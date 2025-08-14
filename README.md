@@ -1,5 +1,4 @@
 # poker-mcp
-=======
 mcp server for poker app
 YAMLファイルをベースにしたシンプルなタスク管理システム。MCPプロトコル（Model Context Protocol）を使用して、AIアシスタントからのタスク管理を可能にします。
 
