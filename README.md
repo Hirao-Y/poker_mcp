@@ -1,13 +1,8 @@
-<<<<<<< HEAD
 # poker-mcp
 mcp server for poker app
-=======
-# YAML4Task MCP
-
 YAMLファイルをベースにしたシンプルなタスク管理システム。MCPプロトコル（Model Context Protocol）を使用して、AIアシスタントからのタスク管理を可能にします。
 
 ## 特徴
-
 - YAML形式でタスクを管理
 - サブタスクの提案と適用
 - タスクステータスの更新
@@ -15,11 +10,10 @@ YAMLファイルをベースにしたシンプルなタスク管理システム�
 - Cursor/VSCodeなどのMCP対応エディタと連携可能
 
 ## インストール
-
 ```bash
 # リポジトリのクローン
-git clone https://github.com/sososha/yaml4task_mcp.git
-cd yaml4task_mcp
+git clone https://github.com/Hirao-Y/poker_mcp.git
+cd poker_mcp
 
 # 依存関係のインストール
 npm install
@@ -45,12 +39,12 @@ node mcp_server.js
 ```json
 {
   "mcpServers": {
-    "yaml4task": {
+    "poker_mcp": {
       "command": "node",
       "args": [
         "パス/mcp_server.js"
       ],
-      "cwd": "パス/yaml4task_mcp"
+      "cwd": "パス/poker_mcp"
     }
   }
 }
@@ -113,5 +107,4 @@ MIT
 
 ## 開発者
 
-sososha 
->>>>>>> 2941f67 (first commit)
+Hirao-Y
