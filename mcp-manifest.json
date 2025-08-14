@@ -1,0 +1,29 @@
+{
+  "name": "pokerinput-mcp",
+  "version": "1.0.1",
+  "description": "YAML-based Poker input creation tool",
+  "tools": [
+    {
+      "name": "pokerinput.proposeBody",
+      "description": "新しい立体を提案します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "立体の名前"
+        },
+        "type": {
+          "type": "string",
+          "description": "立体のタイプ"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.applyChanges",
+      "description": "提案された変更を適用します",
+      "parameters": {
+        "type": "string",
+        "description": "変更を適用します"
+      }
+    }
+  ]
+} 

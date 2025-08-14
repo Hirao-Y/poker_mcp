@@ -1,0 +1,152 @@
+{
+  "name": "pokerinput",
+  "version": "1.0.1",
+  "description": "YAML-based Poker input creation tool",
+  "url": "http://localhost:3000/mcp",
+  "tools": [
+    {
+      "name": "pokerinput.proposeBody",
+      "description": "新しい立体を提案します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "立体の名前"
+        },
+        "type": {
+          "type": "string",
+          "description": "立体のタイプ"
+        },
+        "vertex": {
+           "type": "vector",
+           "description": "頂点座標"
+        },
+        "edge_1": {
+           "type": "vector",
+           "description": "辺1のベクトル"
+        },
+        "edge_2": {
+           "type": "vector",
+           "description": "辺2のベクトル"
+        },
+        "edge_3": {
+           "type": "vector",
+           "description": "辺3のベクトル"
+        },
+        "min": {
+           "type": "vector",
+           "description": "最小座標"
+        },
+        "max": {
+           "type": "vector",
+           "description": "最大座標"
+        },
+        "width_vector": {
+            "type": "vector",
+            "description": "幅ベクトル"
+        },
+        "height_vector": {
+            "type": "vector",
+            "description": "高さベクトル"
+        },
+        "depth_vector": {
+            "type": "vector",
+            "description": "深さベクトル"
+        },
+        "bottom_center": {
+           "type": "vector",
+           "description": "底面の中心座標"
+        },
+        "radius": {
+            "type": "double",
+            "description": "半径"
+        },
+        "bottom_radius": {
+           "type": "double",
+           "description": "底面の半径"
+        },
+        "top_radius": {
+           "type": "double",
+           "description": "上面の半径"
+        },
+        "radius_vector_1": {
+           "type": "vector",
+           "description": "半径ベクトル1"
+        },
+        "radius_vector_2": {
+          "type": "vector",
+          "description": "半径ベクトル2"
+        },
+        "radius_vector_3": {
+          "type": "vector",
+          "description": "半径ベクトル3"
+        },
+          "normal": {
+          "type": "vector",
+          "description": "法線ベクトル"
+        },
+        "major_radius": {
+           "type": "double",
+           "description": "長半径"
+        },
+        "minor_radius": {
+           "type": "double",
+           "description": "短半径"
+        },
+        "center": {
+           "type": "vector",
+           "description": "中心座標"
+        },
+        "expression": {
+           "type": "string",
+           "description": "集合演算式"
+        },
+        "transform": {
+           "type": "string",
+           "description": "回転と平行移動"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.proposeZone",
+      "description": "新しいゾーンを提案します",
+      "parameters": {
+        "body_name": {
+          "type": "string",
+          "description": "ゾーンの名前"
+        },
+        "material": {
+          "type": "string",
+          "description": "ゾーンの材料"
+        },
+        "density": {
+          "type": "double",
+          "description": "ゾーンの密度"
+        }
+      }
+    }, 
+    {
+      "name": "pokerinput.deleteBody",
+      "description": "立体を削除します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "立体の名前"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.deleteZone",
+      "description": "ゾーンを削除します",
+      "parameters": {
+        "body_name": {
+          "type": "string",
+          "description": "ゾーンの名前"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.applyChanges",
+      "description": "提案された変更を適用します"
+    }
+  ]
+} 
