@@ -207,3 +207,4 @@
 {"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-08-16T17:29:37.072Z"}
 {"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-08-16T17:29:37.073Z"}
 {"level":"info","message":"改善版MCPサーバ v2.1 (修正版) が起動しました","port":3001,"timestamp":"2025-08-16T17:29:37.076Z"}
+{"level":"info","message":"MCP要求を受信しました","method":"pokerinput.proposeBuildupFactor","params":{"material":"Concrete","use_finite_medium_correction":false,"use_slant_correction":true},"timestamp":"2025-08-16T17:29:47.792Z"}
