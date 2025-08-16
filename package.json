@@ -14,9 +14,11 @@
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.7.0",
     "content-type": "^1.0.5",
+    "cors": "^2.8.5",
     "express": "^5.0.1",
     "js-yaml": "^4.1.0",
     "raw-body": "^3.0.0",
+    "winston": "^3.17.0",
     "zod": "^3.24.2"
   }
 }

@@ -1,0 +1,62 @@
+{
+  "server": {
+    "port": 3001,
+    "host": "localhost",
+    "cors": {
+      "enabled": true,
+      "origins": ["*"]
+    }
+  },
+  "data": {
+    "yamlFile": "tasks/pokerinputs.yaml",
+    "pendingFile": "tasks/pending_changes.json",
+    "backupDir": "backups",
+    "maxBackups": 10
+  },
+  "logging": {
+    "level": "info",
+    "maxFiles": 5,
+    "maxSize": "10m",
+    "datePattern": "YYYY-MM-DD"
+  },
+  "physics": {
+    "materials": {
+      "Concrete": {
+        "densityRange": { "min": 1.8, "max": 2.5 },
+        "type": "structural",
+        "description": "一般的なコンクリート",
+        "defaultDensity": 2.1
+      },
+      "Heavy_concrete_T": {
+        "densityRange": { "min": 3.5, "max": 4.2 },
+        "type": "shielding", 
+        "description": "重コンクリート（タングステン系）",
+        "defaultDensity": 3.86
+      },
+      "Iron": {
+        "densityRange": { "min": 7.6, "max": 7.9 },
+        "type": "metal",
+        "description": "鉄",
+        "defaultDensity": 7.8
+      },
+      "Lead": {
+        "densityRange": { "min": 11.0, "max": 11.4 },
+        "type": "heavy_metal", 
+        "description": "鉛",
+        "defaultDensity": 11.0
+      },
+      "Water": {
+        "densityRange": { "min": 0.95, "max": 1.05 },
+        "type": "liquid",
+        "description": "水",
+        "defaultDensity": 1.0
+      },
+      "Air": {
+        "densityRange": { "min": 0.001, "max": 0.002 },
+        "type": "gas",
+        "description": "空気", 
+        "defaultDensity": 0.001205
+      }
+    }
+  }
+}

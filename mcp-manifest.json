@@ -1,7 +1,20 @@
 {
   "name": "pokerinput-mcp",
-  "version": "1.0.1",
-  "description": "YAML-based Poker input creation tool",
+  "version": "2.1.0",
+  "description": "YAML-based radiation shielding calculation input file management tool with comprehensive MCP support",
+  "author": "yoshihiro hirao",
+  "license": "ISC",
+  "homepage": "http://localhost:3001",
+  "mcp_version": "1.0.0",
+  "server": {
+    "name": "pokerinput-mcp-server",
+    "version": "2.1.0"
+  },
+  "endpoints": {
+    "jsonrpc": "/mcp",
+    "rest": "/api/v1",
+    "status": "/api/v1/status"
+  },
   "tools": [
     {
       "name": "pokerinput.proposeBody",
@@ -9,21 +22,475 @@
       "parameters": {
         "name": {
           "type": "string",
-          "description": "立体の名前"
+          "description": "立体の名前（一意である必要があります）",
+          "required": true
         },
         "type": {
           "type": "string",
-          "description": "立体のタイプ"
+          "description": "立体のタイプ（SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED）",
+          "required": true,
+          "enum": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"]
+        },
+        "center": {
+          "type": "string",
+          "description": "中心座標（x y z形式）"
+        },
+        "radius": {
+          "type": "number",
+          "description": "半径（SPH, RCC用）"
+        },
+        "min": {
+          "type": "string",
+          "description": "最小座標（RPP用、x y z形式）"
+        },
+        "max": {
+          "type": "string",
+          "description": "最大座標（RPP用、x y z形式）"
+        },
+        "vertex": {
+          "type": "string",
+          "description": "頂点座標（BOX, WED用、x y z形式）"
+        },
+        "edge_1": {
+          "type": "string",
+          "description": "辺1のベクトル（BOX, WED用、x y z形式）"
+        },
+        "edge_2": {
+          "type": "string",
+          "description": "辺2のベクトル（BOX, WED用、x y z形式）"
+        },
+        "edge_3": {
+          "type": "string",
+          "description": "辺3のベクトル（BOX, WED用、x y z形式）"
+        },
+        "bottom_center": {
+          "type": "string",
+          "description": "底面の中心座標（RCC, REC, TRC用、x y z形式）"
+        },
+        "height_vector": {
+          "type": "string",
+          "description": "高さベクトル（RCC, REC, TRC用、x y z形式）"
+        },
+        "radius_vector_1": {
+          "type": "string",
+          "description": "半径ベクトル1（TOR, ELL, REC用、x y z形式）"
+        },
+        "radius_vector_2": {
+          "type": "string",
+          "description": "半径ベクトル2（TOR, ELL, REC用、x y z形式）"
+        },
+        "radius_vector_3": {
+          "type": "string",
+          "description": "半径ベクトル3（TOR, ELL用、x y z形式）"
+        },
+        "bottom_radius": {
+          "type": "number",
+          "description": "底面の半径（TRC用）"
+        },
+        "top_radius": {
+          "type": "number",
+          "description": "上面の半径（TRC用）"
+        },
+        "expression": {
+          "type": "string",
+          "description": "集合演算式（CMB用）"
+        },
+        "transform": {
+          "type": "string",
+          "description": "変換（回転と平行移動）"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.updateBody",
+      "description": "既存の立体のパラメータを更新します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "更新する立体の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput.deleteBody",
+      "description": "立体を削除します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "削除する立体の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput.proposeZone",
+      "description": "新しい材料ゾーンを提案します",
+      "parameters": {
+        "body_name": {
+          "type": "string",
+          "description": "ゾーンを割り当てる立体の名前",
+          "required": true
+        },
+        "material": {
+          "type": "string",
+          "description": "材料名（Concrete, Iron, Lead, Water, Air, VOID等）",
+          "required": true
+        },
+        "density": {
+          "type": "number",
+          "description": "材料密度（g/cm³）"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.updateZone",
+      "description": "既存のゾーンを更新します",
+      "parameters": {
+        "body_name": {
+          "type": "string",
+          "description": "更新するゾーンの立体名",
+          "required": true
+        },
+        "material": {
+          "type": "string",
+          "description": "新しい材料名"
+        },
+        "density": {
+          "type": "number",
+          "description": "新しい密度"
+        },
+        "new_body_name": {
+          "type": "string",
+          "description": "新しい立体名（リネーム時）"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.deleteZone",
+      "description": "ゾーンを削除します",
+      "parameters": {
+        "body_name": {
+          "type": "string",
+          "description": "削除するゾーンの立体名",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput.proposeTransform",
+      "description": "新しい変換（回転・移動）を提案します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "変換の名前",
+          "required": true
+        },
+        "operation": {
+          "type": "array",
+          "description": "変換操作の配列。各要素は単一のキーを持つオブジェクト",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "rotate_around_x": {
+                "type": "number",
+                "description": "X軸周りの回転角度（度）"
+              },
+              "rotate_around_y": {
+                "type": "number",
+                "description": "Y軸周りの回転角度（度）"
+              },
+              "rotate_around_z": {
+                "type": "number",
+                "description": "Z軸周りの回転角度（度）"
+              },
+              "translate": {
+                "type": "string",
+                "description": "平行移動ベクトル（x y z形式）"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "pokerinput.updateTransform",
+      "description": "既存の変換を更新します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "更新する変換の名前",
+          "required": true
+        },
+        "operation": {
+          "type": "array",
+          "description": "新しい変換操作の配列",
+          "items": {
+            "type": "object",
+            "properties": {
+              "rotate_around_x": {
+                "type": "number",
+                "description": "X軸周りの回転角度（度）"
+              },
+              "rotate_around_y": {
+                "type": "number",
+                "description": "Y軸周りの回転角度（度）"
+              },
+              "rotate_around_z": {
+                "type": "number",
+                "description": "Z軸周りの回転角度（度）"
+              },
+              "translate": {
+                "type": "string",
+                "description": "平行移動ベクトル（x y z形式）"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "pokerinput.deleteTransform",
+      "description": "変換を削除します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "削除する変換の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput.proposeBuildupFactor",
+      "description": "新しいビルドアップ係数を提案します",
+      "parameters": {
+        "material": {
+          "type": "string",
+          "description": "材料名",
+          "required": true
+        },
+        "use_slant_correction": {
+          "type": "boolean",
+          "description": "傾斜補正の使用"
+        },
+        "use_finite_medium_correction": {
+          "type": "boolean",
+          "description": "有限媒質補正の使用"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.updateBuildupFactor",
+      "description": "既存のビルドアップ係数を更新します",
+      "parameters": {
+        "material": {
+          "type": "string",
+          "description": "更新する材料名",
+          "required": true
+        },
+        "use_slant_correction": {
+          "type": "boolean",
+          "description": "傾斜補正の使用"
+        },
+        "use_finite_medium_correction": {
+          "type": "boolean",
+          "description": "有限媒質補正の使用"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.deleteBuildupFactor",
+      "description": "ビルドアップ係数を削除します",
+      "parameters": {
+        "material": {
+          "type": "string",
+          "description": "削除する材料名",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput.changeOrderBuildupFactor",
+      "description": "ビルドアップ係数の順序を変更します",
+      "parameters": {
+        "material": {
+          "type": "string",
+          "description": "移動する材料名",
+          "required": true
+        },
+        "newIndex": {
+          "type": "number",
+          "description": "新しいインデックス位置"
+        }
+      }
+    },
+    {
+      "name": "pokerinput.proposeSource",
+      "description": "新しい線源を提案します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "線源の名前",
+          "required": true
+        },
+        "type": {
+          "type": "string",
+          "description": "線源のタイプ（POINT, LINE, AREA, VOLUME等）",
+          "required": true,
+          "enum": ["POINT", "LINE", "AREA", "VOLUME"]
+        },
+        "position": {
+          "type": "string",
+          "description": "線源の位置（x y z形式）",
+          "required": true
+        },
+        "inventory": {
+          "type": "array",
+          "description": "放射性核種のインベントリ",
+          "required": true,
+          "items": {
+            "type": "object",
+            "properties": {
+              "nuclide": {
+                "type": "string",
+                "description": "核種名（例：Cs-137, Co-60）",
+                "required": true
+              },
+              "radioactivity": {
+                "type": "number",
+                "description": "放射能の値",
+                "required": true
+              },
+              "unit": {
+                "type": "string",
+                "description": "放射能の単位（Bq, kBq, MBq, GBq, Ci等）",
+                "required": true
+              }
+            }
+          }
+        },
+        "cutoff_rate": {
+          "type": "number",
+          "description": "カットオフ率",
+          "default": 0.0001
         }
       }
     },
     {
       "name": "pokerinput.applyChanges",
-      "description": "提案された変更を適用します",
-      "parameters": {
-        "type": "string",
-        "description": "変更を適用します"
-      }
+      "description": "提案されたすべての変更を適用します"
     }
-  ]
-} 
+  ],
+  "supported_shapes": [
+    {
+      "type": "SPH",
+      "name": "球体",
+      "parameters": ["center", "radius"]
+    },
+    {
+      "type": "RCC",
+      "name": "円柱",
+      "parameters": ["bottom_center", "height_vector", "radius"]
+    },
+    {
+      "type": "RPP",
+      "name": "軸平行直方体",
+      "parameters": ["min", "max"]
+    },
+    {
+      "type": "BOX",
+      "name": "一般直方体",
+      "parameters": ["vertex", "edge_1", "edge_2", "edge_3"]
+    },
+    {
+      "type": "CMB",
+      "name": "組み合わせ形状",
+      "parameters": ["expression"]
+    },
+    {
+      "type": "TOR",
+      "name": "トーラス",
+      "parameters": ["center", "radius_vector_1", "radius_vector_2", "radius_vector_3"]
+    },
+    {
+      "type": "ELL",
+      "name": "楕円体",
+      "parameters": ["center", "radius_vector_1", "radius_vector_2", "radius_vector_3"]
+    },
+    {
+      "type": "REC",
+      "name": "楕円柱",
+      "parameters": ["bottom_center", "height_vector", "radius_vector_1", "radius_vector_2"]
+    },
+    {
+      "type": "TRC",
+      "name": "台形円錐",
+      "parameters": ["bottom_center", "height_vector", "bottom_radius", "top_radius"]
+    },
+    {
+      "type": "WED",
+      "name": "楔形",
+      "parameters": ["vertex", "edge_1", "edge_2", "edge_3"]
+    }
+  ],
+  "supported_materials": [
+    {
+      "name": "Concrete",
+      "description": "コンクリート",
+      "density_range": "1.8-2.5 g/cm³"
+    },
+    {
+      "name": "Iron",
+      "description": "鉄",
+      "density_range": "7.6-7.9 g/cm³"
+    },
+    {
+      "name": "Lead",
+      "description": "鉛",
+      "density_range": "11.0-11.4 g/cm³"
+    },
+    {
+      "name": "Water",
+      "description": "水",
+      "density_range": "0.95-1.05 g/cm³"
+    },
+    {
+      "name": "Air",
+      "description": "空気",
+      "density_range": "0.001-0.002 g/cm³"
+    },
+    {
+      "name": "VOID",
+      "description": "真空",
+      "density_range": "0 g/cm³"
+    }
+  ],
+  "features": [
+    "YAML形式の入力ファイル管理",
+    "立体形状の定義と操作",
+    "材料ゾーンの管理",
+    "変換（回転・移動）の管理",
+    "ビルドアップ係数の管理",
+    "線源の管理",
+    "段階的変更の適用",
+    "物理的制約の検証",
+    "自動バックアップ機能",
+    "詳細なログ機能",
+    "REST APIサポート",
+    "JSON-RPC 2.0プロトコル"
+  ],
+  "constraints": [
+    "立体名は一意である必要があります",
+    "ゾーンは既存の立体に対してのみ作成できます",
+    "材料密度は物理的範囲内である必要があります",
+    "ATMOSPHEREゾーンは削除できません",
+    "変更は段階的に適用され、明示的な適用が必要です"
+  ],
+  "data_files": {
+    "input": "tasks/pokerinputs.yaml",
+    "pending_changes": "tasks/pending_changes.json",
+    "logs": "logs/",
+    "backups": "backups/"
+  }
+}

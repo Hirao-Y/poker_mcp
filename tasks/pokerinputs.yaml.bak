@@ -1,4 +1,0 @@
-tasks: [{status: 未開始, id: T1, title: タスク1, subtasks: []}]
-attributes: {T1: {depends_on: null, parallel: false, loop: false, design: 基盤構築, milestone: '2025-03-20'}}
-tasks: [{status: 進行中, id: T1, title: タスク1, subtasks: [{status: 進行中, id: T1-2, title: 実装, subtasks: [{status: 進行中, id: T1-2-3, title: デバッグ, subtasks: []}]}, {status: 進行中, id: T1-3, title: テスト, subtasks: []}]}]
-attributes: {T1: {depends_on: null, parallel: false, loop: false, design: 基盤構築, milestone: '2025-03-20'}, T1-2: {depends_on: null, parallel: false, loop: false, design: '', milestone: '2025-09-01'}, T1-2-3: {depends_on: null, parallel: false, loop: false, design: '', milestone: '2025-08-01'}, T1-3: {depends_on: null, parallel: false, loop: false, design: '', milestone: '2025-07-01'}}

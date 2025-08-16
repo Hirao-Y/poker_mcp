@@ -3,13 +3,12 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'task.proposeSubtask',
+  method: 'pokerinput.proposeBody',
   params: {
-    parentId: 'T1',
-    title: '設計レビュー',
-    options: {
-      milestone: '2024-07-01'
-    }
+    name: 'TestSphere',
+    type: 'SPH',
+    center: '0 0 0',
+    radius: 10
   }
 });
 
@@ -17,7 +16,7 @@ console.log('送信データ:', data);
 
 const options = {
   hostname: 'localhost',
-  port: 3000,
+  port: 3001,  // 改善版サーバーのポート
   path: '/mcp',
   method: 'POST',
   headers: {
@@ -66,4 +65,4 @@ req.on('response', (res) => {
 });
 
 req.write(data);
-req.end(); 
+req.end();

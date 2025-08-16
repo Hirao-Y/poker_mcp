@@ -1,0 +1,7 @@
+unit: {length: cm, angle: radian, density: g/cm3, radioactivity: Bq}
+transform: [{name: tr1, operation: [{translate: 1 1 1}]}, {name: tr_all_ops_renamed, operation: [{rotate_around_x: 180}, {translate: 0 0 100}]}, {name: test_transform, operation: [{rotate_around_z: 45}]}]
+body: [{name: S1, type: SPH, center: 0 0 0, radius: 67}, {name: S2, type: SPH, center: 20 20 -20, radius: 30}, {name: C1, type: CMB, expression: S1-S2}, {name: R1, type: RPP, min: 90 5 4, max: 4 5 6}, {name: U1, type: RCC, bottom_center: 0 0 0, height_vector: 0 0 10, radius: 5}]
+zone: [{body_name: ATMOSPHERE, material: VOID}, {body_name: S1, material: Concrete, density: 2.22}, {body_name: S2, material: Iron, density: 7.9}, {body_name: U1, material: Water, density: 1}]
+buildup_factor: [{material: Iron, use_slant_correction: false, use_finite_medium_correction: true}, {material: Copper, use_slant_correction: false, use_finite_medium_correction: false}, {material: Concrete, use_slant_correction: false, use_finite_medium_correction: false}]
+source: [{type: POINT, name: s1, position: 0 0 0, inventory: [{nuclide: Co60, radioactivity: 1}], cutoff_rate: 0.0001}, {type: POINT, name: test_source, cutoff_rate: 0.0001, inventory: [{nuclide: Cs-137, radioactivity: 1}], position: 0 0 0}]
+detector: [{name: d1, origin: 0 0 0, show_path_trace: true}]

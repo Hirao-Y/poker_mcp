@@ -1,8 +1,8 @@
 {
-  "name": "pokerinput",
-  "version": "1.0.1",
+  "name": "pokerinput-mcp",
+  "version": "2.0.1",
   "description": "YAML-based Poker input creation tool",
-  "url": "http://localhost:3000/mcp",
+  "url": "http://localhost:3050/mcp",
   "tools": [
     {
       "name": "pokerinput.proposeBody",
