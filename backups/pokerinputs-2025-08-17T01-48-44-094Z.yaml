@@ -23,7 +23,6 @@ body:
   - {name: debug, type: SPH, center: 0 0 0, radius: 1}
   - {name: test1, type: SPH, center: 0 0 0, radius: 1}
   - {name: test_sphere_v21, type: SPH, center: 0 0 0, radius: 5}
-  - {name: readme_test_sphere, type: SPH, center: 0 0 0, radius: 5}
 zone:
   - {body_name: ATMOSPHERE, material: VOID}
   - {body_name: S1, material: Concrete, density: 2.22}
@@ -31,7 +30,6 @@ zone:
   - {body_name: U1, material: Water, density: 1}
   - {body_name: TestSphere, material: Iron, density: 7.8}
   - {body_name: TestShield, material: Lead, density: 11.2}
-  - {body_name: readme_test_sphere, material: Lead, density: 11}
 buildup_factor:
   - {material: Concrete, use_slant_correction: false, use_finite_medium_correction: false}
   - {material: Iron, use_slant_correction: false, use_finite_medium_correction: false}

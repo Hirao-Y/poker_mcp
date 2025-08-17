@@ -1,16 +1,38 @@
 {
-  "name": "pokerinput-mcp",
-  "version": "1.0.0",
-  "description": "",
-  "main": "mcp_server.js",
+  "name": "pokerinput-mcp-final",
+  "version": "3.0.1",
+  "description": "本番環境対応 YAML-based radiation shielding calculation input file management tool with complete MCP support and production features",
+  "main": "mcp_server_final_fixed.js",
   "type": "module",
   "scripts": {
+    "start": "node mcp_server_final_fixed.js",
+    "start:production": "node mcp_server_final_fixed.js",
+    "start:test": "node mcp_server_test_final.js",
+    "start:original": "node mcp_server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node mcp_server.js"
+    "health": "curl http://localhost:3020/health",
+    "backup": "echo \"Backups are created automatically on applyChanges\""
   },
-  "keywords": [],
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "yaml",
+    "radiation",
+    "shielding",
+    "poker",
+    "nuclear",
+    "geometry",
+    "production"
+  ],
   "author": "yoshihiro hirao",
   "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-repo/pokerinput-mcp-final"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.7.0",
     "content-type": "^1.0.5",
@@ -20,5 +42,23 @@
     "raw-body": "^3.0.0",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
+  },
+  "files": [
+    "mcp_server_final_fixed.js",
+    "mcp_server_test_final.js",
+    "mcp_server.js",
+    "mcp-manifest.json",
+    "README.md",
+    "tasks/",
+    "backups/"
+  ],
+  "mcp": {
+    "server": "mcp_server_final_fixed.js",
+    "port": 3020,
+    "endpoints": {
+      "jsonrpc": "/mcp",
+      "health": "/health",
+      "root": "/"
+    }
   }
 }

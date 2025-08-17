@@ -141,7 +141,7 @@ class TaskManager {
       const newBody = { name, type, ...options };
       
       this.pendingChanges.push({ 
-        action: \"add_body\", 
+        action: "add_body", 
         body: newBody,
         timestamp: new Date().toISOString()
       });
@@ -161,7 +161,7 @@ class TaskManager {
       if (!name) throw new Error('立体名は必須です');
       
       this.pendingChanges.push({ 
-        action: \"update_body\", 
+        action: "update_body", 
         name, 
         updates,
         timestamp: new Date().toISOString()
@@ -182,7 +182,7 @@ class TaskManager {
       if (!name) throw new Error('立体名は必須です');
       
       this.pendingChanges.push({ 
-        action: \"delete_body\", 
+        action: "delete_body", 
         name,
         timestamp: new Date().toISOString()
       });
@@ -209,7 +209,7 @@ class TaskManager {
       }
 
       this.pendingChanges.push({ 
-        action: \"add_zone\", 
+        action: "add_zone", 
         zone: newZone,
         timestamp: new Date().toISOString()
       });
@@ -229,7 +229,7 @@ class TaskManager {
       if (!body_name) throw new Error('body_nameは必須です');
       
       this.pendingChanges.push({ 
-        action: \"update_zone\", 
+        action: "update_zone", 
         body_name, 
         updates,
         timestamp: new Date().toISOString()
@@ -252,7 +252,7 @@ class TaskManager {
       }
       
       this.pendingChanges.push({ 
-        action: \"delete_zone\", 
+        action: "delete_zone", 
         body_name,
         timestamp: new Date().toISOString()
       });
@@ -275,7 +275,7 @@ class TaskManager {
       }
 
       this.pendingChanges.push({ 
-        action: \"add_transform\", 
+        action: "add_transform", 
         transform: { name, operation: operations },
         timestamp: new Date().toISOString()
       });
@@ -295,7 +295,7 @@ class TaskManager {
       if (!name) throw new Error('変換名は必須です');
 
       this.pendingChanges.push({ 
-        action: \"update_transform\", 
+        action: "update_transform", 
         name, 
         updates,
         timestamp: new Date().toISOString()
@@ -316,7 +316,7 @@ class TaskManager {
       if (!name) throw new Error('変換名は必須です');
 
       this.pendingChanges.push({ 
-        action: \"delete_transform\", 
+        action: "delete_transform", 
         name,
         timestamp: new Date().toISOString()
       });
@@ -336,7 +336,7 @@ class TaskManager {
       if (!material) throw new Error('materialは必須です');
 
       this.pendingChanges.push({ 
-        action: \"add_buildup_factor\", 
+        action: "add_buildup_factor", 
         buildup_factor: { 
           material, 
           use_slant_correction: Boolean(use_slant_correction), 
@@ -360,7 +360,7 @@ class TaskManager {
       if (!material) throw new Error('materialは必須です');
 
       this.pendingChanges.push({ 
-        action: \"update_buildup_factor\", 
+        action: "update_buildup_factor", 
         material, 
         updates,
         timestamp: new Date().toISOString()
@@ -381,7 +381,7 @@ class TaskManager {
       if (!material) throw new Error('materialは必須です');
 
       this.pendingChanges.push({ 
-        action: \"delete_buildup_factor\", 
+        action: "delete_buildup_factor", 
         material,
         timestamp: new Date().toISOString()
       });
@@ -401,7 +401,7 @@ class TaskManager {
       if (!material) throw new Error('materialは必須です');
 
       this.pendingChanges.push({ 
-        action: \"reorder_buildup_factor\", 
+        action: "reorder_buildup_factor", 
         material, 
         newIndex,
         timestamp: new Date().toISOString()
@@ -435,7 +435,7 @@ class TaskManager {
       }
 
       this.pendingChanges.push({ 
-        action: \"add_source\", 
+        action: "add_source", 
         source: {
           name, type, position, inventory, 
           cutoff_rate: cutoff_rate || 0.0001
@@ -479,7 +479,7 @@ class TaskManager {
 
   // 個別変更適用（完全実装）
   applyChange(change) {
-    if (change.action === \"add_body\") {
+    if (change.action === "add_body") {
       const body = this.findBodyByName(change.body.name);
       if (body) {
         Object.assign(body, change.body);
@@ -487,7 +487,7 @@ class TaskManager {
         if (!this.data.body) this.data.body = [];
         this.data.body.push(change.body);
       }
-    } else if (change.action === \"add_zone\") {
+    } else if (change.action === "add_zone") {
       const zone = this.findZoneByBodyName(change.zone.body_name);
       if (zone) {
         Object.assign(zone, change.zone);
@@ -495,14 +495,14 @@ class TaskManager {
         if (!this.data.zone) this.data.zone = [];
         this.data.zone.push(change.zone);
       }
-    } else if (change.action === \"delete_body\") {
+    } else if (change.action === "delete_body") {
       const bodyIndex = this.data.body.findIndex(b => b.name === change.name);
       if (bodyIndex !== -1) this.data.body.splice(bodyIndex, 1);
-    } else if (change.action === \"delete_zone\") {
+    } else if (change.action === "delete_zone") {
       if (change.body_name === 'ATMOSPHERE') return;
       const zoneIndex = this.data.zone.findIndex(z => z.body_name === change.body_name);
       if (zoneIndex !== -1) this.data.zone.splice(zoneIndex, 1);
-    } else if (change.action === \"update_body\") {
+    } else if (change.action === "update_body") {
       const body = this.findBodyByName(change.name);
       if (body) {
         Object.keys(change.updates).forEach(key => {
@@ -513,7 +513,7 @@ class TaskManager {
           }
         });
       }
-    } else if (change.action === \"update_zone\") {
+    } else if (change.action === "update_zone") {
       const zone = this.findZoneByBodyName(change.body_name);
       if (zone) {
         if (change.updates.new_body_name !== undefined) zone.body_name = change.updates.new_body_name;
@@ -526,7 +526,7 @@ class TaskManager {
           }
         }
       }
-    } else if (change.action === \"add_transform\") {
+    } else if (change.action === "add_transform") {
       if (!this.data.transform) this.data.transform = [];
       const existingTransform = this.data.transform.find(t => t.name === change.transform.name);
       if (existingTransform) {
@@ -534,18 +534,18 @@ class TaskManager {
       } else {
         this.data.transform.push(change.transform);
       }
-    } else if (change.action === \"update_transform\") {
+    } else if (change.action === "update_transform") {
       if (!this.data.transform) this.data.transform = [];
       const t = this.data.transform.find(t => t.name === change.name);
       if (t) {
         if (change.updates.new_name) t.name = change.updates.new_name;
         if (change.updates.operation) t.operation = change.updates.operation;
       }
-    } else if (change.action === \"delete_transform\") {
+    } else if (change.action === "delete_transform") {
       if (!this.data.transform) this.data.transform = [];
       const idx = this.data.transform.findIndex(t => t.name === change.name);
       if (idx !== -1) this.data.transform.splice(idx, 1);
-    } else if (change.action === \"add_buildup_factor\") {
+    } else if (change.action === "add_buildup_factor") {
       if (!this.data.buildup_factor) this.data.buildup_factor = [];
       const idx = this.data.buildup_factor.findIndex(bf => bf.material === change.buildup_factor.material);
       if (idx !== -1) {
@@ -553,20 +553,20 @@ class TaskManager {
       } else {
         this.data.buildup_factor.push(change.buildup_factor);
       }
-    } else if (change.action === \"delete_buildup_factor\") {
+    } else if (change.action === "delete_buildup_factor") {
       if (!this.data.buildup_factor) this.data.buildup_factor = [];
       const idx = this.data.buildup_factor.findIndex(bf => bf.material === change.material);
       if (idx !== -1) {
         this.data.buildup_factor.splice(idx, 1);
       }
-    } else if (change.action === \"reorder_buildup_factor\") {
+    } else if (change.action === "reorder_buildup_factor") {
       if (!this.data.buildup_factor) this.data.buildup_factor = [];
       const idx = this.data.buildup_factor.findIndex(bf => bf.material === change.material);
       if (idx !== -1 && typeof change.newIndex === 'number' && change.newIndex >= 0 && change.newIndex < this.data.buildup_factor.length) {
         const [item] = this.data.buildup_factor.splice(idx, 1);
         this.data.buildup_factor.splice(change.newIndex, 0, item);
       }
-    } else if (change.action === \"update_buildup_factor\") {
+    } else if (change.action === "update_buildup_factor") {
       if (!this.data.buildup_factor) this.data.buildup_factor = [];
       const bf = this.data.buildup_factor.find(bf => bf.material === change.material);
       if (bf) {
@@ -577,7 +577,7 @@ class TaskManager {
           bf.use_finite_medium_correction = change.updates.use_finite_medium_correction;
         }
       }
-    } else if (change.action === \"add_source\") {
+    } else if (change.action === "add_source") {
       if (!this.data.source) this.data.source = [];
       const existingSource = this.data.source.find(s => s.name === change.source.name);
       if (existingSource) {
@@ -595,7 +595,7 @@ const PORT = process.env.PORT || 3020;
 
 // CORS設定
 app.use(cors({
-  origin: \"*\",
+  origin: "*",
   credentials: true
 }));
 
@@ -604,8 +604,8 @@ app.use(express.json({ limit: '10mb' }));
 
 // TaskManager インスタンス
 const manager = new TaskManager(
-  \"tasks/pokerinputs.yaml\",
-  \"tasks/pending_changes.json\"
+  "tasks/pokerinputs.yaml",
+  "tasks/pending_changes.json"
 );
 
 // JSON-RPC ヘルパー関数
@@ -628,23 +628,23 @@ function jsonRpcError(id, code, message, data = null) {
 // ルートエンドポイント
 app.get('/', (req, res) => {
   res.json({
-    name: \"poker-mcp-final-fixed\",
-    version: \"3.0.1\",
-    description: \"Complete MCP Server FINAL - 構文エラー修正版\",
+    name: "poker-mcp-final-fixed",
+    version: "3.0.1",
+    description: "Complete MCP Server FINAL - 構文エラー修正版",
     port: PORT,
     features: [
-      \"全15のMCPメソッド完全実装\",
-      \"実際のYAMLファイル更新\",
-      \"自動バックアップ機能\",
-      \"完全なエラーハンドリング\",
-      \"JSON-RPC 2.0完全対応\"
+      "全15のMCPメソッド完全実装",
+      "実際のYAMLファイル更新",
+      "自動バックアップ機能",
+      "完全なエラーハンドリング",
+      "JSON-RPC 2.0完全対応"
     ],
     methods: [
-      \"pokerinput.proposeBody\", \"pokerinput.updateBody\", \"pokerinput.deleteBody\",
-      \"pokerinput.proposeZone\", \"pokerinput.updateZone\", \"pokerinput.deleteZone\",
-      \"pokerinput.proposeTransform\", \"pokerinput.updateTransform\", \"pokerinput.deleteTransform\",
-      \"pokerinput.proposeBuildupFactor\", \"pokerinput.updateBuildupFactor\", \"pokerinput.deleteBuildupFactor\",
-      \"pokerinput.changeOrderBuildupFactor\", \"pokerinput.proposeSource\", \"pokerinput.applyChanges\"
+      "pokerinput.proposeBody", "pokerinput.updateBody", "pokerinput.deleteBody",
+      "pokerinput.proposeZone", "pokerinput.updateZone", "pokerinput.deleteZone",
+      "pokerinput.proposeTransform", "pokerinput.updateTransform", "pokerinput.deleteTransform",
+      "pokerinput.proposeBuildupFactor", "pokerinput.updateBuildupFactor", "pokerinput.deleteBuildupFactor",
+      "pokerinput.changeOrderBuildupFactor", "pokerinput.proposeSource", "pokerinput.applyChanges"
     ]
   });
 });
@@ -717,7 +717,7 @@ app.post('/mcp', (req, res) => {
           }
           const result = manager.updateZone(body_name, updates);
           return res.json(jsonRpcSuccess(jsonBody.id, { result }));
-        } catch (error) {`
+        } catch (error) {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ゾーン更新エラー: ${error.message}`));
         }
 
