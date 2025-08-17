@@ -24,7 +24,6 @@ body:
   - {name: test1, type: SPH, center: 0 0 0, radius: 1}
   - {name: test_sphere_v21, type: SPH, center: 0 0 0, radius: 5}
   - {name: readme_test_sphere, type: SPH, center: 0 0 0, radius: 5}
-  - {name: test_sphere_v3, type: SPH, center: 0 0 0, radius: 15}
 zone:
   - {body_name: ATMOSPHERE, material: VOID}
   - {body_name: S1, material: Concrete, density: 2.22}
