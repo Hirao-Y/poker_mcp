@@ -1,17 +1,20 @@
 {
   "name": "pokerinput-mcp-final",
   "version": "3.0.1",
-  "description": "本番環境対応 YAML-based radiation shielding calculation input file management tool with complete MCP support and production features",
-  "main": "mcp_server_final_fixed.js",
+  "description": "世界クラス YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support and complete production features",
+  "main": "../src/mcp_server_final_fixed.js",
   "type": "module",
   "scripts": {
-    "start": "node mcp_server_final_fixed.js",
-    "start:production": "node mcp_server_final_fixed.js",
-    "start:test": "node mcp_server_test_final.js",
-    "start:original": "node mcp_server.js",
+    "start": "cd .. && node src/mcp_server_final_fixed.js",
+    "start:production": "cd .. && node src/mcp_server_final_fixed.js",
+    "start:test": "cd .. && node src/mcp_server_test_final.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "health": "curl http://localhost:3020/health",
-    "backup": "echo \"Backups are created automatically on applyChanges\""
+    "backup": "echo \"Backups are created automatically on applyChanges\"",
+    "install-deps": "npm install",
+    "dev": "cd .. && nodemon src/mcp_server_final_fixed.js",
+    "clean": "cd .. && rm -rf logs/*.log && echo \"Logs cleaned\"",
+    "check-structure": "cd .. && find . -maxdepth 2 -type d | sort"
   },
   "keywords": [
     "mcp",
