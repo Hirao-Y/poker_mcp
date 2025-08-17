@@ -40,391 +40,498 @@
     {
       "name": "pokerinput.proposeBody",
       "description": "新しい3D立体を提案します（自動バックアップ付き）",
-      "category": "geometry",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "立体の一意な名前",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "立体の一意な名前"
+          },
+          "type": {
+            "type": "string", 
+            "description": "立体タイプ",
+            "enum": ["SPH", "RCC", "RPP", "BOX", "TOR", "ELL", "TRC", "WED", "CMB"]
+          },
+          "center": {
+            "type": "string",
+            "description": "中心座標 (x y z形式)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "radius": {
+            "type": "number",
+            "description": "半径 (SPH, RCC用)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "axis": {
+            "type": "string", 
+            "description": "軸ベクトル (RCC, TRC用)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "height": {
+            "type": "number",
+            "description": "高さ (RCC, TRC用)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "min": {
+            "type": "string",
+            "description": "最小座標 (RPP用)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "max": {
+            "type": "string",
+            "description": "最大座標 (RPP用)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "vertex": {
+            "type": "string",
+            "description": "頂点座標 (BOX, WED用)"
+          },
+          "vector1": {
+            "type": "string",
+            "description": "ベクトル1 (BOX, WED, ELL用)"
+          },
+          "vector2": {
+            "type": "string",
+            "description": "ベクトル2 (BOX, WED, ELL用)"
+          },
+          "vector3": {
+            "type": "string",
+            "description": "ベクトル3 (BOX, WED, ELL用)"
+          },
+          "radius1": {
+            "type": "number",
+            "description": "半径1 (TOR用の主半径)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "radius2": {
+            "type": "number", 
+            "description": "半径2 (TOR用の副半径)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "top_radius": {
+            "type": "number",
+            "description": "上面半径 (TRC用)",
+            "minimum": 0
+          },
+          "operation": {
+            "type": "string",
+            "description": "集合演算 (CMB用)",
+            "enum": ["union", "intersection", "difference"]
+          },
+          "operands": {
+            "type": "array",
+            "description": "演算対象の立体名リスト (CMB用)",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2
+          },
+          "transform": {
+            "type": "string",
+            "description": "変換名（事前定義された回転・移動）"
+          }
         },
-        "type": {
-          "type": "string", 
-          "description": "立体タイプ (SPH, RCC, RPP, BOX, TOR, ELL, TRC, WED, CMB)",
-          "required": true,
-          "enum": ["SPH", "RCC", "RPP", "BOX", "TOR", "ELL", "TRC", "WED", "CMB"]
-        },
-        "center": {
-          "type": "string",
-          "description": "中心座標 (x y z形式)",
-          "example": "0 0 0"
-        },
-        "radius": {
-          "type": "number",
-          "description": "半径 (SPH, RCC用)"
-        },
-        "axis": {
-          "type": "string", 
-          "description": "軸ベクトル (RCC, TRC用)",
-          "example": "0 0 1"
-        },
-        "height": {
-          "type": "number",
-          "description": "高さ (RCC, TRC用)"
-        },
-        "min": {
-          "type": "string",
-          "description": "最小座標 (RPP用)",
-          "example": "-10 -10 -10"
-        },
-        "max": {
-          "type": "string",
-          "description": "最大座標 (RPP用)", 
-          "example": "10 10 10"
-        },
-        "vertex": {
-          "type": "string",
-          "description": "頂点座標 (BOX, WED用)"
-        },
-        "vector1": {
-          "type": "string",
-          "description": "ベクトル1 (BOX, WED, ELL用)"
-        },
-        "vector2": {
-          "type": "string",
-          "description": "ベクトル2 (BOX, WED, ELL用)"
-        },
-        "vector3": {
-          "type": "string",
-          "description": "ベクトル3 (BOX, WED, ELL用)"
-        },
-        "radius1": {
-          "type": "number",
-          "description": "半径1 (TOR用の主半径)"
-        },
-        "radius2": {
-          "type": "number", 
-          "description": "半径2 (TOR用の副半径)"
-        },
-        "top_radius": {
-          "type": "number",
-          "description": "上面半径 (TRC用)"
-        },
-        "operation": {
-          "type": "string",
-          "description": "集合演算 (CMB用)",
-          "enum": ["union", "intersection", "difference"]
-        },
-        "operands": {
-          "type": "array",
-          "description": "演算対象の立体名リスト (CMB用)"
-        },
-        "transform": {
-          "type": "string",
-          "description": "変換名（事前定義された回転・移動）"
-        }
+        "required": ["name", "type"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.updateBody", 
       "description": "既存立体のパラメータを更新します",
-      "category": "geometry",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "更新する立体の名前",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "更新する立体の名前"
+          },
+          "updates": {
+            "type": "object",
+            "description": "更新するパラメータのオブジェクト",
+            "additionalProperties": true
+          }
         },
-        "updates": {
-          "type": "object",
-          "description": "更新するパラメータのオブジェクト",
-          "required": true
-        }
+        "required": ["name", "updates"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.deleteBody",
       "description": "立体を削除します（依存関係もチェック）",
-      "category": "geometry", 
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "削除する立体の名前",
-          "required": true
-        }
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "削除する立体の名前"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.proposeZone",
       "description": "材料ゾーンを提案します",
-      "category": "material",
-      "parameters": {
-        "body_name": {
-          "type": "string", 
-          "description": "ゾーンが適用される立体名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body_name": {
+            "type": "string", 
+            "description": "ゾーンが適用される立体名"
+          },
+          "material": {
+            "type": "string",
+            "description": "材料名"
+          },
+          "density": {
+            "type": "number",
+            "description": "密度 (g/cm³)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "temperature": {
+            "type": "number",
+            "description": "温度 (K)",
+            "minimum": 0
+          }
         },
-        "material": {
-          "type": "string",
-          "description": "材料名",
-          "required": true
-        },
-        "density": {
-          "type": "number",
-          "description": "密度 (g/cm³)",
-          "required": true
-        },
-        "temperature": {
-          "type": "number",
-          "description": "温度 (K)"
-        }
+        "required": ["body_name", "material", "density"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.updateZone",
       "description": "既存ゾーンの材料・密度を更新します",
-      "category": "material",
-      "parameters": {
-        "body_name": {
-          "type": "string",
-          "description": "更新するゾーンの立体名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body_name": {
+            "type": "string",
+            "description": "更新するゾーンの立体名"
+          },
+          "updates": {
+            "type": "object", 
+            "description": "更新するパラメータ",
+            "additionalProperties": true
+          }
         },
-        "updates": {
-          "type": "object", 
-          "description": "更新するパラメータ",
-          "required": true
-        }
+        "required": ["body_name", "updates"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.deleteZone",
       "description": "材料ゾーンを削除します",
-      "category": "material",
-      "parameters": {
-        "body_name": {
-          "type": "string",
-          "description": "削除するゾーンの立体名", 
-          "required": true
-        }
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "body_name": {
+            "type": "string",
+            "description": "削除するゾーンの立体名"
+          }
+        },
+        "required": ["body_name"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.proposeTransform",
       "description": "回転・移動変換を提案します",
-      "category": "transform",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "変換の一意な名前",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "変換の一意な名前"
+          },
+          "type": {
+            "type": "string",
+            "description": "変換タイプ",
+            "enum": ["rotation", "translation", "combined"]
+          },
+          "rotation_axis": {
+            "type": "string",
+            "description": "回転軸ベクトル (rotation用)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "rotation_angle": {
+            "type": "number",
+            "description": "回転角度（度）",
+            "minimum": -360,
+            "maximum": 360
+          },
+          "translation": {
+            "type": "string", 
+            "description": "平行移動ベクトル",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          }
         },
-        "type": {
-          "type": "string",
-          "description": "変換タイプ",
-          "enum": ["rotation", "translation", "combined"],
-          "required": true
-        },
-        "rotation_axis": {
-          "type": "string",
-          "description": "回転軸ベクトル (rotation用)",
-          "example": "0 0 1"
-        },
-        "rotation_angle": {
-          "type": "number",
-          "description": "回転角度（度）"
-        },
-        "translation": {
-          "type": "string", 
-          "description": "平行移動ベクトル",
-          "example": "10 0 0"
-        }
+        "required": ["name", "type"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.updateTransform",
       "description": "既存変換のパラメータを更新します",
-      "category": "transform",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "更新する変換名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "更新する変換名"
+          },
+          "updates": {
+            "type": "object",
+            "description": "更新するパラメータ",
+            "additionalProperties": true
+          }
         },
-        "updates": {
-          "type": "object",
-          "description": "更新するパラメータ",
-          "required": true
-        }
+        "required": ["name", "updates"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.deleteTransform",
       "description": "変換を削除します",
-      "category": "transform",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "削除する変換名",
-          "required": true
-        }
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "削除する変換名"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.proposeBuildupFactor",
       "description": "ビルドアップ係数を提案します", 
-      "category": "physics",
-      "parameters": {
-        "material": {
-          "type": "string",
-          "description": "材料名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "type": "string",
+            "description": "材料名",
+            "examples": ["Concrete", "Lead", "Steel", "Water"]
+          },
+          "energy": {
+            "type": "number",
+            "description": "γ線エネルギー (MeV)",
+            "minimum": 0.01,
+            "maximum": 20.0
+          },
+          "thickness": {
+            "type": "number",
+            "description": "材料厚さ (cm)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "factor": {
+            "type": "number",
+            "description": "ビルドアップ係数値",
+            "minimum": 1.0
+          },
+          "formula": {
+            "type": "string",
+            "description": "ビルドアップ係数計算式",
+            "enum": ["Taylor", "Berger", "ANSI/ANS-6.4.3"],
+            "default": "Taylor"
+          },
+          "coefficients": {
+            "type": "array",
+            "description": "計算式の係数パラメータ",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 10
+          }
         },
-        "energy": {
-          "type": "number", 
-          "description": "エネルギー (MeV)",
-          "required": true
-        },
-        "thickness": {
-          "type": "number",
-          "description": "厚さ (cm)",
-          "required": true
-        },
-        "factor": {
-          "type": "number",
-          "description": "ビルドアップ係数",
-          "required": true
-        }
+        "required": ["material", "energy", "thickness", "factor"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.updateBuildupFactor",
       "description": "ビルドアップ係数を更新します",
-      "category": "physics",
-      "parameters": {
-        "material": {
-          "type": "string",
-          "description": "材料名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "type": "string",
+            "description": "材料名"
+          },
+          "energy": {
+            "type": "number",
+            "description": "γ線エネルギー (MeV)",
+            "minimum": 0.01,
+            "maximum": 20.0
+          },
+          "updates": {
+            "type": "object",
+            "description": "更新するパラメータ",
+            "properties": {
+              "thickness": {
+                "type": "number",
+                "minimum": 0,
+                "exclusiveMinimum": true
+              },
+              "factor": {
+                "type": "number",
+                "minimum": 1.0
+              },
+              "formula": {
+                "type": "string",
+                "enum": ["Taylor", "Berger", "ANSI/ANS-6.4.3"]
+              },
+              "coefficients": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 10
+              }
+            },
+            "additionalProperties": false
+          }
         },
-        "energy": {
-          "type": "number",
-          "description": "エネルギー (MeV)",
-          "required": true
-        },
-        "updates": {
-          "type": "object",
-          "description": "更新するパラメータ",
-          "required": true
-        }
+        "required": ["material", "energy", "updates"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.deleteBuildupFactor",
       "description": "ビルドアップ係数を削除します",
-      "category": "physics",
-      "parameters": {
-        "material": {
-          "type": "string", 
-          "description": "材料名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "type": "string",
+            "description": "材料名"
+          },
+          "energy": {
+            "type": "number",
+            "description": "γ線エネルギー (MeV)",
+            "minimum": 0.01,
+            "maximum": 20.0
+          }
         },
-        "energy": {
-          "type": "number",
-          "description": "エネルギー (MeV)",
-          "required": true
-        }
+        "required": ["material", "energy"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.changeOrderBuildupFactor",
       "description": "ビルドアップ係数の計算順序を変更します",
-      "category": "physics",
-      "parameters": {
-        "material": {
-          "type": "string",
-          "description": "材料名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "material": {
+            "type": "string",
+            "description": "材料名"
+          },
+          "new_order": {
+            "type": "array",
+            "description": "新しい順序のエネルギー配列 (MeV)",
+            "items": {
+              "type": "number",
+              "minimum": 0.01,
+              "maximum": 20.0
+            },
+            "minItems": 2,
+            "uniqueItems": true
+          }
         },
-        "new_order": {
-          "type": "array",
-          "description": "新しい順序のエネルギー配列",
-          "required": true
-        }
+        "required": ["material", "new_order"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.proposeSource",
       "description": "放射線源を提案します",
-      "category": "source",
-      "parameters": {
-        "name": {
-          "type": "string",
-          "description": "線源名",
-          "required": true
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "線源名"
+          },
+          "type": {
+            "type": "string",
+            "description": "線源タイプ",
+            "enum": ["point", "surface", "volume"]
+          },
+          "position": {
+            "type": "string",
+            "description": "線源位置 (x y z形式)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          },
+          "energy": {
+            "type": "number",
+            "description": "主要エネルギー (MeV)",
+            "minimum": 0.001,
+            "maximum": 20.0
+          },
+          "intensity": {
+            "type": "number",
+            "description": "放射能強度 (Bq)",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "spectrum": {
+            "type": "object",
+            "description": "エネルギースペクトラム",
+            "properties": {
+              "energies": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0.001
+                }
+              },
+              "probabilities": {
+                "type": "array",
+                "items": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                }
+              }
+            },
+            "additionalProperties": false
+          }
         },
-        "type": {
-          "type": "string",
-          "description": "線源タイプ",
-          "enum": ["point", "surface", "volume"],
-          "required": true
-        },
-        "position": {
-          "type": "string",
-          "description": "線源位置",
-          "example": "0 0 0"
-        },
-        "energy": {
-          "type": "number",
-          "description": "エネルギー (MeV)",
-          "required": true
-        },
-        "intensity": {
-          "type": "number",
-          "description": "強度 (Bq)",
-          "required": true
-        },
-        "spectrum": {
-          "type": "object",
-          "description": "エネルギースペクトラム"
-        }
+        "required": ["name", "type", "energy", "intensity"],
+        "additionalProperties": false
       }
     },
     {
       "name": "pokerinput.applyChanges",
       "description": "保留中の全変更を実際のYAMLファイルに適用します（自動バックアップ実行）",
-      "category": "system",
-      "parameters": {
-        "force": {
-          "type": "boolean",
-          "description": "強制適用フラグ（警告を無視）",
-          "default": false
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "force": {
+            "type": "boolean",
+            "description": "強制適用フラグ（警告を無視）",
+            "default": false
+          },
+          "backup_comment": {
+            "type": "string",
+            "description": "バックアップのコメント",
+            "maxLength": 200
+          }
         },
-        "backup_comment": {
-          "type": "string",
-          "description": "バックアップのコメント"
-        }
+        "additionalProperties": false
       }
     }
-  ],
-  "error_handling": {
-    "validation": "strict",
-    "backup_on_error": true,
-    "rollback_support": true,
-    "detailed_errors": true
-  },
-  "performance": {
-    "max_concurrent_requests": 10,
-    "timeout_ms": 30000,
-    "cache_enabled": true
-  },
-  "security": {
-    "cors_enabled": true,
-    "rate_limiting": true,
-    "input_validation": "strict"
-  },
-  "monitoring": {
-    "health_endpoint": "/health",
-    "metrics_endpoint": "/metrics", 
-    "logging_level": "info"
-  }
+  ]
 }
