@@ -25,7 +25,6 @@ body:
   - {name: test_sphere_v21, type: SPH, center: 0 0 0, radius: 5}
   - {name: readme_test_sphere, type: SPH, center: 0 0 0, radius: 5}
   - {name: test_sphere_v3, type: SPH, center: 0 0 0, radius: 15}
-  - {name: test_reactor, type: SPH, center: 0 0 0, radius: 50}
 zone:
   - {body_name: ATMOSPHERE, material: VOID}
   - {body_name: S1, material: Concrete, density: 2.22}
@@ -38,7 +37,6 @@ buildup_factor:
   - {material: Concrete, use_slant_correction: false, use_finite_medium_correction: false}
   - {material: Iron, use_slant_correction: false, use_finite_medium_correction: false}
   - {material: Copper, use_slant_correction: false, use_finite_medium_correction: false}
-  - {material: Test_Steel, use_slant_correction: true, use_finite_medium_correction: false}
 source:
   - {type: POINT, name: s1, position: 0 0 0, inventory: [{nuclide: Co60, radioactivity: 1}], cutoff_rate: 0.0001}
   - {name: production_source, type: POINT, position: 0 0 20, inventory: [{nuclide: Cs-137, radioactivity: 2.5}], cutoff_rate: 0.0005}

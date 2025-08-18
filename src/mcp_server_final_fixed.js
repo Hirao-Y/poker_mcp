@@ -452,6 +452,80 @@ class TaskManager {
     }
   }
 
+  // 線源更新
+  updateSource(name, updates) {
+    try {
+      if (!name) throw new Error('線源名は必須です');
+      
+      // 更新パラメータの検証
+      if (updates.type) {
+        const validTypes = ['POINT', 'BOX', 'RPP', 'SPH', 'RCC'];
+        if (!validTypes.includes(updates.type)) {
+          throw new Error(`無効な線源タイプ: ${updates.type}. 有効なタイプ: ${validTypes.join(', ')}`);
+        }
+      }
+      
+      if (updates.position) {
+        const positionPattern = /^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$/;
+        if (!positionPattern.test(updates.position)) {
+          throw new Error('positionは "x y z" 形式で指定してください');
+        }
+      }
+      
+      if (updates.inventory) {
+        if (!Array.isArray(updates.inventory) || updates.inventory.length === 0) {
+          throw new Error('inventoryは1つ以上の要素が必要です');
+        }
+        for (const item of updates.inventory) {
+          if (!item.nuclide) throw new Error('inventory要素にnuclideが必要');
+          if (typeof item.radioactivity !== 'number' || item.radioactivity <= 0) {
+            throw new Error('inventory要素のradioactivityは正数である必要があります');
+          }
+        }
+      }
+      
+      if (updates.cutoff_rate !== undefined) {
+        if (typeof updates.cutoff_rate !== 'number' || updates.cutoff_rate < 0 || updates.cutoff_rate > 1) {
+          throw new Error('cutoff_rateは 0-1 の範囲の数値である必要があります');
+        }
+      }
+      
+      this.pendingChanges.push({ 
+        action: "update_source", 
+        name, 
+        updates,
+        timestamp: new Date().toISOString()
+      });
+      this.savePendingChanges();
+      
+      console.log('線源更新提案:', { name, updates });
+      return `提案: 線源 ${name} の更新を保留しました: ${JSON.stringify(updates)}`;
+    } catch (error) {
+      console.error('線源更新エラー:', { name, error: error.message });
+      throw error;
+    }
+  }
+
+  // 線源削除
+  deleteSource(name) {
+    try {
+      if (!name) throw new Error('線源名は必須です');
+      
+      this.pendingChanges.push({ 
+        action: "delete_source", 
+        name,
+        timestamp: new Date().toISOString()
+      });
+      this.savePendingChanges();
+      
+      console.log('線源削除提案:', { name });
+      return `提案: 線源 ${name} の削除を保留しました`;
+    } catch (error) {
+      console.error('線源削除エラー:', { name, error: error.message });
+      throw error;
+    }
+  }
+
   // 変更適用（完全実装）
   applyChanges() {
     try {
@@ -585,6 +659,24 @@ class TaskManager {
       } else {
         this.data.source.push(change.source);
       }
+    } else if (change.action === "update_source") {
+      if (!this.data.source) this.data.source = [];
+      const source = this.data.source.find(s => s.name === change.name);
+      if (source) {
+        Object.keys(change.updates).forEach(key => {
+          if (change.updates[key] === null) {
+            delete source[key];
+          } else {
+            source[key] = change.updates[key];
+          }
+        });
+      }
+    } else if (change.action === "delete_source") {
+      if (!this.data.source) this.data.source = [];
+      const sourceIndex = this.data.source.findIndex(s => s.name === change.name);
+      if (sourceIndex !== -1) {
+        this.data.source.splice(sourceIndex, 1);
+      }
     }
   }
 }
@@ -633,7 +725,7 @@ app.get('/', (req, res) => {
     description: "Complete MCP Server FINAL - 構文エラー修正版",
     port: PORT,
     features: [
-      "全15のMCPメソッド完全実装",
+      "全17のMCPメソッド完全実装",
       "実際のYAMLファイル更新",
       "自動バックアップ機能",
       "完全なエラーハンドリング",
@@ -644,7 +736,7 @@ app.get('/', (req, res) => {
       "pokerinput.proposeZone", "pokerinput.updateZone", "pokerinput.deleteZone",
       "pokerinput.proposeTransform", "pokerinput.updateTransform", "pokerinput.deleteTransform",
       "pokerinput.proposeBuildupFactor", "pokerinput.updateBuildupFactor", "pokerinput.deleteBuildupFactor",
-      "pokerinput.changeOrderBuildupFactor", "pokerinput.proposeSource", "pokerinput.applyChanges"
+      "pokerinput.changeOrderBuildupFactor", "pokerinput.proposeSource", "pokerinput.updateSource", "pokerinput.deleteSource", "pokerinput.applyChanges"
     ]
   });
 });
@@ -823,6 +915,30 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcSuccess(jsonBody.id, { result }));
         } catch (error) {
           return res.json(jsonRpcError(jsonBody.id, -32000, `線源提案エラー: ${error.message}`));
+        }
+
+      case 'pokerinput.updateSource':
+        try {
+          const { name, ...updates } = jsonBody.params;
+          if (!name) {
+            return res.json(jsonRpcError(jsonBody.id, -32602, '無効なパラメータ: nameは必須です'));
+          }
+          const result = manager.updateSource(name, updates);
+          return res.json(jsonRpcSuccess(jsonBody.id, { result }));
+        } catch (error) {
+          return res.json(jsonRpcError(jsonBody.id, -32000, `線源更新エラー: ${error.message}`));
+        }
+
+      case 'pokerinput.deleteSource':
+        try {
+          const { name } = jsonBody.params;
+          if (!name) {
+            return res.json(jsonRpcError(jsonBody.id, -32602, '無効なパラメータ: nameは必須です'));
+          }
+          const result = manager.deleteSource(name);
+          return res.json(jsonRpcSuccess(jsonBody.id, { result }));
+        } catch (error) {
+          return res.json(jsonRpcError(jsonBody.id, -32000, `線源削除エラー: ${error.message}`));
         }
 
       case 'pokerinput.applyChanges':

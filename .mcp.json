@@ -50,7 +50,7 @@
           "type": {
             "type": "string", 
             "description": "立体タイプ",
-            "enum": ["SPH", "RCC", "RPP", "BOX", "TOR", "ELL", "TRC", "WED", "CMB"]
+            "enum": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"]
           },
           "center": {
             "type": "string",
@@ -59,20 +59,19 @@
           },
           "radius": {
             "type": "number",
-            "description": "半径 (SPH, RCC用)",
+            "description": "半径 (SPH用)",
             "minimum": 0,
             "exclusiveMinimum": true
           },
-          "axis": {
+          "bottom_center": {
             "type": "string", 
-            "description": "軸ベクトル (RCC, TRC用)",
+            "description": "底面中心座標 (RCC用)",
             "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
           },
-          "height": {
-            "type": "number",
-            "description": "高さ (RCC, TRC用)",
-            "minimum": 0,
-            "exclusiveMinimum": true
+          "height_vector": {
+            "type": "string",
+            "description": "高さベクトル (RCC用)",
+            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
           },
           "min": {
             "type": "string",
@@ -84,59 +83,13 @@
             "description": "最大座標 (RPP用)",
             "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
           },
-          "vertex": {
+          "expression": {
             "type": "string",
-            "description": "頂点座標 (BOX, WED用)"
-          },
-          "vector1": {
-            "type": "string",
-            "description": "ベクトル1 (BOX, WED, ELL用)"
-          },
-          "vector2": {
-            "type": "string",
-            "description": "ベクトル2 (BOX, WED, ELL用)"
-          },
-          "vector3": {
-            "type": "string",
-            "description": "ベクトル3 (BOX, WED, ELL用)"
-          },
-          "radius1": {
-            "type": "number",
-            "description": "半径1 (TOR用の主半径)",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "radius2": {
-            "type": "number", 
-            "description": "半径2 (TOR用の副半径)",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "top_radius": {
-            "type": "number",
-            "description": "上面半径 (TRC用)",
-            "minimum": 0
-          },
-          "operation": {
-            "type": "string",
-            "description": "集合演算 (CMB用)",
-            "enum": ["union", "intersection", "difference"]
-          },
-          "operands": {
-            "type": "array",
-            "description": "演算対象の立体名リスト (CMB用)",
-            "items": {
-              "type": "string"
-            },
-            "minItems": 2
-          },
-          "transform": {
-            "type": "string",
-            "description": "変換名（事前定義された回転・移動）"
+            "description": "組み合わせ式 (CMB用)"
           }
         },
         "required": ["name", "type"],
-        "additionalProperties": false
+        "additionalProperties": true
       }
     },
     {
@@ -148,15 +101,10 @@
           "name": {
             "type": "string",
             "description": "更新する立体の名前"
-          },
-          "updates": {
-            "type": "object",
-            "description": "更新するパラメータのオブジェクト",
-            "additionalProperties": true
           }
         },
-        "required": ["name", "updates"],
-        "additionalProperties": false
+        "required": ["name"],
+        "additionalProperties": true
       }
     },
     {
@@ -191,16 +139,10 @@
           "density": {
             "type": "number",
             "description": "密度 (g/cm³)",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "temperature": {
-            "type": "number",
-            "description": "温度 (K)",
             "minimum": 0
           }
         },
-        "required": ["body_name", "material", "density"],
+        "required": ["body_name", "material"],
         "additionalProperties": false
       }
     },
@@ -213,15 +155,10 @@
           "body_name": {
             "type": "string",
             "description": "更新するゾーンの立体名"
-          },
-          "updates": {
-            "type": "object", 
-            "description": "更新するパラメータ",
-            "additionalProperties": true
           }
         },
-        "required": ["body_name", "updates"],
-        "additionalProperties": false
+        "required": ["body_name"],
+        "additionalProperties": true
       }
     },
     {
@@ -249,29 +186,17 @@
             "type": "string",
             "description": "変換の一意な名前"
           },
-          "type": {
-            "type": "string",
-            "description": "変換タイプ",
-            "enum": ["rotation", "translation", "combined"]
-          },
-          "rotation_axis": {
-            "type": "string",
-            "description": "回転軸ベクトル (rotation用)",
-            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-          },
-          "rotation_angle": {
-            "type": "number",
-            "description": "回転角度（度）",
-            "minimum": -360,
-            "maximum": 360
-          },
-          "translation": {
-            "type": "string", 
-            "description": "平行移動ベクトル",
-            "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+          "operation": {
+            "type": "array",
+            "description": "変換操作の配列",
+            "items": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "minItems": 1
           }
         },
-        "required": ["name", "type"],
+        "required": ["name", "operation"],
         "additionalProperties": false
       }
     },
@@ -284,15 +209,10 @@
           "name": {
             "type": "string",
             "description": "更新する変換名"
-          },
-          "updates": {
-            "type": "object",
-            "description": "更新するパラメータ",
-            "additionalProperties": true
           }
         },
-        "required": ["name", "updates"],
-        "additionalProperties": false
+        "required": ["name"],
+        "additionalProperties": true
       }
     },
     {
@@ -318,43 +238,20 @@
         "properties": {
           "material": {
             "type": "string",
-            "description": "材料名",
-            "examples": ["Concrete", "Lead", "Steel", "Water"]
+            "description": "材料名"
           },
-          "energy": {
-            "type": "number",
-            "description": "γ線エネルギー (MeV)",
-            "minimum": 0.01,
-            "maximum": 20.0
+          "use_slant_correction": {
+            "type": "boolean",
+            "description": "斜め入射補正を使用するか",
+            "default": false
           },
-          "thickness": {
-            "type": "number",
-            "description": "材料厚さ (cm)",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "factor": {
-            "type": "number",
-            "description": "ビルドアップ係数値",
-            "minimum": 1.0
-          },
-          "formula": {
-            "type": "string",
-            "description": "ビルドアップ係数計算式",
-            "enum": ["Taylor", "Berger", "ANSI/ANS-6.4.3"],
-            "default": "Taylor"
-          },
-          "coefficients": {
-            "type": "array",
-            "description": "計算式の係数パラメータ",
-            "items": {
-              "type": "number"
-            },
-            "minItems": 2,
-            "maxItems": 10
+          "use_finite_medium_correction": {
+            "type": "boolean",
+            "description": "有限媒質補正を使用するか",
+            "default": false
           }
         },
-        "required": ["material", "energy", "thickness", "factor"],
+        "required": ["material"],
         "additionalProperties": false
       }
     },
@@ -367,44 +264,10 @@
           "material": {
             "type": "string",
             "description": "材料名"
-          },
-          "energy": {
-            "type": "number",
-            "description": "γ線エネルギー (MeV)",
-            "minimum": 0.01,
-            "maximum": 20.0
-          },
-          "updates": {
-            "type": "object",
-            "description": "更新するパラメータ",
-            "properties": {
-              "thickness": {
-                "type": "number",
-                "minimum": 0,
-                "exclusiveMinimum": true
-              },
-              "factor": {
-                "type": "number",
-                "minimum": 1.0
-              },
-              "formula": {
-                "type": "string",
-                "enum": ["Taylor", "Berger", "ANSI/ANS-6.4.3"]
-              },
-              "coefficients": {
-                "type": "array",
-                "items": {
-                  "type": "number"
-                },
-                "minItems": 2,
-                "maxItems": 10
-              }
-            },
-            "additionalProperties": false
           }
         },
-        "required": ["material", "energy", "updates"],
-        "additionalProperties": false
+        "required": ["material"],
+        "additionalProperties": true
       }
     },
     {
@@ -416,15 +279,9 @@
           "material": {
             "type": "string",
             "description": "材料名"
-          },
-          "energy": {
-            "type": "number",
-            "description": "γ線エネルギー (MeV)",
-            "minimum": 0.01,
-            "maximum": 20.0
           }
         },
-        "required": ["material", "energy"],
+        "required": ["material"],
         "additionalProperties": false
       }
     },
@@ -438,19 +295,13 @@
             "type": "string",
             "description": "材料名"
           },
-          "new_order": {
-            "type": "array",
-            "description": "新しい順序のエネルギー配列 (MeV)",
-            "items": {
-              "type": "number",
-              "minimum": 0.01,
-              "maximum": 20.0
-            },
-            "minItems": 2,
-            "uniqueItems": true
+          "newIndex": {
+            "type": "number",
+            "description": "新しいインデックス位置",
+            "minimum": 0
           }
         },
-        "required": ["material", "new_order"],
+        "required": ["material"],
         "additionalProperties": false
       }
     },
@@ -467,49 +318,74 @@
           "type": {
             "type": "string",
             "description": "線源タイプ",
-            "enum": ["point", "surface", "volume"]
+            "enum": ["POINT", "BOX", "RPP", "SPH", "RCC"]
           },
           "position": {
             "type": "string",
             "description": "線源位置 (x y z形式)",
             "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
           },
-          "energy": {
-            "type": "number",
-            "description": "主要エネルギー (MeV)",
-            "minimum": 0.001,
-            "maximum": 20.0
-          },
-          "intensity": {
-            "type": "number",
-            "description": "放射能強度 (Bq)",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
-          "spectrum": {
-            "type": "object",
-            "description": "エネルギースペクトラム",
-            "properties": {
-              "energies": {
-                "type": "array",
-                "items": {
+          "inventory": {
+            "type": "array",
+            "description": "核種インベントリ",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nuclide": {
+                  "type": "string",
+                  "description": "核種名"
+                },
+                "radioactivity": {
                   "type": "number",
-                  "minimum": 0.001
+                  "description": "放射能 (Bq)",
+                  "minimum": 0,
+                  "exclusiveMinimum": true
                 }
               },
-              "probabilities": {
-                "type": "array",
-                "items": {
-                  "type": "number",
-                  "minimum": 0,
-                  "maximum": 1
-                }
-              }
+              "required": ["nuclide", "radioactivity"],
+              "additionalProperties": false
             },
-            "additionalProperties": false
+            "minItems": 1
+          },
+          "cutoff_rate": {
+            "type": "number",
+            "description": "カットオフ率",
+            "minimum": 0,
+            "maximum": 1,
+            "default": 0.0001
           }
         },
-        "required": ["name", "type", "energy", "intensity"],
+        "required": ["name", "type", "position", "inventory"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "pokerinput.updateSource",
+      "description": "既存線源のパラメータを更新します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "更新する線源の名前"
+          }
+        },
+        "required": ["name"],
+        "additionalProperties": true
+      }
+    },
+    {
+      "name": "pokerinput.deleteSource",
+      "description": "線源を削除します",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "削除する線源の名前"
+          }
+        },
+        "required": ["name"],
         "additionalProperties": false
       }
     },
