@@ -994,12 +994,12 @@ npm run start --prefix config/
 ```
 
 ### ❓ **Q3: API が \"Method not found\" エラー**
-**A**: メソッド名を確認してください。v3.0.1 では15個のメソッドが利用可能です：
+**A**: メソッド名を確認してください。v3.0.1 では17個のメソッドが利用可能です：
 - pokerinput.proposeBody, updateBody, deleteBody
 - pokerinput.proposeZone, updateZone, deleteZone
 - pokerinput.proposeTransform, updateTransform, deleteTransform
 - pokerinput.proposeBuildupFactor, updateBuildupFactor, deleteBuildupFactor, changeOrderBuildupFactor
-- pokerinput.proposeSource
+- pokerinput.proposeSource, updateSource, deleteSource
 - pokerinput.applyChanges
 
 ### ❓ **Q4: データが保存されない**

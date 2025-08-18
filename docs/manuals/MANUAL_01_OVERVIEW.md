@@ -54,7 +54,7 @@ YAML Files + Backup System
 
 ## ✨ 主要機能
 
-### 🔧 完全実装されたMCPメソッド（15個）
+### 🔧 完全実装されたMCPメソッド（17個）
 
 #### 立体操作（3メソッド）
 - **proposeBody**: 新しい3D形状の提案
@@ -77,8 +77,12 @@ YAML Files + Backup System
 - **deleteBuildupFactor**: 係数の削除
 - **changeOrderBuildupFactor**: 計算順序の変更
 
-#### 線源・システム（2メソッド）
+#### 線源操作（3メソッド）
 - **proposeSource**: 放射線源の提案
+- **updateSource**: 線源パラメータの更新
+- **deleteSource**: 線源の削除
+
+#### システム（1メソッド）
 - **applyChanges**: 全変更の実際のファイルへの適用
 
 ### 🛡️ 本番環境機能

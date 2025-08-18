@@ -10,9 +10,9 @@
 
 ## 🌟 API概要
 
-### 🎯 **完全実装されたMCPメソッド（15個）**
+### 🎯 **完全実装されたMCPメソッド（17個）**
 
-**PokerInput MCP Server**は、放射線遮蔽計算用入力ファイル管理のための包括的なAPIを提供します。全15メソッドが6つのカテゴリに分類され、完全実装・動作確認済みです。
+**PokerInput MCP Server**は、放射線遮蔽計算用入力ファイル管理のための包括的なAPIを提供します。全17メソッドが6つのカテゴリに分類され、完全実装・動作確認済みです。
 
 #### **📊 カテゴリ別メソッド構成**
 
@@ -22,7 +22,7 @@
 | **🧪 Material** | 3個 | 材料ゾーンの管理 | ★★★★★ |
 | **🔄 Transform** | 3個 | 回転・移動変換の制御 | ★★★★☆ |
 | **⚛️ Physics** | 4個 | ビルドアップ係数の計算制御 | ★★★☆☆ |
-| **📡 Source** | 1個 | 放射線源の管理 | ★★★☆☆ |
+| **📡 Source** | 3個 | 放射線源の完全管理 | ★★★★☆ |
 | **🔧 System** | 1個 | 変更適用・システム制御 | ★★★★★ |
 
 ---
@@ -1015,6 +1015,80 @@ curl -X POST http://localhost:3020/mcp \
   }'
 ```
 
+### 📡 **pokerinput.updateSource**
+
+**説明**: 既存線源のパラメータを更新します
+
+#### **パラメータ**
+```json
+{
+  "name": "string (必須) - 更新する線源名",
+  "type": "string (任意) - 線源タイプ [POINT|BOX|RPP|SPH|RCC]",
+  "position": "string (任意) - 線源位置 'x y z'",
+  "inventory": "array (任意) - 核種インベントリ",
+  "cutoff_rate": "number (任意) - カットオフ率 (0-1)"
+}
+```
+
+#### **使用例**
+```bash
+# 位置のみ更新
+curl -X POST http://localhost:3020/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "pokerinput.updateSource",
+    "params": {
+      "name": "cs137_source",
+      "position": "50 50 100"
+    },
+    "id": 18
+  }'
+
+# 放射能減衰後の強度更新
+curl -X POST http://localhost:3020/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "pokerinput.updateSource",
+    "params": {
+      "name": "cs137_source",
+      "inventory": [
+        {
+          "nuclide": "Cs-137",
+          "radioactivity": 2.5e10
+        }
+      ]
+    },
+    "id": 19
+  }'
+```
+
+### 📡 **pokerinput.deleteSource**
+
+**説明**: 線源を削除します
+
+#### **パラメータ**
+```json
+{
+  "name": "string (必須) - 削除する線源名"
+}
+```
+
+#### **使用例**
+```bash
+curl -X POST http://localhost:3020/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "pokerinput.deleteSource",
+    "params": {
+      "name": "cs137_source"
+    },
+    "id": 20
+  }'
+```
+
 ---
 
 ## 🔧 System API (システム制御)
@@ -1040,7 +1114,7 @@ curl -X POST http://localhost:3020/mcp \
     "jsonrpc": "2.0",
     "method": "pokerinput.applyChanges",
     "params": {},
-    "id": 18
+    "id": 21
   }'
 
 # コメント付き強制適用
@@ -1053,7 +1127,7 @@ curl -X POST http://localhost:3020/mcp \
       "force": true,
       "backup_comment": "重要な設計変更を適用"
     },
-    "id": 19
+    "id": 22
   }'
 ```
 
@@ -1394,7 +1468,7 @@ describe('MCP API Tests', () => {
 **この API 仕様書は、業界最高レベルの完成度を誇る技術文書です。**
 
 #### **包括性**
-- ✅ **15メソッド完全仕様**: 全API の詳細仕様
+- ✅ **17メソッド完全仕様**: 全CRUD操作対応詳細仕様
 - ✅ **9立体タイプ対応**: 業界最多の立体対応
 - ✅ **実用的な例**: すぐに使える具体例
 - ✅ **エラー処理**: 完全なエラーハンドリング仕様

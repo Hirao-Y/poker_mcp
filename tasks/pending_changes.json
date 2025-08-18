@@ -1,1 +1,66 @@
-[]
+[
+  {
+    "action": "add_source",
+    "source": {
+      "name": "test_update_source",
+      "type": "POINT",
+      "position": "0 0 0",
+      "inventory": [
+        {
+          "nuclide": "Co-60",
+          "radioactivity": 1100000000000
+        }
+      ],
+      "cutoff_rate": 0.0001
+    },
+    "timestamp": "2025-08-18T03:51:22.862Z"
+  },
+  {
+    "action": "update_source",
+    "name": "test_update_source",
+    "updates": {
+      "position": "25 50 75"
+    },
+    "timestamp": "2025-08-18T03:51:30.754Z"
+  },
+  {
+    "action": "update_source",
+    "name": "test_update_source",
+    "updates": {
+      "inventory": [
+        {
+          "nuclide": "Co-60",
+          "radioactivity": 850000000000
+        }
+      ]
+    },
+    "timestamp": "2025-08-18T03:51:39.492Z"
+  },
+  {
+    "action": "update_source",
+    "name": "test_update_source",
+    "updates": {
+      "type": "SPH",
+      "position": "100 100 100",
+      "cutoff_rate": 0.0005
+    },
+    "timestamp": "2025-08-18T03:51:52.263Z"
+  },
+  {
+    "action": "update_source",
+    "name": "test_update_source",
+    "updates": {
+      "inventory": [
+        {
+          "nuclide": "Co-60",
+          "radioactivity": 500000000000
+        },
+        {
+          "nuclide": "Cs-137",
+          "radioactivity": 20000000000
+        }
+      ]
+    },
+    "timestamp": "2025-08-18T03:52:01.087Z"
+  }
+]
