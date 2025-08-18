@@ -14,7 +14,7 @@
 ## 🌟 プロジェクトの特徴
 
 ### 🎯 **業界標準レベルの完成度**
-- ✅ **15個のMCPメソッド完全実装・動作確認済み**
+- ✅ **17個のMCPメソッド完全実装・動作確認済み**
 - ✅ **本番環境対応機能完備**
 - ✅ **企業レベルのプロジェクト構成**
 - ✅ **2,500行超の包括的ドキュメント**
@@ -71,7 +71,7 @@ poker_mcp/
 
 ## ✨ 主要機能
 
-### 🔧 **完全実装されたMCPメソッド（15個）**
+### 🔧 **完全実装されたMCPメソッド（17個）**
 
 #### 立体操作（3メソッド）
 - **`pokerinput.proposeBody`**: 新しい3D形状の提案
@@ -94,8 +94,12 @@ poker_mcp/
 - **`pokerinput.deleteBuildupFactor`**: 係数の削除
 - **`pokerinput.changeOrderBuildupFactor`**: 計算順序の変更
 
-#### 線源・システム（2メソッド）
+#### 線源操作（3メソッド）
 - **`pokerinput.proposeSource`**: 放射線源の提案
+- **`pokerinput.updateSource`**: 線源パラメータの更新
+- **`pokerinput.deleteSource`**: 線源の削除
+
+#### システム（1メソッド）
 - **`pokerinput.applyChanges`**: 全変更の実際のファイルへの適用
 
 ### 🛡️ **本番環境機能**
