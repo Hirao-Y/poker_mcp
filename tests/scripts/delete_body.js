@@ -8,7 +8,7 @@ async function deleteBody(bodyName) {
     const data = JSON.stringify({
       jsonrpc: '2.0',
       id: 1,
-      method: 'pokerinput.deleteBody',
+      method: 'pokerinput_deleteBody',
       params: {
         name: bodyName
       }

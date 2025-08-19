@@ -37,7 +37,7 @@
   },
   "tools": [
     {
-      "name": "pokerinput.proposeBody",
+      "name": "pokerinput_proposeBody",
       "description": "新しい立体（ジオメトリ）を提案します。実際のYAMLファイルに反映するにはapplyChangesを実行してください。",
       "parameters": {
         "name": {
@@ -70,7 +70,7 @@
       }
     },
     {
-      "name": "pokerinput.updateBody",
+      "name": "pokerinput_updateBody",
       "description": "既存の立体のパラメータを更新します",
       "parameters": {
         "name": {
@@ -89,7 +89,7 @@
       }
     },
     {
-      "name": "pokerinput.deleteBody",
+      "name": "pokerinput_deleteBody",
       "description": "指定された立体を削除します",
       "parameters": {
         "name": {
@@ -100,7 +100,7 @@
       }
     },
     {
-      "name": "pokerinput.proposeZone",
+      "name": "pokerinput_proposeZone",
       "description": "新しいゾーン（材料割り当て）を提案します",
       "parameters": {
         "body_name": {
@@ -120,7 +120,7 @@
       }
     },
     {
-      "name": "pokerinput.updateZone",
+      "name": "pokerinput_updateZone",
       "description": "既存のゾーンを更新します",
       "parameters": {
         "body_name": {
@@ -139,7 +139,7 @@
       }
     },
     {
-      "name": "pokerinput.deleteZone",
+      "name": "pokerinput_deleteZone",
       "description": "指定されたゾーンを削除します（ATMOSPHEREは削除不可）",
       "parameters": {
         "body_name": {
@@ -150,7 +150,7 @@
       }
     },
     {
-      "name": "pokerinput.proposeTransform",
+      "name": "pokerinput_proposeTransform",
       "description": "新しい変換（回転・移動）を提案します",
       "parameters": {
         "name": {
@@ -166,7 +166,7 @@
       }
     },
     {
-      "name": "pokerinput.updateTransform",
+      "name": "pokerinput_updateTransform",
       "description": "既存の変換を更新します",
       "parameters": {
         "name": {
@@ -181,7 +181,7 @@
       }
     },
     {
-      "name": "pokerinput.deleteTransform",
+      "name": "pokerinput_deleteTransform",
       "description": "指定された変換を削除します",
       "parameters": {
         "name": {
@@ -192,7 +192,7 @@
       }
     },
     {
-      "name": "pokerinput.proposeBuildupFactor",
+      "name": "pokerinput_proposeBuildupFactor",
       "description": "新しいビルドアップ係数を提案します",
       "parameters": {
         "material": {
@@ -211,7 +211,7 @@
       }
     },
     {
-      "name": "pokerinput.updateBuildupFactor",
+      "name": "pokerinput_updateBuildupFactor",
       "description": "既存のビルドアップ係数を更新します",
       "parameters": {
         "material": {
@@ -230,7 +230,7 @@
       }
     },
     {
-      "name": "pokerinput.deleteBuildupFactor",
+      "name": "pokerinput_deleteBuildupFactor",
       "description": "指定されたビルドアップ係数を削除します",
       "parameters": {
         "material": {
@@ -241,7 +241,7 @@
       }
     },
     {
-      "name": "pokerinput.changeOrderBuildupFactor",
+      "name": "pokerinput_changeOrderBuildupFactor",
       "description": "ビルドアップ係数の順序を変更します",
       "parameters": {
         "material": {
@@ -256,7 +256,7 @@
       }
     },
     {
-      "name": "pokerinput.proposeSource",
+      "name": "pokerinput_proposeSource",
       "description": "新しい線源を提案します",
       "parameters": {
         "name": {
@@ -286,7 +286,29 @@
       }
     },
     {
-      "name": "pokerinput.applyChanges",
+      "name": "pokerinput_updateSource",
+      "description": "既存線源のパラメータを更新します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "更新する線源の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput_deleteSource",
+      "description": "線源を削除します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "削除する線源の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput_applyChanges",
       "description": "全ての保留中の変更を実際のYAMLファイルに適用します。自動的にバックアップが作成されます。",
       "parameters": {}
     }

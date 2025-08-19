@@ -3,7 +3,7 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.proposeTransform',
+  method: 'pokerinput_proposeTransform',
   params: {
     name: 'tr_all_ops',
     operation: [

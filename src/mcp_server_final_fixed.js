@@ -732,11 +732,11 @@ app.get('/', (req, res) => {
       "JSON-RPC 2.0完全対応"
     ],
     methods: [
-      "pokerinput.proposeBody", "pokerinput.updateBody", "pokerinput.deleteBody",
-      "pokerinput.proposeZone", "pokerinput.updateZone", "pokerinput.deleteZone",
-      "pokerinput.proposeTransform", "pokerinput.updateTransform", "pokerinput.deleteTransform",
-      "pokerinput.proposeBuildupFactor", "pokerinput.updateBuildupFactor", "pokerinput.deleteBuildupFactor",
-      "pokerinput.changeOrderBuildupFactor", "pokerinput.proposeSource", "pokerinput.updateSource", "pokerinput.deleteSource", "pokerinput.applyChanges"
+      "pokerinput_proposeBody", "pokerinput_updateBody", "pokerinput_deleteBody",
+      "pokerinput_proposeZone", "pokerinput_updateZone", "pokerinput_deleteZone",
+      "pokerinput_proposeTransform", "pokerinput_updateTransform", "pokerinput_deleteTransform",
+      "pokerinput_proposeBuildupFactor", "pokerinput_updateBuildupFactor", "pokerinput_deleteBuildupFactor",
+      "pokerinput_changeOrderBuildupFactor", "pokerinput_proposeSource", "pokerinput_updateSource", "pokerinput_deleteSource", "pokerinput_applyChanges"
     ]
   });
 });
@@ -753,7 +753,7 @@ app.post('/mcp', (req, res) => {
     console.log('MCP要求受信:', { method: jsonBody.method, id: jsonBody.id });
 
     switch (jsonBody.method) {
-      case 'pokerinput.proposeBody':
+      case 'pokerinput_proposeBody':
         try {
           const { name, type, ...options } = jsonBody.params;
           if (!name || !type) {
@@ -765,7 +765,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `立体提案エラー: ${error.message}`));
         }
 
-      case 'pokerinput.updateBody':
+      case 'pokerinput_updateBody':
         try {
           const { name, ...updates } = jsonBody.params;
           if (!name) {
@@ -777,7 +777,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `立体更新エラー: ${error.message}`));
         }
 
-      case 'pokerinput.deleteBody':
+      case 'pokerinput_deleteBody':
         try {
           const { name } = jsonBody.params;
           if (!name) {
@@ -789,7 +789,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `立体削除エラー: ${error.message}`));
         }
 
-      case 'pokerinput.proposeZone':
+      case 'pokerinput_proposeZone':
         try {
           const { body_name, material, density } = jsonBody.params;
           if (!body_name || !material) {
@@ -801,7 +801,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ゾーン提案エラー: ${error.message}`));
         }
 
-      case 'pokerinput.updateZone':
+      case 'pokerinput_updateZone':
         try {
           const { body_name, ...updates } = jsonBody.params;
           if (!body_name) {
@@ -813,7 +813,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ゾーン更新エラー: ${error.message}`));
         }
 
-      case 'pokerinput.deleteZone':
+      case 'pokerinput_deleteZone':
         try {
           const { body_name } = jsonBody.params;
           if (!body_name) {
@@ -825,7 +825,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ゾーン削除エラー: ${error.message}`));
         }
 
-      case 'pokerinput.proposeTransform':
+      case 'pokerinput_proposeTransform':
         try {
           const { name, operation } = jsonBody.params;
           if (!name || !operation) {
@@ -837,7 +837,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `変換提案エラー: ${error.message}`));
         }
 
-      case 'pokerinput.updateTransform':
+      case 'pokerinput_updateTransform':
         try {
           const { name, ...updates } = jsonBody.params;
           if (!name) {
@@ -849,7 +849,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `変換更新エラー: ${error.message}`));
         }
 
-      case 'pokerinput.deleteTransform':
+      case 'pokerinput_deleteTransform':
         try {
           const { name } = jsonBody.params;
           if (!name) {
@@ -861,7 +861,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `変換削除エラー: ${error.message}`));
         }
 
-      case 'pokerinput.proposeBuildupFactor':
+      case 'pokerinput_proposeBuildupFactor':
         try {
           const { material, use_slant_correction, use_finite_medium_correction } = jsonBody.params;
           if (!material) {
@@ -873,7 +873,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ビルドアップ係数提案エラー: ${error.message}`));
         }
 
-      case 'pokerinput.updateBuildupFactor':
+      case 'pokerinput_updateBuildupFactor':
         try {
           const { material, ...updates } = jsonBody.params;
           if (!material) {
@@ -885,7 +885,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ビルドアップ係数更新エラー: ${error.message}`));
         }
 
-      case 'pokerinput.deleteBuildupFactor':
+      case 'pokerinput_deleteBuildupFactor':
         try {
           const { material } = jsonBody.params;
           if (!material) {
@@ -897,7 +897,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ビルドアップ係数削除エラー: ${error.message}`));
         }
 
-      case 'pokerinput.changeOrderBuildupFactor':
+      case 'pokerinput_changeOrderBuildupFactor':
         try {
           const { material, newIndex } = jsonBody.params;
           if (!material) {
@@ -909,7 +909,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `ビルドアップ係数順序変更エラー: ${error.message}`));
         }
 
-      case 'pokerinput.proposeSource':
+      case 'pokerinput_proposeSource':
         try {
           const result = manager.proposeSource(jsonBody.params);
           return res.json(jsonRpcSuccess(jsonBody.id, { result }));
@@ -917,7 +917,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `線源提案エラー: ${error.message}`));
         }
 
-      case 'pokerinput.updateSource':
+      case 'pokerinput_updateSource':
         try {
           const { name, ...updates } = jsonBody.params;
           if (!name) {
@@ -929,7 +929,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `線源更新エラー: ${error.message}`));
         }
 
-      case 'pokerinput.deleteSource':
+      case 'pokerinput_deleteSource':
         try {
           const { name } = jsonBody.params;
           if (!name) {
@@ -941,7 +941,7 @@ app.post('/mcp', (req, res) => {
           return res.json(jsonRpcError(jsonBody.id, -32000, `線源削除エラー: ${error.message}`));
         }
 
-      case 'pokerinput.applyChanges':
+      case 'pokerinput_applyChanges':
         try {
           const result = manager.applyChanges();
           return res.json(jsonRpcSuccess(jsonBody.id, { result }));

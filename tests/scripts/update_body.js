@@ -3,7 +3,7 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.updateBody',
+  method: 'pokerinput_updateBody',
   params: {
     name: 'R1',
     min: '90 5 4'

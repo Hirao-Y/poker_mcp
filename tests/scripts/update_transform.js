@@ -3,7 +3,7 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.updateTransform',
+  method: 'pokerinput_updateTransform',
   params: {
     name: 'tr_all_ops', // 既存transform名
     new_name: 'tr_all_ops_renamed', // 新しい名前
@@ -18,7 +18,7 @@ const data = JSON.stringify({
 const correctData = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.updateTransform',
+  method: 'pokerinput_updateTransform',
   params: {
     name: 'tr_all_ops',
     name: 'tr_all_ops',

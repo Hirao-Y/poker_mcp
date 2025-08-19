@@ -3,7 +3,7 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.deleteZone',
+  method: 'pokerinput_deleteZone',
   params: {
     body_name: 'Z2'
   }

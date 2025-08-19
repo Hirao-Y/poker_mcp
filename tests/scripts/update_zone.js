@@ -3,7 +3,7 @@ import http from 'http';
 const data = JSON.stringify({
   jsonrpc: '2.0',
   id: 1,
-  method: 'pokerinput.updateZone',
+  method: 'pokerinput_updateZone',
   params: {
     body_name: 'S1',
     material: 'Concrete',
