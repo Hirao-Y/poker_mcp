@@ -987,48 +987,91 @@ curl -X POST http://localhost:3020/mcp \
 #### **パラメータ**
 ```json
 {
-  "name": "string (必須) - 線源名",
+  "name": "string (必須) - 線源の一意な名前",
   "type": "string (必須) - 線源タイプ [point|surface|volume]",
-  "position": "string (任意) - 線源位置",
-  "energy": "number (必須) - エネルギー (MeV)",
-  "intensity": "number (必須) - 強度 (Bq)",
-  "spectrum": "object (任意) - エネルギースペクトラム"
+  "position": "string (必須) - 線源位置 (x y z形式)",
+  "inventory": "array (必須) - 核種インベントリ",
+  "cutoff_rate": "number (任意) - カットオフレート (default: 0.01)"
 }
+```
+
+#### **inventory形式**
+```json
+[
+  {
+    "nuclide": "string - 核種名 (例: Cs-137, Co-60)",
+    "radioactivity": "number - 放射能 (Bq)"
+  }
+]
 ```
 
 #### **使用例**
 ```bash
-# 点線源の提案
+# Co-60点線源の作成
 curl -X POST http://localhost:3020/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
     "method": "pokerinput.proposeSource",
     "params": {
-      "name": "cs137_source",
+      "name": "co60_medical_source",
       "type": "point",
-      "position": "0 0 0",
-      "energy": 0.662,
-      "intensity": 1e9
+      "position": "0 0 100",
+      "inventory": [
+        {
+          "nuclide": "Co-60",
+          "radioactivity": 3.7e10
+        }
+      ],
+      "cutoff_rate": 0.01
     },
     "id": 17
   }'
+
+# 複数核種線源の作成
+curl -X POST http://localhost:3020/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "pokerinput.proposeSource",
+    "params": {
+      "name": "mixed_source",
+      "type": "point",
+      "position": "50 0 0",
+      "inventory": [
+        {
+          "nuclide": "Cs-137",
+          "radioactivity": 1.85e10
+        },
+        {
+          "nuclide": "Co-60",
+          "radioactivity": 7.4e9
+        }
+      ]
+    },
+    "id": 18
+  }'
 ```
 
-### 📡 **pokerinput.updateSource**
+### 🔧 **pokerinput.updateSource**
 
-**説明**: 既存線源のパラメータを更新します
+**説明**: 既存放射線源のパラメータを更新します
 
 #### **パラメータ**
 ```json
 {
-  "name": "string (必須) - 更新する線源名",
-  "type": "string (任意) - 線源タイプ [POINT|BOX|RPP|SPH|RCC]",
-  "position": "string (任意) - 線源位置 'x y z'",
-  "inventory": "array (任意) - 核種インベントリ",
-  "cutoff_rate": "number (任意) - カットオフ率 (0-1)"
+  "name": "string (必須) - 更新対象線源名",
+  "position": "string (任意) - 新しい線源位置 (x y z形式)",
+  "inventory": "array (任意) - 新しい核種インベントリ",
+  "cutoff_rate": "number (任意) - 新しいカットオフレート"
 }
 ```
+
+#### **制限事項**
+- **type変更禁止**: 線源タイプは物理的整合性のため変更不可
+- **位置座標**: 有効な3次元座標 (x y z) 形式
+- **放射能値**: 0以上の数値が必要
+- **核種名**: 標準的な核種表記 (例: Co-60, Cs-137)
 
 #### **使用例**
 ```bash
@@ -1039,54 +1082,91 @@ curl -X POST http://localhost:3020/mcp \
     "jsonrpc": "2.0",
     "method": "pokerinput.updateSource",
     "params": {
-      "name": "cs137_source",
-      "position": "50 50 100"
+      "name": "co60_medical_source",
+      "position": "10 10 120"
     },
-    "id": 18
+    "id": 19
   }'
 
-# 放射能減衰後の強度更新
+# 減衰による放射能更新
 curl -X POST http://localhost:3020/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
     "method": "pokerinput.updateSource",
     "params": {
-      "name": "cs137_source",
+      "name": "co60_medical_source",
       "inventory": [
         {
-          "nuclide": "Cs-137",
-          "radioactivity": 2.5e10
+          "nuclide": "Co-60",
+          "radioactivity": 2.8e10
         }
       ]
     },
-    "id": 19
+    "id": 20
+  }'
+
+# カットオフレートの調整
+curl -X POST http://localhost:3020/mcp \
+  -H "Content-Type: application/json" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "pokerinput.updateSource",
+    "params": {
+      "name": "mixed_source",
+      "cutoff_rate": 0.005
+    },
+    "id": 21
   }'
 ```
 
-### 📡 **pokerinput.deleteSource**
+### 🔧 **pokerinput.deleteSource**
 
-**説明**: 線源を削除します
+**説明**: 放射線源を削除します
 
 #### **パラメータ**
 ```json
 {
-  "name": "string (必須) - 削除する線源名"
+  "name": "string (必須) - 削除対象線源名"
 }
 ```
 
+#### **安全機能**
+- **存在確認**: 指定された線源の存在を確認
+- **依存関係チェック**: 将来的な参照関係の確認
+- **バックアップ対応**: 削除前の自動バックアップ
+
 #### **使用例**
 ```bash
+# 線源の削除
 curl -X POST http://localhost:3020/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
     "method": "pokerinput.deleteSource",
     "params": {
-      "name": "cs137_source"
+      "name": "unused_source"
     },
-    "id": 20
+    "id": 22
   }'
+```
+
+#### **線源管理のワークフロー例**
+```bash
+# 1. 複数線源の作成
+curl -X POST ... proposeSource (Co-60源)
+curl -X POST ... proposeSource (Cs-137源) 
+curl -X POST ... proposeSource (Am-Be中性子源)
+
+# 2. 実験に応じた位置調整
+curl -X POST ... updateSource (Co-60位置変更)
+curl -X POST ... updateSource (強度調整)
+
+# 3. 不要線源の削除
+curl -X POST ... deleteSource (古い線源)
+
+# 4. 変更の適用
+curl -X POST ... applyChanges
 ```
 
 ---

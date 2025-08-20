@@ -1,0 +1,40 @@
+{
+  "name": "pokerinput-mcp-final",
+  "version": "4.0.0",
+  "description": "フル機能版 YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support",
+  "main": "src/mcp_server_stdio_v4.js",
+  "type": "module",
+  "scripts": {
+    "start": "node src/mcp_server_stdio_v4.js",
+    "start:legacy": "node src/mcp_server_stdio.js",
+    "test": "node test/test_full_features.js",
+    "test:simple": "echo 'Simple test completed'",
+    "dev": "nodemon src/mcp_server_stdio_v4.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "yaml",
+    "radiation",
+    "shielding",
+    "nuclear",
+    "geometry",
+    "physics",
+    "validation"
+  ],
+  "author": "yoshihiro hirao",
+  "license": "ISC",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.7.0",
+    "content-type": "^1.0.5",
+    "cors": "^2.8.5",
+    "express": "^5.0.1",
+    "js-yaml": "^4.1.0",
+    "raw-body": "^3.0.0",
+    "winston": "^3.17.0",
+    "zod": "^3.24.2"
+  }
+}

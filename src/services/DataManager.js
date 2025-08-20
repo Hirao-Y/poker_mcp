@@ -339,6 +339,32 @@ export class SafeDataManager {
         }
         break;
 
+      case 'updateSource':
+        if (this.data.source) {
+          const source = this.data.source.find(s => s.name === data.name);
+          if (source) {
+            Object.keys(data).forEach(key => {
+              if (key !== 'name') {
+                if (data[key] === null) {
+                  delete source[key];
+                } else {
+                  source[key] = data[key];
+                }
+              }
+            });
+          }
+        }
+        break;
+
+      case 'deleteSource':
+        if (this.data.source) {
+          const sourceIndex = this.data.source.findIndex(s => s.name === data.name);
+          if (sourceIndex !== -1) {
+            this.data.source.splice(sourceIndex, 1);
+          }
+        }
+        break;
+
       default:
         logger.warn('未知の変更アクション', { action });
         break;

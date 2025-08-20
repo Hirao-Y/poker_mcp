@@ -10,8 +10,16 @@ export class TaskManager {
   }
 
   async initialize() {
-    await this.dataManager.initialize();
-    logger.info('TaskManagerを初期化しました');
+    // ConfigManager初期化
+    try {
+      await this.dataManager.initialize();
+      logger.info('TaskManagerを初期化しました');
+    } catch (error) {
+      // ConfigManagerが見つからない場合は警告のみ
+      logger.warn('ConfigManagerの初期化をスキップしました', { error: error.message });
+      await this.dataManager.initialize();
+      logger.info('TaskManagerを初期化しました（ConfigManagerなし）');
+    }
   }
 
   // データアクセサ
@@ -30,6 +38,25 @@ export class TaskManager {
 
   findZoneByBodyName(bodyName) {
     return this.data.zone?.find(z => z.body_name === bodyName);
+  }
+
+  findSourceByName(name) {
+    return this.data.source?.find(s => s.name === name);
+  }
+
+  validatePosition(position) {
+    if (typeof position !== 'string' || position.trim() === '') {
+      throw new ValidationError('positionは文字列で指定してください', 'position', position);
+    }
+    const coords = position.trim().split(/\s+/);
+    if (coords.length !== 3) {
+      throw new ValidationError('positionは3つの座標値（x y z）で指定してください', 'position', position);
+    }
+    for (const coord of coords) {
+      if (isNaN(Number(coord))) {
+        throw new ValidationError('positionの座標値は数値で指定してください', 'position', position);
+      }
+    }
   }
 
   validateBodyName(name) {
@@ -388,6 +415,84 @@ export class TaskManager {
       
     } catch (error) {
       logger.error('線源提案エラー', { params, error: error.message });
+      throw error;
+    }
+  }
+
+  async updateSource(name, updates) {
+    try {
+      if (!name) throw new ValidationError('線源のnameは必須です', 'name', name);
+      
+      // 既存線源の存在確認
+      const existingSource = this.findSourceByName(name);
+      if (!existingSource) {
+        throw new ValidationError(`線源 ${name} が見つかりません`, 'name', name);
+      }
+
+      // 更新内容のバリデーション
+      if (updates.position) {
+        this.validatePosition(updates.position);
+      }
+      
+      if (updates.inventory) {
+        if (!Array.isArray(updates.inventory) || updates.inventory.length === 0) {
+          throw new ValidationError('inventoryは配列で1つ以上の要素が必要です', 'inventory', updates.inventory);
+        }
+        // inventoryの検証
+        for (const item of updates.inventory) {
+          if (!item.nuclide) throw new ValidationError('inventory要素にnuclideが必要', 'nuclide', item);
+          if (typeof item.radioactivity !== 'number' || item.radioactivity < 0) {
+            throw new ValidationError('radioactivityは0以上の数値が必要', 'radioactivity', item);
+          }
+        }
+      }
+      
+      if (updates.cutoff_rate !== undefined) {
+        if (typeof updates.cutoff_rate !== 'number' || updates.cutoff_rate < 0) {
+          throw new ValidationError('cutoff_rateは0以上の数値が必要', 'cutoff_rate', updates.cutoff_rate);
+        }
+      }
+      
+      // typeの変更は禁止（物理的整合性のため）
+      if (updates.type && updates.type !== existingSource.type) {
+        throw new ValidationError('線源のtypeは変更できません', 'type', updates.type);
+      }
+      
+      await this.dataManager.addPendingChange({
+        action: 'updateSource',
+        data: { name, ...updates }
+      });
+      logger.info('線源更新を提案しました', { name, updates });
+      return `提案: 線源 ${name} の更新を保留しました`;
+      
+    } catch (error) {
+      logger.error('線源更新エラー', { name, error: error.message });
+      throw error;
+    }
+  }
+
+  async deleteSource(name) {
+    try {
+      if (!name) throw new ValidationError('線源のnameは必須です', 'name', name);
+      
+      // 既存線源の存在確認
+      const existingSource = this.findSourceByName(name);
+      if (!existingSource) {
+        throw new ValidationError(`線源 ${name} が見つかりません`, 'name', name);
+      }
+
+      // 依存関係チェック（将来の拡張用）
+      // 現在は線源を直接参照する他要素はないが、将来の機能追加に備える
+      
+      await this.dataManager.addPendingChange({
+        action: 'deleteSource',
+        data: { name }
+      });
+      logger.info('線源削除を提案しました', { name });
+      return `提案: 線源 ${name} を削除`;
+      
+    } catch (error) {
+      logger.error('線源削除エラー', { name, error: error.message });
       throw error;
     }
   }
