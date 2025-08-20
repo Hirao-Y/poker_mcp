@@ -3,7 +3,7 @@
 ## 📋 マニュアル構成
 
 **対応バージョン**: v3.0.1 Final Edition  
-**対応サーバー**: `src/mcp_server_final_fixed.js`  
+**対応サーバー**: `src/mcp_server_stdio.js`  
 **品質レベル**: 世界クラス・エンタープライズレベル  
 **最終更新**: 2025年8月17日
 

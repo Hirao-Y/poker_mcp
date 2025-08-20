@@ -5,7 +5,7 @@
   "url": "http://localhost:3020/mcp",
   "server": {
     "command": "node",
-    "args": ["src/mcp_server_final_fixed.js"],
+    "args": ["src/mcp_server_stdio.js"],
     "cwd": "C:\\Users\\yoshi\\Desktop\\poker_mcp",
     "env": {
       "NODE_ENV": "production"

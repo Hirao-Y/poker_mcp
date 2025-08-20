@@ -2,17 +2,17 @@
   "name": "pokerinput-mcp-final",
   "version": "3.0.1",
   "description": "世界クラス YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support and complete production features",
-  "main": "../src/mcp_server_final_fixed.js",
+  "main": "../src/mcp_server_stdio.js",
   "type": "module",
   "scripts": {
-    "start": "cd .. && node src/mcp_server_final_fixed.js",
-    "start:production": "cd .. && node src/mcp_server_final_fixed.js",
+    "start": "cd .. && node src/mcp_server_stdio.js",
+    "start:production": "cd .. && node src/mcp_server_stdio.js",
     "start:test": "cd .. && node src/mcp_server_test_final.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "health": "curl http://localhost:3020/health",
     "backup": "echo \"Backups are created automatically on applyChanges\"",
     "install-deps": "npm install",
-    "dev": "cd .. && nodemon src/mcp_server_final_fixed.js",
+    "dev": "cd .. && nodemon src/mcp_server_stdio.js",
     "clean": "cd .. && rm -rf logs/*.log && echo \"Logs cleaned\"",
     "check-structure": "cd .. && find . -maxdepth 2 -type d | sort"
   },
@@ -47,7 +47,7 @@
     "zod": "^3.24.2"
   },
   "files": [
-    "mcp_server_final_fixed.js",
+    "mcp_server_stdio.js",
     "mcp_server_test_final.js",
     "mcp_server.js",
     "mcp-manifest.json",
@@ -56,7 +56,7 @@
     "backups/"
   ],
   "mcp": {
-    "server": "mcp_server_final_fixed.js",
+    "server": "mcp_server_stdio.js",
     "port": 3020,
     "endpoints": {
       "jsonrpc": "/mcp",

@@ -5,7 +5,7 @@
 ## 📋 プロジェクト情報
 
 - **バージョン**: 3.0.1 (Final Fixed Edition)
-- **メインサーバー**: `src/mcp_server_final_fixed.js`
+- **メインサーバー**: `src/mcp_server_stdio.js`
 - **ポート**: 3020
 - **作者**: yoshihiro hirao
 - **ライセンス**: ISC
@@ -36,7 +36,7 @@
 ```
 poker_mcp/
 ├── 📁 src/                    # 🚀 本番ソースコード
-│   ├── 📄 mcp_server_final_fixed.js  # メインサーバー
+│   ├── 📄 mcp_server_stdio.js  # メインサーバー
 │   └── 📄 mcp_server_test_final.js   # テスト用サーバー
 ├── 📁 config/                 # ⚙️ 設定ファイル
 │   ├── 📄 package.json        # Node.js設定
@@ -150,7 +150,7 @@ npm install --prefix config/
 mkdir -p tasks backups logs
 
 # 4. サーバー起動
-node src/mcp_server_final_fixed.js
+node src/mcp_server_stdio.js
 ```
 
 ### 🎯 **起動確認**
@@ -334,7 +334,7 @@ curl http://localhost:3020/health | jq '.'
 curl http://localhost:3020/ | jq '.'
 
 # プロセス監視
-ps aux | grep mcp_server_final_fixed.js
+ps aux | grep mcp_server_stdio.js
 
 # ログ確認
 tail -f logs/combined.log
@@ -515,4 +515,4 @@ Permission to use, copy, modify, and/or distribute this software for any purpose
 **📅 最終更新**: 2025年8月17日  
 **✨ ステータス**: 本番環境対応完了
 
-**🚀 始めましょう: `node src/mcp_server_final_fixed.js`**
+**🚀 始めましょう: `node src/mcp_server_stdio.js`**

@@ -2,7 +2,7 @@
 
 **対象読者**: システム管理者・運用担当者・DevOps エンジニア  
 **運用バージョン**: 3.0.1 Final Edition  
-**対応サーバー**: `src/mcp_server_final_fixed.js`  
+**対応サーバー**: `src/mcp_server_stdio.js`  
 **品質レベル**: **エンタープライズ本番環境対応**  
 **最終更新**: 2025年8月17日
 
@@ -126,16 +126,16 @@ LOG_LEVEL=info
 # サーバー起動 (新構造)
 npm run start --prefix config/
 # または
-node src/mcp_server_final_fixed.js
+node src/mcp_server_stdio.js
 
 # サーバー起動 (本番環境)
 npm run start:production --prefix config/
 
 # サーバー停止 (グレースフル)
-pkill -SIGTERM -f mcp_server_final_fixed.js
+pkill -SIGTERM -f mcp_server_stdio.js
 
 # サーバー強制停止
-pkill -SIGKILL -f mcp_server_final_fixed.js
+pkill -SIGKILL -f mcp_server_stdio.js
 
 # サーバー再起動
 npm run restart --prefix config/
@@ -156,10 +156,10 @@ curl http://localhost:3020/metrics
 curl http://localhost:3020/ | jq '.'
 
 # プロセス監視
-ps aux | grep mcp_server_final_fixed.js
+ps aux | grep mcp_server_stdio.js
 
 # リソース使用量確認
-top -p $(pgrep -f mcp_server_final_fixed.js)
+top -p $(pgrep -f mcp_server_stdio.js)
 ```
 
 #### **ログ管理**
@@ -590,11 +590,11 @@ echo "=== データ品質チェック完了 ==="
 export NODE_OPTIONS="--max-old-space-size=4096"
 
 # 本番環境向け起動
-NODE_ENV=production node --optimize-for-size src/mcp_server_final_fixed.js
+NODE_ENV=production node --optimize-for-size src/mcp_server_stdio.js
 
 # クラスター化 (複数プロセス)
 npm install pm2 -g
-pm2 start src/mcp_server_final_fixed.js --instances max
+pm2 start src/mcp_server_stdio.js --instances max
 ```
 
 #### **2. データベース最適化**
