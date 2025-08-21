@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🎮 Poker MCP インタラクティブチュートリアル</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            color: #333;
+        }
+        .tutorial-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        .instruction-panel {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            border-left: 4px solid #007bff;
+        }
+        #code-editor {
+            width: 100%;
+            height: 300px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            resize: vertical;
+        }
+        .execute-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            margin-top: 15px;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .result-panel {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+        }
+        .result-success {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .result-error {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .result-waiting {
+            background-color: #fff3cd;
+            border: 1px solid #ffeaa7;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="tutorial-container">
+        <div class="header">
+            <h1>🎮 Poker MCP インタラクティブチュートリアル</h1>
+            <p>放射線遮蔽計算を楽しく学ぼう！</p>
+        </div>
+        
+        <div class="content">
+            <div class="instruction-panel">
+                <h3>📍 ステップ1: 最初の線源を作成しよう</h3>
+                <p>Poker MCPで放射線源を作成するためのJSONコードを完成させてください。</p>
+                
+                <div style="background: #e7f3ff; padding: 15px; border-radius: 6px; margin-top: 15px;">
+                    <h4>💡 ヒント</h4>
+                    <pre style="font-size: 12px; overflow: auto;">
+{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource", 
+  "params": {
+    "name": "ここに線源名を入力",
+    "type": "point",
+    "position": "0 0 100",
+    "inventory": [
+      {
+        "nuclide": "Co-60",
+        "radioactivity": 3.7e10
+      }
+    ]
+  },
+  "id": 1001
+}
+                    </pre>
+                </div>
+            </div>
+            
+            <div class="code-panel">
+                <h3>📝 コードエディタ</h3>
+                <textarea id="code-editor" placeholder="ここにJSONコードを入力してください...">
+{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource",
+  "params": {
+    "name": "",
+    "type": "point", 
+    "position": "0 0 100",
+    "inventory": [
+      {
+        "nuclide": "Co-60",
+        "radioactivity": 3.7e10
+      }
+    ]
+  },
+  "id": 1001
+}
+                </textarea>
+                
+                <button class="execute-btn" onclick="executeCode()">
+                    🚀 実行
+                </button>
+                
+                <div class="result-panel result-waiting" id="result-panel">
+                    <span>⏳ コードを入力して実行ボタンを押してください</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function executeCode() {
+            const code = document.getElementById('code-editor').value;
+            const resultPanel = document.getElementById('result-panel');
+            
+            try {
+                const parsed = JSON.parse(code);
+                
+                if (parsed.method === 'pokerinput_proposeSource' && 
+                    parsed.params?.name && 
+                    parsed.params.name.trim() !== '') {
+                    
+                    resultPanel.className = 'result-panel result-success';
+                    resultPanel.innerHTML = `
+                        <span>✅ 成功！線源 "${parsed.params.name}" の作成に成功しました！<br>
+                        素晴らしいです！次は立体を作成してみましょう。</span>
+                    `;
+                } else {
+                    resultPanel.className = 'result-panel result-error';
+                    resultPanel.innerHTML = `
+                        <span>❌ エラー: "name" フィールドに適切な線源名を入力してください</span>
+                    `;
+                }
+            } catch (e) {
+                resultPanel.className = 'result-panel result-error';
+                resultPanel.innerHTML = `
+                    <span>❌ JSON構文エラー: ${e.message}</span>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>
