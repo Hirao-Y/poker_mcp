@@ -44,6 +44,10 @@ export class TaskManager {
     return this.data.source?.find(s => s.name === name);
   }
 
+  findDetectorByName(name) {
+    return this.data.detector?.find(d => d.name === name);
+  }
+
   validatePosition(position) {
     if (typeof position !== 'string' || position.trim() === '') {
       throw new ValidationError('positionは文字列で指定してください', 'position', position);
@@ -77,6 +81,65 @@ export class TaskManager {
       return coords.join(' ');
     }
     return coordString;
+  }
+
+  // グリッドデータ正規化（検出器用）
+  normalizeGridData(grid) {
+    if (!Array.isArray(grid)) return grid;
+    
+    return grid.map(gridItem => ({
+      edge: this.normalizeCoordinates(gridItem.edge),
+      number: Number(gridItem.number)
+    }));
+  }
+
+  // 検出器バリデーション
+  validateDetectorData(name, origin, grid) {
+    // 名前バリデーション
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      throw new ValidationError('検出器名は必須です', 'name', name);
+    }
+    if (name.length > 50) {
+      throw new ValidationError('検出器名は50文字以内で指定してください', 'name', name);
+    }
+    
+    // 座標バリデーション
+    this.validatePosition(origin);
+    
+    // グリッドバリデーション
+    if (grid && Array.isArray(grid)) {
+      if (grid.length > 3) {
+        throw new ValidationError('gridの次元は3次元以下である必要があります', 'grid', grid);
+      }
+      for (const gridItem of grid) {
+        if (!gridItem.edge || !gridItem.number) {
+          throw new ValidationError('gridの各要素にはedgeとnumberが必要です', 'grid', gridItem);
+        }
+        this.validatePosition(gridItem.edge);
+        if (!Number.isInteger(gridItem.number) || gridItem.number <= 0) {
+          throw new ValidationError('gridのnumberは正の整数である必要があります', 'number', gridItem.number);
+        }
+      }
+    }
+  }
+
+  // グリッドデータのバリデーション（更新用）
+  validateGridData(grid) {
+    if (!Array.isArray(grid)) {
+      throw new ValidationError('gridは配列である必要があります', 'grid', grid);
+    }
+    if (grid.length > 3) {
+      throw new ValidationError('gridの次元は3次元以下である必要があります', 'grid', grid);
+    }
+    for (const gridItem of grid) {
+      if (!gridItem.edge || !gridItem.number) {
+        throw new ValidationError('gridの各要素にはedgeとnumberが必要です', 'grid', gridItem);
+      }
+      this.validatePosition(gridItem.edge);
+      if (!Number.isInteger(gridItem.number) || gridItem.number <= 0) {
+        throw new ValidationError('gridのnumberは正の整数である必要があります', 'number', gridItem.number);
+      }
+    }
   }
   // 立体関連メソッド
   async proposeBody(name, type, options = {}) {
@@ -559,6 +622,105 @@ export class TaskManager {
       
     } catch (error) {
       logger.error('ゾーン更新エラー', { bodyName, error: error.message });
+      throw error;
+    }
+  }
+
+  // Detector操作
+  async proposeDetector(name, origin, grid = [], show_path_trace = false) {
+    try {
+      // 入力バリデーション
+      this.validateDetectorData(name, origin, grid);
+
+      // 重複チェック
+      if (this.findDetectorByName(name)) {
+        throw new ValidationError(`検出器名 ${name} は既に存在します`, 'name', name);
+      }
+
+      const newDetector = {
+        name,
+        origin: this.normalizeCoordinates(origin),
+        grid: this.normalizeGridData(grid),
+        show_path_trace
+      };
+      
+      await this.dataManager.addPendingChange({
+        action: 'proposeDetector',
+        data: newDetector
+      });
+
+      logger.info('検出器を提案しました', { name, origin, gridDimensions: grid.length });
+      return `提案: 検出器 ${name} を追加`;
+      
+    } catch (error) {
+      logger.error('検出器提案エラー', { name, origin, error: error.message });
+      throw error;
+    }
+  }
+
+  async updateDetector(name, updates) {
+    try {
+      if (!name) throw new ValidationError('検出器のnameは必須です', 'name', name);
+      
+      // 既存検出器の存在確認
+      const existingDetector = this.findDetectorByName(name);
+      if (!existingDetector) {
+        throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
+      }
+
+      // 更新内容のバリデーションと正規化
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.origin) {
+        this.validatePosition(normalizedUpdates.origin);
+        normalizedUpdates.origin = this.normalizeCoordinates(normalizedUpdates.origin);
+      }
+      
+      if (normalizedUpdates.grid) {
+        this.validateGridData(normalizedUpdates.grid);
+        normalizedUpdates.grid = this.normalizeGridData(normalizedUpdates.grid);
+      }
+      
+      if (normalizedUpdates.show_path_trace !== undefined) {
+        if (typeof normalizedUpdates.show_path_trace !== 'boolean') {
+          throw new ValidationError('show_path_traceは真偽値である必要があります', 'show_path_trace', normalizedUpdates.show_path_trace);
+        }
+      }
+      
+      await this.dataManager.addPendingChange({
+        action: 'updateDetector',
+        data: { name, ...normalizedUpdates }
+      });
+      logger.info('検出器更新を提案しました', { name, updates: normalizedUpdates });
+      return `提案: 検出器 ${name} の更新を保留しました`;
+      
+    } catch (error) {
+      logger.error('検出器更新エラー', { name, error: error.message });
+      throw error;
+    }
+  }
+
+  async deleteDetector(name) {
+    try {
+      if (!name) throw new ValidationError('検出器のnameは必須です', 'name', name);
+      
+      // 既存検出器の存在確認
+      const existingDetector = this.findDetectorByName(name);
+      if (!existingDetector) {
+        throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
+      }
+
+      // 依存関係チェック（将来の拡張用）
+      // 現在は検出器を直接参照する他要素はないが、将来の機能追加に備える
+      
+      await this.dataManager.addPendingChange({
+        action: 'deleteDetector',
+        data: { name }
+      });
+      logger.info('検出器削除を提案しました', { name });
+      return `提案: 検出器 ${name} を削除`;
+      
+    } catch (error) {
+      logger.error('検出器削除エラー', { name, error: error.message });
       throw error;
     }
   }

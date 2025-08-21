@@ -1,6 +1,6 @@
 {
   "name": "pokerinput-mcp-final",
-  "version": "4.0.0",
+  "version": "3.0.1",
   "description": "世界クラス YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support and complete production features",
   "main": "../src/mcp_server_stdio_v4.js",
   "type": "module",

@@ -40,7 +40,7 @@ export class SafeDataManager {
     } catch (error) {
       if (error.code === 'ENOENT') {
         logger.warn('YAMLファイルが見つかりません。初期データを作成します', { file: this.yamlFile });
-        this.data = { body: [], zone: [], transform: [], buildup_factor: [], source: [] };
+        this.data = { body: [], zone: [], transform: [], buildup_factor: [], source: [], detector: [] };
         await this.saveData();
       } else {
         logger.error('YAMLファイルの読み込みに失敗しました', { error: error.message });
@@ -363,6 +363,47 @@ export class SafeDataManager {
           const sourceIndex = this.data.source.findIndex(s => s.name === data.name);
           if (sourceIndex !== -1) {
             this.data.source.splice(sourceIndex, 1);
+          }
+        }
+        break;
+
+      case 'proposeDetector':
+        if (!this.data.detector) this.data.detector = [];
+        const existingDetector = this.data.detector.find(d => d.name === data.name);
+        if (existingDetector) {
+          Object.assign(existingDetector, data);
+        } else {
+          this.data.detector.push({
+            name: data.name,
+            origin: data.origin,
+            grid: data.grid || [],
+            show_path_trace: data.show_path_trace || false
+          });
+        }
+        break;
+
+      case 'updateDetector':
+        if (this.data.detector) {
+          const detector = this.data.detector.find(d => d.name === data.name);
+          if (detector) {
+            Object.keys(data).forEach(key => {
+              if (key !== 'name') {
+                if (data[key] === null) {
+                  delete detector[key];
+                } else {
+                  detector[key] = data[key];
+                }
+              }
+            });
+          }
+        }
+        break;
+
+      case 'deleteDetector':
+        if (this.data.detector) {
+          const detectorIndex = this.data.detector.findIndex(d => d.name === data.name);
+          if (detectorIndex !== -1) {
+            this.data.detector.splice(detectorIndex, 1);
           }
         }
         break;

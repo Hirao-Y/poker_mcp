@@ -4,6 +4,7 @@ import { createZoneHandlers } from './zoneHandlers.js';
 import { createTransformHandlers } from './transformHandlers.js';
 import { createBuildupFactorHandlers } from './buildupFactorHandlers.js';
 import { createSourceHandlers } from './sourceHandlers.js';
+import { createDetectorHandlers } from './detectorHandlers.js';
 
 export function createAllHandlers(taskManager) {
   return {
@@ -21,6 +22,9 @@ export function createAllHandlers(taskManager) {
     
     // 線源操作
     ...createSourceHandlers(taskManager),
+    
+    // 検出器操作
+    ...createDetectorHandlers(taskManager),
     
     // 共通操作
     async applyChanges(args) {

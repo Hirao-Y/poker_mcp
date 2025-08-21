@@ -4,6 +4,7 @@ import { zoneTools } from './zoneTools.js';
 import { transformTools } from './transformTools.js';
 import { buildupFactorTools } from './buildupFactorTools.js';
 import { sourceTools } from './sourceTools.js';
+import { detectorTools } from './detectorTools.js';
 import { commonTools } from './commonTools.js';
 
 export const allTools = [
@@ -12,6 +13,7 @@ export const allTools = [
   ...transformTools,
   ...buildupFactorTools,
   ...sourceTools,
+  ...detectorTools,
   ...commonTools
 ];
 
@@ -21,5 +23,6 @@ export {
   transformTools,
   buildupFactorTools,
   sourceTools,
+  detectorTools,
   commonTools
 };
