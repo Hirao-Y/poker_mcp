@@ -53,7 +53,11 @@
         },
         "center": {
           "type": "string",
-          "description": "中心座標（x y z形式、SPH用）"
+          "description": "中心座標（x y z形式、SPH,ELL,TOR用）"
+        },
+        "bottom_center": {
+          "type": "string",
+          "description": "底面中心座標（x y z形式、RCC,TRC,REC用）"
         },
         "radius": {
           "type": "number",
@@ -66,6 +70,74 @@
         "max": {
           "type": "string",
           "description": "最大座標（RPP用、x y z形式）"
+        },
+        "vertex": {
+          "type": "string",
+          "description": "頂点（BOX,WED用、x y z形式）"
+        },
+        "edge_1": {
+          "type": "string",
+          "description": "エッジ1ベクトル（BOX用、x y z形式）"
+        },
+        "edge_2": {
+          "type": "string",
+          "description": "エッジ2ベクトル（BOX用、x y z形式）"
+        },
+        "edge_3": {
+          "type": "string",
+          "description": "エッジ3ベクトル（BOX用、x y z形式）"
+        },
+        "width_vector": {
+          "type": "string",
+          "description": "幅ベクトル（WED用、x y z形式）"
+        },
+        "height_vector": {
+          "type": "string",
+          "description": "高さベクトル（BOX用、x y z形式）"
+        },
+        "depth_vector": {
+          "type": "string",
+          "description": "深さベクトル（BOX用、x y z形式）"
+        },
+        "bottom_radius": {
+          "type": "number",
+          "description": "底面半径（TRC用）"
+        },
+        "top_radius": {
+          "type": "number",
+          "description": "上面半径（TRC用）"
+        },
+        "radius_vector_1": {
+          "type": "string",
+          "description": "半径ベクトル1（REC,ELL用）"
+        },
+        "radius_vector_2": {
+          "type": "string",
+          "description": "半径ベクトル2（REC,ELL用）"
+        },
+        "radius_vector_3": {
+          "type": "string",
+          "description": "半径ベクトル3（ELL用）"
+        },
+        "normal": {
+          "type": "string",
+          "description": "法線ベクトル（TOR用）"
+        },
+        "major_radius": {
+          "type": "number",
+          "description": "主半径（TOR用）"
+        },
+        "minor_radius_horizontal": {
+          "type": "number",
+          "description": "水平方向の副半径（TOR用）"
+        },
+        "minor_radius_vertical": {
+          "type": "number",
+          "description": "垂直方向の副半径（TOR用）"
+        },
+        "expression": {
+          "type": "string",
+          "description": "演算式（CMB用）"
         }
       }
     },
@@ -85,6 +157,86 @@
         "center": {
           "type": "string",
           "description": "新しい中心座標"
+        },
+        "bottom_center": {
+          "type": "string",
+          "description": "新しい底面中心座標（x y z形式、RCC,TRC,REC用）"
+        },
+        "min": {
+          "type": "string",
+          "description": "新しい最小座標（RPP用、x y z形式）"
+        },
+        "max": {
+          "type": "string",
+          "description": "新しい最大座標（RPP用、x y z形式）"
+        },
+        "vertex": {
+          "type": "string",
+          "description": "新しい頂点（BOX,WED用、x y z形式）"
+        },
+        "edge_1": {
+          "type": "string",
+          "description": "新しいエッジ1ベクトル（BOX用、x y z形式）"
+        },
+        "edge_2": {
+          "type": "string",
+          "description": "新しいエッジ2ベクトル（BOX用、x y z形式）"
+        },
+        "edge_3": {
+          "type": "string",
+          "description": "新しいエッジ3ベクトル（BOX用、x y z形式）"
+        },
+        "width_vector": {
+          "type": "string",
+          "description": "新しい幅ベクトル（WED用、x y z形式）"
+        },
+        "height_vector": {
+          "type": "string",
+          "description": "新しい高さベクトル（BOX用、x y z形式）"
+        },
+        "depth_vector": {
+          "type": "string",
+          "description": "新しい深さベクトル（BOX用、x y z形式）"
+        },
+        "bottom_radius": {
+          "type": "number",
+          "description": "新しい底面半径（TRC用）"
+        },
+        "top_radius": {
+          "type": "number",
+          "description": "新しい上面半径（TRC用）"
+        },
+        "radius_vector_1": {
+          "type": "string",
+          "description": "新しい半径ベクトル1（REC,ELL用）"
+        },
+        "radius_vector_2": {
+          "type": "string",
+          "description": "新しい半径ベクトル2（REC,ELL用）"
+        },
+        "radius_vector_3": {
+          "type": "string",
+          "description": "新しい半径ベクトル3（ELL用）"
+        },
+        "normal": {
+          "type": "string",
+          "description": "新しい法線ベクトル（TOR用）"
+        },
+        "major_radius": {
+          "type": "number",
+          "description": "新しい主半径（TOR用）"
+        },
+        "minor_radius_horizontal": {
+          "type": "number",
+          "description": "新しい水平方向の副半径（TOR用）"
+        },
+        "minor_radius_vertical": {
+          "type": "number",
+          "description": "新しい垂直方向の副半径（TOR用）"
+        },
+        "expression": {
+          "type": "string",
+          "description": "新しい演算式（CMB用）"
         }
       }
     },
@@ -155,7 +307,7 @@
       "parameters": {
         "name": {
           "type": "string",
-          "description": "変換の名前",
+          "description": "変換の名前（一意である必要があります）",
           "required": true
         },
         "operation": {
@@ -261,7 +413,7 @@
       "parameters": {
         "name": {
           "type": "string",
-          "description": "線源の名前",
+          "description": "線源の名前（一意である必要があります）",
           "required": true
         },
         "type": {
@@ -271,17 +423,24 @@
         },
         "position": {
           "type": "string",
-          "description": "線源の位置（x y z形式）",
-          "required": true
+          "description": "線源の位置（x y z形式）"
         },
         "inventory": {
           "type": "array",
-          "description": "核種と放射能のリスト",
+          "description": "核種と放射能の組の配列（nuclideとradioactivityの組）",
           "required": true
+        },
+        "geometry": {
+          "type": "array",
+          "description": "線源タイプの形状パラメータ"
+        },
+        "division": {
+          "type": "array",
+          "description": "POINT以外の線源タイプに対する領域分割パラメータ"
         },
         "cutoff_rate": {
           "type": "number",
-          "description": "カットオフレート（デフォルト: 0.0001）"
+          "description": "放出率カットオフ（デフォルト: 0.0001）"
         }
       }
     },
@@ -293,6 +452,31 @@
           "type": "string",
           "description": "更新する線源の名前",
           "required": true
+        },
+        "type": {
+          "type": "string",
+          "description": "新しい線源のタイプ（POINT等）"
+        },
+        "position": {
+          "type": "string",
+          "description": "新しい線源の位置（x y z形式）"
+        },
+        "inventory": {
+          "type": "array",
+          "description": "新しい核種と放射能の組の配列（nuclideとradioactivityの組）",
+          "required": true
+        },
+        "geometry": {
+          "type": "array",
+          "description": "新しい線源タイプの形状パラメータ"
+        },
+        "division": {
+          "type": "array",
+          "description": "新しいPOINT以外の線源タイプに対する領域分割パラメータ"
+        },
+        "cutoff_rate": {
+          "type": "number",
+          "description": "新しい放出率カットオフ（デフォルト: 0.0001）"
         }
       }
     },
@@ -303,6 +487,64 @@
         "name": {
           "type": "string",
           "description": "削除する線源の名前",
+          "required": true
+        }
+      }
+    },
+    {
+      "name": "pokerinput_proposeDetector",
+      "description": "新しい検出器を提案します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "検出器の名前（一意である必要があります）",
+          "required": true
+        },
+        "origin": {
+          "type": "string",
+          "description": "検出器の基準位置（x y z形式）",
+          "required": true
+        },
+        "grid": {
+          "type": "array",
+          "description": "エッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）"
+        },
+        "show_path_trace": {
+          "type": "boolean",
+          "description": "透過線の経路トレースをサマリーに出力するか"
+        }
+      }
+    },
+    {
+      "name": "pokerinput_updateDetector",
+      "description": "既存検出器のパラメータを更新します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "更新する検出器の名前",
+          "required": true
+        },
+        "origin": {
+          "type": "string",
+          "description": "新しい検出器の基準位置（x y z形式）"
+        },
+        "grid": {
+          "type": "array",
+          "description": "新しいエッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）"
+        },
+        "show_path_trace": {
+          "type": "boolean",
+          "description": "透過線の経路トレースをサマリーに出力するか"
+        }
+      }
+    },
+    {
+      "name": "pokerinput_deleteDetector",
+      "description": "検出器を削除します",
+      "parameters": {
+        "name": {
+          "type": "string",
+          "description": "削除する検出器の名前",
           "required": true
         }
       }
@@ -328,7 +570,30 @@
     "body_types": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"],
     "required_parameters": {
       "SPH": ["name", "type", "center", "radius"],
-      "RPP": ["name", "type", "min", "max"]
+      "RPP": ["name", "type", "min", "max"],
+      "BOX": ["name", "type", "vertex", "edge_1", "edge_2", "edge_3"],
+      "WED": ["name", "type", "vertex", "width_vector", "height_vector", "depth_vector"],
+      "RCC": ["name", "type", "bottom_center", "height_vector", "radius"],
+      "TRC": ["name", "type", "bottom_center", "height_vector", "bottom_radius", "top_radius"],
+      "REC": ["name", "type", "bottom_center", "height_vector", "radius_vector_1", "radius_vector_2"],
+      "ELL": ["name", "type", "center", "radius_vector_1", "radius_vector_2", "radius_vector_3"],
+      "TOR": ["name", "type", "center", "normal", "major_radius", "minor_radius_horizontal", "minor_radius_vertical"],
+      "CMB": ["name", "type", "expression"]
+    },
+    "source_types": ["POINT", "BOX", "RPP", "SPH", "RCC"],
+    "required_parameters_source": {
+      "POINT": ["name", "type", "position", "inventory", "cutoff_rate"],
+      "SPH": ["name", "type", "geometry", "division", "inventory", "cutoff_rate"],
+      "RPP": ["name", "type", "geometry", "division", "inventory", "cutoff_rate"],
+      "BOX": ["name", "type", "geometry", "division", "inventory", "cutoff_rate"],
+      "RCC": ["name", "type", "geometry", "division", "inventory", "cutoff_rate"]
+    },
+    "detector_types": ["POINT", "GRID_1D", "GRID_2D", "GRID_3D"],
+    "required_parameters_detector": {
+      "POINT": ["name", "origin", "show_path_trace"],
+      "GRID_1D": ["name", "origin", "grid", "show_path_trace"],
+      "GRID_2D": ["name", "origin", "grid", "show_path_trace"],
+      "GRID_3D": ["name", "origin", "grid", "show_path_trace"]
     },
     "protected_zones": ["ATMOSPHERE"]
   },
