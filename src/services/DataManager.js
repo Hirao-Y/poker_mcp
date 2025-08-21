@@ -103,10 +103,12 @@ export class SafeDataManager {
     try {
       await this.createBackup();
       const yamlData = yaml.dump(this.data, { 
-        flowLevel: 2,
-        lineWidth: 120,
-        noRefs: true 
-      });
+      flowLevel: 2,
+      lineWidth: 120,
+      noRefs: true,
+        quotingType: '"',
+      forceQuotes: false
+    });
       await fs.writeFile(this.yamlFile, yamlData, 'utf8');
       logger.info('YAMLデータを保存しました', { file: this.yamlFile });
     } catch (error) {

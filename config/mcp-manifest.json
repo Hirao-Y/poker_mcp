@@ -7,7 +7,7 @@
   "homepage": "http://localhost:3020",
   "repository": {
     "type": "git",
-    "url": "https://github.com/your-repo/pokerinput-mcp-final"
+    "url": "https://github.com/Hirao-Y/pokerinput-mcp-final"
   },
   "mcp_version": "1.0.0",
   "server": {

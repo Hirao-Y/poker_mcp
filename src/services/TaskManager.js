@@ -67,6 +67,17 @@ export class TaskManager {
       throw new ValidationError('立体名は50文字以内で指定してください', 'name', name);
     }
   }
+
+  // 座標文字列を正規化（引用符なしの数値として処理）
+  normalizeCoordinates(coordString) {
+    if (typeof coordString !== 'string') return coordString;
+    // "x y z" 形式の文字列を数値として正規化
+    const coords = coordString.trim().split(/\s+/).map(Number);
+    if (coords.length === 3 && coords.every(n => !isNaN(n))) {
+      return coords.join(' ');
+    }
+    return coordString;
+  }
   // 立体関連メソッド
   async proposeBody(name, type, options = {}) {
     try {
@@ -98,26 +109,26 @@ export class TaskManager {
   createBodyObject(name, type, options) {
     const body = { name, type };
     
-    // 型別のパラメータ設定
+    // 型別のパラメータ設定（座標の正規化適用）
     switch (type) {
       case 'SPH':
-        body.center = options.center;
+        body.center = this.normalizeCoordinates(options.center);
         body.radius = Number(options.radius);
         break;
       case 'RCC':
-        body.bottom_center = options.bottom_center;
-        body.height_vector = options.height_vector;
+        body.bottom_center = this.normalizeCoordinates(options.bottom_center);
+        body.height_vector = this.normalizeCoordinates(options.height_vector);
         body.radius = Number(options.radius);
         break;
       case 'RPP':
-        body.min = options.min;
-        body.max = options.max;
+        body.min = this.normalizeCoordinates(options.min);
+        body.max = this.normalizeCoordinates(options.max);
         break;
       case 'BOX':
-        body.vertex = options.vertex;
-        body.edge_1 = options.edge_1;
-        body.edge_2 = options.edge_2;
-        body.edge_3 = options.edge_3;
+        body.vertex = this.normalizeCoordinates(options.vertex);
+        body.edge_1 = this.normalizeCoordinates(options.edge_1);
+        body.edge_2 = this.normalizeCoordinates(options.edge_2);
+        body.edge_3 = this.normalizeCoordinates(options.edge_3);
         break;
       case 'CMB':
         body.expression = options.expression;
@@ -406,9 +417,15 @@ export class TaskManager {
         if (typeof item.radioactivity !== 'number') throw new ValidationError('inventory要素にradioactivityが必要', 'radioactivity', item);
       }
       
+      // 座標データの正規化
+      const normalizedParams = {
+        ...params,
+        position: this.normalizeCoordinates(position)
+      };
+      
       await this.dataManager.addPendingChange({
         action: 'proposeSource',
-        data: params
+        data: normalizedParams
       });
       logger.info('線源提案を追加しました', { name, type });
       return `提案: 線源 ${name} を追加`;
@@ -429,17 +446,19 @@ export class TaskManager {
         throw new ValidationError(`線源 ${name} が見つかりません`, 'name', name);
       }
 
-      // 更新内容のバリデーション
-      if (updates.position) {
-        this.validatePosition(updates.position);
+      // 更新内容のバリデーションと正規化
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.position) {
+        this.validatePosition(normalizedUpdates.position);
+        normalizedUpdates.position = this.normalizeCoordinates(normalizedUpdates.position);
       }
       
-      if (updates.inventory) {
-        if (!Array.isArray(updates.inventory) || updates.inventory.length === 0) {
-          throw new ValidationError('inventoryは配列で1つ以上の要素が必要です', 'inventory', updates.inventory);
+      if (normalizedUpdates.inventory) {
+        if (!Array.isArray(normalizedUpdates.inventory) || normalizedUpdates.inventory.length === 0) {
+          throw new ValidationError('inventoryは配列で1つ以上の要素が必要です', 'inventory', normalizedUpdates.inventory);
         }
         // inventoryの検証
-        for (const item of updates.inventory) {
+        for (const item of normalizedUpdates.inventory) {
           if (!item.nuclide) throw new ValidationError('inventory要素にnuclideが必要', 'nuclide', item);
           if (typeof item.radioactivity !== 'number' || item.radioactivity < 0) {
             throw new ValidationError('radioactivityは0以上の数値が必要', 'radioactivity', item);
@@ -447,22 +466,22 @@ export class TaskManager {
         }
       }
       
-      if (updates.cutoff_rate !== undefined) {
-        if (typeof updates.cutoff_rate !== 'number' || updates.cutoff_rate < 0) {
-          throw new ValidationError('cutoff_rateは0以上の数値が必要', 'cutoff_rate', updates.cutoff_rate);
+      if (normalizedUpdates.cutoff_rate !== undefined) {
+        if (typeof normalizedUpdates.cutoff_rate !== 'number' || normalizedUpdates.cutoff_rate < 0) {
+          throw new ValidationError('cutoff_rateは0以上の数値が必要', 'cutoff_rate', normalizedUpdates.cutoff_rate);
         }
       }
       
       // typeの変更は禁止（物理的整合性のため）
-      if (updates.type && updates.type !== existingSource.type) {
-        throw new ValidationError('線源のtypeは変更できません', 'type', updates.type);
+      if (normalizedUpdates.type && normalizedUpdates.type !== existingSource.type) {
+        throw new ValidationError('線源のtypeは変更できません', 'type', normalizedUpdates.type);
       }
       
       await this.dataManager.addPendingChange({
         action: 'updateSource',
-        data: { name, ...updates }
+        data: { name, ...normalizedUpdates }
       });
-      logger.info('線源更新を提案しました', { name, updates });
+      logger.info('線源更新を提案しました', { name, updates: normalizedUpdates });
       return `提案: 線源 ${name} の更新を保留しました`;
       
     } catch (error) {
@@ -502,12 +521,24 @@ export class TaskManager {
     try {
       if (!name) throw new ValidationError('立体のnameは必須です', 'name', name);
       
+      // 座標データの正規化
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.min) normalizedUpdates.min = this.normalizeCoordinates(normalizedUpdates.min);
+      if (normalizedUpdates.max) normalizedUpdates.max = this.normalizeCoordinates(normalizedUpdates.max);
+      if (normalizedUpdates.center) normalizedUpdates.center = this.normalizeCoordinates(normalizedUpdates.center);
+      if (normalizedUpdates.bottom_center) normalizedUpdates.bottom_center = this.normalizeCoordinates(normalizedUpdates.bottom_center);
+      if (normalizedUpdates.height_vector) normalizedUpdates.height_vector = this.normalizeCoordinates(normalizedUpdates.height_vector);
+      if (normalizedUpdates.vertex) normalizedUpdates.vertex = this.normalizeCoordinates(normalizedUpdates.vertex);
+      if (normalizedUpdates.edge_1) normalizedUpdates.edge_1 = this.normalizeCoordinates(normalizedUpdates.edge_1);
+      if (normalizedUpdates.edge_2) normalizedUpdates.edge_2 = this.normalizeCoordinates(normalizedUpdates.edge_2);
+      if (normalizedUpdates.edge_3) normalizedUpdates.edge_3 = this.normalizeCoordinates(normalizedUpdates.edge_3);
+      
       await this.dataManager.addPendingChange({
         action: 'updateBody',
-        data: { name, ...updates }
+        data: { name, ...normalizedUpdates }
       });
-      logger.info('立体更新を提案しました', { name, updates });
-      return `提案: 立体 ${name} の更新を保留しました: ${JSON.stringify(updates)}`;
+      logger.info('立体更新を提案しました', { name, updates: normalizedUpdates });
+      return `提案: 立体 ${name} の更新を保留しました: ${JSON.stringify(normalizedUpdates)}`;
       
     } catch (error) {
       logger.error('立体更新エラー', { name, error: error.message });

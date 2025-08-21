@@ -96,7 +96,13 @@ class TaskManager {
   saveYamlData(data = this.data) {
     try {
       this.createBackup();
-      const yamlString = yaml.dump(data, { flowLevel: 2, lineWidth: 120 });
+      const yamlString = yaml.dump(data, { 
+        flowLevel: 2, 
+        lineWidth: 120,
+        quotingType: '"',
+        forceQuotes: false,
+        noRefs: true
+      });
       fs.writeFileSync(this.yamlFile, yamlString, 'utf8');
       console.log('YAMLデータ保存完了');
     } catch (error) {
@@ -123,6 +129,17 @@ class TaskManager {
     return this.data.zone?.find(zone => zone.body_name === name) || null;
   }
 
+  // 座標文字列を正規化（引用符なしの数値として処理）
+  normalizeCoordinates(coordString) {
+    if (typeof coordString !== 'string') return coordString;
+    // "x y z" 形式の文字列を数値として正規化
+    const coords = coordString.trim().split(/\s+/).map(Number);
+    if (coords.length === 3 && coords.every(n => !isNaN(n))) {
+      return coords.join(' ');
+    }
+    return coordString;
+  }
+
   // 立体提案
   proposeBody(name, type, options = {}) {
     try {
@@ -138,7 +155,17 @@ class TaskManager {
         throw new Error(`無効な立体タイプ: ${type}. 有効なタイプ: ${validTypes.join(', ')}`);
       }
 
-      const newBody = { name, type, ...options };
+      // 座標データの正規化
+      const normalizedOptions = { ...options };
+      if (normalizedOptions.min) normalizedOptions.min = this.normalizeCoordinates(normalizedOptions.min);
+      if (normalizedOptions.max) normalizedOptions.max = this.normalizeCoordinates(normalizedOptions.max);
+      if (normalizedOptions.center) normalizedOptions.center = this.normalizeCoordinates(normalizedOptions.center);
+      if (normalizedOptions.position) normalizedOptions.position = this.normalizeCoordinates(normalizedOptions.position);
+      if (normalizedOptions.bottom_center) normalizedOptions.bottom_center = this.normalizeCoordinates(normalizedOptions.bottom_center);
+      if (normalizedOptions.height_vector) normalizedOptions.height_vector = this.normalizeCoordinates(normalizedOptions.height_vector);
+      if (normalizedOptions.vertex) normalizedOptions.vertex = this.normalizeCoordinates(normalizedOptions.vertex);
+
+      const newBody = { name, type, ...normalizedOptions };
       
       this.pendingChanges.push({ 
         action: "add_body", 
@@ -160,16 +187,26 @@ class TaskManager {
     try {
       if (!name) throw new Error('立体名は必須です');
       
+      // 座標データの正規化
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.min) normalizedUpdates.min = this.normalizeCoordinates(normalizedUpdates.min);
+      if (normalizedUpdates.max) normalizedUpdates.max = this.normalizeCoordinates(normalizedUpdates.max);
+      if (normalizedUpdates.center) normalizedUpdates.center = this.normalizeCoordinates(normalizedUpdates.center);
+      if (normalizedUpdates.position) normalizedUpdates.position = this.normalizeCoordinates(normalizedUpdates.position);
+      if (normalizedUpdates.bottom_center) normalizedUpdates.bottom_center = this.normalizeCoordinates(normalizedUpdates.bottom_center);
+      if (normalizedUpdates.height_vector) normalizedUpdates.height_vector = this.normalizeCoordinates(normalizedUpdates.height_vector);
+      if (normalizedUpdates.vertex) normalizedUpdates.vertex = this.normalizeCoordinates(normalizedUpdates.vertex);
+      
       this.pendingChanges.push({ 
         action: "update_body", 
         name, 
-        updates,
+        updates: normalizedUpdates,
         timestamp: new Date().toISOString()
       });
       this.savePendingChanges();
       
-      console.log('立体更新提案:', { name, updates });
-      return `提案: 立体 ${name} の更新を保留しました: ${JSON.stringify(updates)}`;
+      console.log('立体更新提案:', { name, updates: normalizedUpdates });
+      return `提案: 立体 ${name} の更新を保留しました: ${JSON.stringify(normalizedUpdates)}`;
     } catch (error) {
       console.error('立体更新エラー:', { name, error: error.message });
       throw error;
@@ -434,10 +471,13 @@ class TaskManager {
         if (typeof item.radioactivity !== 'number') throw new Error('inventory要素にradioactivityが必要');
       }
 
+      // 座標データの正規化
+      const normalizedPosition = this.normalizeCoordinates(position);
+
       this.pendingChanges.push({ 
         action: "add_source", 
         source: {
-          name, type, position, inventory, 
+          name, type, position: normalizedPosition, inventory, 
           cutoff_rate: cutoff_rate || 0.0001
         },
         timestamp: new Date().toISOString()
@@ -457,26 +497,32 @@ class TaskManager {
     try {
       if (!name) throw new Error('線源名は必須です');
       
+      // 座標データの正規化
+      const normalizedUpdates = { ...updates };
+      if (normalizedUpdates.position) {
+        normalizedUpdates.position = this.normalizeCoordinates(normalizedUpdates.position);
+      }
+      
       // 更新パラメータの検証
-      if (updates.type) {
+      if (normalizedUpdates.type) {
         const validTypes = ['POINT', 'BOX', 'RPP', 'SPH', 'RCC'];
-        if (!validTypes.includes(updates.type)) {
-          throw new Error(`無効な線源タイプ: ${updates.type}. 有効なタイプ: ${validTypes.join(', ')}`);
+        if (!validTypes.includes(normalizedUpdates.type)) {
+          throw new Error(`無効な線源タイプ: ${normalizedUpdates.type}. 有効なタイプ: ${validTypes.join(', ')}`);
         }
       }
       
-      if (updates.position) {
+      if (normalizedUpdates.position) {
         const positionPattern = /^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$/;
-        if (!positionPattern.test(updates.position)) {
+        if (!positionPattern.test(normalizedUpdates.position)) {
           throw new Error('positionは "x y z" 形式で指定してください');
         }
       }
       
-      if (updates.inventory) {
-        if (!Array.isArray(updates.inventory) || updates.inventory.length === 0) {
+      if (normalizedUpdates.inventory) {
+        if (!Array.isArray(normalizedUpdates.inventory) || normalizedUpdates.inventory.length === 0) {
           throw new Error('inventoryは1つ以上の要素が必要です');
         }
-        for (const item of updates.inventory) {
+        for (const item of normalizedUpdates.inventory) {
           if (!item.nuclide) throw new Error('inventory要素にnuclideが必要');
           if (typeof item.radioactivity !== 'number' || item.radioactivity <= 0) {
             throw new Error('inventory要素のradioactivityは正数である必要があります');
@@ -484,8 +530,8 @@ class TaskManager {
         }
       }
       
-      if (updates.cutoff_rate !== undefined) {
-        if (typeof updates.cutoff_rate !== 'number' || updates.cutoff_rate < 0 || updates.cutoff_rate > 1) {
+      if (normalizedUpdates.cutoff_rate !== undefined) {
+        if (typeof normalizedUpdates.cutoff_rate !== 'number' || normalizedUpdates.cutoff_rate < 0 || normalizedUpdates.cutoff_rate > 1) {
           throw new Error('cutoff_rateは 0-1 の範囲の数値である必要があります');
         }
       }
@@ -493,13 +539,13 @@ class TaskManager {
       this.pendingChanges.push({ 
         action: "update_source", 
         name, 
-        updates,
+        updates: normalizedUpdates,
         timestamp: new Date().toISOString()
       });
       this.savePendingChanges();
       
-      console.log('線源更新提案:', { name, updates });
-      return `提案: 線源 ${name} の更新を保留しました: ${JSON.stringify(updates)}`;
+      console.log('線源更新提案:', { name, updates: normalizedUpdates });
+      return `提案: 線源 ${name} の更新を保留しました: ${JSON.stringify(normalizedUpdates)}`;
     } catch (error) {
       console.error('線源更新エラー:', { name, error: error.message });
       throw error;
