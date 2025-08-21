@@ -10,8 +10,16 @@ export class TaskManager {
   }
 
   async initialize() {
-    await this.dataManager.initialize();
-    logger.info('TaskManagerを初期化しました');
+    // ConfigManager初期化
+    try {
+      await this.dataManager.initialize();
+      logger.info('TaskManagerを初期化しました');
+    } catch (error) {
+      // ConfigManagerが見つからない場合は警告のみ
+      logger.warn('ConfigManagerの初期化をスキップしました', { error: error.message });
+      await this.dataManager.initialize();
+      logger.info('TaskManagerを初期化しました（ConfigManagerなし）');
+    }
   }
 
   // データアクセサ

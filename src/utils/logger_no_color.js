@@ -1,4 +1,4 @@
-// utils/logger.js - MCP専用版（stdout汚染防止）
+// utils/logger.js - カラーコード無効化版
 import winston from 'winston';
 import path from 'path';
 
@@ -16,8 +16,12 @@ const logger = winston.createLogger({
     }),
     new winston.transports.File({ 
       filename: path.join('logs', 'combined.log') 
+    }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.simple()
+      )
     })
-    // Console transportは削除（MCPサーバーではstdout汚染禁止）
   ]
 });
 

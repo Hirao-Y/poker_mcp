@@ -2,11 +2,18 @@
 import { z } from 'zod';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
-import { configManager } from '../config/ConfigManager.js';
 
 export class PhysicsValidator {
   static getMaterialProperties() {
-    return configManager.getMaterialProperties() || {};
+    // fallbackデータを返す
+    return {
+      'Concrete': { densityRange: { min: 1.8, max: 2.5 } },
+      'Iron': { densityRange: { min: 7.6, max: 7.9 } },
+      'Lead': { densityRange: { min: 11.0, max: 11.4 } },
+      'Water': { densityRange: { min: 0.95, max: 1.05 } },
+      'Air': { densityRange: { min: 0.001, max: 0.002 } },
+      'VOID': { densityRange: { min: 0, max: 0 } }
+    };
   }
 
   static GEOMETRY_TYPES = {
