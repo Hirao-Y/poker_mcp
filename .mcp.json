@@ -5,7 +5,7 @@
   "server": {
     "command": "node",
     "args": ["src/mcp_server_stdio_v4.js"],
-    "cwd": "C:\\Users\\tora\\Desktop\\poker_mcp"
+    "cwd": "C:\\Users\\yoshi\\Desktop\\poker_mcp"
   },
   "capabilities": {
     "tools": true,
