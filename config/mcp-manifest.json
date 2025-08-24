@@ -321,7 +321,7 @@
           "type": "string",
           "description": "材料名",
           "required": true,
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"]
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials"
         },
         "density": {
           "type": "number",
@@ -345,7 +345,7 @@
         "material": {
           "type": "string",
           "description": "新しい材料名",
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"]
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials"
         },
         "density": {
           "type": "number",
@@ -376,7 +376,7 @@
           "type": "string",
           "description": "材料名",
           "required": true,
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"],
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials",
           "examples": ["Concrete", "Lead", "Iron"]
         },
         "use_slant_correction": {
@@ -406,7 +406,7 @@
           "type": "string",
           "description": "更新する材料名",
           "required": true,
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"],
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials",
           "pattern": "^[A-Za-z]+$",
           "maxLength": 20
         },
@@ -435,7 +435,7 @@
           "type": "string",
           "description": "削除する材料名",
           "required": true,
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"],
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials",
           "pattern": "^[A-Za-z]+$",
           "maxLength": 20
         }
@@ -458,7 +458,7 @@
           "type": "string",
           "description": "順序を変更する材料名",
           "required": true,
-          "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"],
+          "$ref": "#/validation_enhanced/material_constraints/supported_materials",
           "pattern": "^[A-Za-z]+$",
           "maxLength": 20
         },
