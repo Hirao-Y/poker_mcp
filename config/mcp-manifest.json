@@ -638,6 +638,10 @@
                 "edge_3": {
                   "$ref": "#/definitions/coordinate_string",
                   "description": "エッジ3ベクトル（x y z形式）"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["vertex", "edge_1", "edge_2", "edge_3"],
@@ -653,6 +657,10 @@
                 "max": {
                   "$ref": "#/definitions/coordinate_string",
                   "description": "最大座標（x y z形式）"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["min", "max"],
@@ -666,9 +674,12 @@
                   "description": "中心座標（x y z形式）"
                 },
                 "radius": {
-                  "type": "number",
-                  "description": "半径",
-                  "minimum": 0.001
+                  "$ref": "#/definitions/positive_radius",
+                  "description": "半径"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["center", "radius"],
@@ -686,19 +697,18 @@
                   "description": "高さベクトル（x y z形式）"
                 },
                 "radius": {
-                  "type": "number",
-                  "description": "半径",
-                  "minimum": 0.001
+                  "$ref": "#/definitions/positive_radius",
+                  "description": "半径"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["bottom_center", "height_vector", "radius"],
               "additionalProperties": false
             }
-          ],
-          "transform": {
-            "type": "string",
-            "description": "適用する変換名"
-          }  
+          ]
         },
         "division": {
           "type": "object",
@@ -809,10 +819,8 @@
                 "pattern": "^[A-Za-z0-9-]+$"
               },
               "radioactivity": {
-                "type": "number",
-                "description": "放射能（単位Bq）",
-                "minimum": 0.001,
-                "maximum": 1e15
+                "$ref": "#/definitions/radioactivity_value",
+                "description": "放射能（単位Bq）"
               }
             },
             "required": ["nuclide", "radioactivity"],
@@ -837,6 +845,10 @@
                 },
                 "edge_3": {
                   "$ref": "#/definitions/coordinate_string"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["vertex", "edge_1", "edge_2", "edge_3"]
@@ -849,6 +861,10 @@
                 },
                 "max": {
                   "$ref": "#/definitions/coordinate_string"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["min", "max"]
@@ -860,8 +876,11 @@
                   "$ref": "#/definitions/coordinate_string"
                 },
                 "radius": {
-                  "type": "number",
-                  "minimum": 0.001
+                  "$ref": "#/definitions/positive_radius"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["center", "radius"]
@@ -876,17 +895,16 @@
                   "$ref": "#/definitions/coordinate_string"
                 },
                 "radius": {
-                  "type": "number",
-                  "minimum": 0.001
+                  "$ref": "#/definitions/positive_radius"
+                },
+                "transform": {
+                  "type": "string",
+                  "description": "適用する変換名"
                 }
               },
               "required": ["bottom_center", "height_vector", "radius"]
             }
-          ],
-          "transform": {
-            "type": "string",
-            "description": "適用する変換名"
-          }
+          ]
         },
         "division": {
           "type": "object",
@@ -1036,9 +1054,8 @@
                 "description": "エッジベクトル（x y z形式）"
               },
               "number": {
-                "type": "integer",
-                "description": "分割数",
-                "minimum": 1
+                "$ref": "#/definitions/grid_division",
+                "description": "分割数"
               }
             },
             "required": ["edge", "number"]
