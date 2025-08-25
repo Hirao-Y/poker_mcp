@@ -9,6 +9,183 @@ export class TaskManager {
     this.dataManager = new SafeDataManager(yamlFile, pendingFile);
   }
 
+  // Unit操作メソッド
+  async proposeUnit(length, angle, density, radioactivity) {
+    try {
+      // デフォルト値適用
+      const unitData = {
+        length: length || 'cm',
+        angle: angle || 'radian',
+        density: density || 'g/cm3',
+        radioactivity: radioactivity || 'Bq'
+      };
+      
+      // Unit セクション存在チェック
+      if (this.data.unit) {
+        throw new ValidationError('unit セクションは既に存在します', 'unit', this.data.unit);
+      }
+      
+      // 4つのキー完全性チェック
+      this.validateUnitCompleteness(unitData);
+      
+      // 単位値バリデーション
+      this.validateUnitValues(unitData);
+      
+      await this.dataManager.addPendingChange({
+        action: 'proposeUnit',
+        data: unitData
+      });
+      
+      logger.info('Unit提案を追加しました', unitData);
+      return `提案: unit セクションを追加 - ${JSON.stringify(unitData)}`;
+      
+    } catch (error) {
+      logger.error('Unit提案エラー', { error: error.message });
+      throw error;
+    }
+  }
+  
+  async updateUnit(updates) {
+    try {
+      if (!updates || Object.keys(updates).length === 0) {
+        throw new ValidationError('更新する内容が指定されていません', 'updates', updates);
+      }
+      
+      // Unit セクション存在チェック
+      if (!this.data.unit) {
+        throw new ValidationError('unit セクションが存在しません', 'unit', null);
+      }
+      
+      // 既存データと更新データをマージ
+      const mergedData = { ...this.data.unit, ...updates };
+      
+      // 4つのキー完全性保証
+      this.ensureUnitIntegrity(mergedData);
+      
+      // 単位値バリデーション
+      this.validateUnitValues(mergedData);
+      
+      await this.dataManager.addPendingChange({
+        action: 'updateUnit',
+        data: mergedData
+      });
+      
+      logger.info('Unit更新を提案しました', { updates, merged: mergedData });
+      return `提案: unit セクションを更新 - ${JSON.stringify(updates)}`;
+      
+    } catch (error) {
+      logger.error('Unit更新エラー', { updates, error: error.message });
+      throw error;
+    }
+  }
+  
+  async getUnit() {
+    try {
+      let unitData = this.data.unit || {};
+      
+      // 4つのキー完全性確認と修復
+      unitData = this.repairIncompleteUnit(unitData);
+      
+      const result = {
+        length: unitData.length,
+        angle: unitData.angle,
+        density: unitData.density,
+        radioactivity: unitData.radioactivity,
+        exists: !!this.data.unit,
+        complete: this.checkUnitCompleteness(unitData)
+      };
+      
+      logger.info('Unit設定を取得しました', result);
+      return result;
+      
+    } catch (error) {
+      logger.error('Unit取得エラー', { error: error.message });
+      throw error;
+    }
+  }
+  
+  // Unit検証・整合性メソッド
+  validateUnitExists() {
+    if (!this.data.unit) {
+      throw new ValidationError('unit セクションが存在しません', 'unit', null);
+    }
+    return true;
+  }
+  
+  validateUnitCompleteness(unitData) {
+    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
+    for (const key of requiredKeys) {
+      if (!unitData[key]) {
+        throw new ValidationError(`unit セクションに必須キー ${key} がありません`, key, unitData[key]);
+      }
+    }
+    return true;
+  }
+  
+  ensureUnitIntegrity(unitData) {
+    const defaults = this.getDefaultUnitValues();
+    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
+    
+    for (const key of requiredKeys) {
+      if (!unitData[key]) {
+        unitData[key] = defaults[key];
+        logger.warn(`Unit キー ${key} が不足しているためデフォルト値を適用しました`, { key, default: defaults[key] });
+      }
+    }
+    
+    return unitData;
+  }
+  
+  validateUnitValues(unitData) {
+    const validUnits = {
+      length: ['m', 'cm', 'mm'],
+      angle: ['radian', 'degree'],
+      density: ['g/cm3'],
+      radioactivity: ['Bq']
+    };
+    
+    for (const [key, value] of Object.entries(unitData)) {
+      if (validUnits[key] && !validUnits[key].includes(value)) {
+        throw new ValidationError(
+          `${key} の値 '${value}' は無効です。有効な値: ${validUnits[key].join(', ')}`,
+          key,
+          value
+        );
+      }
+    }
+    return true;
+  }
+  
+  getDefaultUnitValues() {
+    return {
+      length: 'cm',
+      angle: 'radian',
+      density: 'g/cm3',
+      radioactivity: 'Bq'
+    };
+  }
+  
+  repairIncompleteUnit(unitData) {
+    try {
+      const defaults = this.getDefaultUnitValues();
+      const repairedData = { ...defaults, ...unitData };
+      
+      // 有効性チェック
+      this.validateUnitValues(repairedData);
+      
+      return repairedData;
+    } catch (error) {
+      logger.error('Unit修復失敗', { unitData, error: error.message });
+      // 修復失敗時はデフォルト値を返却
+      return this.getDefaultUnitValues();
+    }
+  }
+  
+  checkUnitCompleteness(unitData) {
+    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
+    return requiredKeys.every(key => unitData[key]);
+  }
+
   async initialize() {
     // ConfigManager初期化
     try {

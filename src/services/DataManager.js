@@ -36,11 +36,19 @@ export class SafeDataManager {
     try {
       const data = await fs.readFile(this.yamlFile, 'utf8');
       this.data = yaml.load(data);
+      
+      // Unit セクション自動検証・修復
+      await this.validateAndRepairUnit();
+      
       logger.info('YAMLデータを読み込みました', { file: this.yamlFile });
     } catch (error) {
       if (error.code === 'ENOENT') {
         logger.warn('YAMLファイルが見つかりません。初期データを作成します', { file: this.yamlFile });
         this.data = { body: [], zone: [], transform: [], buildup_factor: [], source: [], detector: [] };
+        
+        // 初期データにunit セクションを作成
+        this.data.unit = this.createDefaultUnitSection();
+        
         await this.saveData();
       } else {
         logger.error('YAMLファイルの読み込みに失敗しました', { error: error.message });
@@ -408,9 +416,204 @@ export class SafeDataManager {
         }
         break;
 
+      case 'proposeUnit':
+        await this.applyProposeUnit(data);
+        break;
+
+      case 'updateUnit':
+        await this.applyUpdateUnit(data);
+        break;
+
       default:
         logger.warn('未知の変更アクション', { action });
         break;
+    }
+  }
+
+  // Unit専用処理メソッド
+  async applyProposeUnit(data) {
+    try {
+      // Unit セクション存在チェック
+      if (this.data.unit) {
+        throw new DataError('unit セクションは既に存在します', 'UNIT_ALREADY_EXISTS');
+      }
+      
+      // 4つのキー完全性チェック
+      this.validateUnitOperation('proposeUnit', data);
+      
+      // Unit セクション作成
+      this.data.unit = {
+        length: data.length,
+        angle: data.angle,
+        density: data.density,
+        radioactivity: data.radioactivity
+      };
+      
+      logger.info('unit セクションを作成しました', this.data.unit);
+      
+    } catch (error) {
+      logger.error('proposeUnit適用エラー', { data, error: error.message });
+      throw error;
+    }
+  }
+  
+  async applyUpdateUnit(data) {
+    try {
+      // Unit セクション存在チェック
+      if (!this.data.unit) {
+        throw new DataError('unit セクションが存在しません', 'UNIT_NOT_FOUND');
+      }
+      
+      // データ完全性チェック
+      this.validateUnitOperation('updateUnit', data);
+      
+      // Unit セクション更新（4つのキー全て更新）
+      this.data.unit = {
+        length: data.length,
+        angle: data.angle,
+        density: data.density,
+        radioactivity: data.radioactivity
+      };
+      
+      logger.info('unit セクションを更新しました', this.data.unit);
+      
+    } catch (error) {
+      logger.error('updateUnit適用エラー', { data, error: error.message });
+      throw error;
+    }
+  }
+  
+  validateUnitOperation(action, data) {
+    // 4つのキー完全性チェック
+    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
+    for (const key of requiredKeys) {
+      if (!data[key]) {
+        throw new DataError(`unit ${action}に必須キー ${key} がありません`, 'UNIT_KEY_MISSING');
+      }
+    }
+    
+    // 単位値妥当性チェック
+    const validUnits = {
+      length: ['m', 'cm', 'mm'],
+      angle: ['radian', 'degree'],
+      density: ['g/cm3'],
+      radioactivity: ['Bq']
+    };
+    
+    for (const [key, value] of Object.entries(data)) {
+      if (validUnits[key] && !validUnits[key].includes(value)) {
+        throw new DataError(
+          `${key} の値 '${value}' は無効です。有効な値: ${validUnits[key].join(', ')}`,
+          'UNIT_INVALID_VALUE'
+        );
+      }
+    }
+    
+    return true;
+  }
+
+  // Unit自動検証・修復メソッド
+  async validateAndRepairUnit() {
+    try {
+      let repairActions = [];
+      
+      // Unit セクション存在チェック
+      if (!this.data.unit) {
+        this.data.unit = this.createDefaultUnitSection();
+        repairActions.push('未存在unit セクションをデフォルト値で作成');
+        logger.warn('unit セクションが存在しないため、デフォルト値で作成しました');
+      } else {
+        // 不完全unit セクションの修復
+        const repairedUnit = this.repairIncompleteUnitSection(this.data.unit);
+        if (repairedUnit.repaired) {
+          this.data.unit = repairedUnit.data;
+          repairActions.push(...repairedUnit.actions);
+        }
+      }
+      
+      // 修復アクションのログ
+      if (repairActions.length > 0) {
+        this.logUnitRepairActions(repairActions);
+        // 修復した場合はファイルを保存
+        await this.saveData();
+      }
+      
+    } catch (error) {
+      logger.error('Unit自動修復に失敗しました', { error: error.message });
+      // 修復失敗時はデフォルト値で強制作成
+      this.data.unit = this.createDefaultUnitSection();
+      logger.warn('Unit修復失敗のため、デフォルト値で強制作成しました');
+    }
+  }
+  
+  createDefaultUnitSection() {
+    const defaultUnit = {
+      length: 'cm',
+      angle: 'radian',
+      density: 'g/cm3',
+      radioactivity: 'Bq'
+    };
+    
+    logger.info('unit デフォルトセクションを作成しました', defaultUnit);
+    return defaultUnit;
+  }
+  
+  repairIncompleteUnitSection(unitData) {
+    const defaultValues = {
+      length: 'cm',
+      angle: 'radian', 
+      density: 'g/cm3',
+      radioactivity: 'Bq'
+    };
+    
+    const validUnits = {
+      length: ['m', 'cm', 'mm'],
+      angle: ['radian', 'degree'],
+      density: ['g/cm3'],
+      radioactivity: ['Bq']
+    };
+    
+    let repaired = false;
+    let actions = [];
+    const repairedData = { ...unitData };
+    
+    // 不足キーの補完
+    for (const [key, defaultValue] of Object.entries(defaultValues)) {
+      if (!repairedData[key]) {
+        repairedData[key] = defaultValue;
+        repaired = true;
+        actions.push(`不足キー ${key} をデフォルト値 '${defaultValue}' で補完`);
+        logger.warn(`Unitキー ${key} が不足しているためデフォルト値で補完しました`, { key, defaultValue });
+      }
+    }
+    
+    // 無効値の修正
+    for (const [key, value] of Object.entries(repairedData)) {
+      if (validUnits[key] && !validUnits[key].includes(value)) {
+        const defaultValue = defaultValues[key];
+        repairedData[key] = defaultValue;
+        repaired = true;
+        actions.push(`無効値 ${key}:'${value}' をデフォルト値 '${defaultValue}' で置換`);
+        logger.warn(`Unitキー ${key} の値 '${value}' が無効のためデフォルト値で置換しました`, { key, oldValue: value, newValue: defaultValue });
+      }
+    }
+    
+    return {
+      repaired,
+      data: repairedData,
+      actions
+    };
+  }
+  
+  logUnitRepairActions(actions) {
+    logger.info('Unitセクションの自動修復を実行しました', { 
+      repairCount: actions.length,
+      repairs: actions 
+    });
+    
+    // 特別ログ: 重要な自動修復情報
+    for (const action of actions) {
+      logger.warn('Unit自動修復', { action });
     }
   }
 }

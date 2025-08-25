@@ -25,11 +25,6 @@
       "Detector操作系: 作成・更新・削除",
       "立体10タイプ完全対応",
       "材料13種類完全対応",
-      "Unit操作系: 作成・更新・取得（削除不可）",
-      "単位設定4キー完全性保証 (length, angle, density, radioactivity)",
-      "単位データ自動修復機能",
-      "読み込み時unit整合性チェック",
-      "unit セクション一意性強制",
       "物理係数計算機能強化",
       "依存関係チェック機能",
       "実際のYAMLファイル更新",
@@ -61,15 +56,6 @@
     "detector_operations": true,
     "dependency_checking": true,
     "order_management": true,
-    "unit_operations": true,
-    "unit_completeness_guarantee": true,
-    "unit_auto_repair": true,
-    "unit_validation": "comprehensive",
-    "unit_uniqueness_enforcement": true,
-    "auto_data_repair": true,
-    "unit_section_integrity": "guaranteed",
-    "default_value_compensation": true,
-    "load_time_validation": true,
     "rollback_support": true
   },
   "tools": [
@@ -1340,27 +1326,6 @@
     },
     "detector_constraints": {
       "supported_types": ["POINT", "GRID_1D", "GRID_2D", "GRID_3D"]
-    },
-    "unit_constraints": {
-      "mandatory_keys": ["length", "angle", "density", "radioactivity"],
-      "supported_values": {
-        "length": ["m", "cm", "mm"],
-        "angle": ["radian", "degree"],
-        "density": ["g/cm3"],
-        "radioactivity": ["Bq"]
-      },
-      "uniqueness": "single_unit_section_only",
-      "completeness": "four_keys_always_required"
-    },
-    "auto_repair_constraints": {
-      "repair_triggers": ["missing_unit_section", "incomplete_keys", "invalid_values"],
-      "default_fallback": {
-        "length": "cm",
-        "angle": "radian",
-        "density": "g/cm3",
-        "radioactivity": "Bq"
-      },
-      "repair_logging": "comprehensive"
     },
     "body_type_constraints": {
       "SPH": {
