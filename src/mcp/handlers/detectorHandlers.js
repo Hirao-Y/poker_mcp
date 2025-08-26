@@ -1,6 +1,4 @@
 // mcp/handlers/detectorHandlers.js
-// 検出器関連のリクエストハンドラー
-
 import { ValidationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 
@@ -9,29 +7,45 @@ export function createDetectorHandlers(taskManager) {
     // 検出器提案
     async proposeDetector(args) {
       try {
-        const { name, origin, grid = [], show_path_trace = false } = args;
+        const { name, origin, grid = [], show_path_trace = false, transform = null } = args;
         
-        logger.info('検出器提案開始', { name, origin, gridCount: grid.length });
+        logger.info('検出器提案開始', { 
+          name, 
+          origin, 
+          gridCount: grid.length,
+          hasTransform: !!transform 
+        });
         
-        // バリデーション
-        taskManager.validateDetectorData(name, origin, grid);
+        // DetectorValidator統合のため、TaskManagerの包括的検証を利用
+        const result = await taskManager.proposeDetector(name, origin, grid, show_path_trace, transform);
         
-        // 重複チェック
-        if (taskManager.findDetectorByName(name)) {
-          throw new ValidationError(`検出器名 ${name} は既に存在します`, 'name', name);
-        }
+        // 検出器の分析情報を追加取得
+        const detectorData = { name, origin, grid, show_path_trace, transform };
+        const analysisResult = taskManager.analyzeDetectorStructure(detectorData);
         
-        const result = await taskManager.proposeDetector(name, origin, grid, show_path_trace);
+        logger.info('検出器提案完了', { 
+          name, 
+          dimension: analysisResult.dimension,
+          complexity: analysisResult.complexity 
+        });
         
-        logger.info('検出器提案完了', { name, origin });
         return { 
           success: true, 
           message: result,
           detector: {
             name,
-            type: grid.length === 0 ? 'POINT' : `GRID_${grid.length}D`,
+            type: analysisResult.type,
+            dimension: analysisResult.dimension,
+            complexity: analysisResult.complexity,
             origin,
-            gridDimensions: grid.length
+            gridDimensions: grid.length,
+            hasTransform: !!transform,
+            pathTrace: show_path_trace
+          },
+          analysis: {
+            isOptimal: analysisResult.isOptimal,
+            suggestions: analysisResult.suggestions,
+            performance: analysisResult.performance
           }
         };
         
@@ -49,27 +63,34 @@ export function createDetectorHandlers(taskManager) {
         logger.info('検出器更新開始', { name, updates });
         
         // 存在確認
-        if (!taskManager.findDetectorByName(name)) {
+        const existingDetector = taskManager.findDetectorByName(name);
+        if (!existingDetector) {
           throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
         }
         
-        // 更新データのバリデーション
-        if (updates.origin) {
-          taskManager.validatePosition(updates.origin);
-        }
-        if (updates.grid) {
-          taskManager.validateGridData(updates.grid);
-        }
-        
+        // TaskManagerの包括的更新処理を利用
         const result = await taskManager.updateDetector(name, updates);
         
-        logger.info('検出器更新完了', { name, updates });
+        // 更新後の分析情報
+        const updatedDetectorData = { ...existingDetector, ...updates };
+        const analysisResult = taskManager.analyzeDetectorStructure(updatedDetectorData);
+        
+        logger.info('検出器更新完了', { 
+          name, 
+          newComplexity: analysisResult.complexity 
+        });
+        
         return { 
           success: true, 
           message: result,
           updated: {
             name,
-            ...updates
+            ...updates,
+            analysisAfterUpdate: {
+              complexity: analysisResult.complexity,
+              dimension: analysisResult.dimension,
+              isOptimal: analysisResult.isOptimal
+            }
           }
         };
         
@@ -92,23 +113,81 @@ export function createDetectorHandlers(taskManager) {
           throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
         }
         
-        // 依存関係チェック（将来の拡張用）
-        // 現在は検出器を直接参照する他要素はないが、将来の機能追加に備える
+        // 削除前の分析情報を記録
+        const preDeleteAnalysis = taskManager.analyzeDetectorStructure(existingDetector);
         
         const result = await taskManager.deleteDetector(name);
         
-        logger.info('検出器削除完了', { name });
+        logger.info('検出器削除完了', { 
+          name, 
+          deletedComplexity: preDeleteAnalysis.complexity 
+        });
+        
         return { 
           success: true, 
           message: result,
           deleted: {
             name,
-            type: existingDetector.grid?.length === 0 ? 'POINT' : `GRID_${existingDetector.grid?.length || 0}D`
+            type: preDeleteAnalysis.type,
+            dimension: preDeleteAnalysis.dimension,
+            complexity: preDeleteAnalysis.complexity
           }
         };
         
       } catch (error) {
         logger.error('検出器削除エラー', { args, error: error.message });
+        throw error;
+      }
+    },
+    
+    // 検出器互換性分析
+    async analyzeDetectorCompatibility(args) {
+      try {
+        const { detector1Name, detector2Name } = args;
+        
+        logger.info('検出器互換性分析開始', { detector1Name, detector2Name });
+        
+        const result = await taskManager.analyzeDetectorCompatibility(detector1Name, detector2Name);
+        
+        logger.info('検出器互換性分析完了', { 
+          detector1Name, 
+          detector2Name,
+          compatibility: result.compatibility.overall 
+        });
+        
+        return {
+          success: true,
+          message: `検出器互換性分析完了: ${result.compatibility.overall}`,
+          compatibility: result
+        };
+        
+      } catch (error) {
+        logger.error('検出器互換性分析エラー', { args, error: error.message });
+        throw error;
+      }
+    },
+    
+    // システム検出器性能分析
+    async analyzeSystemDetectorPerformance(args) {
+      try {
+        logger.info('システム検出器性能分析開始');
+        
+        const result = await taskManager.analyzeSystemDetectorPerformance();
+        
+        logger.info('システム検出器性能分析完了', {
+          totalDetectors: result.totalDetectors,
+          averageComplexity: result.averageComplexity,
+          totalMemoryMB: result.memoryEstimate.total
+        });
+        
+        return {
+          success: true,
+          message: `システム検出器性能分析完了: ${result.totalDetectors}個の検出器を分析`,
+          performance: result
+        };
+        
+      } catch (error) {
+        logger.error('システム検出器性能分析エラー', { error: error.message });
         throw error;
       }
     }

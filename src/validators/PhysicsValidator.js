@@ -36,6 +36,26 @@ export class PhysicsValidator {
     'CMB': {
       requiredParams: ['expression'],
       description: '組み合わせ形状'
+    },
+    'TOR': {
+      requiredParams: ['center', 'normal', 'major_radius', 'minor_radius_horizontal', 'minor_radius_vertical'],
+      description: 'トーラス（ドーナツ形状）'
+    },
+    'ELL': {
+      requiredParams: ['center', 'radius_vector_1', 'radius_vector_2', 'radius_vector_3'],
+      description: '楕円体（3つの半径ベクトル）'
+    },
+    'REC': {
+      requiredParams: ['bottom_center', 'height_vector', 'radius_vector_1', 'radius_vector_2'],
+      description: '楕円円柱（2つの半径ベクトル）'
+    },
+    'TRC': {
+      requiredParams: ['bottom_center', 'height_vector', 'bottom_radius', 'top_radius'],
+      description: '円錐台（異なる上下半径）'
+    },
+    'WED': {
+      requiredParams: ['vertex', 'width_vector', 'height_vector', 'depth_vector'],
+      description: 'くさび形（頂点＋3方向ベクトル）'
     }
   };
 
@@ -128,6 +148,27 @@ export class PhysicsValidator {
       case 'RPP':
         this.validateRectangularParallelepiped(params);
         break;
+      case 'BOX':
+        this.validateBox(params);
+        break;
+      case 'CMB':
+        this.validateCombination(params);
+        break;
+      case 'TOR':
+        this.validateTorus(params);
+        break;
+      case 'ELL':
+        this.validateEllipsoid(params);
+        break;
+      case 'REC':
+        this.validateEllipticalCylinder(params);
+        break;
+      case 'TRC':
+        this.validateTruncatedCone(params);
+        break;
+      case 'WED':
+        this.validateWedge(params);
+        break;
     }
 
     return true;
@@ -169,6 +210,192 @@ export class PhysicsValidator {
       throw new PhysicsError(
         'RPPの最小座標は最大座標より小さくなければなりません',
         'INVALID_RPP_BOUNDS'
+      );
+    }
+  }
+
+  static validateBox(params) {
+    this.VectorSchema.parse(params.vertex);
+    this.VectorSchema.parse(params.edge_1);
+    this.VectorSchema.parse(params.edge_2);
+    this.VectorSchema.parse(params.edge_3);
+    
+    // エッジベクトルの長さチェック
+    const edges = [params.edge_1, params.edge_2, params.edge_3];
+    for (let i = 0; i < 3; i++) {
+      const [x, y, z] = edges[i].split(/\s+/).map(Number);
+      const length = Math.sqrt(x*x + y*y + z*z);
+      if (length === 0) {
+        throw new PhysicsError(
+          `BOXのエッジ${i+1}ベクトルは零ベクトルにできません`,
+          'ZERO_EDGE_VECTOR'
+        );
+      }
+    }
+  }
+
+  static validateCombination(params) {
+    if (!params.expression || typeof params.expression !== 'string' || params.expression.trim() === '') {
+      throw new ValidationError(
+        'CMB型にはexpressionパラメータが必要です',
+        'expression',
+        params.expression
+      );
+    }
+    
+    // 簡単な式の構文チェック（英数字、スペース、演算子のみ）
+    const allowedChars = /^[a-zA-Z0-9\s+\-*()&|!]+$/;
+    if (!allowedChars.test(params.expression)) {
+      throw new ValidationError(
+        'CMBのexpressionに不正な文字が含まれています',
+        'expression',
+        params.expression
+      );
+    }
+  }
+
+  static validateTorus(params) {
+    this.VectorSchema.parse(params.center);
+    this.VectorSchema.parse(params.normal);
+    
+    const majorRadius = this.PositiveNumberSchema.parse(params.major_radius);
+    const minorRadiusH = this.PositiveNumberSchema.parse(params.minor_radius_horizontal);
+    const minorRadiusV = this.PositiveNumberSchema.parse(params.minor_radius_vertical);
+    
+    // 法線ベクトルの長さチェック
+    const [nx, ny, nz] = params.normal.split(/\s+/).map(Number);
+    const normalLength = Math.sqrt(nx*nx + ny*ny + nz*nz);
+    if (normalLength === 0) {
+      throw new PhysicsError(
+        'TORの法線ベクトルは零ベクトルにできません',
+        'ZERO_NORMAL_VECTOR'
+      );
+    }
+    
+    // 主半径と副半径の関係チェック
+    if (majorRadius <= Math.max(minorRadiusH, minorRadiusV)) {
+      throw new PhysicsError(
+        'TORの主半径は副半径より大きくなければなりません',
+        'INVALID_TORUS_RADII'
+      );
+    }
+  }
+
+  static validateEllipsoid(params) {
+    this.VectorSchema.parse(params.center);
+    this.VectorSchema.parse(params.radius_vector_1);
+    this.VectorSchema.parse(params.radius_vector_2);
+    this.VectorSchema.parse(params.radius_vector_3);
+    
+    // 半径ベクトルの長さチェック
+    const vectors = [params.radius_vector_1, params.radius_vector_2, params.radius_vector_3];
+    for (let i = 0; i < 3; i++) {
+      const [x, y, z] = vectors[i].split(/\s+/).map(Number);
+      const length = Math.sqrt(x*x + y*y + z*z);
+      if (length === 0) {
+        throw new PhysicsError(
+          `ELLの半径ベクトル${i+1}は零ベクトルにできません`,
+          'ZERO_RADIUS_VECTOR'
+        );
+      }
+    }
+  }
+
+  static validateEllipticalCylinder(params) {
+    this.VectorSchema.parse(params.bottom_center);
+    this.VectorSchema.parse(params.height_vector);
+    this.VectorSchema.parse(params.radius_vector_1);
+    this.VectorSchema.parse(params.radius_vector_2);
+    
+    // 高さベクトルの長さチェック
+    const [hx, hy, hz] = params.height_vector.split(/\s+/).map(Number);
+    const height = Math.sqrt(hx*hx + hy*hy + hz*hz);
+    if (height === 0) {
+      throw new PhysicsError(
+        'RECの高さベクトルは零ベクトルにできません',
+        'ZERO_HEIGHT_VECTOR'
+      );
+    }
+    
+    // 半径ベクトルの長さチェック
+    const vectors = [params.radius_vector_1, params.radius_vector_2];
+    for (let i = 0; i < 2; i++) {
+      const [x, y, z] = vectors[i].split(/\s+/).map(Number);
+      const length = Math.sqrt(x*x + y*y + z*z);
+      if (length === 0) {
+        throw new PhysicsError(
+          `RECの半径ベクトル${i+1}は零ベクトルにできません`,
+          'ZERO_RADIUS_VECTOR'
+        );
+      }
+    }
+  }
+
+  static validateTruncatedCone(params) {
+    this.VectorSchema.parse(params.bottom_center);
+    this.VectorSchema.parse(params.height_vector);
+    
+    const bottomRadius = this.PositiveNumberSchema.parse(params.bottom_radius);
+    const topRadius = this.PositiveNumberSchema.parse(params.top_radius);
+    
+    // 高さベクトルの長さチェック
+    const [hx, hy, hz] = params.height_vector.split(/\s+/).map(Number);
+    const height = Math.sqrt(hx*hx + hy*hy + hz*hz);
+    if (height === 0) {
+      throw new PhysicsError(
+        'TRCの高さベクトルは零ベクトルにできません',
+        'ZERO_HEIGHT_VECTOR'
+      );
+    }
+    
+    // 半径の物理的妃当性チェック
+    if (bottomRadius === topRadius) {
+      logger.warn('TRCの上下半径が同じです。RCCの使用を検討してください', {
+        bottomRadius, topRadius
+      });
+    }
+  }
+
+  static validateWedge(params) {
+    this.VectorSchema.parse(params.vertex);
+    this.VectorSchema.parse(params.width_vector);
+    this.VectorSchema.parse(params.height_vector);
+    this.VectorSchema.parse(params.depth_vector);
+    
+    // ベクトルの長さチェック
+    const vectors = [
+      { name: 'width_vector', value: params.width_vector },
+      { name: 'height_vector', value: params.height_vector },
+      { name: 'depth_vector', value: params.depth_vector }
+    ];
+    
+    for (const vector of vectors) {
+      const [x, y, z] = vector.value.split(/\s+/).map(Number);
+      const length = Math.sqrt(x*x + y*y + z*z);
+      if (length === 0) {
+        throw new PhysicsError(
+          `WEDの${vector.name}は零ベクトルにできません`,
+          'ZERO_VECTOR'
+        );
+      }
+    }
+    
+    // ベクトルの線形独立性チェック（簡単なチェック）
+    const [wx, wy, wz] = params.width_vector.split(/\s+/).map(Number);
+    const [hx, hy, hz] = params.height_vector.split(/\s+/).map(Number);
+    const [dx, dy, dz] = params.depth_vector.split(/\s+/).map(Number);
+    
+    // 外積で平行性をチェック
+    const cross1 = [
+      wy * hz - wz * hy,
+      wz * hx - wx * hz,
+      wx * hy - wy * hx
+    ];
+    const crossLength = Math.sqrt(cross1[0]*cross1[0] + cross1[1]*cross1[1] + cross1[2]*cross1[2]);
+    if (crossLength < 1e-10) {
+      throw new PhysicsError(
+        'WEDのwidth_vectorとheight_vectorが平行です',
+        'PARALLEL_VECTORS'
       );
     }
   }

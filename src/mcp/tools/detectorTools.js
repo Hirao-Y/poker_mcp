@@ -1,6 +1,4 @@
 // mcp/tools/detectorTools.js
-// 検出器関連のMCPツール定義
-
 export const detectorTools = [
   {
     name: 'pokerinput_proposeDetector',
@@ -10,30 +8,44 @@ export const detectorTools = [
       properties: {
         name: {
           type: 'string',
-          description: '検出器の名前（一意である必要があります）'
+          description: '検出器の名前（一意である必要があります）',
+          pattern: '^[a-zA-Z0-9_]+$',
+          maxLength: 50
         },
         origin: {
           type: 'string',
-          description: '検出器の基準位置（x y z形式）'
+          description: '検出器の基準位置（x y z形式）',
+          pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
         },
         grid: {
           type: 'array',
-          description: 'エッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）',
+          description: 'エッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す: 1D/2D/3D）',
+          minItems: 0,
+          maxItems: 3,
           items: {
             type: 'object',
             properties: {
               edge: {
                 type: 'string',
-                description: 'エッジベクトル（x y z形式）'
+                description: 'エッジベクトル（x y z形式）',
+                pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
               },
               number: {
                 type: 'integer',
                 description: '分割数',
-                minimum: 1
+                minimum: 1,
+                maximum: 10000
               }
             },
-            required: ['edge', 'number']
+            required: ['edge', 'number'],
+            additionalProperties: false
           }
+        },
+        transform: {
+          type: 'string',
+          description: '適用する変換名（オプション）',
+          pattern: '^[a-zA-Z0-9_]+$',
+          maxLength: 50
         },
         show_path_trace: {
           type: 'boolean',
@@ -41,7 +53,8 @@ export const detectorTools = [
           default: false
         }
       },
-      required: ['name', 'origin']
+      required: ['name', 'origin'],
+      additionalProperties: false
     }
   },
   
@@ -57,33 +70,46 @@ export const detectorTools = [
         },
         origin: {
           type: 'string',
-          description: '新しい検出器の基準位置（x y z形式）'
+          description: '新しい検出器の基準位置（x y z形式）',
+          pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
         },
         grid: {
           type: 'array',
-          description: '新しいエッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）',
+          description: '新しいエッジベクトルと分割数の組の配列',
+          minItems: 0,
+          maxItems: 3,
           items: {
             type: 'object',
             properties: {
               edge: {
                 type: 'string',
-                description: 'エッジベクトル（x y z形式）'
+                description: 'エッジベクトル（x y z形式）',
+                pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
               },
               number: {
                 type: 'integer',
                 description: '分割数',
-                minimum: 1
+                minimum: 1,
+                maximum: 10000
               }
             },
-            required: ['edge', 'number']
+            required: ['edge', 'number'],
+            additionalProperties: false
           }
+        },
+        transform: {
+          type: 'string',
+          description: '新しい変換名',
+          pattern: '^[a-zA-Z0-9_]+$',
+          maxLength: 50
         },
         show_path_trace: {
           type: 'boolean',
           description: '透過線の経路トレースをサマリーに出力するか'
         }
       },
-      required: ['name']
+      required: ['name'],
+      additionalProperties: false
     }
   },
   
@@ -98,7 +124,8 @@ export const detectorTools = [
           description: '削除する検出器の名前'
         }
       },
-      required: ['name']
+      required: ['name'],
+      additionalProperties: false
     }
   }
 ];

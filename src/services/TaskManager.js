@@ -4,6 +4,9 @@ import { PhysicsValidator } from '../validators/PhysicsValidator.js';
 import { ManifestValidator } from '../validators/ManifestValidator.js';
 import { TransformValidator } from '../validators/TransformValidator.js';
 import { NuclideValidator } from '../validators/NuclideValidator.js';
+import { SourceValidator } from '../validators/SourceValidator.js';
+import { DetectorValidator } from '../validators/DetectorValidator.js';
+import { UnitValidator } from '../validators/UnitValidator.js';
 import { PokerMcpError } from '../utils/mcpErrors.js';
 import { logger } from '../utils/logger.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
@@ -13,187 +16,564 @@ export class TaskManager {
     this.dataManager = new SafeDataManager(yamlFile, pendingFile);
   }
 
-  // Unit操作メソッド
-  async proposeUnit(length, angle, density, radioactivity) {
+  /**
+   * Detector構造の分析ヘルパーメソッド
+   * DetectorHandlerから使用される簡易分析インターフェース
+   */
+  analyzeDetectorStructure(detectorData) {
     try {
-      // デフォルト値適用
-      const unitData = {
-        length: length || 'cm',
-        angle: angle || 'radian',
-        density: density || 'g/cm3',
-        radioactivity: radioactivity || 'Bq'
+      const validation = DetectorValidator.validateCompleteDetectorStructure(detectorData, this.data);
+      const optimization = DetectorValidator.analyzeDetectorOptimization(detectorData, this.data);
+      
+      return {
+        name: validation.name,
+        dimension: validation.gridAnalysis ? validation.gridAnalysis.dimension : 0,
+        complexity: validation.complexity,
+        type: validation.type,
+        isOptimal: optimization.isOptimal,
+        suggestions: optimization.suggestions,
+        performance: optimization.performance
       };
       
-      // 单位値バリデーション（マニフェスト準拠）
-      ManifestValidator.validateSupportedLengthUnit(unitData.length, 'length');
-      ManifestValidator.validateSupportedAngleUnit(unitData.angle, 'angle');
-      ManifestValidator.validateSupportedDensityUnit(unitData.density, 'density');
-      ManifestValidator.validateSupportedRadioactivityUnit(unitData.radioactivity, 'radioactivity');
+    } catch (error) {
+      logger.error('Detector構造分析エラー', { 
+        detectorName: detectorData.name, 
+        error: error.message 
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Detectorグリッドの互換性チェック
+   * 複数のDetector間でグリッド構造の互換性を分析
+   */
+  async analyzeDetectorCompatibility(detector1Name, detector2Name) {
+    try {
+      const detector1 = this.findDetectorByName(detector1Name);
+      const detector2 = this.findDetectorByName(detector2Name);
       
-      // Unit セクション存在チェック
-      if (this.data.unit) {
-        throw PokerMcpError.unitAlreadyExists();
+      if (!detector1) {
+        throw new ValidationError(`検出器 ${detector1Name} が見つかりません`, 'detector1Name', detector1Name);
       }
       
-      // 4つのキー完全性チェック
-      this.validateUnitCompleteness(unitData);
+      if (!detector2) {
+        throw new ValidationError(`検出器 ${detector2Name} が見つかりません`, 'detector2Name', detector2Name);
+      }
+      
+      const compatibility = DetectorValidator.checkDetectorCompatibility(detector1, detector2);
+      
+      logger.info('Detector互換性分析を実行しました', {
+        detector1: detector1Name,
+        detector2: detector2Name,
+        compatibility
+      });
+      
+      return {
+        detector1: detector1Name,
+        detector2: detector2Name,
+        compatibility,
+        recommendations: this.generateCompatibilityRecommendations(compatibility)
+      };
+      
+    } catch (error) {
+      logger.error('Detector互換性分析エラー', { 
+        detector1Name, 
+        detector2Name, 
+        error: error.message 
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * 互換性に基づいた推奨事項を生成
+   * @private
+   */
+  generateCompatibilityRecommendations(compatibility) {
+    const recommendations = [];
+    
+    if (!compatibility.dimensionMatch) {
+      recommendations.push({
+        type: 'dimension_mismatch',
+        priority: 'high',
+        message: 'Detectors have different dimensions. Consider using detectors with matching dimensions for comparative analysis.'
+      });
+    }
+    
+    if (!compatibility.resolutionCompatible) {
+      recommendations.push({
+        type: 'resolution_mismatch',
+        priority: 'medium',
+        message: 'Detector resolutions differ significantly. Results may not be directly comparable.'
+      });
+    }
+    
+    if (!compatibility.geometryCompatible) {
+      recommendations.push({
+        type: 'geometry_mismatch',
+        priority: 'medium',
+        message: 'Different grid geometries (orthogonal vs oblique). Consider geometric corrections in analysis.'
+      });
+    }
+    
+    if (compatibility.overall === 'fully_compatible') {
+      recommendations.push({
+        type: 'fully_compatible',
+        priority: 'info',
+        message: 'Detectors are fully compatible. Direct comparison and analysis is recommended.'
+      });
+    }
+    
+    return recommendations;
+  }
+
+  /**
+   * システム全体のDetector性能分析
+   * 全てのDetectorの性能特性を分析
+   */
+  async analyzeSystemDetectorPerformance() {
+    try {
+      const detectors = this.data.detector || [];
+      const performanceAnalysis = {
+        totalDetectors: detectors.length,
+        dimensionDistribution: { '0D': 0, '1D': 0, '2D': 0, '3D': 0 },
+        totalComplexity: 0,
+        averageComplexity: 0,
+        highPerformanceDetectors: [],
+        lowPerformanceDetectors: [],
+        memoryEstimate: { total: 0, breakdown: [] },
+        processingRecommendations: []
+      };
+      
+      if (detectors.length === 0) {
+        return performanceAnalysis;
+      }
+      
+      for (const detector of detectors) {
+        const analysis = DetectorValidator.validateCompleteDetectorStructure(detector, this.data);
+        const optimization = DetectorValidator.analyzeDetectorOptimization(detector, this.data);
+        
+        // 次元分布
+        const dimension = analysis.gridAnalysis ? 
+          `${analysis.gridAnalysis.dimension}D` : '0D';
+        performanceAnalysis.dimensionDistribution[dimension]++;
+        
+        // 複雑度統計
+        performanceAnalysis.totalComplexity += analysis.complexity;
+        
+        // 性能分類
+        if (analysis.complexity > 10000) {
+          performanceAnalysis.highPerformanceDetectors.push({
+            name: detector.name,
+            complexity: analysis.complexity,
+            estimatedMemory: optimization.performance.estimatedMemory.total
+          });
+        } else if (analysis.complexity < 100) {
+          performanceAnalysis.lowPerformanceDetectors.push({
+            name: detector.name,
+            complexity: analysis.complexity
+          });
+        }
+        
+        // メモリ使用量統計
+        performanceAnalysis.memoryEstimate.total += optimization.performance.estimatedMemory.total;
+        performanceAnalysis.memoryEstimate.breakdown.push({
+          detector: detector.name,
+          memory: optimization.performance.estimatedMemory.total
+        });
+      }
+      
+      performanceAnalysis.averageComplexity = 
+        performanceAnalysis.totalComplexity / detectors.length;
+      
+      // 処理推奨事項の生成
+      if (performanceAnalysis.memoryEstimate.total > 1000) {
+        performanceAnalysis.processingRecommendations.push(
+          '高メモリ使用量が予想されます。分散処理または解像度の調整を検討してください。'
+        );
+      }
+      
+      if (performanceAnalysis.highPerformanceDetectors.length > 5) {
+        performanceAnalysis.processingRecommendations.push(
+          '多数の高性能検出器があります。並列処理またはクラスター計算を推奨します。'
+        );
+      }
+      
+      logger.info('システムDetector性能分析を完了しました', performanceAnalysis);
+      
+      return performanceAnalysis;
+      
+    } catch (error) {
+      logger.error('システムDetector性能分析エラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Transformの完全性チェック
+   * システム全体でTransform参照の整合性を確認
+   */
+  // Unit操作 - 4キー完全性保証機能強化版
+  async proposeUnit(length, angle, density, radioactivity) {
+    try {
+      // 4キー完全構造の構築
+      const unitData = {
+        length,
+        angle, 
+        density,
+        radioactivity
+      };
+      
+      // UnitValidatorによる4キー完全性検証
+      UnitValidator.validateFourKeyCompleteness(unitData);
+      
+      // 既存単位設定の確認
+      if (this.data.unit) {
+        throw PokerMcpError.duplicateName('unit', 'unit section already exists');
+      }
+      
+      // 物理的整合性検証
+      const physicalConsistency = UnitValidator.validatePhysicalConsistency(unitData);
+      
+      // データ正規化
+      const normalizedUnit = UnitValidator.normalizeUnitStructure(unitData);
       
       await this.dataManager.addPendingChange({
         action: 'proposeUnit',
-        data: unitData
+        data: normalizedUnit
       });
       
-      logger.info('Unit提案を追加しました', unitData);
-      return `提案: unit セクションを追加 - ${JSON.stringify(unitData)}`;
+      logger.info('4キー完全単位設定を提案しました', {
+        unitData: normalizedUnit,
+        physicalConsistency: physicalConsistency.isConsistent,
+        warnings: physicalConsistency.warnings.length
+      });
+      
+      let responseMessage = '提案: 単位設定を追加（4キー完全性保証）';
+      
+      if (physicalConsistency.warnings.length > 0) {
+        const warningTypes = physicalConsistency.warnings.map(w => w.type);
+        responseMessage += ` - 警告: ${warningTypes.join(', ')}`;
+      }
+      
+      return responseMessage;
       
     } catch (error) {
-      logger.error('Unit提案エラー', { error: error.message });
+      logger.error('単位設定提案エラー', { unitData: { length, angle, density, radioactivity }, error: error.message });
       throw error;
     }
   }
-  
+
+  async getUnit() {
+    try {
+      if (!this.data.unit) {
+        throw new ValidationError('単位設定が存在しません', 'unit', null);
+      }
+      
+      // 4キー完全性の事後検証
+      UnitValidator.validateFourKeyCompleteness(this.data.unit);
+      
+      logger.info('4キー完全単位設定を取得しました', { unit: this.data.unit });
+      
+      return {
+        unit: this.data.unit,
+        integrity: '4-key-complete',
+        keys: Object.keys(this.data.unit)
+      };
+      
+    } catch (error) {
+      logger.error('単位設定取得エラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Transformの完全性チェック
+   * システム全体でTransform参照の整合性を確認
+   */
+  async validateSystemTransformIntegrity() {
+      const integrityResult = TransformValidator.validateTransformIntegrity(this.data);
+      
+      if (!integrityResult.isValid) {
+        logger.warn('Transform参照の整合性問題が発見されました', {
+          issues: integrityResult.issues
+        });
+      }
+      
+      return {
+        success: integrityResult.isValid,
+        issues: integrityResult.issues,
+        summary: {
+          availableTransforms: integrityResult.availableTransforms.length,
+          checkedReferences: integrityResult.checkedReferences,
+          problemCount: integrityResult.issues.length
+        }
+      };
+      
+    } catch (error) {
+      logger.error('Transform整合性チェックエラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * Transform使用状況統計を取得
+   * システム内のTransform使用状況を分析
+   */
+  async getTransformUsageReport() {
+    try {
+      const usageStats = TransformValidator.getTransformUsageStats(this.data);
+      
+      logger.info('Transform使用状況を取得しました', {
+        total: usageStats.totalTransforms,
+        used: usageStats.usedTransforms,
+        unused: usageStats.unusedTransforms.length
+      });
+      
+      return {
+        summary: {
+          totalTransforms: usageStats.totalTransforms,
+          usedTransforms: usageStats.usedTransforms,
+          unusedTransforms: usageStats.unusedTransforms.length,
+          usageEfficiency: usageStats.totalTransforms > 0 ? 
+            (usageStats.usedTransforms / usageStats.totalTransforms * 100).toFixed(1) + '%' : '0%'
+        },
+        unusedTransforms: usageStats.unusedTransforms,
+        detailedStats: usageStats.detailedStats,
+        mostUsedTransform: usageStats.summary.mostUsed,
+        averageUsage: usageStats.summary.averageUsage.toFixed(2)
+      };
+      
+    } catch (error) {
+      logger.error('Transform使用統計エラー', { error: error.message });
+      throw error;
+    }
+  }
+
   async updateUnit(updates) {
     try {
-      if (!updates || Object.keys(updates).length === 0) {
-        throw PokerMcpError.validationError('更新する内容が指定されていません', 'updates', updates);
-      }
-      
-      // Unit セクション存在チェック
       if (!this.data.unit) {
-        throw PokerMcpError.unitNotFound();
+        throw new ValidationError('単位設定が存在しません', 'unit', null);
       }
       
-      // 更新値のバリデーション
-      if (updates.length) ManifestValidator.validateSupportedLengthUnit(updates.length, 'length');
-      if (updates.angle) ManifestValidator.validateSupportedAngleUnit(updates.angle, 'angle');
-      if (updates.density) ManifestValidator.validateSupportedDensityUnit(updates.density, 'density');
-      if (updates.radioactivity) ManifestValidator.validateSupportedRadioactivityUnit(updates.radioactivity, 'radioactivity');
+      // 部分更新での4キー保持検証
+      const validationResult = UnitValidator.validatePartialUpdate(this.data.unit, updates);
       
-      // 既存データと更新データをマージ
-      const mergedData = { ...this.data.unit, ...updates };
+      // 更新後の物理的整合性検証
+      const physicalConsistency = UnitValidator.validatePhysicalConsistency(validationResult.updatedStructure);
       
-      // 4つのキー完全性保証
-      this.ensureUnitIntegrity(mergedData);
+      // データ正規化
+      const normalizedUpdates = {};
+      for (const [key, value] of Object.entries(updates)) {
+        normalizedUpdates[key] = value.trim();
+        UnitValidator.validateSingleUnitKey(key, normalizedUpdates[key]);
+      }
       
       await this.dataManager.addPendingChange({
         action: 'updateUnit',
-        data: mergedData
+        data: normalizedUpdates
       });
       
-      logger.info('Unit更新を提案しました', { updates, merged: mergedData });
-      return `提案: unit セクションを更新 - ${JSON.stringify(updates)}`;
+      logger.info('4キー保持単位更新を提案しました', {
+        updates: normalizedUpdates,
+        preservedIntegrity: validationResult.preservedIntegrity,
+        changedKeys: validationResult.changedKeys,
+        physicalConsistency: physicalConsistency.isConsistent
+      });
+      
+      let responseMessage = `提案: 単位設定の更新（${validationResult.changedKeys.join(', ')}）- 4キー完全性保持`;
+      
+      if (physicalConsistency.warnings.length > 0) {
+        const warningTypes = physicalConsistency.warnings.map(w => w.type);
+        responseMessage += ` - 警告: ${warningTypes.join(', ')}`;
+      }
+      
+      return responseMessage;
       
     } catch (error) {
-      logger.error('Unit更新エラー', { updates, error: error.message });
+      logger.error('単位設定更新エラー', { updates, error: error.message });
       throw error;
     }
   }
-  
-  async getUnit() {
+
+  /**
+   * 単位系の4キー完全性と物理的整合性を包括検証
+   */
+  async validateUnitIntegrity(includeSystemAnalysis = true, generateReport = true) {
     try {
-      let unitData = this.data.unit || {};
-      
-      // 4つのキー完全性確認と修復
-      unitData = this.repairIncompleteUnit(unitData);
-      
-      const result = {
-        length: unitData.length,
-        angle: unitData.angle,
-        density: unitData.density,
-        radioactivity: unitData.radioactivity,
-        exists: !!this.data.unit,
-        complete: this.checkUnitCompleteness(unitData)
-      };
-      
-      logger.info('Unit設定を取得しました', result);
-      return result;
-      
-    } catch (error) {
-      logger.error('Unit取得エラー', { error: error.message });
-      throw error;
-    }
-  }
-  
-  // Unit検証・整合性メソッド
-  validateUnitExists() {
-    if (!this.data.unit) {
-      throw new ValidationError('unit セクションが存在しません', 'unit', null);
-    }
-    return true;
-  }
-  
-  validateUnitCompleteness(unitData) {
-    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
-    for (const key of requiredKeys) {
-      if (!unitData[key]) {
-        throw new ValidationError(`unit セクションに必須キー ${key} がありません`, key, unitData[key]);
+      if (!this.data.unit) {
+        throw new ValidationError('単位設定が存在しません。検証には単位設定が必要です', 'unit', null);
       }
-    }
-    return true;
-  }
-  
-  ensureUnitIntegrity(unitData) {
-    const defaults = this.getDefaultUnitValues();
-    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
-    
-    for (const key of requiredKeys) {
-      if (!unitData[key]) {
-        unitData[key] = defaults[key];
-        logger.warn(`Unit キー ${key} が不足しているためデフォルト値を適用しました`, { key, default: defaults[key] });
-      }
-    }
-    
-    return unitData;
-  }
-  
-  validateUnitValues(unitData) {
-    const validUnits = {
-      length: ['m', 'cm', 'mm'],
-      angle: ['radian', 'degree'],
-      density: ['g/cm3'],
-      radioactivity: ['Bq']
-    };
-    
-    for (const [key, value] of Object.entries(unitData)) {
-      if (validUnits[key] && !validUnits[key].includes(value)) {
-        throw new ValidationError(
-          `${key} の値 '${value}' は無効です。有効な値: ${validUnits[key].join(', ')}`,
-          key,
-          value
+      
+      let report = null;
+      if (generateReport) {
+        report = UnitValidator.generateIntegrityDiagnosticReport(
+          this.data.unit, 
+          includeSystemAnalysis ? this.data : null
         );
       }
-    }
-    return true;
-  }
-  
-  getDefaultUnitValues() {
-    return {
-      length: 'cm',
-      angle: 'radian',
-      density: 'g/cm3',
-      radioactivity: 'Bq'
-    };
-  }
-  
-  repairIncompleteUnit(unitData) {
-    try {
-      const defaults = this.getDefaultUnitValues();
-      const repairedData = { ...defaults, ...unitData };
       
-      // 有効性チェック
-      this.validateUnitValues(repairedData);
+      // 基本4キー完全性検証
+      UnitValidator.validateFourKeyCompleteness(this.data.unit);
       
-      return repairedData;
+      // 物理的整合性検証
+      const physicalConsistency = UnitValidator.validatePhysicalConsistency(this.data.unit);
+      
+      // システム整合性検証
+      let systemIntegrity = null;
+      if (includeSystemAnalysis) {
+        systemIntegrity = UnitValidator.validateSystemUnitIntegrity(this.data.unit, this.data);
+      }
+      
+      logger.info('単位系完全性検証を実行しました', {
+        hasAllFourKeys: true,
+        physicalConsistency: physicalConsistency.isConsistent,
+        warningCount: physicalConsistency.warnings.length,
+        systemAnalysis: !!systemIntegrity
+      });
+      
+      return {
+        integrity: 'verified',
+        fourKeyComplete: true,
+        physicalConsistency,
+        systemIntegrity,
+        diagnosticReport: report,
+        summary: {
+          overallHealth: report ? report.overallHealth : 'verified',
+          criticalIssues: report ? report.criticalIssues.length : 0,
+          warnings: physicalConsistency.warnings.length,
+          recommendations: report ? report.recommendations.length : 0
+        }
+      };
+      
     } catch (error) {
-      logger.error('Unit修復失敗', { unitData, error: error.message });
-      // 修復失敗時はデフォルト値を返却
-      return this.getDefaultUnitValues();
+      logger.error('単位系完全性検証エラー', { error: error.message });
+      throw error;
     }
   }
-  
-  checkUnitCompleteness(unitData) {
-    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
-    return requiredKeys.every(key => unitData[key]);
+
+  /**
+   * 異なる単位系間の変換係数分析
+   */
+  async analyzeUnitConversion(targetUnits, includePhysicalAnalysis = true) {
+    try {
+      if (!this.data.unit) {
+        throw new ValidationError('現在の単位設定が存在しません', 'unit', null);
+      }
+      
+      // 現在の単位系の4キー完全性検証
+      UnitValidator.validateFourKeyCompleteness(this.data.unit);
+      
+      // 目標単位系の4キー完全性検証
+      UnitValidator.validateFourKeyCompleteness(targetUnits);
+      
+      // 変換係数の計算
+      const conversionAnalysis = UnitValidator.calculateConversionFactors(
+        this.data.unit, 
+        targetUnits
+      );
+      
+      let physicalAnalysis = null;
+      if (includePhysicalAnalysis) {
+        // 両方の単位系の物理的整合性分析
+        const currentConsistency = UnitValidator.validatePhysicalConsistency(this.data.unit);
+        const targetConsistency = UnitValidator.validatePhysicalConsistency(targetUnits);
+        
+        physicalAnalysis = {
+          current: currentConsistency,
+          target: targetConsistency,
+          conversionImpact: this.assessConversionImpact(conversionAnalysis)
+        };
+      }
+      
+      logger.info('単位変換分析を実行しました', {
+        fromUnits: this.data.unit,
+        toUnits: targetUnits,
+        isIdentityConversion: conversionAnalysis.isIdentity,
+        hasPhysicalAnalysis: !!physicalAnalysis
+      });
+      
+      return {
+        conversion: conversionAnalysis,
+        physicalAnalysis,
+        recommendations: this.generateConversionRecommendations(conversionAnalysis, physicalAnalysis)
+      };
+      
+    } catch (error) {
+      logger.error('単位変換分析エラー', { targetUnits, error: error.message });
+      throw error;
+    }
+  }
+
+  /**
+   * 変換の影響評価
+   * @private
+   */
+  assessConversionImpact(conversionAnalysis) {
+    const impacts = [];
+    
+    for (const [key, factor] of Object.entries(conversionAnalysis.factors)) {
+      if (Math.abs(factor - 1.0) > 1e-10) {
+        let impact = 'moderate';
+        if (Math.abs(Math.log10(Math.abs(factor))) > 2) {
+          impact = 'significant';  // 100倍以上の差
+        } else if (Math.abs(Math.log10(Math.abs(factor))) < 0.1) {
+          impact = 'minor';       // 1.26倍未満の差
+        }
+        
+        impacts.push({
+          key,
+          factor,
+          impact,
+          description: `${key} units require ${factor.toExponential(3)} multiplication factor`
+        });
+      }
+    }
+    
+    return impacts;
+  }
+
+  /**
+   * 変換推奨事項の生成
+   * @private
+   */
+  generateConversionRecommendations(conversionAnalysis, physicalAnalysis) {
+    const recommendations = [];
+    
+    if (conversionAnalysis.isIdentity) {
+      recommendations.push({
+        type: 'no_conversion_needed',
+        priority: 'info',
+        message: 'No unit conversion required - units are identical'
+      });
+      return recommendations;
+    }
+    
+    // 大きな変換係数の警告
+    const significantConversions = conversionAnalysis.factors;
+    for (const [key, factor] of Object.entries(significantConversions)) {
+      if (Math.abs(Math.log10(Math.abs(factor))) > 3) { // 1000倍以上
+        recommendations.push({
+          type: 'large_conversion_factor',
+          priority: 'high',
+          message: `Very large conversion factor for ${key}: ${factor.toExponential(2)}. Verify calculation accuracy.`
+        });
+      }
+    }
+    
+    // 物理的整合性の比較
+    if (physicalAnalysis) {
+      if (physicalAnalysis.current.warnings.length < physicalAnalysis.target.warnings.length) {
+        recommendations.push({
+          type: 'target_system_warnings',
+          priority: 'medium',
+          message: 'Target unit system has more warnings than current system. Consider physical consistency.'
+        });
+      }
+    }
+    
+    return recommendations;
   }
 
   async initialize() {
@@ -254,7 +634,59 @@ export class TaskManager {
     ManifestValidator.validateObjectName(name, 'body name');
   }
 
-  // 座標文字列を正規化（引用符なしの数値として処理）
+  // Sourceデータの正規化（座標正規化とgeometry/division処理）
+  normalizeSourceData(sourceData) {
+    const normalized = { ...sourceData };
+    
+    // POINT線源の場合
+    if (sourceData.type === 'POINT') {
+      if (sourceData.position) {
+        normalized.position = this.normalizeCoordinates(sourceData.position);
+      }
+      // POINT線源ではgeometryとdivisionを除去
+      delete normalized.geometry;
+      delete normalized.division;
+      return normalized;
+    }
+    
+    // 複雑線源のgeometry正規化
+    if (sourceData.geometry) {
+      normalized.geometry = this.normalizeGeometryData(sourceData.geometry);
+    }
+    
+    // divisionは正規化不要（数値データのみ）
+    if (sourceData.division) {
+      normalized.division = sourceData.division;
+    }
+    
+    // cutoff_rateのデフォルト値設定
+    if (normalized.cutoff_rate === undefined) {
+      normalized.cutoff_rate = 0.01;
+    }
+    
+    return normalized;
+  }
+  
+  // Geometryデータの正規化
+  normalizeGeometryData(geometry) {
+    const normalized = { ...geometry };
+    
+    // 座標関連フィールドの正規化
+    const coordinateFields = [
+      'vertex', 'edge_1', 'edge_2', 'edge_3',  // BOX用
+      'min', 'max',                              // RPP用
+      'center',                                  // SPH用
+      'bottom_center', 'height_vector'           // RCC用
+    ];
+    
+    for (const field of coordinateFields) {
+      if (normalized[field]) {
+        normalized[field] = this.normalizeCoordinates(normalized[field]);
+      }
+    }
+    
+    return normalized;
+  }
   normalizeCoordinates(coordString) {
     if (typeof coordString !== 'string') return coordString;
     // "x y z" 形式の文字列を数値として正規化
@@ -265,7 +697,35 @@ export class TaskManager {
     return coordString;
   }
 
-  // グリッドデータ正規化（検出器用）
+  // Detectorデータの正規化
+  normalizeDetectorData(detectorData) {
+    const normalized = { ...detectorData };
+    
+    // 基準位置の正規化
+    if (normalized.origin) {
+      normalized.origin = this.normalizeCoordinates(normalized.origin);
+    }
+    
+    // グリッドデータの正規化
+    if (normalized.grid && Array.isArray(normalized.grid)) {
+      normalized.grid = normalized.grid.map(gridItem => ({
+        edge: this.normalizeCoordinates(gridItem.edge),
+        number: Number(gridItem.number)
+      }));
+    }
+    
+    // show_path_traceのデフォルト値設定
+    if (normalized.show_path_trace === undefined) {
+      normalized.show_path_trace = false;
+    }
+    
+    // transformが空文字列の場合は削除
+    if (!normalized.transform) {
+      delete normalized.transform;
+    }
+    
+    return normalized;
+  }
   normalizeGridData(grid) {
     if (!Array.isArray(grid)) return grid;
     
@@ -542,36 +1002,27 @@ export class TaskManager {
         throw new ValidationError('operationは配列で1つ以上必要です', 'operation', operations);
       }
 
-      // operationバリデーション
-      for (const op of operations) {
-        const keys = Object.keys(op);
-        if (keys.length !== 1) throw new ValidationError('各operationは1つのキーのみ指定してください', 'operation', op);
-        const key = keys[0];
-        const val = op[key];
-        switch (key) {
-          case 'rotate_around_x':
-          case 'rotate_around_y':
-          case 'rotate_around_z':
-            if (!(typeof val === 'number' || (typeof val === 'string' && !isNaN(Number(val))))) {
-              throw new ValidationError(`${key}の値は数値で指定してください`, key, val);
-            }
-            break;
-          case 'translate':
-            if (typeof val !== 'string' || val.trim().split(/\s+/).length !== 3) {
-              throw new ValidationError('translateは3つの数字（空白区切り）で指定してください', 'translate', val);
-            }
-            break;
-          default:
-            throw new ValidationError(`未対応の操作: ${key}`, 'operation', key);
-        }
-      }
-
+      // 基本バリデーション
+      TransformValidator.validateTransformOperations(operations);
+      
+      // 一意性チェック
+      TransformValidator.validateTransformUniqueness(name, this.data.transform, this.pendingChanges);
+      
+      // 物理的妥当性チェック
+      const physicsAnalysis = TransformValidator.validateTransformPhysics(operations, name);
+      
       await this.dataManager.addPendingChange({
         action: 'proposeTransform',
         data: { name, operations }
       });
-      logger.info('変換提案を追加しました', { name, operations });
-      return `回転移動 ${name} を追加しました`;
+      
+      logger.info('変換提案を追加しました', { 
+        name, 
+        operations,
+        analysis: physicsAnalysis
+      });
+      
+      return `回転移動 ${name} を追加しました - 操作数: ${physicsAnalysis.operationCount}, 回転: ${physicsAnalysis.hasRotation}, 移動: ${physicsAnalysis.hasTranslation}`;
       
     } catch (error) {
       logger.error('変換提案エラー', { name, error: error.message });
@@ -603,8 +1054,8 @@ export class TaskManager {
       // Transform名の検証
       ManifestValidator.validateObjectName(name, 'transform name');
       
-      // 依存関係チェック
-      TransformValidator.checkTransformDependencies(name, this.data);
+      // 依存関係チェック（保留中変更も含む）
+      TransformValidator.checkTransformDependencies(name, this.data, this.pendingChanges);
       
       await this.dataManager.addPendingChange({
         action: 'deleteTransform',
@@ -695,43 +1146,61 @@ export class TaskManager {
   // Source操作
   async proposeSource(params) {
     try {
-      const { name, type, position, inventory, cutoff_rate } = params;
+      const { name, type, position, geometry, division, inventory, cutoff_rate } = params;
       
       // 基本バリデーション
       if (!name) throw PokerMcpError.validationError('線源のnameは必須です', 'name', name);
       ManifestValidator.validateObjectName(name, 'source name');
       
       if (!type) throw PokerMcpError.validationError('線源のtypeは必須です', 'type', type);
-      if (!position) throw PokerMcpError.validationError('線源のpositionは必須です', 'position', position);
+      if (!inventory) throw PokerMcpError.validationError('線源のinventoryは必須です', 'inventory', inventory);
       
-      // 座標検証
-      ManifestValidator.validateCoordinateString(position, 'position');
+      // Source構造の包括的検証（SourceValidatorを使用）
+      const validationResult = SourceValidator.validateCompleteSourceStructure(params);
       
-      // インベントリ検証（核種名連結形式チェック含む）
-      NuclideValidator.validateInventory(inventory);
+      // 重複チェック
+      if (this.findSourceByName(name)) {
+        throw PokerMcpError.duplicateName(name, 'source');
+      }
       
       // Transform参照チェック（geometry内にある場合）
-      if (params.geometry && params.geometry.transform) {
+      if (geometry && geometry.transform) {
         TransformValidator.validateContextTransformReference(
-          params.geometry.transform,
+          geometry.transform,
           this.data,
           'source',
           name
         );
       }
       
-      // 座標データの正規化
-      const normalizedParams = {
-        ...params,
-        position: this.normalizeCoordinates(position)
-      };
+      // Source構造の最適化分析
+      const optimization = SourceValidator.analyzeSrcStructureOptimization(params);
+      if (optimization.suggestions.length > 0) {
+        logger.info('Source構造最適化の提案', {
+          name,
+          suggestions: optimization.suggestions
+        });
+      }
+      
+      // データ正規化
+      const normalizedParams = this.normalizeSourceData(params);
       
       await this.dataManager.addPendingChange({
         action: 'proposeSource',
         data: normalizedParams
       });
-      logger.info('線源提案を追加しました', { name, type });
-      return `提案: 線源 ${name} を追加`;
+      
+      logger.info('線源提案を追加しました', { 
+        name, 
+        type, 
+        validation: validationResult,
+        optimization: optimization.isOptimal ? 'optimal' : 'has_suggestions'
+      });
+      
+      const complexityInfo = validationResult.divisionComplexity > 1 ? 
+        ` (分割複雑度: ${validationResult.divisionComplexity})` : '';
+      
+      return `提案: 線源 ${name} (${type}${complexityInfo}) を追加`;
       
     } catch (error) {
       logger.error('線源提案エラー', { params, error: error.message });
@@ -751,28 +1220,45 @@ export class TaskManager {
 
       // 更新内容のバリデーションと正規化
       const normalizedUpdates = { ...updates };
+      
+      // POINT線源のposition更新
       if (normalizedUpdates.position) {
         this.validatePosition(normalizedUpdates.position);
         normalizedUpdates.position = this.normalizeCoordinates(normalizedUpdates.position);
       }
       
+      // インベントリの更新
       if (normalizedUpdates.inventory) {
-        if (!Array.isArray(normalizedUpdates.inventory) || normalizedUpdates.inventory.length === 0) {
-          throw new ValidationError('inventoryは配列で1つ以上の要素が必要です', 'inventory', normalizedUpdates.inventory);
-        }
-        // inventoryの検証
-        for (const item of normalizedUpdates.inventory) {
-          if (!item.nuclide) throw new ValidationError('inventory要素にnuclideが必要', 'nuclide', item);
-          if (typeof item.radioactivity !== 'number' || item.radioactivity < 0) {
-            throw new ValidationError('radioactivityは0以上の数値が必要', 'radioactivity', item);
-          }
+        NuclideValidator.validateInventory(normalizedUpdates.inventory);
+      }
+      
+      // geometryの更新
+      if (normalizedUpdates.geometry) {
+        // 既存Sourceのtypeを取得してgeometry検証
+        const sourceType = existingSource.type;
+        SourceValidator.validateSourceGeometry(sourceType, normalizedUpdates.geometry);
+        normalizedUpdates.geometry = this.normalizeGeometryData(normalizedUpdates.geometry);
+        
+        // Transform参照チェック
+        if (normalizedUpdates.geometry.transform) {
+          TransformValidator.validateContextTransformReference(
+            normalizedUpdates.geometry.transform,
+            this.data,
+            'source',
+            name
+          );
         }
       }
       
+      // divisionの更新
+      if (normalizedUpdates.division) {
+        const sourceType = existingSource.type;
+        SourceValidator.validateSourceDivision(sourceType, normalizedUpdates.division);
+      }
+      
+      // cutoff_rateの更新
       if (normalizedUpdates.cutoff_rate !== undefined) {
-        if (typeof normalizedUpdates.cutoff_rate !== 'number' || normalizedUpdates.cutoff_rate < 0) {
-          throw new ValidationError('cutoff_rateは0以上の数値が必要', 'cutoff_rate', normalizedUpdates.cutoff_rate);
-        }
+        SourceValidator.validateCutoffRate(normalizedUpdates.cutoff_rate);
       }
       
       // typeの変更は禁止（物理的整合性のため）
@@ -780,10 +1266,21 @@ export class TaskManager {
         throw new ValidationError('線源のtypeは変更できません', 'type', normalizedUpdates.type);
       }
       
+      // 更新後の構造最適化分析
+      const mergedSource = { ...existingSource, ...normalizedUpdates };
+      const optimization = SourceValidator.analyzeSrcStructureOptimization(mergedSource);
+      if (optimization.suggestions.length > 0) {
+        logger.info('Source更新後の最適化提案', {
+          name,
+          suggestions: optimization.suggestions
+        });
+      }
+      
       await this.dataManager.addPendingChange({
         action: 'updateSource',
         data: { name, ...normalizedUpdates }
       });
+      
       logger.info('線源更新を提案しました', { name, updates: normalizedUpdates });
       return `提案: 線源 ${name} の更新を保留しました`;
       
@@ -874,30 +1371,64 @@ export class TaskManager {
   }
 
   // Detector操作
-  async proposeDetector(name, origin, grid = [], show_path_trace = false) {
+  async proposeDetector(name, origin, grid = [], show_path_trace = false, transform = null) {
     try {
-      // 入力バリデーション
-      this.validateDetectorData(name, origin, grid);
-
+      // 基本パラメータの構築
+      const detectorData = {
+        name,
+        origin,
+        grid,
+        show_path_trace,
+        transform
+      };
+      
+      // DetectorValidatorによる包括的検証
+      const validationResult = DetectorValidator.validateCompleteDetectorStructure(
+        detectorData, 
+        this.data
+      );
+      
       // 重複チェック
       if (this.findDetectorByName(name)) {
-        throw new ValidationError(`検出器名 ${name} は既に存在します`, 'name', name);
+        throw PokerMcpError.duplicateName(name, 'detector');
       }
-
-      const newDetector = {
-        name,
-        origin: this.normalizeCoordinates(origin),
-        grid: this.normalizeGridData(grid),
-        show_path_trace
-      };
+      
+      // Transform参照チェック（指定されている場合）
+      if (transform) {
+        DetectorValidator.validateDetectorTransform(transform, this.data, name);
+      }
+      
+      // Detector最適化分析
+      const optimization = DetectorValidator.analyzeDetectorOptimization(detectorData, this.data);
+      
+      if (optimization.suggestions.length > 0) {
+        logger.info('Detector構造最適化の提案', {
+          name,
+          suggestions: optimization.suggestions
+        });
+      }
+      
+      // データ正規化
+      const normalizedDetector = this.normalizeDetectorData(detectorData);
       
       await this.dataManager.addPendingChange({
         action: 'proposeDetector',
-        data: newDetector
+        data: normalizedDetector
       });
-
-      logger.info('検出器を提案しました', { name, origin, gridDimensions: grid.length });
-      return `提案: 検出器 ${name} を追加`;
+      
+      logger.info('検出器提案を追加しました', { 
+        name, 
+        validation: validationResult,
+        optimization: optimization.isOptimal ? 'optimal' : 'has_suggestions',
+        performance: optimization.performance
+      });
+      
+      const complexityInfo = validationResult.complexity > 1 ? 
+        ` (複雑度: ${validationResult.complexity})` : '';
+      const dimensionInfo = validationResult.gridAnalysis ? 
+        ` ${validationResult.gridAnalysis.dimension}D` : ' Point';
+      
+      return `提案: 検出器 ${name}${dimensionInfo}${complexityInfo} を追加`;
       
     } catch (error) {
       logger.error('検出器提案エラー', { name, origin, error: error.message });
@@ -915,30 +1446,54 @@ export class TaskManager {
         throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
       }
 
-      // 更新内容のバリデーションと正規化
-      const normalizedUpdates = { ...updates };
-      if (normalizedUpdates.origin) {
-        this.validatePosition(normalizedUpdates.origin);
-        normalizedUpdates.origin = this.normalizeCoordinates(normalizedUpdates.origin);
-      }
+      // 更新データの構築
+      const updatedDetectorData = { ...existingDetector, ...updates, name };
       
-      if (normalizedUpdates.grid) {
-        this.validateGridData(normalizedUpdates.grid);
-        normalizedUpdates.grid = this.normalizeGridData(normalizedUpdates.grid);
-      }
+      // DetectorValidatorによる更新後データの検証
+      const validationResult = DetectorValidator.validateCompleteDetectorStructure(
+        updatedDetectorData,
+        this.data
+      );
       
-      if (normalizedUpdates.show_path_trace !== undefined) {
-        if (typeof normalizedUpdates.show_path_trace !== 'boolean') {
-          throw new ValidationError('show_path_traceは真偽値である必要があります', 'show_path_trace', normalizedUpdates.show_path_trace);
+      // Transform参照チェック（更新される場合）
+      if (updates.transform !== undefined) {
+        if (updates.transform) {
+          DetectorValidator.validateDetectorTransform(updates.transform, this.data, name);
         }
       }
+      
+      // 更新後の最適化分析
+      const optimization = DetectorValidator.analyzeDetectorOptimization(updatedDetectorData, this.data);
+      
+      if (optimization.suggestions.length > 0) {
+        logger.info('Detector更新後の最適化提案', {
+          name,
+          suggestions: optimization.suggestions
+        });
+      }
+      
+      // データ正規化
+      const normalizedUpdates = this.normalizeDetectorData(updates);
+      
+      // nameフィールドは削除（名前変更不可）
+      delete normalizedUpdates.name;
       
       await this.dataManager.addPendingChange({
         action: 'updateDetector',
         data: { name, ...normalizedUpdates }
       });
-      logger.info('検出器更新を提案しました', { name, updates: normalizedUpdates });
-      return `提案: 検出器 ${name} の更新を保留しました`;
+      
+      logger.info('検出器更新を提案しました', { 
+        name, 
+        updates: normalizedUpdates,
+        validation: validationResult,
+        optimization: optimization.isOptimal ? 'optimal' : 'has_suggestions' 
+      });
+      
+      const complexityChange = validationResult.complexity !== existingDetector.grid?.length ?
+        ` (複雑度: ${validationResult.complexity})` : '';
+      
+      return `提案: 検出器 ${name} の更新を保留しました${complexityChange}`;
       
     } catch (error) {
       logger.error('検出器更新エラー', { name, error: error.message });
