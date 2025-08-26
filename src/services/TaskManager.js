@@ -1,6 +1,10 @@
 // services/TaskManager.js
 import { SafeDataManager } from './DataManager.js';
 import { PhysicsValidator } from '../validators/PhysicsValidator.js';
+import { ManifestValidator } from '../validators/ManifestValidator.js';
+import { TransformValidator } from '../validators/TransformValidator.js';
+import { NuclideValidator } from '../validators/NuclideValidator.js';
+import { PokerMcpError } from '../utils/mcpErrors.js';
 import { logger } from '../utils/logger.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
@@ -20,16 +24,19 @@ export class TaskManager {
         radioactivity: radioactivity || 'Bq'
       };
       
+      // 单位値バリデーション（マニフェスト準拠）
+      ManifestValidator.validateSupportedLengthUnit(unitData.length, 'length');
+      ManifestValidator.validateSupportedAngleUnit(unitData.angle, 'angle');
+      ManifestValidator.validateSupportedDensityUnit(unitData.density, 'density');
+      ManifestValidator.validateSupportedRadioactivityUnit(unitData.radioactivity, 'radioactivity');
+      
       // Unit セクション存在チェック
       if (this.data.unit) {
-        throw new ValidationError('unit セクションは既に存在します', 'unit', this.data.unit);
+        throw PokerMcpError.unitAlreadyExists();
       }
       
       // 4つのキー完全性チェック
       this.validateUnitCompleteness(unitData);
-      
-      // 単位値バリデーション
-      this.validateUnitValues(unitData);
       
       await this.dataManager.addPendingChange({
         action: 'proposeUnit',
@@ -48,22 +55,25 @@ export class TaskManager {
   async updateUnit(updates) {
     try {
       if (!updates || Object.keys(updates).length === 0) {
-        throw new ValidationError('更新する内容が指定されていません', 'updates', updates);
+        throw PokerMcpError.validationError('更新する内容が指定されていません', 'updates', updates);
       }
       
       // Unit セクション存在チェック
       if (!this.data.unit) {
-        throw new ValidationError('unit セクションが存在しません', 'unit', null);
+        throw PokerMcpError.unitNotFound();
       }
+      
+      // 更新値のバリデーション
+      if (updates.length) ManifestValidator.validateSupportedLengthUnit(updates.length, 'length');
+      if (updates.angle) ManifestValidator.validateSupportedAngleUnit(updates.angle, 'angle');
+      if (updates.density) ManifestValidator.validateSupportedDensityUnit(updates.density, 'density');
+      if (updates.radioactivity) ManifestValidator.validateSupportedRadioactivityUnit(updates.radioactivity, 'radioactivity');
       
       // 既存データと更新データをマージ
       const mergedData = { ...this.data.unit, ...updates };
       
       // 4つのキー完全性保証
       this.ensureUnitIntegrity(mergedData);
-      
-      // 単位値バリデーション
-      this.validateUnitValues(mergedData);
       
       await this.dataManager.addPendingChange({
         action: 'updateUnit',
@@ -241,12 +251,7 @@ export class TaskManager {
   }
 
   validateBodyName(name) {
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      throw new ValidationError('立体名は必須です', 'name', name);
-    }
-    if (name.length > 50) {
-      throw new ValidationError('立体名は50文字以内で指定してください', 'name', name);
-    }
+    ManifestValidator.validateObjectName(name, 'body name');
   }
 
   // 座標文字列を正規化（引用符なしの数値として処理）
@@ -323,11 +328,22 @@ export class TaskManager {
     try {
       // 入力バリデーション
       this.validateBodyName(name);
+      ManifestValidator.validateBodyType(type, 'type');
       PhysicsValidator.validateGeometry(type, options);
+      
+      // Transform参照チェック
+      if (options.transform) {
+        TransformValidator.validateContextTransformReference(
+          options.transform, 
+          this.data, 
+          'body', 
+          name
+        );
+      }
 
       // 重複チェック
       if (this.findBodyByName(name)) {
-        throw new ValidationError(`立体名 ${name} は既に存在します`, 'name', name);
+        throw PokerMcpError.duplicateName(name, 'body');
       }
 
       const newBody = this.createBodyObject(name, type, options);
@@ -372,6 +388,37 @@ export class TaskManager {
         break;
       case 'CMB':
         body.expression = options.expression;
+        break;
+      case 'TOR':
+        body.center = this.normalizeCoordinates(options.center);
+        body.normal = this.normalizeCoordinates(options.normal);
+        body.major_radius = Number(options.major_radius);
+        body.minor_radius_horizontal = Number(options.minor_radius_horizontal);
+        body.minor_radius_vertical = Number(options.minor_radius_vertical);
+        break;
+      case 'ELL':
+        body.center = this.normalizeCoordinates(options.center);
+        body.radius_vector_1 = this.normalizeCoordinates(options.radius_vector_1);
+        body.radius_vector_2 = this.normalizeCoordinates(options.radius_vector_2);
+        body.radius_vector_3 = this.normalizeCoordinates(options.radius_vector_3);
+        break;
+      case 'REC':
+        body.bottom_center = this.normalizeCoordinates(options.bottom_center);
+        body.height_vector = this.normalizeCoordinates(options.height_vector);
+        body.radius_vector_1 = this.normalizeCoordinates(options.radius_vector_1);
+        body.radius_vector_2 = this.normalizeCoordinates(options.radius_vector_2);
+        break;
+      case 'TRC':
+        body.bottom_center = this.normalizeCoordinates(options.bottom_center);
+        body.height_vector = this.normalizeCoordinates(options.height_vector);
+        body.bottom_radius = Number(options.bottom_radius);
+        body.top_radius = Number(options.top_radius);
+        break;
+      case 'WED':
+        body.vertex = this.normalizeCoordinates(options.vertex);
+        body.width_vector = this.normalizeCoordinates(options.width_vector);
+        body.height_vector = this.normalizeCoordinates(options.height_vector);
+        body.depth_vector = this.normalizeCoordinates(options.depth_vector);
         break;
     }
 
@@ -551,7 +598,13 @@ export class TaskManager {
 
   async deleteTransform(name) {
     try {
-      if (!name) throw new ValidationError('変換のnameは必須です', 'name', name);
+      if (!name) throw PokerMcpError.validationError('変換のnameは必須です', 'name', name);
+      
+      // Transform名の検証
+      ManifestValidator.validateObjectName(name, 'transform name');
+      
+      // 依存関係チェック
+      TransformValidator.checkTransformDependencies(name, this.data);
       
       await this.dataManager.addPendingChange({
         action: 'deleteTransform',
@@ -644,17 +697,27 @@ export class TaskManager {
     try {
       const { name, type, position, inventory, cutoff_rate } = params;
       
-      if (!name) throw new ValidationError('線源のnameは必須です', 'name', name);
-      if (!type) throw new ValidationError('線源のtypeは必須です', 'type', type);
-      if (!position) throw new ValidationError('線源のpositionは必須です', 'position', position);
-      if (!inventory || !Array.isArray(inventory) || inventory.length === 0) {
-        throw new ValidationError('inventoryは必須で、配列である必要があります', 'inventory', inventory);
-      }
+      // 基本バリデーション
+      if (!name) throw PokerMcpError.validationError('線源のnameは必須です', 'name', name);
+      ManifestValidator.validateObjectName(name, 'source name');
       
-      // inventoryの検証
-      for (const item of inventory) {
-        if (!item.nuclide) throw new ValidationError('inventory要素にnuclideが必要', 'nuclide', item);
-        if (typeof item.radioactivity !== 'number') throw new ValidationError('inventory要素にradioactivityが必要', 'radioactivity', item);
+      if (!type) throw PokerMcpError.validationError('線源のtypeは必須です', 'type', type);
+      if (!position) throw PokerMcpError.validationError('線源のpositionは必須です', 'position', position);
+      
+      // 座標検証
+      ManifestValidator.validateCoordinateString(position, 'position');
+      
+      // インベントリ検証（核種名連結形式チェック含む）
+      NuclideValidator.validateInventory(inventory);
+      
+      // Transform参照チェック（geometry内にある場合）
+      if (params.geometry && params.geometry.transform) {
+        TransformValidator.validateContextTransformReference(
+          params.geometry.transform,
+          this.data,
+          'source',
+          name
+        );
       }
       
       // 座標データの正規化
@@ -772,6 +835,13 @@ export class TaskManager {
       if (normalizedUpdates.edge_1) normalizedUpdates.edge_1 = this.normalizeCoordinates(normalizedUpdates.edge_1);
       if (normalizedUpdates.edge_2) normalizedUpdates.edge_2 = this.normalizeCoordinates(normalizedUpdates.edge_2);
       if (normalizedUpdates.edge_3) normalizedUpdates.edge_3 = this.normalizeCoordinates(normalizedUpdates.edge_3);
+      // 新しい立体タイプのパラメータ対応
+      if (normalizedUpdates.normal) normalizedUpdates.normal = this.normalizeCoordinates(normalizedUpdates.normal);
+      if (normalizedUpdates.radius_vector_1) normalizedUpdates.radius_vector_1 = this.normalizeCoordinates(normalizedUpdates.radius_vector_1);
+      if (normalizedUpdates.radius_vector_2) normalizedUpdates.radius_vector_2 = this.normalizeCoordinates(normalizedUpdates.radius_vector_2);
+      if (normalizedUpdates.radius_vector_3) normalizedUpdates.radius_vector_3 = this.normalizeCoordinates(normalizedUpdates.radius_vector_3);
+      if (normalizedUpdates.width_vector) normalizedUpdates.width_vector = this.normalizeCoordinates(normalizedUpdates.width_vector);
+      if (normalizedUpdates.depth_vector) normalizedUpdates.depth_vector = this.normalizeCoordinates(normalizedUpdates.depth_vector);
       
       await this.dataManager.addPendingChange({
         action: 'updateBody',

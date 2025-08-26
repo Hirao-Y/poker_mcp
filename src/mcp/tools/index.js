@@ -6,6 +6,7 @@ import { buildupFactorTools } from './buildupFactorTools.js';
 import { sourceTools } from './sourceTools.js';
 import { detectorTools } from './detectorTools.js';
 import { commonTools } from './commonTools.js';
+import { unitTools } from './unitTools.js';
 
 export const allTools = [
   ...bodyTools,
@@ -14,7 +15,8 @@ export const allTools = [
   ...buildupFactorTools,
   ...sourceTools,
   ...detectorTools,
-  ...commonTools
+  ...commonTools,
+  ...unitTools
 ];
 
 export {
@@ -24,5 +26,6 @@ export {
   buildupFactorTools,
   sourceTools,
   detectorTools,
-  commonTools
+  commonTools,
+  unitTools
 };

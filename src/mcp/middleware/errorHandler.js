@@ -1,24 +1,33 @@
 // mcp/middleware/errorHandler.js
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { ValidationError, PhysicsError } from '../../utils/errors.js';
+import { PokerMcpError } from '../../utils/mcpErrors.js';
 import { logger } from '../../utils/logger.js';
 
 export function handleMcpError(error, context = {}) {
   logger.error('MCP操作エラー', { error: error.message, context });
 
+  // PokerMcpErrorは既に適切なMcpErrorなのでそのまま返す
+  if (error instanceof PokerMcpError) {
+    return error;
+  }
+  
+  // 従来の ValidationError を適切な PokerMcpError に変換
   if (error instanceof ValidationError) {
-    return new McpError(ErrorCode.InvalidParams, `入力エラー: ${error.message}`);
+    return PokerMcpError.validationError(error.message, error.field, error.value);
   }
   
+  // PhysicsError の処理
   if (error instanceof PhysicsError) {
-    return new McpError(ErrorCode.InvalidParams, `物理パラメータエラー: ${error.message}`);
+    return PokerMcpError.validationError(`物理パラメータエラー: ${error.message}`, error.field, error.value);
   }
   
+  // 既存のMcpError
   if (error instanceof McpError) {
     return error;
   }
   
-  // 予期しないエラー
+  // その他の予期しないエラー
   return new McpError(ErrorCode.InternalError, `内部エラー: ${error.message}`);
 }
 

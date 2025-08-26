@@ -13,7 +13,7 @@ export class PokerMcpServer {
     this.server = new Server(
       {
         name: 'pokerinput-mcp-final',
-        version: '4.0.0',
+        version: '4.2.0',
       },
       {
         capabilities: {
