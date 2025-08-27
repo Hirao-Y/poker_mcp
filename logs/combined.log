@@ -222,3 +222,16 @@
 {"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-08-21T07:25:16.249Z"}
 {"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-08-21T07:25:16.249Z"}
 {"level":"info","message":"SIGINT受信、サーバーを終了します","timestamp":"2025-08-21T07:26:01.786Z"}
+{"level":"info","message":"Step2 loggerテストメッセージ","timestamp":"2025-08-27T08:07:28.235Z"}
+{"file":"tasks/pokerinputs.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-08-27T08:09:31.594Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-08-27T08:09:31.596Z"}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-08-27T08:09:31.596Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-08-27T08:09:31.596Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-08-27T08:09:31.596Z"}
+{"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-08-27T08:09:31.598Z"}
+{"file":"tasks/pokerinputs.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-08-27T08:18:50.061Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-08-27T08:18:50.067Z"}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-08-27T08:18:50.067Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-08-27T08:18:50.067Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-08-27T08:18:50.067Z"}
+{"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-08-27T08:18:50.067Z"}

@@ -1,26 +1,42 @@
 // mcp/handlers/zoneHandlers.js
 import { validateZoneRequest } from '../middleware/requestValidator.js';
 import { ValidationError } from '../../utils/errors.js';
+import { logger } from '../../utils/logger.js';
 
 export function createZoneHandlers(taskManager) {
   return {
     async proposeZone(args) {
-      validateZoneRequest(args);
-      const result = await taskManager.proposeZone(args.body_name, args.material, args.density);
-      return { success: true, message: result };
+      try {
+        validateZoneRequest(args);
+        const result = await taskManager.proposeZone(args.body_name, args.material, args.density);
+        return { success: true, message: result };
+      } catch (error) {
+        logger.error('proposeZoneハンドラーエラー', { args, error: error.message });
+        throw error;
+      }
     },
 
     async updateZone(args) {
-      if (!args.body_name) throw new ValidationError('立体名は必須です', 'body_name', args.body_name);
-      const { body_name, ...updates } = args;
-      const result = await taskManager.updateZone(body_name, updates);
-      return { success: true, message: result };
+      try {
+        if (!args.body_name) throw new ValidationError('立体名は必須です', 'body_name', args.body_name);
+        const { body_name, ...updates } = args;
+        const result = await taskManager.updateZone(body_name, updates);
+        return { success: true, message: result };
+      } catch (error) {
+        logger.error('updateZoneハンドラーエラー', { args, error: error.message });
+        throw error;
+      }
     },
 
     async deleteZone(args) {
-      if (!args.body_name) throw new ValidationError('立体名は必須です', 'body_name', args.body_name);
-      const result = await taskManager.deleteZone(args.body_name);
-      return { success: true, message: result };
+      try {
+        if (!args.body_name) throw new ValidationError('立体名は必須です', 'body_name', args.body_name);
+        const result = await taskManager.deleteZone(args.body_name);
+        return { success: true, message: result };
+      } catch (error) {
+        logger.error('deleteZoneハンドラーエラー', { args, error: error.message });
+        throw error;
+      }
     }
   };
 }

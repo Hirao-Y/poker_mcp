@@ -9,54 +9,59 @@ import { ManifestValidator } from './ManifestValidator.js';
 export class UnitValidator {
 
   /**
-   * 必須4キーの完全定義
+   * 必須4キーの完全定義（遅延初期化版）
    * マニフェスト仕様に完全準拠
    */
-  static REQUIRED_UNIT_KEYS = {
-    length: {
-      description: '長さの単位',
-      allowedValues: ['m', 'cm', 'mm'],
-      default: 'cm',
-      physicalDimension: 'L',
-      siBase: 'm',
-      conversionFactors: {
-        'm': 1.0,
-        'cm': 0.01,
-        'mm': 0.001
-      }
-    },
-    angle: {
-      description: '角度の単位', 
-      allowedValues: ['radian', 'degree'],
-      default: 'radian',
-      physicalDimension: 'dimensionless',
-      siBase: 'radian',
-      conversionFactors: {
-        'radian': 1.0,
-        'degree': Math.PI / 180.0
-      }
-    },
-    density: {
-      description: '密度の単位',
-      allowedValues: ['g/cm3'],
-      default: 'g/cm3',
-      physicalDimension: 'ML^-3',
-      siBase: 'kg/m3',
-      conversionFactors: {
-        'g/cm3': 1000.0  // g/cm³ to kg/m³
-      }
-    },
-    radioactivity: {
-      description: '放射能の単位',
-      allowedValues: ['Bq'],
-      default: 'Bq',
-      physicalDimension: 'T^-1',
-      siBase: 'Bq',
-      conversionFactors: {
-        'Bq': 1.0
-      }
+  static get REQUIRED_UNIT_KEYS() {
+    if (!this._cachedUnitKeys) {
+      this._cachedUnitKeys = {
+        length: {
+          description: '長さの単位',
+          allowedValues: ['m', 'cm', 'mm'],
+          default: 'cm',
+          physicalDimension: 'L',
+          siBase: 'm',
+          conversionFactors: {
+            'm': 1.0,
+            'cm': 0.01,
+            'mm': 0.001
+          }
+        },
+        angle: {
+          description: '角度の単位', 
+          allowedValues: ['radian', 'degree'],
+          default: 'radian',
+          physicalDimension: 'dimensionless',
+          siBase: 'radian',
+          conversionFactors: {
+            'radian': 1.0,
+            'degree': Math.PI / 180.0  // 遅延計算
+          }
+        },
+        density: {
+          description: '密度の単位',
+          allowedValues: ['g/cm3'],
+          default: 'g/cm3',
+          physicalDimension: 'ML^-3',
+          siBase: 'kg/m3',
+          conversionFactors: {
+            'g/cm3': 1000.0  // g/cm³ to kg/m³
+          }
+        },
+        radioactivity: {
+          description: '放射能の単位',
+          allowedValues: ['Bq'],
+          default: 'Bq',
+          physicalDimension: 'T^-1',
+          siBase: 'Bq',
+          conversionFactors: {
+            'Bq': 1.0
+          }
+        }
+      };
     }
-  };
+    return this._cachedUnitKeys;
+  }
 
   /**
    * 単位システムの物理的整合性チェック用定数

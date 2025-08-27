@@ -1,8 +1,8 @@
 // validators/ManifestValidator.js
-import { PokerMcpError } from '../utils/mcpErrors.js';
+// 最終的なエラー処理は呈出先で実装（循環依存解消のため）
 
 /**
- * マニフェスト仕様準拠バリデーター
+ * マニフェスト仕様準拠バリデーター（循環依存解消版）
  * マニフェストで定義されたパラメータ制約を厳密に実装
  */
 export class ManifestValidator {
@@ -10,23 +10,39 @@ export class ManifestValidator {
   // オブジェクト名の検証（英数字とアンダースコアのみ、50文字以内）
   static validateObjectName(name, fieldName = 'name') {
     if (!name || typeof name !== 'string') {
-      throw PokerMcpError.validationError(`${fieldName} is required and must be a string`, fieldName, name);
+      const error = new Error(`${fieldName} is required and must be a string`);
+      error.field = fieldName;
+      error.value = name;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     // ハイフンチェック
     if (name.includes('-')) {
-      throw PokerMcpError.invalidNameFormatHyphens(name);
+      const error = new Error(`Invalid name format - hyphens not allowed: ${name}`);
+      error.field = 'name';
+      error.value = name;
+      error.code = 'INVALID_NAME_FORMAT_HYPHENS';
+      throw error;
     }
     
     // パターンチェック: 英数字とアンダースコアのみ
     if (!/^[a-zA-Z0-9_]+$/.test(name)) {
       const invalidChars = name.match(/[^a-zA-Z0-9_]/g) || [];
-      throw PokerMcpError.nameForbiddenCharacters(name, [...new Set(invalidChars)]);
+      const error = new Error(`Name contains forbidden characters: ${name} (invalid: ${invalidChars.join(', ')})`);
+      error.field = 'name';
+      error.value = name;
+      error.code = 'NAME_FORBIDDEN_CHARACTERS';
+      throw error;
     }
     
     // 長さチェック
     if (name.length > 50) {
-      throw PokerMcpError.validationError(`${fieldName} must be 50 characters or less`, fieldName, name);
+      const error = new Error(`${fieldName} must be 50 characters or less`);
+      error.field = fieldName;
+      error.value = name;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     return true;
@@ -35,16 +51,20 @@ export class ManifestValidator {
   // 座標文字列の検証（x y z形式）
   static validateCoordinateString(coordString, fieldName) {
     if (!coordString || typeof coordString !== 'string') {
-      throw PokerMcpError.validationError(`${fieldName} must be a coordinate string`, fieldName, coordString);
+      const error = new Error(`${fieldName} must be a coordinate string`);
+      error.field = fieldName;
+      error.value = coordString;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     const pattern = /^-?\d+(\.\d+)?\s+-?\d+(\.\d+)?\s+-?\d+(\.\d+)?$/;
     if (!pattern.test(coordString.trim())) {
-      throw PokerMcpError.validationError(
-        `${fieldName} must be in "x y z" format with numeric values`,
-        fieldName,
-        coordString
-      );
+      const error = new Error(`${fieldName} must be in "x y z" format with numeric values`);
+      error.field = fieldName;
+      error.value = coordString;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     return true;
@@ -53,11 +73,19 @@ export class ManifestValidator {
   // 正の半径値検証
   static validatePositiveRadius(radius, fieldName) {
     if (typeof radius !== 'number' || radius <= 0) {
-      throw PokerMcpError.validationError(`${fieldName} must be a positive number`, fieldName, radius);
+      const error = new Error(`${fieldName} must be a positive number`);
+      error.field = fieldName;
+      error.value = radius;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     if (radius < 0.001 || radius > 10000) {
-      throw PokerMcpError.validationError(`${fieldName} must be between 0.001 and 10000`, fieldName, radius);
+      const error = new Error(`${fieldName} must be between 0.001 and 10000`);
+      error.field = fieldName;
+      error.value = radius;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     return true;
@@ -66,11 +94,19 @@ export class ManifestValidator {
   // 密度値検証
   static validateDensityValue(density, fieldName) {
     if (typeof density !== 'number' || density <= 0) {
-      throw PokerMcpError.validationError(`${fieldName} must be a positive number`, fieldName, density);
+      const error = new Error(`${fieldName} must be a positive number`);
+      error.field = fieldName;
+      error.value = density;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     if (density < 0.001 || density > 30.0) {
-      throw PokerMcpError.validationError(`${fieldName} must be between 0.001 and 30.0 g/cm³`, fieldName, density);
+      const error = new Error(`${fieldName} must be between 0.001 and 30.0 g/cm³`);
+      error.field = fieldName;
+      error.value = density;
+      error.code = 'VALIDATION_ERROR';
+      throw error;
     }
     
     return true;

@@ -1,4 +1,4 @@
-// mcp/tools/sourceTools.js
+// mcp/tools/sourceTools.js - Enhanced with oneOf geometry structure (マニフェスト完全対応版)
 export const sourceTools = [
   {
     name: 'pokerinput_proposeSource',
@@ -48,276 +48,379 @@ export const sourceTools = [
         geometry: {
           type: 'object',
           description: '線源形状パラメータ（typeがPOINT以外の場合に必須）',
-          properties: {
-            // BOX線源用
-            vertex: {
-              type: 'string',
-              description: 'BOX: 頂点座標（x y z形式）'
+          oneOf: [
+            {
+              title: 'BOX線源形状',
+              properties: {
+                vertex: {
+                  type: 'string',
+                  description: '頂点座標（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_1: {
+                  type: 'string',
+                  description: 'エッジ1ベクトル（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_2: {
+                  type: 'string',
+                  description: 'エッジ2ベクトル（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_3: {
+                  type: 'string',
+                  description: 'エッジ3ベクトル（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['vertex', 'edge_1', 'edge_2', 'edge_3'],
+              additionalProperties: false
             },
-            edge_1: {
-              type: 'string', 
-              description: 'BOX: エッジ1ベクトル（x y z形式）'
+            {
+              title: 'RPP線源形状',
+              properties: {
+                min: {
+                  type: 'string',
+                  description: '最小座標（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                max: {
+                  type: 'string',
+                  description: '最大座標（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['min', 'max'],
+              additionalProperties: false
             },
-            edge_2: {
-              type: 'string',
-              description: 'BOX: エッジ2ベクトル（x y z形式）'
+            {
+              title: 'SPH線源形状',
+              properties: {
+                center: {
+                  type: 'string',
+                  description: '中心座標（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                radius: {
+                  type: 'number',
+                  description: '半径',
+                  minimum: 0.001,
+                  maximum: 10000
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['center', 'radius'],
+              additionalProperties: false
             },
-            edge_3: {
-              type: 'string',
-              description: 'BOX: エッジ3ベクトル（x y z形式）'
-            },
-            // RPP線源用
-            min: {
-              type: 'string',
-              description: 'RPP: 最小座標（x y z形式）'
-            },
-            max: {
-              type: 'string', 
-              description: 'RPP: 最大座標（x y z形式）'
-            },
-            // SPH線源用
-            center: {
-              type: 'string',
-              description: 'SPH: 中心座標（x y z形式）'
-            },
-            radius: {
-              type: 'number',
-              description: 'SPH/RCC: 半径',
-              minimum: 0.001
-            },
-            // RCC線源用
-            bottom_center: {
-              type: 'string',
-              description: 'RCC: 底面中心座標（x y z形式）'
-            },
-            height_vector: {
-              type: 'string',
-              description: 'RCC: 高さベクトル（x y z形式）'
-            },
-            // 共通
-            transform: {
-              type: 'string',
-              description: '適用する変換名'
+            {
+              title: 'RCC線源形状',
+              properties: {
+                bottom_center: {
+                  type: 'string',
+                  description: '底面中心座標（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                height_vector: {
+                  type: 'string',
+                  description: '高さベクトル（x y z形式）',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                radius: {
+                  type: 'number',
+                  description: '半径',
+                  minimum: 0.001,
+                  maximum: 10000
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['bottom_center', 'height_vector', 'radius'],
+              additionalProperties: false
             }
-          },
-          additionalProperties: false
+          ]
         },
         division: {
           type: 'object',
           description: '線源の領域分割パラメータ（typeがPOINT以外の場合に必須）',
-          properties: {
-            // BOX/RPP用（直交座標系）
-            edge_1: {
-              type: 'object',
+          oneOf: [
+            {
+              title: 'BOX線源分割（直交座標系）',
               properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
+                edge_1: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: {
+                      type: 'integer',
+                      minimum: 1,
+                      maximum: 1000
+                    },
+                    min: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 0.0
+                    },
+                    max: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 1.0
+                    }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
+                edge_2: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: {
+                      type: 'integer',
+                      minimum: 1,
+                      maximum: 1000
+                    },
+                    min: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 0.0
+                    },
+                    max: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 1.0
+                    }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
+                edge_3: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: {
+                      type: 'integer',
+                      minimum: 1,
+                      maximum: 1000
+                    },
+                    min: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 0.0
+                    },
+                    max: {
+                      type: 'number',
+                      minimum: 0.0,
+                      maximum: 1.0,
+                      default: 1.0
+                    }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 }
               },
-              required: ['type', 'number'],
+              required: ['edge_1', 'edge_2', 'edge_3'],
               additionalProperties: false
             },
-            edge_2: {
-              type: 'object',
+            {
+              title: 'RPP線源分割（直交座標系）',
               properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
+                edge_1: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
+                edge_2: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
+                edge_3: {
+                  type: 'object',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 }
               },
-              required: ['type', 'number'],
+              required: ['edge_1', 'edge_2', 'edge_3'],
               additionalProperties: false
             },
-            edge_3: {
-              type: 'object',
+            {
+              title: 'SPH線源分割（球面座標系）',
               properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
+                r: {
+                  type: 'object',
+                  description: 'SPH: 動径方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
+                theta: {
+                  type: 'object',
+                  description: 'SPH: 極角方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
+                phi: {
+                  type: 'object',
+                  description: 'SPH: 方位角方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 }
               },
-              required: ['type', 'number'],
+              required: ['r', 'theta', 'phi'],
               additionalProperties: false
             },
-            // SPH用（球面座標系）
-            r: {
-              type: 'object',
-              description: 'SPH: 動径方向分割',
+            {
+              title: 'RCC線源分割（円柱座標系）',
               properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
+                r: {
+                  type: 'object',
+                  description: 'RCC: 動径方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
+                phi: {
+                  type: 'object',
+                  description: 'RCC: 方位角方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
+                z: {
+                  type: 'object',
+                  description: 'RCC: 軸方向分割',
+                  properties: {
+                    type: {
+                      type: 'string',
+                      enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
+                      default: 'UNIFORM'
+                    },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
                 }
               },
-              required: ['type', 'number'],
-              additionalProperties: false
-            },
-            theta: {
-              type: 'object',
-              description: 'SPH: 極角方向分割',
-              properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
-                },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
-                },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
-                }
-              },
-              required: ['type', 'number'],
-              additionalProperties: false
-            },
-            phi: {
-              type: 'object',
-              description: 'SPH/RCC: 方位角方向分割',
-              properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
-                },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
-                },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
-                }
-              },
-              required: ['type', 'number'],
-              additionalProperties: false
-            },
-            // RCC用（円柱座標系）のz軸分割
-            z: {
-              type: 'object',
-              description: 'RCC: 軸方向分割',
-              properties: {
-                type: {
-                  type: 'string',
-                  enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
-                  default: 'UNIFORM'
-                },
-                number: {
-                  type: 'integer',
-                  minimum: 1,
-                  maximum: 1000
-                },
-                min: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 0.0
-                },
-                max: {
-                  type: 'number',
-                  minimum: 0.0,
-                  maximum: 1.0,
-                  default: 1.0
-                }
-              },
-              required: ['type', 'number'],
+              required: ['r', 'phi', 'z'],
               additionalProperties: false
             }
-          },
-          additionalProperties: false
+          ]
         },
         cutoff_rate: {
           type: 'number',
@@ -358,7 +461,8 @@ export const sourceTools = [
               radioactivity: {
                 type: 'number',
                 description: '放射能 (Bq)',
-                minimum: 0.001
+                minimum: 0.001,
+                maximum: 1e15
               }
             },
             required: ['nuclide', 'radioactivity']
@@ -367,13 +471,233 @@ export const sourceTools = [
         },
         geometry: {
           type: 'object',
-          description: '新しい形状パラメータ',
-          additionalProperties: true
+          description: '新しい線源形状パラメータ（完全なoneOf制約付き）',
+          oneOf: [
+            {
+              title: 'BOX線源形状',
+              properties: {
+                vertex: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_1: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_2: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                edge_3: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['vertex', 'edge_1', 'edge_2', 'edge_3'],
+              additionalProperties: false
+            },
+            {
+              title: 'RPP線源形状',
+              properties: {
+                min: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                max: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['min', 'max'],
+              additionalProperties: false
+            },
+            {
+              title: 'SPH線源形状',
+              properties: {
+                center: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                radius: {
+                  type: 'number',
+                  minimum: 0.001,
+                  maximum: 10000
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['center', 'radius'],
+              additionalProperties: false
+            },
+            {
+              title: 'RCC線源形状',
+              properties: {
+                bottom_center: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                height_vector: {
+                  type: 'string',
+                  pattern: '^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$'
+                },
+                radius: {
+                  type: 'number',
+                  minimum: 0.001,
+                  maximum: 10000
+                },
+                transform: {
+                  type: 'string',
+                  description: '適用する変換名',
+                  pattern: '^[a-zA-Z0-9_]+$',
+                  maxLength: 50
+                }
+              },
+              required: ['bottom_center', 'height_vector', 'radius'],
+              additionalProperties: false
+            }
+          ]
         },
         division: {
           type: 'object',
-          description: '新しい分割パラメータ',
-          additionalProperties: true
+          description: '新しい線源分割パラメータ（完全なoneOf制約付き）',
+          oneOf: [
+            {
+              title: 'BOX線源分割',
+              properties: {
+                edge_1: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                edge_2: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                edge_3: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                }
+              },
+              required: ['edge_1', 'edge_2', 'edge_3'],
+              additionalProperties: false
+            },
+            {
+              title: 'SPH線源分割',
+              properties: {
+                r: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                theta: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                phi: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                }
+              },
+              required: ['r', 'theta', 'phi'],
+              additionalProperties: false
+            },
+            {
+              title: 'RCC線源分割',
+              properties: {
+                r: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                phi: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                },
+                z: {
+                  type: 'object',
+                  properties: {
+                    type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
+                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    min: { type: 'number', minimum: 0.0, maximum: 1.0 },
+                    max: { type: 'number', minimum: 0.0, maximum: 1.0 }
+                  },
+                  required: ['type', 'number'],
+                  additionalProperties: false
+                }
+              },
+              required: ['r', 'phi', 'z'],
+              additionalProperties: false
+            }
+          ]
         },
         cutoff_rate: {
           type: 'number',

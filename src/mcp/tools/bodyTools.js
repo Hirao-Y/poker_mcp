@@ -22,7 +22,8 @@ export const bodyTools = [
         radius: {
           type: 'number',
           description: '半径 - SPH, RCC用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         bottom_center: {
           type: 'string',
@@ -68,17 +69,20 @@ export const bodyTools = [
         major_radius: {
           type: 'number',
           description: '主半径 - TOR用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         minor_radius_horizontal: {
           type: 'number',
           description: '水平方向副半径 - TOR用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         minor_radius_vertical: {
           type: 'number',
           description: '垂直方向副半径 - TOR用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         // ELL用パラメータ
         radius_vector_1: {
@@ -97,12 +101,14 @@ export const bodyTools = [
         bottom_radius: {
           type: 'number',
           description: '底面半径 - TRC用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         top_radius: {
           type: 'number',
           description: '上面半径 - TRC用',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 10000
         },
         // WED用パラメータ
         width_vector: {
@@ -132,7 +138,7 @@ export const bodyTools = [
           description: '更新する立体名'
         },
         center: { type: 'string', description: '新しい中心座標 (x y z形式)' },
-        radius: { type: 'number', description: '新しい半径', minimum: 0 },
+        radius: { type: 'number', description: '新しい半径', minimum: 0.001, maximum: 10000 },
         bottom_center: { type: 'string', description: '新しい底面中心座標 (x y z形式)' },
         height_vector: { type: 'string', description: '新しい高さベクトル (x y z形式)' },
         min: { type: 'string', description: '新しい最小座標 (x y z形式)' },
@@ -144,16 +150,16 @@ export const bodyTools = [
         expression: { type: 'string', description: '新しい組み合わせ式' },
         // TOR用パラメータ
         normal: { type: 'string', description: '新しい法線ベクトル (x y z形式)' },
-        major_radius: { type: 'number', description: '新しい主半径', minimum: 0 },
-        minor_radius_horizontal: { type: 'number', description: '新しい水平方向副半径', minimum: 0 },
-        minor_radius_vertical: { type: 'number', description: '新しい垂直方向副半径', minimum: 0 },
+        major_radius: { type: 'number', description: '新しい主半径', minimum: 0.001, maximum: 10000 },
+        minor_radius_horizontal: { type: 'number', description: '新しい水平方向副半径', minimum: 0.001, maximum: 10000 },
+        minor_radius_vertical: { type: 'number', description: '新しい垂直方向副半径', minimum: 0.001, maximum: 10000 },
         // ELL用パラメータ
         radius_vector_1: { type: 'string', description: '新しい半径ベクトル1 (x y z形式)' },
         radius_vector_2: { type: 'string', description: '新しい半径ベクトル2 (x y z形式)' },
         radius_vector_3: { type: 'string', description: '新しい半径ベクトル3 (x y z形式)' },
         // TRC用パラメータ
-        bottom_radius: { type: 'number', description: '新しい底面半径', minimum: 0 },
-        top_radius: { type: 'number', description: '新しい上面半径', minimum: 0 },
+        bottom_radius: { type: 'number', description: '新しい底面半径', minimum: 0.001, maximum: 10000 },
+        top_radius: { type: 'number', description: '新しい上面半径', minimum: 0.001, maximum: 10000 },
         // WED用パラメータ
         width_vector: { type: 'string', description: '新しい幅ベクトル (x y z形式)' },
         depth_vector: { type: 'string', description: '新しい奥行きベクトル (x y z形式)' },

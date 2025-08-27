@@ -17,7 +17,8 @@ export const zoneTools = [
         density: {
           type: 'number',
           description: '密度 (g/cm³)',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 30.0
         }
       },
       required: ['body_name', 'material']
@@ -40,7 +41,8 @@ export const zoneTools = [
         density: {
           type: 'number',
           description: '新しい密度 (g/cm³)',
-          minimum: 0
+          minimum: 0.001,
+          maximum: 30.0
         }
       },
       required: ['body_name']

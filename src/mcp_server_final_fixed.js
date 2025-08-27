@@ -456,11 +456,10 @@ class TaskManager {
   // 線源提案
   proposeSource(params) {
     try {
-      const { name, type, position, inventory, cutoff_rate } = params;
+      const { name, type, position, geometry, division, inventory, cutoff_rate } = params;
       
       if (!name) throw new Error('線源名は必須です');
       if (!type) throw new Error('線源タイプは必須です');
-      if (!position) throw new Error('線源位置は必須です');
       if (!inventory || !Array.isArray(inventory) || inventory.length === 0) {
         throw new Error('inventoryは必須で、配列である必要があります');
       }
@@ -471,15 +470,35 @@ class TaskManager {
         if (typeof item.radioactivity !== 'number') throw new Error('inventory要素にradioactivityが必要');
       }
 
-      // 座標データの正規化
-      const normalizedPosition = this.normalizeCoordinates(position);
+      const source = { name, type, inventory, cutoff_rate: cutoff_rate || 0.0001 };
+
+      // POINTタイプの場合はpositionを使用
+      if (type === 'POINT') {
+        if (!position) throw new Error('POINT線源には位置が必須です');
+        source.position = this.normalizeCoordinates(position);
+      } else {
+        // その他のタイプはgeometryとdivisionを使用
+        if (geometry) {
+          const normalizedGeometry = { ...geometry };
+          if (geometry.center) normalizedGeometry.center = this.normalizeCoordinates(geometry.center);
+          if (geometry.min) normalizedGeometry.min = this.normalizeCoordinates(geometry.min);
+          if (geometry.max) normalizedGeometry.max = this.normalizeCoordinates(geometry.max);
+          if (geometry.vertex) normalizedGeometry.vertex = this.normalizeCoordinates(geometry.vertex);
+          if (geometry.bottom_center) normalizedGeometry.bottom_center = this.normalizeCoordinates(geometry.bottom_center);
+          if (geometry.height_vector) normalizedGeometry.height_vector = this.normalizeCoordinates(geometry.height_vector);
+          if (geometry.edge_1) normalizedGeometry.edge_1 = this.normalizeCoordinates(geometry.edge_1);
+          if (geometry.edge_2) normalizedGeometry.edge_2 = this.normalizeCoordinates(geometry.edge_2);
+          if (geometry.edge_3) normalizedGeometry.edge_3 = this.normalizeCoordinates(geometry.edge_3);
+          source.geometry = normalizedGeometry;
+        }
+        if (division) {
+          source.division = division;
+        }
+      }
 
       this.pendingChanges.push({ 
         action: "add_source", 
-        source: {
-          name, type, position: normalizedPosition, inventory, 
-          cutoff_rate: cutoff_rate || 0.0001
-        },
+        source,
         timestamp: new Date().toISOString()
       });
       this.savePendingChanges();
@@ -503,9 +522,24 @@ class TaskManager {
         normalizedUpdates.position = this.normalizeCoordinates(normalizedUpdates.position);
       }
       
+      // geometryパラメータの正規化
+      if (normalizedUpdates.geometry) {
+        const normalizedGeometry = { ...normalizedUpdates.geometry };
+        if (normalizedUpdates.geometry.center) normalizedGeometry.center = this.normalizeCoordinates(normalizedUpdates.geometry.center);
+        if (normalizedUpdates.geometry.min) normalizedGeometry.min = this.normalizeCoordinates(normalizedUpdates.geometry.min);
+        if (normalizedUpdates.geometry.max) normalizedGeometry.max = this.normalizeCoordinates(normalizedUpdates.geometry.max);
+        if (normalizedUpdates.geometry.vertex) normalizedGeometry.vertex = this.normalizeCoordinates(normalizedUpdates.geometry.vertex);
+        if (normalizedUpdates.geometry.bottom_center) normalizedGeometry.bottom_center = this.normalizeCoordinates(normalizedUpdates.geometry.bottom_center);
+        if (normalizedUpdates.geometry.height_vector) normalizedGeometry.height_vector = this.normalizeCoordinates(normalizedUpdates.geometry.height_vector);
+        if (normalizedUpdates.geometry.edge_1) normalizedGeometry.edge_1 = this.normalizeCoordinates(normalizedUpdates.geometry.edge_1);
+        if (normalizedUpdates.geometry.edge_2) normalizedGeometry.edge_2 = this.normalizeCoordinates(normalizedUpdates.geometry.edge_2);
+        if (normalizedUpdates.geometry.edge_3) normalizedGeometry.edge_3 = this.normalizeCoordinates(normalizedUpdates.geometry.edge_3);
+        normalizedUpdates.geometry = normalizedGeometry;
+      }
+      
       // 更新パラメータの検証
       if (normalizedUpdates.type) {
-        const validTypes = ['POINT', 'BOX', 'RPP', 'SPH', 'RCC'];
+        const validTypes = ['POINT', 'SPH', 'RCC', 'RPP', 'BOX'];
         if (!validTypes.includes(normalizedUpdates.type)) {
           throw new Error(`無効な線源タイプ: ${normalizedUpdates.type}. 有効なタイプ: ${validTypes.join(', ')}`);
         }

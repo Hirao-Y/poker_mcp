@@ -3,6 +3,98 @@ import { ValidationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 
 export function createUnitHandlers(taskManager) {
+  // ヘルパー関数をローカルスコープで定義
+  function generateUnitUsageStats(integrityResult) {
+    const stats = {
+      totalUsages: 0,
+      usagesByKey: {
+        length: 0,
+        angle: 0,
+        density: 0,
+        radioactivity: 0
+      },
+      contextTypes: {
+        coordinates: 0,
+        geometry: 0,
+        material_properties: 0,
+        radiation: 0
+      }
+    };
+
+    if (integrityResult.systemIntegrity && integrityResult.systemIntegrity.usageConsistency) {
+      integrityResult.systemIntegrity.usageConsistency.forEach(usage => {
+        stats.totalUsages += usage.usageCount;
+        
+        // 使用コンテキストの分類
+        usage.contexts.forEach(context => {
+          if (context.includes('coordinates') || context.includes('position')) {
+            stats.contextTypes.coordinates++;
+          } else if (context.includes('geometry') || context.includes('edge')) {
+            stats.contextTypes.geometry++;
+          } else if (context.includes('density')) {
+            stats.contextTypes.material_properties++;
+          } else if (context.includes('radioactivity') || context.includes('inventory')) {
+            stats.contextTypes.radiation++;
+          }
+        });
+      });
+    }
+
+    return stats;
+  }
+
+  function organizeRecommendations(integrityResult) {
+    const recommendations = [];
+    
+    // 診断レポートからの推奨事項
+    if (integrityResult.diagnosticReport && integrityResult.diagnosticReport.recommendations) {
+      integrityResult.diagnosticReport.recommendations.forEach(rec => {
+        recommendations.push({
+          type: 'system_optimization',
+          priority: 'medium',
+          category: 'unit_consistency',
+          message: rec,
+          source: 'diagnostic_report'
+        });
+      });
+    }
+    
+    // 物理的整合性からの推奨事項
+    if (integrityResult.physicalConsistency && integrityResult.physicalConsistency.recommendations) {
+      integrityResult.physicalConsistency.recommendations.forEach(rec => {
+        recommendations.push({
+          type: 'physical_consistency',
+          priority: 'high',
+          category: 'unit_physics',
+          message: rec.message,
+          source: 'physical_consistency'
+        });
+      });
+    }
+    
+    // 健全性に基づく一般的推奨事項
+    const overallHealth = integrityResult.summary.overallHealth;
+    if (overallHealth === 'warning' || overallHealth === 'minor_warnings') {
+      recommendations.push({
+        type: 'health_improvement',
+        priority: 'medium',
+        category: 'system_health',
+        message: 'Consider reviewing unit system warnings to improve overall consistency',
+        source: 'health_analysis'
+      });
+    } else if (overallHealth === 'excellent') {
+      recommendations.push({
+        type: 'maintenance',
+        priority: 'low',
+        category: 'system_health', 
+        message: 'Unit system is in excellent condition. Continue current practices.',
+        source: 'health_analysis'
+      });
+    }
+    
+    return recommendations;
+  }
+
   return {
     // 単位設定提案（4キー完全性保証）
     async proposeUnit(args) {
@@ -162,7 +254,7 @@ export function createUnitHandlers(taskManager) {
         const result = await taskManager.validateUnitIntegrity(true, true);
         
         // 使用状況統計を生成
-        const usageStats = this.generateUnitUsageStats(result);
+        const usageStats = generateUnitUsageStats(result);
         
         logger.info('システム単位使用状況分析完了', usageStats);
         
@@ -189,7 +281,7 @@ export function createUnitHandlers(taskManager) {
         const integrityResult = await taskManager.validateUnitIntegrity(true, true);
         
         // 推奨事項を整理
-        const recommendations = this.organizeRecommendations(integrityResult);
+        const recommendations = organizeRecommendations(integrityResult);
         
         logger.info('単位推奨事項取得完了', {
           recommendationCount: recommendations.length
@@ -210,96 +302,4 @@ export function createUnitHandlers(taskManager) {
       }
     }
   };
-
-  // ヘルパーメソッドをハンドラー内に定義
-  function generateUnitUsageStats(integrityResult) {
-    const stats = {
-      totalUsages: 0,
-      usagesByKey: {
-        length: 0,
-        angle: 0,
-        density: 0,
-        radioactivity: 0
-      },
-      contextTypes: {
-        coordinates: 0,
-        geometry: 0,
-        material_properties: 0,
-        radiation: 0
-      }
-    };
-
-    if (integrityResult.systemIntegrity && integrityResult.systemIntegrity.usageConsistency) {
-      integrityResult.systemIntegrity.usageConsistency.forEach(usage => {
-        stats.totalUsages += usage.usageCount;
-        
-        // 使用コンテキストの分類
-        usage.contexts.forEach(context => {
-          if (context.includes('coordinates') || context.includes('position')) {
-            stats.contextTypes.coordinates++;
-          } else if (context.includes('geometry') || context.includes('edge')) {
-            stats.contextTypes.geometry++;
-          } else if (context.includes('density')) {
-            stats.contextTypes.material_properties++;
-          } else if (context.includes('radioactivity') || context.includes('inventory')) {
-            stats.contextTypes.radiation++;
-          }
-        });
-      });
-    }
-
-    return stats;
-  }
-
-  function organizeRecommendations(integrityResult) {
-    const recommendations = [];
-    
-    // 診断レポートからの推奨事項
-    if (integrityResult.diagnosticReport && integrityResult.diagnosticReport.recommendations) {
-      integrityResult.diagnosticReport.recommendations.forEach(rec => {
-        recommendations.push({
-          type: 'system_optimization',
-          priority: 'medium',
-          category: 'unit_consistency',
-          message: rec,
-          source: 'diagnostic_report'
-        });
-      });
-    }
-    
-    // 物理的整合性からの推奨事項
-    if (integrityResult.physicalConsistency && integrityResult.physicalConsistency.recommendations) {
-      integrityResult.physicalConsistency.recommendations.forEach(rec => {
-        recommendations.push({
-          type: 'physical_consistency',
-          priority: 'high',
-          category: 'unit_physics',
-          message: rec.message,
-          source: 'physical_consistency'
-        });
-      });
-    }
-    
-    // 健全性に基づく一般的推奨事項
-    const overallHealth = integrityResult.summary.overallHealth;
-    if (overallHealth === 'warning' || overallHealth === 'minor_warnings') {
-      recommendations.push({
-        type: 'health_improvement',
-        priority: 'medium',
-        category: 'system_health',
-        message: 'Consider reviewing unit system warnings to improve overall consistency',
-        source: 'health_analysis'
-      });
-    } else if (overallHealth === 'excellent') {
-      recommendations.push({
-        type: 'maintenance',
-        priority: 'low',
-        category: 'system_health', 
-        message: 'Unit system is in excellent condition. Continue current practices.',
-        source: 'health_analysis'
-      });
-    }
-    
-    return recommendations;
-  }
 }

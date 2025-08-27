@@ -293,6 +293,7 @@ export class TaskManager {
    * システム全体でTransform参照の整合性を確認
    */
   async validateSystemTransformIntegrity() {
+    try {
       const integrityResult = TransformValidator.validateTransformIntegrity(this.data);
       
       if (!integrityResult.isValid) {
