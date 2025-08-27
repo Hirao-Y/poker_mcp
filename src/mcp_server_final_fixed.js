@@ -97,7 +97,7 @@ class TaskManager {
     try {
       this.createBackup();
       const yamlString = yaml.dump(data, { 
-        flowLevel: 2, 
+        flowLevel: -1, 
         lineWidth: 120,
         quotingType: '"',
         forceQuotes: false,

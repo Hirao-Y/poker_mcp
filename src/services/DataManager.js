@@ -111,7 +111,7 @@ export class SafeDataManager {
     try {
       await this.createBackup();
       const yamlData = yaml.dump(this.data, { 
-      flowLevel: 2,
+      flowLevel: -1,  // すべてのレベルでブロックスタイルを使用
       lineWidth: 120,
       noRefs: true,
         quotingType: '"',
@@ -339,13 +339,52 @@ export class SafeDataManager {
         if (existingSource) {
           Object.assign(existingSource, data);
         } else {
-          this.data.source.push({
+          // 完全なsourceオブジェクトを構築
+          const sourceObject = {
             name: data.name,
             type: data.type,
-            position: data.position,
-            inventory: data.inventory,
-            cutoff_rate: data.cutoff_rate || 0.0001
+            inventory: data.inventory
+          };
+          
+          // cutoff_rateの追加（デフォルト値処理）
+          if (data.cutoff_rate !== undefined) {
+            sourceObject.cutoff_rate = data.cutoff_rate;
+          }
+          
+          // POINT線源の場合はpositionを追加
+          if (data.type === 'POINT' && data.position) {
+            sourceObject.position = data.position;
+            logger.info('POINT線源にpositionを追加', { name: data.name, position: data.position });
+          }
+          
+          // 体積線源の場合はgeometryとdivisionを追加
+          if (data.type !== 'POINT') {
+            // geometryの確実な追加
+            if (data.geometry) {
+              sourceObject.geometry = data.geometry;
+              logger.info('体積線源にgeometryを追加', { name: data.name, geometry: data.geometry });
+            } else {
+              logger.warn('体積線源にgeometryがありません', { name: data.name, type: data.type });
+            }
+            
+            // divisionの確実な追加
+            if (data.division) {
+              sourceObject.division = data.division;
+              logger.info('体積線源にdivisionを追加', { name: data.name, division: data.division });
+            } else {
+              logger.warn('体積線源にdivisionがありません', { name: data.name, type: data.type });
+            }
+          }
+          
+          logger.info('最終的なsourceObject', { 
+            name: sourceObject.name,
+            type: sourceObject.type,
+            hasGeometry: !!sourceObject.geometry,
+            hasDivision: !!sourceObject.division,
+            hasPosition: !!sourceObject.position,
+            fullObject: sourceObject 
           });
+          this.data.source.push(sourceObject);
         }
         break;
 
@@ -381,12 +420,20 @@ export class SafeDataManager {
         if (existingDetector) {
           Object.assign(existingDetector, data);
         } else {
-          this.data.detector.push({
+          // 完全なdetectorオブジェクトを構築
+          const detectorObject = {
             name: data.name,
             origin: data.origin,
             grid: data.grid || [],
             show_path_trace: data.show_path_trace || false
-          });
+          };
+          
+          // transformが指定されている場合は追加
+          if (data.transform) {
+            detectorObject.transform = data.transform;
+          }
+          
+          this.data.detector.push(detectorObject);
         }
         break;
 

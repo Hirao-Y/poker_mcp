@@ -177,7 +177,7 @@ export const sourceTools = [
                     },
                     number: {
                       type: 'integer',
-                      minimum: 1,
+                      minimum: 2,
                       maximum: 1000
                     },
                     min: {
@@ -206,7 +206,7 @@ export const sourceTools = [
                     },
                     number: {
                       type: 'integer',
-                      minimum: 1,
+                      minimum: 2,
                       maximum: 1000
                     },
                     min: {
@@ -235,7 +235,7 @@ export const sourceTools = [
                     },
                     number: {
                       type: 'integer',
-                      minimum: 1,
+                      minimum: 2,
                       maximum: 1000
                     },
                     min: {
@@ -269,7 +269,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -284,7 +284,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -299,7 +299,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -322,7 +322,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -338,7 +338,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -354,7 +354,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -377,7 +377,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -393,7 +393,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -409,7 +409,7 @@ export const sourceTools = [
                       enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'],
                       default: 'UNIFORM'
                     },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0, default: 0.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0, default: 1.0 }
                   },
@@ -584,7 +584,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -595,7 +595,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -606,7 +606,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -624,7 +624,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -635,7 +635,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -646,7 +646,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -664,7 +664,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -675,7 +675,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },
@@ -686,7 +686,7 @@ export const sourceTools = [
                   type: 'object',
                   properties: {
                     type: { enum: ['UNIFORM', 'GAUSS_FIRST', 'GAUSS_LAST', 'GAUSS_BOTH', 'GAUSS_CENTER'] },
-                    number: { type: 'integer', minimum: 1, maximum: 1000 },
+                    number: { type: 'integer', minimum: 2, maximum: 1000 },
                     min: { type: 'number', minimum: 0.0, maximum: 1.0 },
                     max: { type: 'number', minimum: 0.0, maximum: 1.0 }
                   },

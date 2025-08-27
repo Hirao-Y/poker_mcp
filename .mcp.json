@@ -1,116 +1,17 @@
 {
   "name": "pokerinput-mcp-final",
-  "version": "4.0.0",
-  "description": "世界クラス YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support",
-  "url": "http://localhost:3020/mcp",
+  "version": "4.2.0", 
+  "description": "放射線遮蔽計算入力ファイル管理ツール",
+  "url": "stdio://",
   "server": {
     "command": "node",
-    "args": ["src/mcp_server_stdio_v4.js"],
-    "cwd": "C:\\Users\\tora\\Desktop\\poker_mcp",
-    "env": {
-      "NODE_ENV": "production"
-    }
+    "args": ["src/mcp_server_stdio_v4.js"]
   },
   "capabilities": {
     "tools": true,
-    "prompts": false,
-    "resources": false,
     "logging": true
   },
   "metadata": {
-    "author": "yoshihiro hirao",
-    "license": "ISC",
-    "repository": "https://github.com/example/pokerinput-mcp-final",
-    "documentation": "docs/README.md",
-    "manuals": "docs/manuals/INDEX.md",
-    "status": "production",
-    "quality_level": "enterprise",
-    "last_updated": "2025-08-23"
-  },
-  "config": {
-    "data_file": "tasks/pokerinputs.yaml",
-    "pending_file": "tasks/pending_changes.json",
-    "backup_directory": "backups/",
-    "log_directory": "logs/",
-    "max_backups": 10,
-    "auto_backup": true,
-    "real_data_update": true
-  },
-  "tools": [
-    {
-      "name": "pokerinput_proposeBody",
-      "description": "新しい3D立体を提案します（自動バックアップ付き）",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            "description": "立体の一意な名前"
-          },
-          "type": {
-            "type": "string", 
-            "description": "立体タイプ",
-            "enum": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"]
-          },
-          "center": {
-            "type": "string",
-            "description": "中心座標 (x y z形式) - SPH用"
-          },
-          "radius": {
-            "type": "number",
-            "description": "半径 - SPH, RCC用",
-            "minimum": 0
-          },
-          "bottom_center": {
-            "type": "string", 
-            "description": "底面中心座標 (x y z形式) - RCC用"
-          },
-          "height_vector": {
-            "type": "string",
-            "description": "高さベクトル (x y z形式) - RCC用"
-          },
-          "min": {
-            "type": "string",
-            "description": "最小座標 (x y z形式) - RPP用"
-          },
-          "max": {
-            "type": "string",
-            "description": "最大座標 (x y z形式) - RPP用"
-          },
-          "vertex": {
-            "type": "string",
-            "description": "頂点座標 (x y z形式) - BOX用"
-          },
-          "edge_1": {
-            "type": "string",
-            "description": "エッジ1ベクトル (x y z形式) - BOX用"
-          },
-          "edge_2": {
-            "type": "string",
-            "description": "エッジ2ベクトル (x y z形式) - BOX用"
-          },
-          "edge_3": {
-            "type": "string",
-            "description": "エッジ3ベクトル (x y z形式) - BOX用"
-          },
-          "expression": {
-            "type": "string",
-            "description": "組み合わせ式 - CMB用"
-          },
-          "transform": {
-            "type": "string",
-            "description": "適用する変換名"
-          }
-        },
-        "required": ["name", "type"]
-      }
-    },
-    {
-      "name": "pokerinput_updateBody", 
-      "description": "既存立体のパラメータを更新します",
-      "inputSchema": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string",
-            
+    "author": "yoshihiro hirao"
+  }
+}

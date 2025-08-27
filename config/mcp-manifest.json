@@ -1268,7 +1268,7 @@
     },
     "grid_division": {
       "type": "integer",
-      "minimum": 1,
+      "minimum": 2,
       "maximum": 1000,
       "description": "グリッド分割数"
     },

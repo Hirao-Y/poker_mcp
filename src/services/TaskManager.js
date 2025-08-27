@@ -639,31 +639,57 @@ export class TaskManager {
   normalizeSourceData(sourceData) {
     const normalized = { ...sourceData };
     
+    logger.info('Sourceデータ正規化開始', {
+      name: sourceData.name,
+      type: sourceData.type,
+      hasGeometry: !!sourceData.geometry,
+      hasDivision: !!sourceData.division,
+      hasPosition: !!sourceData.position
+    });
+    
     // POINT線源の場合
     if (sourceData.type === 'POINT') {
       if (sourceData.position) {
         normalized.position = this.normalizeCoordinates(sourceData.position);
+        logger.info('POINT線源position正規化', { position: normalized.position });
       }
       // POINT線源ではgeometryとdivisionを除去
       delete normalized.geometry;
       delete normalized.division;
+      logger.info('POINT線源のgeometry/divisionを除去');
       return normalized;
     }
     
-    // 複雑線源のgeometry正規化
+    // 体積線源のgeometry正規化
     if (sourceData.geometry) {
       normalized.geometry = this.normalizeGeometryData(sourceData.geometry);
+      logger.info('体積線源geometry正規化完了', { geometry: normalized.geometry });
+    } else {
+      logger.warn('体積線源にgeometryがありません', { name: sourceData.name, type: sourceData.type });
     }
     
     // divisionは正規化不要（数値データのみ）
     if (sourceData.division) {
       normalized.division = sourceData.division;
+      logger.info('体積線源division保持', { division: normalized.division });
+    } else {
+      logger.warn('体積線源にdivisionがありません', { name: sourceData.name, type: sourceData.type });
     }
     
     // cutoff_rateのデフォルト値設定
     if (normalized.cutoff_rate === undefined) {
       normalized.cutoff_rate = 0.01;
+      logger.info('cutoff_rateデフォルト値設定', { cutoff_rate: normalized.cutoff_rate });
     }
+    
+    logger.info('Sourceデータ正規化完了', {
+      name: normalized.name,
+      type: normalized.type,
+      hasGeometry: !!normalized.geometry,
+      hasDivision: !!normalized.division,
+      hasPosition: !!normalized.position,
+      cutoff_rate: normalized.cutoff_rate
+    });
     
     return normalized;
   }
@@ -1149,6 +1175,16 @@ export class TaskManager {
     try {
       const { name, type, position, geometry, division, inventory, cutoff_rate } = params;
       
+      logger.info('proposeSource開始', {
+        name,
+        type,
+        hasPosition: !!position,
+        hasGeometry: !!geometry,
+        hasDivision: !!division,
+        hasInventory: !!inventory,
+        cutoff_rate
+      });
+      
       // 基本バリデーション
       if (!name) throw PokerMcpError.validationError('線源のnameは必須です', 'name', name);
       ManifestValidator.validateObjectName(name, 'source name');
@@ -1158,6 +1194,7 @@ export class TaskManager {
       
       // Source構造の包括的検証（SourceValidatorを使用）
       const validationResult = SourceValidator.validateCompleteSourceStructure(params);
+      logger.info('SourceValidator検証結果', validationResult);
       
       // 重複チェック
       if (this.findSourceByName(name)) {
@@ -1183,8 +1220,26 @@ export class TaskManager {
         });
       }
       
+      // データ正規化の前にパラメーター確認
+      logger.info('正規化前のパラメーター', {
+        name, type, position, 
+        geometryExists: !!geometry,
+        divisionExists: !!division,
+        geometryContent: geometry ? JSON.stringify(geometry) : 'null',
+        divisionContent: division ? JSON.stringify(division) : 'null'
+      });
+      
       // データ正規化
       const normalizedParams = this.normalizeSourceData(params);
+      
+      logger.info('正規化後のパラメーター', {
+        name: normalizedParams.name,
+        type: normalizedParams.type,
+        geometryExists: !!normalizedParams.geometry,
+        divisionExists: !!normalizedParams.division,
+        geometryContent: normalizedParams.geometry ? JSON.stringify(normalizedParams.geometry) : 'null',
+        divisionContent: normalizedParams.division ? JSON.stringify(normalizedParams.division) : 'null'
+      });
       
       await this.dataManager.addPendingChange({
         action: 'proposeSource',
@@ -1195,7 +1250,9 @@ export class TaskManager {
         name, 
         type, 
         validation: validationResult,
-        optimization: optimization.isOptimal ? 'optimal' : 'has_suggestions'
+        optimization: optimization.isOptimal ? 'optimal' : 'has_suggestions',
+        finalHasGeometry: !!normalizedParams.geometry,
+        finalHasDivision: !!normalizedParams.division
       });
       
       const complexityInfo = validationResult.divisionComplexity > 1 ? 
