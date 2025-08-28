@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ 放射線遮蔽 レベル1: 基礎から実践へ (研究者向け)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --physics-blue: #1e40af;
+            --medical-green: #059669;
+            --nuclear-orange: #ea580c;
+            --safety-red: #dc2626;
+            --theory-purple: #7c3aed;
+            --practical-cyan: #0891b2;
+            --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            --panel-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-glow: rgba(30, 64, 175, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--physics-blue) 0%, var(--theory-purple) 50%, var(--practical-cyan) 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .main-header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 2px,
+                rgba(255, 255, 255, 0.05) 2px,
+                rgba(255, 255, 255, 0.05) 4px
+            );
+            pointer-events: none;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 1;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+            animation: pulseGlow 2s infinite;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+            50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+        }
+
+        .progress-container {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+            z-index: 1;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 12px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 6px;
+            overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #10b981, #34d399);
+            transition: width 0.8s ease;
+            border-radius: 6px;
+            position: relative;
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .level-info {
+            text-align: right;
+            z-index: 1;
+        }
+
+        .level-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .level-subtitle {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 380px 1fr 360px;
+            gap: 1.5rem;
+            padding: 1.5rem;
+            min-height: calc(100vh - 180px);
+        }
+
+        .panel {
+            background: var(--panel-bg);
+            border-radius: 16px;
+            box-shadow: 
+                0 4px 24px rgba(0, 0, 0, 0.08),
+                0 0 0 1px rgba(255, 255, 255, 0.5);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .panel:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 8px 40px rgba(0, 0, 0, 0.12),
+                0 0 0 1px rgba(255, 255, 255, 0.8);
+        }
+
+        .theory-panel {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .step-header {
+            background: linear-gradient(135deg, var(--theory-purple), #9333ea);
+            color: white;
+            padding: 1rem 1.5rem;
+            margin: -2rem -2rem 2rem -2rem;
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .step-icon {
+            font-size: 1.5rem;
+        }
+
+        .physics-section {
+            margin-bottom: 2rem;
+        }
+
+        .physics-title {
+            color: var(--physics-blue);
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .equation-box {
+            background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+            color: #f9fafb;
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin: 1.5rem 0;
+            font-family: 'Courier New', monospace;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .equation-box::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--theory-purple), var(--practical-cyan));
+        }
+
+        .main-equation {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .equation-description {
+            font-size: 0.9rem;
+            color: #d1d5db;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .concept-card {
+            background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+            border: 2px solid #f59e0b;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            position: relative;
+        }
+
+        .concept-card::before {
+            content: '💡';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: #f59e0b;
+            padding: 0.5rem;
+            border-radius: 50%;
+            font-size: 1rem;
+        }
+
+        .concept-title {
+            font-weight: 600;
+            color: var(--nuclear-orange);
+            margin-bottom: 0.75rem;
+            margin-left: 1rem;
+        }
+
+        .parameter-list {
+            display: grid;
+            gap: 0.75rem;
+            margin: 1rem 0;
+        }
+
+        .parameter-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 8px;
+        }
+
+        .param-symbol {
+            background: var(--physics-blue);
+            color: white;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            min-width: 2rem;
+            text-align: center;
+        }
+
+        .param-description {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .visualization-panel {
+            position: relative;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .viz-header {
+            background: linear-gradient(135deg, var(--medical-green), #10b981);
+            color: white;
+            padding: 1rem 1.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .viz-controls {
+            position: absolute;
+            top: 4rem;
+            right: 1rem;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .viz-btn {
+            background: rgba(255, 255, 255, 0.95);
+            border: none;
+            padding: 0.5rem 0.75rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+
+        .viz-btn:hover {
+            background: white;
+            transform: scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 400px;
+            border-radius: 0 0 16px 16px;
+        }
+
+        .scenario-selector {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 1rem;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            min-width: 200px;
+        }
+
+        .scenario-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+
+        .scenario-options {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .scenario-btn {
+            background: transparent;
+            border: 2px solid var(--medical-green);
+            color: var(--medical-green);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+
+        .scenario-btn:hover, .scenario-btn.active {
+            background: var(--medical-green);
+            color: white;
+            transform: translateX(4px);
+        }
+
+        .control-panel {
+            padding: 2rem;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .control-header {
+            background: linear-gradient(135deg, var(--practical-cyan), #0ea5e9);
+            color: white;
+            padding: 1rem 1.5rem;
+            margin: -2rem -2rem 2rem -2rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .parameter-section {
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            color: var(--physics-blue);
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .input-label {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .unit-display {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+            background: white;
+        }
+
+        .input-control:focus {
+            outline: none;
+            border-color: var(--physics-blue);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .slider-container {
+            position: relative;
+            margin: 0.75rem 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+            cursor: pointer;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--physics-blue), var(--theory-purple));
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        .slider-value {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: var(--physics-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .calculate-btn {
+            background: linear-gradient(135deg, var(--medical-green) 0%, #10b981 100%);
+            color: white;
+            border: none;
+            padding: 1.25rem 2rem;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 1.5rem 0;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .calculate-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s;
+        }
+
+        .calculate-btn:hover::before {
+            left: 100%;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.4);
+        }
+
+        .results-panel {
+            background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            border: 2px solid var(--medical-green);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            animation: slideInUp 0.5s ease-out;
+        }
+
+        @keyframes slideInUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .results-title {
+            color: var(--medical-green);
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+
+        .result-label {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .result-value {
+            font-weight: bold;
+            color: var(--physics-blue);
+            font-family: 'Courier New', monospace;
+        }
+
+        .safety-indicator {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .safety-safe {
+            background: var(--medical-green);
+            color: white;
+        }
+
+        .safety-warning {
+            background: var(--nuclear-orange);
+            color: white;
+        }
+
+        .safety-danger {
+            background: var(--safety-red);
+            color: white;
+        }
+
+        .comparison-chart {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .navigation-footer {
+            background: var(--panel-bg);
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+            border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .nav-btn.primary {
+            background: linear-gradient(135deg, var(--physics-blue), var(--theory-purple));
+            color: white;
+        }
+
+        .nav-btn.secondary {
+            background: #f3f4f6;
+            color: var(--text-primary);
+            border: 2px solid #e5e7eb;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .helper-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        /* 応答性のあるデザイン */
+        @media (max-width: 1400px) {
+            .main-layout {
+                grid-template-columns: 350px 1fr 340px;
+            }
+        }
+
+        @media (max-width: 1200px) {
+            .main-layout {
+                grid-template-columns: 320px 1fr 320px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto auto;
+                gap: 1rem;
+            }
+            
+            .theory-panel, .control-panel {
+                max-height: 400px;
+            }
+            
+            #threejs-container {
+                height: 300px;
+            }
+        }
+
+        /* アニメーション効果 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">
+            <span class="logo-icon">🛡️</span>
+            放射線遮蔽計算 - Level 1
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="main-progress" style="width: 0%"></div>
+            </div>
+            <div class="level-subtitle">基礎物理から実践計算まで - 15分完了目標</div>
+        </div>
+        <div class="level-info">
+            <div class="level-title" id="current-step-display">Step 1/4</div>
+            <div class="level-subtitle">研究者向け実践ガイド</div>
+        </div>
+    </header>
+
+    <main class="main-layout" id="main-layout">
+        <!-- 理論・説明パネル -->
+        <div class="panel theory-panel fade-in">
+            <div class="step-header">
+                <span class="step-icon" id="step-icon">🔬</span>
+                <span id="step-title">物理的基礎: 放射線と物質の相互作用</span>
+            </div>
+            
+            <div id="theory-content">
+                <div class="physics-section">
+                    <div class="physics-title">
+                        🔬 遮蔽の基本原理
+                    </div>
+                    <p>放射線遮蔽は、<strong>光子と原子核・電子の相互作用</strong>により、放射線強度を系統的に減衰させる物理現象です。</p>
+                    
+                    <div class="equation-box">
+                        <div class="main-equation">I = I₀ × e<sup>(-μt)</sup> × B(μt)</div>
+                        <div class="equation-description">
+                            基本減衰法則（ビルドアップ効果含む）
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">🧮 各パラメータの物理的意味</div>
+                        <div class="parameter-list">
+                            <div class="parameter-item">
+                                <span class="param-symbol">I₀</span>
+                                <span class="param-description">入射線量率 [μSv/h]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">I</span>
+                                <span class="param-description">透過線量率 [μSv/h]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">μ</span>
+                                <span class="param-description">線減衰係数 [cm⁻¹]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">t</span>
+                                <span class="param-description">遮蔽厚さ [cm]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">B</span>
+                                <span class="param-description">ビルドアップ係数 [-]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">⚡ ICRP勧告による線量限度（2024年基準）</div>
+                        <p><strong>職業被ばく:</strong> 20 mSv/年（5年平均）</p>
+                        <p><strong>公衆被ばく:</strong> 1 mSv/年</p>
+                        <p><strong>管理区域境界:</strong> 2.5 μSv/h（一般的目標値）</p>
+                        <p><small>※ 最新のICRP Publication 146 (2022)を反映</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D可視化パネル -->
+        <div class="panel visualization-panel fade-in">
+            <div class="viz-header">
+                <span>🎯 3D遮蔽シミュレーション</span>
+                <span id="current-scenario">Co-60 医療線源</span>
+            </div>
+            
+            <div class="viz-controls">
+                <button class="viz-btn" id="rotate-view" title="自動回転">🔄</button>
+                <button class="viz-btn" id="zoom-fit" title="全体表示">🔍</button>
+                <button class="viz-btn" id="reset-view" title="視点リセット">🏠</button>
+            </div>
+
+            <div id="threejs-container"></div>
+
+            <div class="scenario-selector">
+                <div class="scenario-title">実習シナリオ</div>
+                <div class="scenario-options">
+                    <button class="scenario-btn active" data-scenario="medical">🏥 医療施設</button>
+                    <button class="scenario-btn" data-scenario="research">🔬 研究室</button>
+                    <button class="scenario-btn" data-scenario="nuclear">⚛️ 原子力施設</button>
+                    <button class="scenario-btn" data-scenario="industrial">🏭 工業利用</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 制御・結果パネル -->
+        <div class="panel control-panel fade-in">
+            <div class="control-header">
+                <span>⚙️</span>
+                <span>パラメータ制御</span>
+            </div>
+
+            <div class="parameter-section">
+                <div class="section-title">
+                    🧪 線源設定
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>核種</span>
+                    </div>
+                    <select class="input-control" id="nuclide-select">
+                        <option value="Co60" selected>Co-60 (1.25 MeV)</option>
+                        <option value="Cs137">Cs-137 (0.662 MeV)</option>
+                        <option value="Ir192">Ir-192 (0.38 MeV)</option>
+                        <option value="I131">I-131 (0.364 MeV)</option>
+                        <option value="Tc99m">Tc-99m (0.140 MeV)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>放射能</span>
+                        <span class="unit-display">GBq</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="activity-slider" 
+                               min="0.1" max="100" value="37" step="0.1">
+                        <span class="slider-value" id="activity-value">37.0 GBq</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <div class="section-title">
+                    🛡️ 遮蔽材設定
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>材料</span>
+                    </div>
+                    <select class="input-control" id="material-select">
+                        <option value="concrete">コンクリート (ρ=2.3 g/cm³)</option>
+                        <option value="lead">鉛 (ρ=11.34 g/cm³)</option>
+                        <option value="steel">鋼鉄 (ρ=7.87 g/cm³)</option>
+                        <option value="aluminum">アルミニウム (ρ=2.70 g/cm³)</option>
+                        <option value="tungsten">タングステン (ρ=19.3 g/cm³)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>厚さ</span>
+                        <span class="unit-display">cm</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="thickness-slider" 
+                               min="0" max="100" value="10" step="0.5">
+                        <span class="slider-value" id="thickness-value">10.0 cm</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>測定距離</span>
+                        <span class="unit-display">cm</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="distance-slider" 
+                               min="30" max="300" value="100" step="5">
+                        <span class="slider-value" id="distance-value">100 cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="calculate-btn" id="calculate-btn">
+                ⚡ 遮蔽効果計算実行
+            </button>
+
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <div class="results-title">
+                    📊 計算結果
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">線量率:</span>
+                    <span class="result-value" id="dose-rate-result">-- μSv/h</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">減衰率:</span>
+                    <span class="result-value" id="attenuation-result">--%</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">HVL:</span>
+                    <span class="result-value" id="hvl-result">-- cm</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="result-label">TVL:</span>
+                    <span class="result-value" id="tvl-result">-- cm</span>
+                </div>
+                
+                <div class="safety-indicator" id="safety-indicator">
+                    安全性評価中...
+                </div>
+
+                <div class="comparison-chart">
+                    <canvas id="comparison-chart" width="280" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="navigation-footer">
+        <button class="nav-btn secondary" id="prev-btn" disabled>
+            ← 前のステップ
+        </button>
+        
+        <div class="helper-actions">
+            <button class="nav-btn secondary" id="hint-btn">💡 ヒント</button>
+            <button class="nav-btn secondary" id="theory-btn">📚 理論解説</button>
+            <button class="nav-btn secondary" id="restart-btn">🔄 リスタート</button>
+        </div>
+        
+        <button class="nav-btn primary" id="next-btn">
+            次のステップ →
+        </button>
+    </footer>
+
+    <script>
+        // グローバル変数
+        let scene, camera, renderer;
+        let sourceObject, shieldObject, detectorObject;
+        let currentStep = 1;
+        let totalSteps = 4;
+        let calculationHistory = [];
+        let currentScenario = 'medical';
+        let isRotating = false;
+        let comparisonChart = null;
+
+        // 最新の物理データベース（2024年データ）
+        const physicsDatabase = {
+            nuclides: {
+                'Co60': { 
+                    energy: 1.25, 
+                    name: 'コバルト-60', 
+                    halfLife: '5.27年',
+                    gammaConstant: 13.2
+                },
+                'Cs137': { 
+                    energy: 0.662, 
+                    name: 'セシウム-137', 
+                    halfLife: '30.2年',
+                    gammaConstant: 3.26 
+                },
+                'Ir192': { 
+                    energy: 0.38, 
+                    name: 'イリジウム-192', 
+                    halfLife: '74日',
+                    gammaConstant: 4.8 
+                },
+                'I131': { 
+                    energy: 0.364, 
+                    name: 'ヨウ素-131', 
+                    halfLife: '8日',
+                    gammaConstant: 2.2 
+                },
+                'Tc99m': { 
+                    energy: 0.140, 
+                    name: 'テクネチウム-99m', 
+                    halfLife: '6時間',
+                    gammaConstant: 0.78 
+                }
+            },
+            materials: {
+                concrete: { 
+                    density: 2.3, 
+                    name: 'コンクリート',
+                    color: 0x8B7355,
+                    muMass: 0.0636
+                },
+                lead: { 
+                    density: 11.34, 
+                    name: '鉛',
+                    color: 0x5D5D5D,
+                    muMass: 0.0683
+                },
+                steel: { 
+                    density: 7.87, 
+                    name: '鋼鉄',
+                    color: 0xB0C4DE,
+                    muMass: 0.0565
+                },
+                aluminum: { 
+                    density: 2.70, 
+                    name: 'アルミニウム',
+                    color: 0xC0C0C0,
+                    muMass: 0.0820
+                },
+                tungsten: { 
+                    density: 19.3, 
+                    name: 'タングステン',
+                    color: 0x4A4A4A,
+                    muMass: 0.0543
+                }
+            }
+        };
+
+        // 学習進捗管理システム
+        class LearningProgressManager {
+            constructor() {
+                this.currentStep = 1;
+                this.totalSteps = 4;
+                this.completedActions = new Set();
+                this.startTime = Date.now();
+                this.updateUI();
+            }
+
+            nextStep() {
+                if (this.currentStep < this.totalSteps) {
+                    this.currentStep++;
+                    this.updateStepContent();
+                    this.updateUI();
+                } else {
+                    this.completeLevel();
+                }
+            }
+
+            prevStep() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.updateStepContent();
+                    this.updateUI();
+                }
+            }
+
+            updateUI() {
+                const progress = ((this.currentStep - 1) / this.totalSteps) * 100;
+                document.getElementById('main-progress').style.width = progress + '%';
+                document.getElementById('current-step-display').textContent = 
+                    `Step ${this.currentStep}/${this.totalSteps}`;
+                
+                document.getElementById('prev-btn').disabled = this.currentStep === 1;
+                document.getElementById('next-btn').style.display = 
+                    this.currentStep === this.totalSteps ? 'none' : 'flex';
+            }
+
+            updateStepContent() {
+                const stepContents = {
+                    1: {
+                        icon: '🔬',
+                        title: '物理的基礎: 放射線と物質の相互作用'
+                    },
+                    2: {
+                        icon: '🧪',
+                        title: '材料特性と遮蔽効果の理解'
+                    },
+                    3: {
+                        icon: '🎯',
+                        title: '実際の遮蔽設計: 目標達成への道筋'
+                    },
+                    4: {
+                        icon: '📊',
+                        title: '結果の評価と最適化'
+                    }
+                };
+
+                const stepData = stepContents[this.currentStep];
+                document.getElementById('step-icon').textContent = stepData.icon;
+                document.getElementById('step-title').textContent = stepData.title;
+            }
+
+            completeLevel() {
+                const completionTime = (Date.now() - this.startTime) / 1000;
+                const calculationCount = calculationHistory.length;
+                
+                alert(`🎉 Level 1 完了おめでとうございます！
+
+📊 学習結果:
+• 完了時間: ${Math.round(completionTime)}秒
+• 実行計算: ${calculationCount}回
+• 習得概念: 基本減衰法則、材料特性、設計手順
+
+🚀 次のレベル:
+Level 2: 実用設計チャレンジ
+Level 3: 高度解析・MCNP連携
+
+放射線遮蔽の基礎をマスターしました！
+実際の研究・業務でご活用ください。`);
+            }
+        }
+
+        // 3D可視化システム（簡易版）
+        class SimpleVisualizer {
+            constructor(container) {
+                this.container = container;
+                this.init();
+            }
+
+            init() {
+                // 簡易的な3D表示を作成
+                this.container.innerHTML = `
+                    <div style="
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                        height: 100%;
+                        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+                        position: relative;
+                    ">
+                        <div style="display: flex; align-items: center; gap: 2rem;">
+                            <div id="source-viz" style="
+                                width: 40px;
+                                height: 40px;
+                                background: radial-gradient(circle, #ff4444, #aa2222);
+                                border-radius: 50%;
+                                box-shadow: 0 0 20px rgba(255, 68, 68, 0.6);
+                                animation: pulse 2s infinite;
+                            "></div>
+                            <div id="shield-viz" style="
+                                width: 60px;
+                                height: 120px;
+                                background: linear-gradient(135deg, #8B7355, #6D5A44);
+                                border-radius: 8px;
+                                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                color: white;
+                                font-weight: bold;
+                                font-size: 0.8rem;
+                            ">遮蔽材</div>
+                            <div id="detector-viz" style="
+                                width: 30px;
+                                height: 30px;
+                                background: radial-gradient(circle, #44ff44, #22aa22);
+                                border-radius: 50%;
+                                box-shadow: 0 0 15px rgba(68, 255, 68, 0.6);
+                            "></div>
+                        </div>
+                        <div style="
+                            position: absolute;
+                            bottom: 20px;
+                            left: 50%;
+                            transform: translateX(-50%);
+                            background: rgba(255, 255, 255, 0.9);
+                            padding: 0.5rem 1rem;
+                            border-radius: 20px;
+                            font-size: 0.9rem;
+                            font-weight: 600;
+                        ">
+                            線源 → 遮蔽材 → 検出器
+                        </div>
+                    </div>
+                `;
+            }
+
+            updateShield(material, thickness) {
+                const shieldViz = document.getElementById('shield-viz');
+                const materialData = physicsDatabase.materials[material];
+                if (shieldViz && materialData) {
+                    shieldViz.style.background = `#${materialData.color.toString(16).padStart(6, '0')}`;
+                    shieldViz.style.width = Math.max(20, thickness * 2) + 'px';
+                    shieldViz.textContent = materialData.name;
+                }
+            }
+        }
+
+        // 計算エンジン
+        class ShieldingCalculator {
+            constructor() {
+                this.safetyLimit = 2.5; // μSv/h
+            }
+
+            calculate(nuclide, activity, material, thickness, distance) {
+                const nuclideData = physicsDatabase.nuclides[nuclide];
+                const materialData = physicsDatabase.materials[material];
+                
+                const mu = materialData.muMass * materialData.density;
+                const buildup = 1 + (2.5 - 1) * mu * thickness * Math.exp(-mu * thickness);
+                const geometricFactor = 1 / (4 * Math.PI * Math.pow(distance, 2));
+                const initialDoseRate = (activity / 37) * nuclideData.gammaConstant * geometricFactor * 10;
+                const finalDoseRate = initialDoseRate * Math.exp(-mu * thickness) * buildup;
+                const hvl = Math.log(2) / mu;
+                const tvl = Math.log(10) / mu;
+                
+                return {
+                    initialDoseRate: Math.max(initialDoseRate, 0.001),
+                    finalDoseRate: Math.max(finalDoseRate, 0.001),
+                    attenuationPercent: (1 - Math.exp(-mu * thickness) * buildup) * 100,
+                    hvl: hvl,
+                    tvl: tvl,
+                    safetyStatus: finalDoseRate <= this.safetyLimit ? 'safe' : 
+                                 finalDoseRate <= this.safetyLimit * 2 ? 'warning' : 'danger',
+                    safetyMargin: finalDoseRate <= this.safetyLimit ? 
+                        ((this.safetyLimit - finalDoseRate) / this.safetyLimit * 100) : 0
+                };
+            }
+        }
+
+        // チャート管理
+        class ComparisonChartManager {
+            constructor() {
+                this.chart = null;
+                this.initializeChart();
+            }
+
+            initializeChart() {
+                const ctx = document.getElementById('comparison-chart').getContext('2d');
+                this.chart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['遮蔽前', '遮蔽後', '基準値'],
+                        datasets: [{
+                            label: '線量率 (μSv/h)',
+                            data: [0, 0, 2.5],
+                            backgroundColor: [
+                                'rgba(239, 68, 68, 0.8)',
+                                'rgba(34, 197, 94, 0.8)',
+                                'rgba(234, 179, 8, 0.8)'
+                            ]
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                type: 'logarithmic'
+                            }
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            title: {
+                                display: true,
+                                text: '遮蔽効果の比較'
+                            }
+                        }
+                    }
+                });
+            }
+
+            updateChart(initialDoseRate, finalDoseRate) {
+                if (this.chart) {
+                    this.chart.data.datasets[0].data = [
+                        Math.max(initialDoseRate, 0.001),
+                        Math.max(finalDoseRate, 0.001),
+                        2.5
+                    ];
+                    this.chart.update();
+                }
+            }
+        }
+
+        // メイン初期化
+        document.addEventListener('DOMContentLoaded', function() {
+            const progressManager = new LearningProgressManager();
+            const calculator = new ShieldingCalculator();
+            const chartManager = new ComparisonChartManager();
+            let visualizer;
+
+            // 3D可視化初期化
+            setTimeout(() => {
+                const container = document.getElementById('threejs-container');
+                if (container) {
+                    visualizer = new SimpleVisualizer(container);
+                }
+            }, 100);
+
+            // スライダー表示更新
+            function updateSliderDisplays() {
+                const activity = document.getElementById('activity-slider').value;
+                const thickness = document.getElementById('thickness-slider').value;
+                const distance = document.getElementById('distance-slider').value;
+                
+                document.getElementById('activity-value').textContent = parseFloat(activity).toFixed(1) + ' GBq';
+                document.getElementById('thickness-value').textContent = parseFloat(thickness).toFixed(1) + ' cm';
+                document.getElementById('distance-value').textContent = distance + ' cm';
+
+                if (visualizer) {
+                    const material = document.getElementById('material-select').value;
+                    visualizer.updateShield(material, parseFloat(thickness));
+                }
+            }
+
+            // 計算実行
+            function performCalculation() {
+                const nuclide = document.getElementById('nuclide-select').value;
+                const activity = parseFloat(document.getElementById('activity-slider').value);
+                const material = document.getElementById('material-select').value;
+                const thickness = parseFloat(document.getElementById('thickness-slider').value);
+                const distance = parseFloat(document.getElementById('distance-slider').value);
+
+                const results = calculator.calculate(nuclide, activity, material, thickness, distance);
+                displayResults(results);
+                chartManager.updateChart(results.initialDoseRate, results.finalDoseRate);
+                calculationHistory.push({
+                    timestamp: new Date(),
+                    params: { nuclide, activity, material, thickness, distance },
+                    results: results
+                });
+            }
+
+            // 結果表示
+            function displayResults(results) {
+                const resultsPanel = document.getElementById('results-panel');
+                resultsPanel.style.display = 'block';
+
+                document.getElementById('dose-rate-result').textContent = 
+                    results.finalDoseRate.toExponential(2) + ' μSv/h';
+                document.getElementById('attenuation-result').textContent = 
+                    results.attenuationPercent.toFixed(1) + '%';
+                document.getElementById('hvl-result').textContent = 
+                    results.hvl.toFixed(2) + ' cm';
+                document.getElementById('tvl-result').textContent = 
+                    results.tvl.toFixed(2) + ' cm';
+
+                const safetyIndicator = document.getElementById('safety-indicator');
+                const safetyTexts = {
+                    safe: `✅ 安全基準クリア (余裕: ${results.safetyMargin.toFixed(1)}%)`,
+                    warning: '⚠️ 基準値近接 - 厚さ増加を推奨',
+                    danger: '❌ 基準値超過 - 遮蔽強化が必要'
+                };
+                
+                safetyIndicator.textContent = safetyTexts[results.safetyStatus];
+                safetyIndicator.className = `safety-indicator safety-${results.safetyStatus}`;
+            }
+
+            // イベントリスナー設定
+            ['activity-slider', 'thickness-slider', 'distance-slider'].forEach(id => {
+                document.getElementById(id).addEventListener('input', updateSliderDisplays);
+            });
+
+            ['nuclide-select', 'material-select'].forEach(id => {
+                document.getElementById(id).addEventListener('change', updateSliderDisplays);
+            });
+
+            document.getElementById('calculate-btn').addEventListener('click', performCalculation);
+
+            document.getElementById('next-btn').addEventListener('click', () => {
+                progressManager.nextStep();
+            });
+            
+            document.getElementById('prev-btn').addEventListener('click', () => {
+                progressManager.prevStep();
+            });
+
+            document.getElementById('hint-btn').addEventListener('click', () => {
+                const hints = [
+                    "💡 放射線は距離の2乗に反比例して減衰します（逆二乗則）",
+                    "📚 HVL（半価層）は線量を半分にする厚さです",
+                    "🎯 管理区域境界の基準値は2.5 μSv/hです"
+                ];
+                const randomHint = hints[Math.floor(Math.random() * hints.length)];
+                alert(randomHint);
+            });
+
+            document.getElementById('restart-btn').addEventListener('click', () => {
+                if (confirm('現在の進捗をリセットして最初からやり直しますか？')) {
+                    progressManager.currentStep = 1;
+                    progressManager.updateStepContent();
+                    progressManager.updateUI();
+                    calculationHistory = [];
+                    document.getElementById('results-panel').style.display = 'none';
+                }
+            });
+
+            // 初期化完了
+            updateSliderDisplays();
+            
+            // ウェルカムメッセージ
+            setTimeout(() => {
+                alert(`🛡️ 放射線遮蔽計算 Level 1 へようこそ！
+
+放射線遮蔽研究者向けの実践的なガイドです。
+
+📚 理論から実践まで4つのステップで学習
+🎯 実際の設計基準に基づいた計算
+🔬 可視化で直感的理解
+
+右側のパラメータを調整しながら、
+遮蔽効果を体感してください！`);
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,1829 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Poker MCP Interactive Guide - Level 1: 基礎習得</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --primary-blue: #1e3a8a;
+            --primary-green: #059669;
+            --warning-orange: #d97706;
+            --danger-red: #dc2626;
+            --bg-light: #f8fafc;
+            --bg-panel: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-physics: #7c3aed;
+            --accent-success: #10b981;
+            --accent-medical: #ec4899;
+            --accent-nuclear: #f59e0b;
+            --accent-research: #06b6d4;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--bg-light) 0%, #e2e8f0 100%);
+            color: var(--text-primary);
+            overflow-x: hidden;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--accent-physics) 100%);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .progress-container {
+            flex: 1;
+            max-width: 400px;
+            margin: 0 2rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress {
+            height: 100%;
+            background: var(--accent-success);
+            transition: width 0.5s ease;
+            border-radius: 4px;
+        }
+
+        .level-indicator {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            margin-top: 0.25rem;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 320px 1fr 340px;
+            gap: 1rem;
+            padding: 1rem;
+            height: calc(100vh - 140px);
+        }
+
+        .instruction-panel, .control-panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow-y: auto;
+        }
+
+        .visualization-panel {
+            background: var(--bg-panel);
+            border-radius: 12px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .step-indicator {
+            background: linear-gradient(135deg, var(--accent-physics), #9333ea);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+            border: 2px solid var(--accent-physics);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+        }
+
+        .physics-formula {
+            background: #1f2937;
+            color: #f3f4f6;
+            padding: 1.5rem;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            margin: 1rem 0;
+            text-align: center;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+        }
+
+        .key-insight {
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            border: 2px solid var(--warning-orange);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 5px solid var(--warning-orange);
+        }
+
+        .research-context {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid var(--primary-green);
+            border-radius: 10px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .parameter-section {
+            margin-bottom: 2rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 1.5rem;
+        }
+
+        .parameter-section:last-child {
+            border-bottom: none;
+        }
+
+        .parameter-section h3 {
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .parameter-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .parameter-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .parameter-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .parameter-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+
+        .slider-container {
+            margin: 0.5rem 0;
+        }
+
+        .slider {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+            cursor: pointer;
+        }
+
+        .slider-value {
+            display: inline-block;
+            background: var(--primary-blue);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+        }
+
+        .primary-btn {
+            background: linear-gradient(135deg, var(--primary-blue), var(--accent-physics));
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 1rem 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .primary-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
+        }
+
+        .primary-btn:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .results-display {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid var(--primary-green);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 1rem;
+            display: none;
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .result-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .result-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin: 0.5rem 0;
+        }
+
+        .result-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .result-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 0.5rem;
+            display: inline-block;
+        }
+
+        .result-status.excellent {
+            background: var(--primary-green);
+            color: white;
+        }
+
+        .result-status.good {
+            background: var(--accent-success);
+            color: white;
+        }
+
+        .result-status.warning {
+            background: var(--warning-orange);
+            color: white;
+        }
+
+        .result-status.danger {
+            background: var(--danger-red);
+            color: white;
+        }
+
+        .comparison-table {
+            background: white;
+            border-radius: 8px;
+            margin: 1rem 0;
+            overflow: hidden;
+            border: 1px solid #e5e7eb;
+        }
+
+        .comparison-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            text-align: center;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.85rem;
+        }
+
+        .comparison-table th {
+            background: var(--primary-blue);
+            color: white;
+            font-weight: 600;
+        }
+
+        .comparison-table tr:hover {
+            background: #f8fafc;
+        }
+
+        .navigation-footer {
+            background: var(--bg-panel);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .nav-btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+        }
+
+        .nav-btn.primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .nav-btn.secondary {
+            background: #e5e7eb;
+            color: var(--text-primary);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .nav-btn:disabled {
+            background: #d1d5db;
+            color: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        #threejs-container {
+            width: 100%;
+            height: 100%;
+        }
+
+        .control-overlay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+        }
+
+        .control-btn:hover {
+            background: rgba(255, 255, 255, 1);
+            transform: scale(1.05);
+        }
+
+        .animation-controls {
+            position: absolute;
+            bottom: 1rem;
+            left: 1rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .play-btn {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .play-btn:hover {
+            background: #047857;
+            transform: scale(1.05);
+        }
+
+        .material-properties {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid var(--danger-red);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+        }
+
+        .hvl-display {
+            background: #1f2937;
+            color: #10b981;
+            font-family: 'Courier New', monospace;
+            padding: 1rem;
+            border-radius: 6px;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+            text-align: center;
+        }
+
+        .educational-note {
+            background: linear-gradient(135deg, #fffbeb, #fef3c7);
+            border-left: 4px solid var(--warning-orange);
+            padding: 1rem;
+            margin: 1rem 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 300px 1fr 320px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto 1fr auto;
+                height: auto;
+            }
+            
+            .instruction-panel, .control-panel {
+                height: auto;
+                max-height: 400px;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="main-header">
+        <div class="logo">
+            🛡️ Poker MCP Level 1: 基礎習得
+        </div>
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress" id="main-progress" style="width: 0%"></div>
+            </div>
+            <div class="level-indicator">理論理解 → 体験学習 → 実践応用 (15分目標)</div>
+        </div>
+        <div class="current-step" id="current-step-display">Step 1/4</div>
+    </header>
+
+    <main class="main-content">
+        <div class="instruction-panel">
+            <div class="step-indicator" id="step-indicator">Step 1: 放射線遮蔽の物理学原理</div>
+            <div id="instruction-content">
+                <h2>🔬 放射線遮蔽の基本法則</h2>
+                
+                <div class="concept-box">
+                    <h3>📐 減衰の指数法則</h3>
+                    <p>放射線の強度は遮蔽材の厚さに対して<strong>指数関数的に減衰</strong>します。</p>
+                    
+                    <div class="physics-formula">
+                        I = I₀ × e^(-μt) × B(μt)
+                    </div>
+                    
+                    <div style="margin-top: 1rem;">
+                        <strong>🧮 各項の物理的意味:</strong><br>
+                        • <strong>I₀</strong>: 入射線量率 [Gy/s]<br>
+                        • <strong>I</strong>: 透過線量率 [Gy/s]<br>
+                        • <strong>μ</strong>: 線減衰係数 [cm⁻¹]<br>
+                        • <strong>t</strong>: 遮蔽厚さ [cm]<br>
+                        • <strong>B(μt)</strong>: ビルドアップ係数 [-]
+                    </div>
+                </div>
+
+                <div class="key-insight">
+                    <strong>💡 研究者にとって重要なポイント</strong><br>
+                    線減衰係数μは材料の<strong>密度と原子番号</strong>に依存します。<br>
+                    μ = (μ/ρ) × ρ<br>
+                    質量減衰係数は材料固有、線減衰係数は密度を含む実効値です。
+                </div>
+
+                <div class="research-context">
+                    <strong>🔬 現代の研究動向 (2024年)</strong><br>
+                    • <strong>モンテカルロ法</strong>: PHITS・Geant4による高精度計算<br>
+                    • <strong>AI最適化</strong>: 機械学習による遮蔽設計自動化<br>
+                    • <strong>新材料</strong>: ナノコンポジット・複合遮蔽材の開発<br>
+                    • <strong>リアルタイム解析</strong>: GPU並列計算による即座評価
+                </div>
+            </div>
+        </div>
+
+        <div class="visualization-panel">
+            <div id="threejs-container"></div>
+            <div class="control-overlay">
+                <button class="control-btn" id="view-3d" title="3D表示切替">🔄 3D回転</button>
+                <button class="control-btn" id="view-cross" title="断面表示">📏 断面図</button>
+                <button class="control-btn" id="reset-view" title="視点リセット">🏠 リセット</button>
+            </div>
+            <div class="animation-controls">
+                <button class="play-btn" id="play-animation">▶️ 放射線飛跡</button>
+                <button class="play-btn" id="pause-animation" style="display: none;">⏸️ 停止</button>
+                <button class="play-btn" id="show-field">🌊 線量分布</button>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="parameter-section">
+                <h3>🧪 遮蔽材料特性</h3>
+                
+                <div class="parameter-group">
+                    <label>材料選択</label>
+                    <select class="parameter-input" id="shield-material">
+                        <option value="lead">鉛 (Pb) - Z=82</option>
+                        <option value="steel">鉄・鋼鉄 (Fe) - Z=26</option>
+                        <option value="concrete" selected>コンクリート - 複合材</option>
+                        <option value="aluminum">アルミニウム (Al) - Z=13</option>
+                        <option value="tungsten">タングステン (W) - Z=74</option>
+                        <option value="barite">バライトコンクリート</option>
+                    </select>
+                </div>
+
+                <div class="material-properties" id="material-properties">
+                    <strong>コンクリート の特性:</strong><br>
+                    • 密度: 2.3 g/cm³<br>
+                    • 質量減衰係数: 0.0636 cm²/g<br>
+                    • 線減衰係数: 0.146 cm⁻¹<br>
+                    • 半価層厚: 4.7 cm
+                </div>
+
+                <div class="parameter-group">
+                    <label>厚さ (cm)</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="thickness-slider" 
+                               min="0" max="100" value="10" step="1">
+                        <span class="slider-value" id="thickness-value">10 cm</span>
+                    </div>
+                    
+                    <div class="hvl-display" id="hvl-display">
+                        現在の厚さ: 2.1 HVL (減衰率: 76.9%)
+                    </div>
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <h3>📏 幾何学的配置</h3>
+                
+                <div class="parameter-group">
+                    <label>線源-遮蔽体距離 (cm)</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="source-distance" 
+                               min="10" max="100" value="50" step="5">
+                        <span class="slider-value" id="source-distance-value">50 cm</span>
+                    </div>
+                </div>
+
+                <div class="parameter-group">
+                    <label>遮蔽体-検出器距離 (cm)</label>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="detector-distance" 
+                               min="10" max="100" value="50" step="5">
+                        <span class="slider-value" id="detector-distance-value">50 cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <h3>☢️ 線源設定</h3>
+                
+                <div class="parameter-group">
+                    <label>核種・エネルギー</label>
+                    <select class="parameter-input" id="radiation-source">
+                        <option value="cs137" selected>Cs-137 (662 keV)</option>
+                        <option value="co60">Co-60 (1.25 MeV平均)</option>
+                        <option value="ir192">Ir-192 (380 keV平均)</option>
+                        <option value="generic_1mev">汎用 (1 MeV)</option>
+                    </select>
+                </div>
+
+                <div class="parameter-group">
+                    <label>放射能 (Bq)</label>
+                    <select class="parameter-input" id="source-activity">
+                        <option value="3.7e9">3.7×10⁹ (100 mCi)</option>
+                        <option value="3.7e10" selected>3.7×10¹⁰ (1 Ci)</option>
+                        <option value="3.7e11">3.7×10¹¹ (10 Ci)</option>
+                        <option value="3.7e12">3.7×10¹² (100 Ci)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="primary-btn" id="calculate-btn">⚡ 高精度遮蔽計算実行</button>
+
+            <div class="results-display" id="results-display">
+                <h4 style="text-align: center; margin-bottom: 1rem; color: var(--primary-blue);">📊 計算結果</h4>
+                
+                <div class="result-grid">
+                    <div class="result-card">
+                        <div class="result-label">透過線量率</div>
+                        <div class="result-value" id="dose-rate-result">-- μSv/h</div>
+                        <div class="result-status" id="safety-status">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-label">減衰率</div>
+                        <div class="result-value" id="attenuation-result">-- %</div>
+                        <div class="result-status" id="attenuation-status">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-label">ビルドアップ係数</div>
+                        <div class="result-value" id="buildup-result">--</div>
+                        <div class="result-status" id="buildup-status">--</div>
+                    </div>
+                    
+                    <div class="result-card">
+                        <div class="result-label">半価層厚比</div>
+                        <div class="result-value" id="hvl-ratio">-- HVL</div>
+                        <div class="result-status" id="hvl-status">--</div>
+                    </div>
+                </div>
+
+                <div class="comparison-table" id="comparison-table" style="display: none;">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>材料</th>
+                                <th>密度<br>[g/cm³]</th>
+                                <th>μ/ρ<br>[cm²/g]</th>
+                                <th>HVL<br>[cm]</th>
+                                <th>相対効率</th>
+                            </tr>
+                        </thead>
+                        <tbody id="comparison-tbody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="navigation-footer">
+        <button class="nav-btn secondary" id="prev-step" disabled>← 前のステップ</button>
+        <div style="display: flex; gap: 1rem;">
+            <button class="nav-btn secondary" id="hint-btn">💡 物理解説</button>
+            <button class="nav-btn secondary" id="compare-materials">📊 材料比較</button>
+            <button class="nav-btn secondary" id="restart-btn">🔄 リセット</button>
+        </div>
+        <button class="nav-btn primary" id="next-step">次のステップ →</button>
+    </footer>
+
+    <script>
+        // 改良された物理定数・材料データベース (2024年最新データ)
+        const materialDatabase = {
+            lead: { 
+                density: 11.34, 
+                muMass: 0.107, 
+                color: 0x696969, 
+                name: '鉛',
+                atomicNumber: 82,
+                cost: 8.5, // 相対コスト
+                applications: '医療遮蔽・工業検査'
+            },
+            steel: { 
+                density: 7.87, 
+                muMass: 0.0565, 
+                color: 0x708090, 
+                name: '鉄・鋼鉄',
+                atomicNumber: 26,
+                cost: 2.0,
+                applications: '構造材・二次遮蔽'
+            },
+            concrete: { 
+                density: 2.3, 
+                muMass: 0.0636, 
+                color: 0xd2b48c, 
+                name: 'コンクリート',
+                atomicNumber: 11.6, // 実効原子番号
+                cost: 1.0,
+                applications: '建築遮蔽・大型施設'
+            },
+            aluminum: { 
+                density: 2.70, 
+                muMass: 0.0820, 
+                color: 0xc0c0c0, 
+                name: 'アルミニウム',
+                atomicNumber: 13,
+                cost: 3.2,
+                applications: '軽量遮蔽・航空宇宙'
+            },
+            tungsten: { 
+                density: 19.25, 
+                muMass: 0.0947, 
+                color: 0x404040, 
+                name: 'タングステン',
+                atomicNumber: 74,
+                cost: 25.0,
+                applications: '高性能遮蔽・医療'
+            },
+            barite: { 
+                density: 4.2, 
+                muMass: 0.0620, 
+                color: 0x8b7355, 
+                name: 'バライトコンクリート',
+                atomicNumber: 16.2,
+                cost: 2.8,
+                applications: '医療施設・重遮蔽'
+            }
+        };
+
+        const sourceDatabase = {
+            cs137: { energy: 0.662, name: 'Cs-137', gammaConstant: 0.325 },
+            co60: { energy: 1.25, name: 'Co-60', gammaConstant: 1.32 },
+            ir192: { energy: 0.38, name: 'Ir-192', gammaConstant: 0.48 },
+            generic_1mev: { energy: 1.0, name: '1 MeV γ線', gammaConstant: 0.85 }
+        };
+
+        let scene, camera, renderer;
+        let shieldGeometry, sourceGeometry, detectorGeometry;
+        let currentStep = 1;
+        let isAnimationPlaying = false;
+        let particleSystem = null;
+
+        // 改良された学習進行管理システム
+        class AdvancedLearningManager {
+            constructor() {
+                this.currentStep = 1;
+                this.totalSteps = 4;
+                this.completedActions = new Set();
+                this.startTime = Date.now();
+                this.interactionCount = 0;
+                this.calculationCount = 0;
+            }
+
+            updateProgress() {
+                const progress = Math.max(0, (this.currentStep - 1) / (this.totalSteps - 1) * 100);
+                document.getElementById('main-progress').style.width = progress + '%';
+                document.getElementById('current-step-display').textContent = `Step ${this.currentStep}/${this.totalSteps}`;
+            }
+
+            nextStep() {
+                if (this.currentStep < this.totalSteps) {
+                    this.currentStep++;
+                    this.updateStepContent();
+                    this.updateProgress();
+                } else {
+                    this.completeLevel1();
+                }
+            }
+
+            previousStep() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.updateStepContent();
+                    this.updateProgress();
+                }
+            }
+
+            updateStepContent() {
+                const stepContents = {
+                    1: {
+                        title: 'Step 1: 放射線遮蔽の物理学原理',
+                        content: `
+                            <h2>🔬 放射線遮蔽の基本法則</h2>
+                            
+                            <div class="concept-box">
+                                <h3>📐 減衰の指数法則</h3>
+                                <p>放射線の強度は遮蔽材の厚さに対して<strong>指数関数的に減衰</strong>します。</p>
+                                
+                                <div class="physics-formula">
+                                    I = I₀ × e^(-μt) × B(μt)
+                                </div>
+                                
+                                <div style="margin-top: 1rem;">
+                                    <strong>🧮 各項の物理的意味:</strong><br>
+                                    • <strong>I₀</strong>: 入射線量率 [Gy/s]<br>
+                                    • <strong>I</strong>: 透過線量率 [Gy/s]<br>
+                                    • <strong>μ</strong>: 線減衰係数 [cm⁻¹]<br>
+                                    • <strong>t</strong>: 遮蔽厚さ [cm]<br>
+                                    • <strong>B(μt)</strong>: ビルドアップ係数 [-]
+                                </div>
+                            </div>
+
+                            <div class="key-insight">
+                                <strong>💡 研究者にとって重要なポイント</strong><br>
+                                線減衰係数μは材料の<strong>密度と原子番号</strong>に依存します。<br>
+                                μ = (μ/ρ) × ρ<br>
+                                質量減衰係数は材料固有、線減衰係数は密度を含む実効値です。
+                            </div>
+
+                            <div class="research-context">
+                                <strong>🔬 現代の研究動向 (2024年)</strong><br>
+                                • <strong>モンテカルロ法</strong>: PHITS・Geant4による高精度計算<br>
+                                • <strong>AI最適化</strong>: 機械学習による遮蔽設計自動化<br>
+                                • <strong>新材料</strong>: ナノコンポジット・複合遮蔽材の開発<br>
+                                • <strong>リアルタイム解析</strong>: GPU並列計算による即座評価
+                            </div>
+                        `
+                    },
+                    2: {
+                        title: 'Step 2: 材料特性の定量的理解',
+                        content: `
+                            <h2>🧪 材料による遮蔽性能の違い</h2>
+                            
+                            <div class="concept-box">
+                                <h3>📊 材料選択の科学的根拠</h3>
+                                <p>遮蔽効果は<strong>原子番号Zと密度ρ</strong>によって決まります。</p>
+                                
+                                <div class="physics-formula">
+                                    μ/ρ ∝ Z^n / A
+                                </div>
+                                
+                                <p style="text-align: center; margin-top: 0.5rem; color: #6b7280;">
+                                    nは3-5（光電効果優勢領域）、Aは原子質量
+                                </p>
+                            </div>
+
+                            <div class="key-insight">
+                                <strong>💡 実用的な材料選択指針</strong><br>
+                                • <strong>鉛・タングステン</strong>: 小スペース・高性能が必要<br>
+                                • <strong>コンクリート</strong>: 大型施設・コスト重視<br>
+                                • <strong>複合材</strong>: 特定用途への最適化
+                            </div>
+
+                            <div class="educational-note">
+                                <strong>🎯 右側のパラメータを変更してみましょう！</strong><br>
+                                材料を変更して、半価層厚や減衰率の変化を観察してください。
+                                計算実行ボタンで定量的な結果も確認できます。
+                            </div>
+                        `
+                    },
+                    3: {
+                        title: 'Step 3: 幾何学的要因と距離効果',
+                        content: `
+                            <h2>📏 距離と形状の影響</h2>
+                            
+                            <div class="concept-box">
+                                <h3>📐 距離の逆二乗則</h3>
+                                <p>点線源からの線量率は<strong>距離の二乗に反比例</strong>します。</p>
+                                
+                                <div class="physics-formula">
+                                    Ḋ = Ḋ₀ × (r₀/r)²
+                                </div>
+                                
+                                <p style="text-align: center; margin-top: 0.5rem; color: #6b7280;">
+                                    距離を2倍にすると線量率は1/4に減少
+                                </p>
+                            </div>
+
+                            <div class="key-insight">
+                                <strong>💡 実際の設計での考慮事項</strong><br>
+                                • <strong>散乱線</strong>: 1次線とは異なる角度分布<br>
+                                • <strong>ビルドアップ</strong>: 厚い遮蔽での散乱線蓄積<br>
+                                • <strong>形状因子</strong>: 線源・検出器の大きさと形状
+                            </div>
+
+                            <div class="educational-note">
+                                <strong>🎯 距離パラメータを調整してみましょう！</strong><br>
+                                線源-遮蔽体、遮蔽体-検出器の距離を変えて、
+                                全体の遮蔽効果がどう変化するかを確認してください。
+                            </div>
+                        `
+                    },
+                    4: {
+                        title: 'Step 4: 実用設計への応用',
+                        content: `
+                            <h2>🏗️ 実際の遮蔽設計手順</h2>
+                            
+                            <div class="concept-box">
+                                <h3>🎯 設計目標の設定</h3>
+                                <p>規制要求値を満たす遮蔽厚を効率的に決定します。</p>
+                                
+                                <div class="physics-formula">
+                                    t = ln(I₀/I_target) / μ
+                                </div>
+                                
+                                <p style="text-align: center; margin-top: 0.5rem; color: #6b7280;">
+                                    簡略化（ビルドアップ無視時）の近似式
+                                </p>
+                            </div>
+
+                            <div class="key-insight">
+                                <strong>💡 実用設計のポイント</strong><br>
+                                • <strong>安全係数</strong>: 計算値の1.5-2倍程度<br>
+                                • <strong>経済性評価</strong>: 材料コスト・施工性・保守性<br>
+                                • <strong>法規制対応</strong>: 各分野の規制基準値遵守
+                            </div>
+
+                            <div class="research-context">
+                                <strong>🔬 最新の設計手法</strong><br>
+                                • <strong>最適化アルゴリズム</strong>: 多目的最適化による設計<br>
+                                • <strong>不確実性解析</strong>: モンテカルロ法による信頼区間<br>
+                                • <strong>デジタルツイン</strong>: リアルタイム監視・予測
+                            </div>
+
+                            <div class="educational-note">
+                                <strong>🎉 Level 1 完了準備</strong><br>
+                                様々なパラメータを試して、遮蔽設計の感覚を掴みましょう。
+                                次のLevel 2では、実際の施設設計を体験します！
+                            </div>
+                        `
+                    }
+                };
+
+                const stepData = stepContents[this.currentStep];
+                document.getElementById('step-indicator').textContent = stepData.title;
+                document.getElementById('instruction-content').innerHTML = stepData.content;
+
+                // ステップに応じたボタン状態
+                document.getElementById('prev-step').disabled = this.currentStep === 1;
+                document.getElementById('next-step').textContent = 
+                    this.currentStep === this.totalSteps ? 'Level 2へ進む →' : '次のステップ →';
+            }
+
+            completeLevel1() {
+                const completionTime = (Date.now() - this.startTime) / 1000;
+                const completionData = {
+                    level: 1,
+                    completionTime: completionTime,
+                    interactionCount: this.interactionCount,
+                    calculationCount: this.calculationCount,
+                    completedAt: new Date().toISOString(),
+                    finalStep: this.currentStep
+                };
+
+                // ローカルストレージに保存
+                localStorage.setItem('poker_mcp_level1_completion', JSON.stringify(completionData));
+                localStorage.setItem('poker_mcp_level1_completed', 'true');
+
+                alert(`🎉 Level 1 基礎習得完了おめでとうございます！\n\n` +
+                      `完了時間: ${Math.round(completionTime)}秒\n` +
+                      `操作回数: ${this.interactionCount}回\n` +
+                      `計算実行: ${this.calculationCount}回\n\n` +
+                      `Level 2: 実用設計 で更なるスキルを習得しましょう！`);
+
+                // Level 2へのリダイレクト（実際のシステムでは）
+                if (confirm('Level 2: 実用設計に進みますか？')) {
+                    window.location.href = 'interactive_guide_level2.html';
+                }
+            }
+
+            trackInteraction(type, data) {
+                this.interactionCount++;
+                this.completedActions.add(`${type}_${Date.now()}`);
+                console.log('Interaction tracked:', type, data);
+            }
+
+            trackCalculation(results) {
+                this.calculationCount++;
+                this.trackInteraction('calculation', results);
+            }
+        }
+
+        // 高度な3D可視化システム
+        class Advanced3DVisualizer {
+            constructor(container) {
+                this.container = container;
+                this.initializeScene();
+                this.createObjects();
+                this.setupControls();
+                this.animate();
+            }
+
+            initializeScene() {
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0xf0f4f8);
+
+                camera = new THREE.PerspectiveCamera(75, 
+                    this.container.clientWidth / this.container.clientHeight, 0.1, 1000);
+                camera.position.set(8, 6, 12);
+                camera.lookAt(0, 0, 0);
+
+                renderer = new THREE.WebGLRenderer({ antialias: true });
+                renderer.setSize(this.container.clientWidth, this.container.clientHeight);
+                renderer.shadowMap.enabled = true;
+                renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                this.container.appendChild(renderer.domElement);
+
+                // 改良されたライティング
+                const ambientLight = new THREE.AmbientLight(0xffffff, 0.4);
+                scene.add(ambientLight);
+
+                const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+                directionalLight.position.set(10, 20, 10);
+                directionalLight.castShadow = true;
+                directionalLight.shadow.mapSize.width = 2048;
+                directionalLight.shadow.mapSize.height = 2048;
+                scene.add(directionalLight);
+
+                // 座標系とグリッド
+                const axesHelper = new THREE.AxesHelper(5);
+                scene.add(axesHelper);
+
+                const gridHelper = new THREE.GridHelper(20, 20, 0xcccccc, 0xeeeeee);
+                scene.add(gridHelper);
+            }
+
+            createObjects() {
+                this.createSource();
+                this.createShield();
+                this.createDetector();
+                this.createEnvironment();
+                this.updatePositions();
+            }
+
+            createSource() {
+                const sourceGeom = new THREE.SphereGeometry(0.3, 32, 32);
+                const sourceMat = new THREE.MeshLambertMaterial({ 
+                    color: 0xff4444,
+                    emissive: 0x330000
+                });
+                sourceGeometry = new THREE.Mesh(sourceGeom, sourceMat);
+                sourceGeometry.position.set(-5, 1, 0);
+                sourceGeometry.castShadow = true;
+                scene.add(sourceGeometry);
+
+                // 線源ラベル（簡略化）
+                this.addObjectLabel(sourceGeometry, '☢️ 線源', 0xff4444);
+            }
+
+            createShield() {
+                // 初期遮蔽材作成（後で更新）
+                this.updateShield('concrete', 1.0);
+            }
+
+            updateShield(material, thickness) {
+                if (shieldGeometry) {
+                    scene.remove(shieldGeometry);
+                }
+
+                if (thickness > 0) {
+                    const materialData = materialDatabase[material];
+                    const shieldGeom = new THREE.BoxGeometry(thickness, 4, 3);
+                    const shieldMat = new THREE.MeshLambertMaterial({ 
+                        color: materialData.color,
+                        transparent: true,
+                        opacity: 0.7
+                    });
+                    shieldGeometry = new THREE.Mesh(shieldGeom, shieldMat);
+                    shieldGeometry.position.set(0, 2, 0);
+                    shieldGeometry.castShadow = true;
+                    shieldGeometry.receiveShadow = true;
+                    scene.add(shieldGeometry);
+
+                    this.addObjectLabel(shieldGeometry, 
+                        `🛡️ ${materialData.name}\n${thickness.toFixed(1)} cm`, 
+                        materialData.color);
+                }
+            }
+
+            createDetector() {
+                const detectorGeom = new THREE.SphereGeometry(0.25, 24, 24);
+                const detectorMat = new THREE.MeshLambertMaterial({ 
+                    color: 0x44ff44,
+                    emissive: 0x002200
+                });
+                detectorGeometry = new THREE.Mesh(detectorGeom, detectorMat);
+                detectorGeometry.position.set(5, 1, 0);
+                detectorGeometry.castShadow = true;
+                scene.add(detectorGeometry);
+
+                this.addObjectLabel(detectorGeometry, '📡 検出器', 0x44ff44);
+            }
+
+            createEnvironment() {
+                // 床面
+                const floorGeometry = new THREE.PlaneGeometry(30, 20);
+                const floorMaterial = new THREE.MeshLambertMaterial({ 
+                    color: 0xf5f5f5,
+                    transparent: true,
+                    opacity: 0.3
+                });
+                const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+                floor.rotation.x = -Math.PI / 2;
+                floor.position.y = -1;
+                floor.receiveShadow = true;
+                scene.add(floor);
+            }
+
+            addObjectLabel(object, text, color) {
+                // 簡略化されたラベル表示（実際にはCSS3Dなどを使用）
+                console.log(`Label for ${object.constructor.name}: ${text}`);
+            }
+
+            updatePositions() {
+                const sourceDistance = parseFloat(document.getElementById('source-distance')?.value || 50);
+                const detectorDistance = parseFloat(document.getElementById('detector-distance')?.value || 50);
+                
+                if (sourceGeometry) {
+                    sourceGeometry.position.x = -(sourceDistance / 10);
+                }
+                
+                if (detectorGeometry) {
+                    detectorGeometry.position.x = detectorDistance / 10;
+                }
+
+                this.createRadiationPaths();
+            }
+
+            createRadiationPaths() {
+                // 放射線経路の可視化
+                const pathMaterial = new THREE.LineBasicMaterial({ 
+                    color: 0xff6666,
+                    transparent: true,
+                    opacity: 0.6
+                });
+
+                // 既存のパスを削除
+                scene.children.forEach(child => {
+                    if (child.userData.isRadiationPath) {
+                        scene.remove(child);
+                    }
+                });
+
+                // 新しいパス作成
+                const points = [];
+                points.push(sourceGeometry.position.clone());
+                points.push(detectorGeometry.position.clone());
+
+                const pathGeometry = new THREE.BufferGeometry().setFromPoints(points);
+                const pathLine = new THREE.Line(pathGeometry, pathMaterial);
+                pathLine.userData.isRadiationPath = true;
+                scene.add(pathLine);
+            }
+
+            setupControls() {
+                let isMouseDown = false;
+                let mouseX = 0, mouseY = 0;
+                let targetRotationX = 0.2, targetRotationY = 0.5;
+                let currentDistance = 15;
+
+                this.container.addEventListener('mousedown', (event) => {
+                    isMouseDown = true;
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+
+                this.container.addEventListener('mousemove', (event) => {
+                    if (!isMouseDown) return;
+                    
+                    const deltaX = event.clientX - mouseX;
+                    const deltaY = event.clientY - mouseY;
+                    
+                    targetRotationY += deltaX * 0.01;
+                    targetRotationX += deltaY * 0.01;
+                    targetRotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, targetRotationX));
+                    
+                    mouseX = event.clientX;
+                    mouseY = event.clientY;
+                });
+
+                this.container.addEventListener('mouseup', () => {
+                    isMouseDown = false;
+                });
+
+                this.container.addEventListener('wheel', (event) => {
+                    event.preventDefault();
+                    currentDistance += event.deltaY * 0.02;
+                    currentDistance = Math.max(5, Math.min(30, currentDistance));
+                });
+
+                // カメラ位置更新
+                const updateCamera = () => {
+                    const x = currentDistance * Math.sin(targetRotationY) * Math.cos(targetRotationX);
+                    const y = currentDistance * Math.sin(targetRotationX) + 3;
+                    const z = currentDistance * Math.cos(targetRotationY) * Math.cos(targetRotationX);
+                    
+                    camera.position.x = x;
+                    camera.position.y = y;
+                    camera.position.z = z;
+                    camera.lookAt(0, 2, 0);
+                    
+                    requestAnimationFrame(updateCamera);
+                };
+                updateCamera();
+            }
+
+            animate() {
+                const render = () => {
+                    requestAnimationFrame(render);
+                    
+                    if (sourceGeometry) {
+                        sourceGeometry.rotation.y += 0.02;
+                    }
+                    
+                    renderer.render(scene, camera);
+                };
+                render();
+            }
+
+            playRadiationAnimation() {
+                if (isAnimationPlaying || !sourceGeometry || !detectorGeometry) return;
+                
+                isAnimationPlaying = true;
+                
+                // パーティクルシステムの作成
+                const particleCount = 20;
+                const particles = new THREE.BufferGeometry();
+                const positions = new Float32Array(particleCount * 3);
+                
+                for (let i = 0; i < particleCount; i++) {
+                    positions[i * 3] = sourceGeometry.position.x;
+                    positions[i * 3 + 1] = sourceGeometry.position.y;
+                    positions[i * 3 + 2] = sourceGeometry.position.z;
+                }
+                
+                particles.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                
+                const particleMaterial = new THREE.PointsMaterial({
+                    color: 0xff6666,
+                    size: 0.2,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                particleSystem = new THREE.Points(particles, particleMaterial);
+                scene.add(particleSystem);
+                
+                this.animateParticles();
+            }
+
+            animateParticles() {
+                if (!isAnimationPlaying || !particleSystem) return;
+                
+                const positions = particleSystem.geometry.attributes.position.array;
+                const sourcePos = sourceGeometry.position;
+                const detectorPos = detectorGeometry.position;
+                const direction = detectorPos.clone().sub(sourcePos).normalize();
+                
+                for (let i = 0; i < positions.length; i += 3) {
+                    positions[i] += direction.x * 0.1;
+                    positions[i + 1] += direction.y * 0.1;
+                    positions[i + 2] += direction.z * 0.1;
+                    
+                    // リセット条件
+                    if (positions[i] > detectorPos.x) {
+                        positions[i] = sourcePos.x;
+                        positions[i + 1] = sourcePos.y;
+                        positions[i + 2] = sourcePos.z;
+                    }
+                }
+                
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+                
+                setTimeout(() => this.animateParticles(), 50);
+            }
+
+            stopRadiationAnimation() {
+                isAnimationPlaying = false;
+                if (particleSystem) {
+                    scene.remove(particleSystem);
+                    particleSystem = null;
+                }
+            }
+        }
+
+        // 高精度計算エンジン
+        class AdvancedShieldingCalculator {
+            constructor() {
+                this.safetyLimits = {
+                    general: 2.5, // μSv/h
+                    occupational: 25.0, // μSv/h
+                    medical: 10.0 // μSv/h
+                };
+            }
+
+            calculate(materialKey, thickness, sourceDistance, detectorDistance, sourceKey, activity) {
+                const material = materialDatabase[materialKey];
+                const source = sourceDatabase[sourceKey];
+                
+                // 線減衰係数
+                const mu = material.muMass * material.density;
+                
+                // エネルギー依存性を考慮（簡略化）
+                const energyFactor = this.getEnergyDependence(source.energy, material.atomicNumber);
+                const effectiveMu = mu * energyFactor;
+                
+                // 基本減衰
+                const basicAttenuation = Math.exp(-effectiveMu * thickness);
+                
+                // ビルドアップ係数（Berger-Seltzer近似）
+                const buildup = this.calculateBuildup(effectiveMu, thickness);
+                
+                // 距離による幾何学的減衰
+                const totalDistance = sourceDistance + detectorDistance;
+                const geometricFactor = Math.pow(totalDistance / 100, -2); // 1m基準
+                
+                // 線量率計算
+                const gammaConstant = source.gammaConstant; // R·cm²/h·Ci
+                const activityCi = activity / 3.7e10;
+                
+                const unshieldedRate = activityCi * gammaConstant * geometricFactor * 10; // μSv/h換算
+                const shieldedRate = unshieldedRate * basicAttenuation * buildup;
+                
+                // 半価層厚（HVL）
+                const hvl = Math.log(2) / effectiveMu;
+                const hvlRatio = thickness / hvl;
+                
+                return {
+                    unshieldedRate: unshieldedRate,
+                    shieldedRate: Math.max(shieldedRate, 0.001),
+                    basicAttenuation: basicAttenuation,
+                    buildup: buildup,
+                    totalAttenuation: basicAttenuation * buildup,
+                    attenuationPercent: (1 - basicAttenuation * buildup) * 100,
+                    hvl: hvl,
+                    hvlRatio: hvlRatio,
+                    geometricFactor: geometricFactor,
+                    safetyStatus: this.evaluateSafety(shieldedRate),
+                    materialEfficiency: this.calculateEfficiency(material, thickness)
+                };
+            }
+
+            getEnergyDependence(energy, atomicNumber) {
+                // 簡略化されたエネルギー依存性
+                // 実際にはNISTデータベースなどを参照
+                const photoelectricFactor = Math.pow(atomicNumber, 3.8) / Math.pow(energy, 3.2);
+                const comptonFactor = 1 / energy;
+                return Math.max(0.1, photoelectricFactor + comptonFactor);
+            }
+
+            calculateBuildup(mu, thickness) {
+                // Taylor-Berger近似
+                const muT = mu * thickness;
+                if (muT < 0.01) return 1.0;
+                
+                const a = 1.0;
+                const b = 1.5;
+                return 1 + a * muT * Math.exp(-b * muT) + (muT - 1 + Math.exp(-muT)) / 2;
+            }
+
+            evaluateSafety(doseRate) {
+                if (doseRate <= this.safetyLimits.general) {
+                    return { level: 'excellent', text: '✓ 基準値以下' };
+                } else if (doseRate <= this.safetyLimits.medical) {
+                    return { level: 'good', text: '△ 要検討' };
+                } else if (doseRate <= this.safetyLimits.occupational) {
+                    return { level: 'warning', text: '⚠ 基準超過' };
+                } else {
+                    return { level: 'danger', text: '✗ 危険' };
+                }
+            }
+
+            calculateEfficiency(material, thickness) {
+                // 厚さ・重量・コストを考慮した効率指標
+                const volume = thickness; // 単位面積あたり
+                const weight = volume * material.density;
+                const cost = weight * material.cost;
+                
+                return {
+                    volume: volume,
+                    weight: weight,
+                    cost: cost,
+                    costEfficiency: 1 / cost // 単純化
+                };
+            }
+        }
+
+        // メイン初期化処理
+        document.addEventListener('DOMContentLoaded', function() {
+            const learningManager = new AdvancedLearningManager();
+            const calculator = new AdvancedShieldingCalculator();
+            let visualizer = null;
+
+            // 3D可視化の初期化
+            setTimeout(() => {
+                const container = document.getElementById('threejs-container');
+                if (container) {
+                    visualizer = new Advanced3DVisualizer(container);
+                    updateAllVisualization();
+                }
+            }, 100);
+
+            // イベントリスナーの設定
+            setupEventListeners();
+            
+            // 初期状態の設定
+            learningManager.updateProgress();
+            updateMaterialProperties();
+            updateHVLDisplay();
+
+            // ウェルカムメッセージ
+            setTimeout(() => {
+                alert('🛡️ Poker MCP Level 1: 基礎習得へようこそ！\n\n' +
+                      '🎯 学習目標:\n' +
+                      '• 放射線遮蔽の物理学的原理の理解\n' +
+                      '• 材料特性と遮蔽効果の定量的関係\n' +
+                      '• 実用的な遮蔽設計の基礎知識\n\n' +
+                      '右側のパラメータを調整しながら、3D可視化で\n' +
+                      '遮蔽効果を体感してください！');
+            }, 1000);
+
+            function setupEventListeners() {
+                // 材料変更
+                document.getElementById('shield-material').addEventListener('change', function() {
+                    updateMaterialProperties();
+                    updateHVLDisplay();
+                    updateAllVisualization();
+                    learningManager.trackInteraction('material_change', this.value);
+                });
+
+                // 厚さ調整
+                document.getElementById('thickness-slider').addEventListener('input', function() {
+                    document.getElementById('thickness-value').textContent = this.value + ' cm';
+                    updateHVLDisplay();
+                    updateAllVisualization();
+                    learningManager.trackInteraction('thickness_change', this.value);
+                });
+
+                // 距離調整
+                document.getElementById('source-distance').addEventListener('input', function() {
+                    document.getElementById('source-distance-value').textContent = this.value + ' cm';
+                    updateAllVisualization();
+                    learningManager.trackInteraction('distance_change', this.value);
+                });
+
+                document.getElementById('detector-distance').addEventListener('input', function() {
+                    document.getElementById('detector-distance-value').textContent = this.value + ' cm';
+                    updateAllVisualization();
+                    learningManager.trackInteraction('distance_change', this.value);
+                });
+
+                // 線源・放射能変更
+                document.getElementById('radiation-source').addEventListener('change', function() {
+                    learningManager.trackInteraction('source_change', this.value);
+                });
+
+                document.getElementById('source-activity').addEventListener('change', function() {
+                    learningManager.trackInteraction('activity_change', this.value);
+                });
+
+                // 計算実行
+                document.getElementById('calculate-btn').addEventListener('click', performCalculation);
+
+                // ナビゲーション
+                document.getElementById('next-step').addEventListener('click', function() {
+                    if (learningManager.currentStep === learningManager.totalSteps) {
+                        learningManager.completeLevel1();
+                    } else {
+                        learningManager.nextStep();
+                    }
+                });
+
+                document.getElementById('prev-step').addEventListener('click', function() {
+                    learningManager.previousStep();
+                });
+
+                // 補助機能
+                document.getElementById('hint-btn').addEventListener('click', showPhysicsHint);
+                document.getElementById('compare-materials').addEventListener('click', showMaterialComparison);
+                document.getElementById('restart-btn').addEventListener('click', resetAllParameters);
+
+                // 3D制御
+                document.getElementById('play-animation').addEventListener('click', function() {
+                    if (visualizer) {
+                        visualizer.playRadiationAnimation();
+                        this.style.display = 'none';
+                        document.getElementById('pause-animation').style.display = 'inline-block';
+                        learningManager.trackInteraction('animation_play');
+                    }
+                });
+
+                document.getElementById('pause-animation').addEventListener('click', function() {
+                    if (visualizer) {
+                        visualizer.stopRadiationAnimation();
+                        this.style.display = 'none';
+                        document.getElementById('play-animation').style.display = 'inline-block';
+                        learningManager.trackInteraction('animation_pause');
+                    }
+                });
+
+                document.getElementById('reset-view').addEventListener('click', function() {
+                    if (camera) {
+                        camera.position.set(8, 6, 12);
+                        camera.lookAt(0, 0, 0);
+                        learningManager.trackInteraction('view_reset');
+                    }
+                });
+            }
+
+            function updateMaterialProperties() {
+                const materialKey = document.getElementById('shield-material').value;
+                const material = materialDatabase[materialKey];
+                
+                const propertiesDiv = document.getElementById('material-properties');
+                propertiesDiv.innerHTML = `
+                    <strong>${material.name} の特性:</strong><br>
+                    • 原子番号: Z=${material.atomicNumber}<br>
+                    • 密度: ${material.density} g/cm³<br>
+                    • 質量減衰係数: ${material.muMass.toFixed(4)} cm²/g<br>
+                    • 線減衰係数: ${(material.muMass * material.density).toFixed(3)} cm⁻¹<br>
+                    • 主な用途: ${material.applications}
+                `;
+            }
+
+            function updateHVLDisplay() {
+                const materialKey = document.getElementById('shield-material').value;
+                const thickness = parseFloat(document.getElementById('thickness-slider').value);
+                const material = materialDatabase[materialKey];
+                
+                const mu = material.muMass * material.density;
+                const hvl = Math.log(2) / mu;
+                const hvlRatio = thickness / hvl;
+                const attenuationPercent = (1 - Math.exp(-mu * thickness)) * 100;
+                
+                const hvlDisplay = document.getElementById('hvl-display');
+                hvlDisplay.innerHTML = `
+                    厚さ: ${hvlRatio.toFixed(1)} HVL<br>
+                    減衰率: ${attenuationPercent.toFixed(1)}%<br>
+                    半価層厚: ${hvl.toFixed(1)} cm
+                `;
+            }
+
+            function updateAllVisualization() {
+                if (!visualizer) return;
+
+                const materialKey = document.getElementById('shield-material').value;
+                const thickness = parseFloat(document.getElementById('thickness-slider').value) / 10; // スケール調整
+                
+                visualizer.updateShield(materialKey, thickness);
+                visualizer.updatePositions();
+            }
+
+            function performCalculation() {
+                const materialKey = document.getElementById('shield-material').value;
+                const thickness = parseFloat(document.getElementById('thickness-slider').value);
+                const sourceDistance = parseFloat(document.getElementById('source-distance').value);
+                const detectorDistance = parseFloat(document.getElementById('detector-distance').value);
+                const sourceKey = document.getElementById('radiation-source').value;
+                const activity = parseFloat(document.getElementById('source-activity').value);
+
+                // 計算実行
+                const results = calculator.calculate(
+                    materialKey, thickness, sourceDistance, detectorDistance, sourceKey, activity
+                );
+
+                // 結果表示
+                displayResults(results);
+                
+                // 学習追跡
+                learningManager.trackCalculation(results);
+
+                // フィードバック提供
+                provideFeedback(results, materialKey);
+            }
+
+            function displayResults(results) {
+                const resultsPanel = document.getElementById('results-display');
+                resultsPanel.style.display = 'block';
+
+                // 透過線量率
+                document.getElementById('dose-rate-result').textContent = 
+                    results.shieldedRate.toFixed(2) + ' μSv/h';
+
+                // 減衰率
+                document.getElementById('attenuation-result').textContent = 
+                    results.attenuationPercent.toFixed(1) + '%';
+
+                // ビルドアップ係数
+                document.getElementById('buildup-result').textContent = 
+                    results.buildup.toFixed(2);
+
+                // HVL比
+                document.getElementById('hvl-ratio').textContent = 
+                    results.hvlRatio.toFixed(1) + ' HVL';
+
+                // ステータス更新
+                updateResultStatuses(results);
+            }
+
+            function updateResultStatuses(results) {
+                // 安全状態
+                const safetyStatus = document.getElementById('safety-status');
+                safetyStatus.textContent = results.safetyStatus.text;
+                safetyStatus.className = `result-status ${results.safetyStatus.level}`;
+
+                // 減衰率評価
+                const attenuationStatus = document.getElementById('attenuation-status');
+                if (results.attenuationPercent > 99) {
+                    attenuationStatus.textContent = '優秀';
+                    attenuationStatus.className = 'result-status excellent';
+                } else if (results.attenuationPercent > 90) {
+                    attenuationStatus.textContent = '良好';
+                    attenuationStatus.className = 'result-status good';
+                } else if (results.attenuationPercent > 50) {
+                    attenuationStatus.textContent = '普通';
+                    attenuationStatus.className = 'result-status warning';
+                } else {
+                    attenuationStatus.textContent = '不足';
+                    attenuationStatus.className = 'result-status danger';
+                }
+
+                // ビルドアップ評価
+                const buildupStatus = document.getElementById('buildup-status');
+                if (results.buildup < 1.5) {
+                    buildupStatus.textContent = '低';
+                    buildupStatus.className = 'result-status excellent';
+                } else if (results.buildup < 3.0) {
+                    buildupStatus.textContent = '中';
+                    buildupStatus.className = 'result-status good';
+                } else {
+                    buildupStatus.textContent = '高';
+                    buildupStatus.className = 'result-status warning';
+                }
+
+                // HVL評価
+                const hvlStatus = document.getElementById('hvl-status');
+                if (results.hvlRatio > 5) {
+                    hvlStatus.textContent = '十分';
+                    hvlStatus.className = 'result-status excellent';
+                } else if (results.hvlRatio > 2) {
+                    hvlStatus.textContent = '適切';
+                    hvlStatus.className = 'result-status good';
+                } else {
+                    hvlStatus.textContent = '不足';
+                    hvlStatus.className = 'result-status warning';
+                }
+            }
+
+            function provideFeedback(results, materialKey) {
+                const material = materialDatabase[materialKey];
+                let feedback = '';
+
+                if (results.safetyStatus.level === 'excellent') {
+                    feedback = `🎉 素晴らしい！${material.name}による遮蔽が効果的に機能しています。`;
+                    if (results.hvlRatio > 10) {
+                        feedback += '\n💡 厚すぎる可能性があります。コスト最適化を検討してみましょう。';
+                    }
+                } else if (results.safetyStatus.level === 'good') {
+                    feedback = `✅ 基本的な遮蔽は達成されています。用途に応じてさらなる改善を検討しましょう。`;
+                } else if (results.safetyStatus.level === 'warning') {
+                    feedback = `⚠️ 遮蔽が不十分です。厚さを増加するか、より効果的な材料への変更を検討してください。`;
+                } else {
+                    feedback = `🚫 危険レベルです！遮蔽の大幅な改善が必要です。`;
+                }
+
+                // ビルドアップが高い場合の追加アドバイス
+                if (results.buildup > 3) {
+                    feedback += `\n🔬 ビルドアップ効果が顕著です。散乱線の蓄積により、単純計算より透過が増加しています。`;
+                }
+
+                // フィードバック表示
+                setTimeout(() => {
+                    alert(feedback);
+                }, 500);
+            }
+
+            function showPhysicsHint() {
+                const hints = {
+                    1: `🔬 物理学的背景\n\n` +
+                       `放射線遮蔽は主に3つの相互作用で起こります：\n` +
+                       `• 光電効果: 低エネルギー領域で支配的\n` +
+                       `• コンプトン散乱: 中エネルギー領域\n` +
+                       `• 電子対生成: 高エネルギー領域\n\n` +
+                       `材料の原子番号Zが高いほど光電効果が強くなり、\n` +
+                       `低エネルギーγ線に対して効果的です。`,
+                    
+                    2: `🧪 材料選択の科学\n\n` +
+                       `遮蔽効率は以下で決まります：\n` +
+                       `• 密度ρ: 単位体積あたりの原子数\n` +
+                       `• 原子番号Z: 光電効果への影響\n` +
+                       `• 価格: 実用性への影響\n\n` +
+                       `鉛は高Z・高密度で優秀ですが、\n` +
+                       `コンクリートは安価で大型施設に適しています。`,
+                    
+                    3: `📏 幾何学的考慮事項\n\n` +
+                       `距離の効果は逆二乗則に従います：\n` +
+                       `• 距離2倍 → 線量率1/4\n` +
+                       `• 距離3倍 → 線量率1/9\n\n` +
+                       `ただし散乱線やビルドアップにより、\n` +
+                       `実際の減衰は複雑になります。`,
+                    
+                    4: `🏗️ 実用設計のポイント\n\n` +
+                       `実際の設計では以下を考慮：\n` +
+                       `• 規制基準値（一般公衆: 1mSv/年）\n` +
+                       `• 安全係数（通常1.5-2倍）\n` +
+                       `• 経済性（材料・施工コスト）\n` +
+                       `• 保守性（点検・交換の容易さ）\n\n` +
+                       `モンテカルロ法による詳細計算も重要です。`
+                };
+
+                alert(hints[learningManager.currentStep] || hints[1]);
+            }
+
+            function showMaterialComparison() {
+                const comparisonTable = document.getElementById('comparison-table');
+                const tbody = document.getElementById('comparison-tbody');
+                
+                // テーブル内容の生成
+                tbody.innerHTML = '';
+                Object.entries(materialDatabase).forEach(([key, material]) => {
+                    const mu = material.muMass * material.density;
+                    const hvl = Math.log(2) / mu;
+                    const efficiency = material.density / material.cost; // 簡易効率指標
+                    
+                    const row = tbody.insertRow();
+                    row.innerHTML = `
+                        <td><strong>${material.name}</strong></td>
+                        <td>${material.density}</td>
+                        <td>${material.muMass.toFixed(4)}</td>
+                        <td>${hvl.toFixed(1)}</td>
+                        <td>${efficiency.toFixed(2)}</td>
+                    `;
+                    
+                    // 現在選択されている材料をハイライト
+                    if (key === document.getElementById('shield-material').value) {
+                        row.style.backgroundColor = '#e0f2fe';
+                        row.style.fontWeight = 'bold';
+                    }
+                });
+                
+                comparisonTable.style.display = 'block';
+                
+                // 学習追跡
+                learningManager.trackInteraction('material_comparison');
+                
+                setTimeout(() => {
+                    alert('📊 材料比較表を表示しました！\n\n' +
+                          '各材料の密度、質量減衰係数、半価層厚、\n' +
+                          '相対効率を比較できます。\n\n' +
+                          '現在選択中の材料がハイライト表示されています。');
+                }, 200);
+            }
+
+            function resetAllParameters() {
+                if (confirm('すべてのパラメータを初期値にリセットしますか？')) {
+                    document.getElementById('shield-material').value = 'concrete';
+                    document.getElementById('thickness-slider').value = '10';
+                    document.getElementById('source-distance').value = '50';
+                    document.getElementById('detector-distance').value = '50';
+                    document.getElementById('radiation-source').value = 'cs137';
+                    document.getElementById('source-activity').value = '3.7e10';
+                    
+                    // 表示更新
+                    document.getElementById('thickness-value').textContent = '10 cm';
+                    document.getElementById('source-distance-value').textContent = '50 cm';
+                    document.getElementById('detector-distance-value').textContent = '50 cm';
+                    
+                    // 結果パネル非表示
+                    document.getElementById('results-display').style.display = 'none';
+                    document.getElementById('comparison-table').style.display = 'none';
+                    
+                    // 更新処理
+                    updateMaterialProperties();
+                    updateHVLDisplay();
+                    updateAllVisualization();
+                    
+                    learningManager.trackInteraction('reset_all');
+                }
+            }
+
+            // リサイズ対応
+            window.addEventListener('resize', function() {
+                if (camera && renderer) {
+                    const container = document.getElementById('threejs-container');
+                    camera.aspect = container.clientWidth / container.clientHeight;
+                    camera.updateProjectionMatrix();
+                    renderer.setSize(container.clientWidth, container.clientHeight);
+                }
+            });
+        });

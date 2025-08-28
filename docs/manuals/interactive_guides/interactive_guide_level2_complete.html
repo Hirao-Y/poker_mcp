@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🏥 Poker MCP Interactive Guide - Level 2: 実用設計</title>
+    <title>🏥 Poker MCP Interactive Guide - Level 2: 実用設計完了</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        /* 省略されたCSS - 前回のLevel2ガイドと同じスタイル */
         :root {
             --primary-blue: #1e3a8a;
             --primary-green: #059669;
@@ -62,7 +61,9 @@
             background: white;
             border-radius: 20px;
             padding: 3rem;
-            max-width: 600px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
             text-align: center;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
             z-index: 1000;
@@ -97,18 +98,106 @@
             color: var(--text-secondary);
             line-height: 1.6;
             margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .certificate-section {
+            background: linear-gradient(135deg, #fef3c7, #fbbf24);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .certificate-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(255,255,255,0.1) 10px,
+                rgba(255,255,255,0.1) 20px
+            );
+            animation: shine 3s linear infinite;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        .certificate-content {
+            position: relative;
+            z-index: 2;
+        }
+
+        .certificate-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 1rem;
+        }
+
+        .progress-stats {
+            background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            border: 2px solid var(--primary-green);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .stat-item {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary-blue);
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .stat-description {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.5rem;
+            line-height: 1.3;
         }
 
         .feature-highlights {
-            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
-            border-radius: 10px;
+            background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+            border-radius: 15px;
             padding: 2rem;
             margin: 2rem 0;
         }
 
         .feature-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
             gap: 1.5rem;
             margin-top: 2rem;
         }
@@ -116,27 +205,60 @@
         .feature-card {
             background: white;
             border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            box-shadow: 0 6px 10px rgba(0, 0, 0, 0.08);
             text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
         }
 
         .feature-icon {
-            font-size: 2.5rem;
+            font-size: 3rem;
             margin-bottom: 1rem;
+            display: block;
         }
 
         .feature-title {
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             font-weight: bold;
             color: var(--primary-blue);
-            margin-bottom: 0.5rem;
+            margin-bottom: 1rem;
         }
 
         .feature-description {
-            font-size: 0.9rem;
+            font-size: 1rem;
             color: var(--text-secondary);
-            line-height: 1.4;
+            line-height: 1.5;
+        }
+
+        .implementation-guide {
+            background: linear-gradient(135deg, #fef2f2, #fee2e2);
+            border: 2px solid var(--danger-red);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .implementation-steps {
+            margin-top: 1.5rem;
+        }
+
+        .implementation-step {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            border-left: 4px solid var(--accent-physics);
+        }
+
+        .step-header {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
         }
 
         .cta-buttons {
@@ -170,39 +292,7 @@
 
         .cta-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .progress-stats {
-            background: linear-gradient(135deg, #fef3c7, #fde68a);
-            border-radius: 10px;
-            padding: 1.5rem;
-            margin: 1.5rem 0;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-            gap: 1rem;
-            margin-top: 1rem;
-        }
-
-        .stat-item {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: var(--primary-blue);
-            display: block;
-        }
-
-        .stat-label {
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.15);
         }
 
         .learning-path {
@@ -234,13 +324,13 @@
         }
 
         .step-circle {
-            width: 60px;
-            height: 60px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             font-weight: bold;
             margin-bottom: 0.5rem;
         }
@@ -248,11 +338,13 @@
         .step-circle.completed {
             background: var(--primary-green);
             color: white;
+            box-shadow: 0 4px 8px rgba(5, 150, 105, 0.3);
         }
 
         .step-circle.current {
             background: var(--warning-orange);
             color: white;
+            animation: pulse 2s infinite;
         }
 
         .step-circle.future {
@@ -260,19 +352,25 @@
             color: var(--text-secondary);
         }
 
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+            70% { box-shadow: 0 0 0 15px rgba(217, 119, 6, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+        }
+
         .step-title {
-            font-size: 0.9rem;
+            font-size: 1rem;
             font-weight: 600;
             text-align: center;
-            max-width: 120px;
+            max-width: 140px;
         }
 
         .step-connector {
             position: absolute;
-            top: 30px;
-            left: 60px;
-            width: calc(100% - 60px);
-            height: 2px;
+            top: 35px;
+            left: 70px;
+            width: calc(100% - 70px);
+            height: 3px;
             background: #e5e7eb;
             z-index: -1;
         }
@@ -284,11 +382,22 @@
         .testimonial {
             background: linear-gradient(135deg, #ede9fe, #ddd6fe);
             border-radius: 10px;
-            padding: 1.5rem;
+            padding: 2rem;
             margin: 2rem 0;
             text-align: center;
             font-style: italic;
             color: var(--accent-physics);
+            position: relative;
+        }
+
+        .testimonial::before {
+            content: '"';
+            font-size: 4rem;
+            color: var(--accent-physics);
+            position: absolute;
+            top: -10px;
+            left: 20px;
+            opacity: 0.3;
         }
 
         .testimonial-author {
@@ -296,6 +405,71 @@
             font-size: 0.9rem;
             font-weight: 600;
             color: var(--primary-blue);
+            font-style: normal;
+        }
+
+        .research-application {
+            background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+            border: 2px solid var(--primary-green);
+            border-radius: 15px;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: left;
+        }
+
+        .application-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .application-item {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            border-left: 4px solid var(--primary-green);
+        }
+
+        .application-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .application-title {
+            font-weight: bold;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .completion-message {
+                margin: 1rem;
+                max-width: calc(100vw - 2rem);
+                padding: 2rem;
+            }
+            
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .path-steps {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .step-connector {
+                display: none;
+            }
         }
     </style>
 </head>
@@ -304,58 +478,86 @@
         <div class="logo">
             🏥 Poker MCP Interactive Guide - Level 2 完了
         </div>
+        <div style="font-size: 0.9rem; opacity: 0.9;">
+            実用設計スキル習得完了 🎉
+        </div>
     </header>
 
     <div class="completion-message">
-        <div class="completion-icon">🎉</div>
+        <div class="completion-icon">🎊</div>
         
-        <h1 class="completion-title">Level 2 完了おめでとうございます！</h1>
+        <h1 class="completion-title">Level 2 実用設計 完了おめでとうございます！</h1>
         
         <div class="completion-description">
-            実用的な放射線遮蔽設計スキルを習得されました。<br>
-            医療・原子力・研究施設での実際の設計体験を通じて、<br>
-            理論と実践の橋渡しができるようになりました。
+            実際の施設設計で求められる高度な放射線遮蔽スキルを習得されました。<br>
+            医療・原子力・研究各分野での実務レベルの設計能力を身につけ、<br>
+            理論から実践への完全な橋渡しが完成しました。
+        </div>
+
+        <!-- 修了証明書セクション -->
+        <div class="certificate-section">
+            <div class="certificate-content">
+                <div class="certificate-title">🏆 Level 2 実用設計 修了証明</div>
+                <p><strong>認定内容</strong>: 放射線遮蔽実用設計スキル</p>
+                <p><strong>習得レベル</strong>: 実務適用可能レベル</p>
+                <p><strong>修了日時</strong>: <span id="completion-date">--</span></p>
+                <p><strong>総合評価</strong>: <span id="final-grade">--</span></p>
+            </div>
         </div>
 
         <div class="progress-stats">
-            <h3 style="text-align: center; margin-bottom: 1rem;">🏆 達成状況</h3>
+            <h3 style="text-align: center; margin-bottom: 1rem; color: var(--primary-blue);">📊 詳細な学習成果</h3>
             <div class="stats-grid">
                 <div class="stat-item">
                     <span class="stat-value" id="completion-time">--</span>
-                    <span class="stat-label">完了時間</span>
+                    <span class="stat-label">学習時間</span>
+                    <div class="stat-description">推奨30分に対する実績</div>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="design-score">--</span>
-                    <span class="stat-label">設計スコア</span>
+                    <span class="stat-label">最終設計スコア</span>
+                    <div class="stat-description">安全性・経済性・効率性の総合評価</div>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="optimization-attempts">--</span>
-                    <span class="stat-label">最適化回数</span>
+                    <span class="stat-label">最適化試行回数</span>
+                    <div class="stat-description">設計改善への積極性指標</div>
                 </div>
                 <div class="stat-item">
                     <span class="stat-value" id="scenario-type">--</span>
                     <span class="stat-label">完了シナリオ</span>
+                    <div class="stat-description">習得した専門分野</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="safety-margin">--</span>
+                    <span class="stat-label">安全余裕</span>
+                    <div class="stat-description">最終設計の安全性確保度</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="cost-efficiency">--</span>
+                    <span class="stat-label">コスト効率</span>
+                    <div class="stat-description">経済性最適化の達成度</div>
                 </div>
             </div>
         </div>
 
         <div class="feature-highlights">
-            <h3 style="text-align: center; margin-bottom: 1rem;">🎯 習得したスキル</h3>
+            <h3 style="text-align: center; margin-bottom: 1rem; color: var(--primary-blue);">🎯 習得した専門スキル</h3>
             
             <div class="feature-grid">
                 <div class="feature-card">
                     <div class="feature-icon">🏗️</div>
                     <div class="feature-title">実用設計手法</div>
                     <div class="feature-description">
-                        実際の施設要件に基づく設計プロセスと、制約条件下での最適化技術
+                        実際の施設要件に基づく設計プロセスと、複雑な制約条件下での総合最適化技術を完全習得
                     </div>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">⚖️</div>
-                    <div class="feature-title">総合判断力</div>
+                    <div class="feature-title">多角的判断力</div>
                     <div class="feature-description">
-                        安全性・経済性・施工性のバランスを考慮した多角的評価能力
+                        安全性・経済性・施工性・運用性のすべてを考慮した高次元バランス判断能力
                     </div>
                 </div>
 
@@ -363,105 +565,207 @@
                     <div class="feature-icon">🔬</div>
                     <div class="feature-title">分野別専門知識</div>
                     <div class="feature-description">
-                        医療・原子力・研究各分野の特殊要件と対応手法の理解
+                        医療・原子力・研究各分野の法規制要件と実務での特殊考慮事項の完全理解
                     </div>
                 </div>
 
                 <div class="feature-card">
                     <div class="feature-icon">📊</div>
-                    <div class="feature-title">設計最適化</div>
+                    <div class="feature-title">高度最適化技術</div>
                     <div class="feature-description">
-                        制約条件内での最適解探索と、設計パフォーマンスの定量評価
+                        複数制約条件下での最適解探索と、設計パフォーマンスの定量的評価・改善手法
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- 研究活動への応用ガイド -->
+        <div class="research-application">
+            <h3 style="color: var(--primary-blue); margin-bottom: 1rem;">🔬 研究活動での即座活用</h3>
+            <p style="margin-bottom: 1rem;">習得したスキルは以下の研究活動で即座に活用可能です：</p>
+            
+            <div class="application-grid">
+                <div class="application-item">
+                    <div class="application-icon">🏥</div>
+                    <div class="application-title">医療物理研究</div>
+                    <div>治療計画・装置遮蔽・安全評価の精密設計</div>
+                </div>
+                <div class="application-item">
+                    <div class="application-icon">⚛️</div>
+                    <div class="application-title">原子力工学研究</div>
+                    <div>炉心遮蔽・廃棄物管理・安全解析の高度計算</div>
+                </div>
+                <div class="application-item">
+                    <div class="application-icon">🔬</div>
+                    <div class="application-title">加速器科学研究</div>
+                    <div>ビームライン設計・中性子遮蔽・検出器配置</div>
+                </div>
+                <div class="application-item">
+                    <div class="application-icon">📊</div>
+                    <div class="application-title">安全工学研究</div>
+                    <div>リスク評価・規制対応・品質保証システム</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 実装ガイド -->
+        <div class="implementation-guide">
+            <h3 style="color: var(--danger-red); margin-bottom: 1rem;">🚀 実務での実装ガイド</h3>
+            <p style="margin-bottom: 1rem;">学習成果を実際の研究・業務で活用するための具体的ステップ：</p>
+            
+            <div class="implementation-steps">
+                <div class="implementation-step">
+                    <div class="step-header">Phase 1: 即座適用 (今週から)</div>
+                    <div>既存研究プロジェクトでの遮蔽計算見直し・精度向上・効率化実施</div>
+                </div>
+                <div class="implementation-step">
+                    <div class="step-header">Phase 2: 高度活用 (1ヶ月以内)</div>
+                    <div>新規研究計画での遮蔽設計・予算策定・安全評価への本格導入</div>
+                </div>
+                <div class="implementation-step">
+                    <div class="step-header">Phase 3: 組織展開 (3ヶ月以内)</div>
+                    <div>研究室・部門での標準手法化・メンバー指導・品質向上システム構築</div>
+                </div>
+                <div class="implementation-step">
+                    <div class="step-header">Phase 4: 専門性確立 (継続的)</div>
+                    <div>学術発表・論文執筆・外部連携での専門知識活用・業界貢献</div>
+                </div>
+            </div>
+        </div>
+
         <div class="learning-path">
-            <div class="path-title">🛤️ 学習進行状況</div>
+            <div class="path-title">🛤️ 学習進行状況と次のステップ</div>
             
             <div class="path-steps">
                 <div class="path-step">
                     <div class="step-circle completed">✓</div>
-                    <div class="step-title">Level 1<br>基本習得</div>
+                    <div class="step-title">Level 1<br>基本習得<br>完了</div>
                     <div class="step-connector completed"></div>
                 </div>
                 <div class="path-step">
                     <div class="step-circle completed">✓</div>
-                    <div class="step-title">Level 2<br>実用設計</div>
+                    <div class="step-title">Level 2<br>実用設計<br>完了</div>
                     <div class="step-connector current"></div>
                 </div>
                 <div class="path-step">
                     <div class="step-circle current">3</div>
-                    <div class="step-title">Level 3<br>高度活用</div>
+                    <div class="step-title">Level 3<br>高度活用<br>準備完了</div>
                     <div class="step-connector future"></div>
                 </div>
                 <div class="path-step">
                     <div class="step-circle future">🚀</div>
-                    <div class="step-title">マスター<br>認定</div>
+                    <div class="step-title">マスター<br>認定<br>目標</div>
                 </div>
             </div>
         </div>
 
         <div class="testimonial">
-            「Level 2では実際の設計業務で直面する複合的な判断が求められました。
-            制約条件下での最適化は、まさに実務そのものの体験でした。」
-            <div class="testimonial-author">- 放射線遮蔽設計エンジニア</div>
+            Level 2では実際の業務で直面する複雑な判断と最適化を体験できました。
+            単なる理論学習を超えて、実務での意思決定プロセスそのものを習得できたのが最大の収穫です。
+            明日からの研究活動で即座に活用します。
+            <div class="testimonial-author">- 放射線遮蔽設計エンジニア（医療物理士）</div>
         </div>
 
         <div class="cta-buttons">
             <a href="interactive_guide_level3.html" class="cta-btn primary">
                 🚀 Level 3: 高度活用 に進む
             </a>
-            <a href="interactive_guide_level1.html" class="cta-btn secondary">
-                🔄 Level 1 に戻る
+            <a href="interactive_guide_level2.html" class="cta-btn secondary">
+                🔄 Level 2 を再実行
+            </a>
+            <a href="index.html" class="cta-btn secondary">
+                📚 ガイドトップ に戻る
             </a>
         </div>
 
         <div style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e5e7eb;">
-            <h4 style="color: var(--primary-blue); margin-bottom: 1rem;">📋 次のステップ</h4>
+            <h4 style="color: var(--primary-blue); margin-bottom: 1rem;">🎯 Level 3 予告: 高度活用への道</h4>
             <p style="color: var(--text-secondary); line-height: 1.6; margin-bottom: 1rem;">
-                Level 3では、複数施設の統合設計、自動化ワークフロー、
-                規制対応の高度な実務スキルを習得します。
+                Level 3では、複数施設の統合設計・自動化ワークフロー・AI最適化・
+                規制対応の完全自動化など、最先端の実務スキルを習得します。
             </p>
-            <ul style="color: var(--text-secondary); line-height: 1.6; text-align: left; max-width: 400px; margin: 0 auto;">
-                <li>🏢 複合施設の統合設計</li>
-                <li>🤖 設計自動化・最適化AI</li>
-                <li>📋 規制文書の自動生成</li>
-                <li>🔗 外部システム連携</li>
-                <li>🎓 マスター認定試験</li>
+            <ul style="color: var(--text-secondary); line-height: 1.6; text-align: left; max-width: 500px; margin: 0 auto;">
+                <li>🏢 <strong>複合施設統合設計</strong>: 病院全体・研究所全体の統合最適化</li>
+                <li>🤖 <strong>AI支援設計自動化</strong>: 機械学習による設計パラメータ最適化</li>
+                <li>📋 <strong>規制文書自動生成</strong>: 申請書類・報告書の自動作成システム</li>
+                <li>🔗 <strong>外部CAD連携</strong>: AutoCAD・SolidWorks等との完全統合</li>
+                <li>☁️ <strong>クラウド分散計算</strong>: 大規模モデルの高速並列処理</li>
+                <li>🎓 <strong>マスター認定試験</strong>: 業界認定の専門資格取得</li>
             </ul>
         </div>
     </div>
 
     <script>
-        // 完了データの表示
         document.addEventListener('DOMContentLoaded', function() {
             // ローカルストレージからデータ取得
             const completionData = JSON.parse(localStorage.getItem('poker_mcp_level2_completion') || '{}');
             const designData = JSON.parse(localStorage.getItem('poker_mcp_level2_design') || '{}');
             
+            // 修了日時の設定
+            const completionDate = completionData.timestamp || new Date().toISOString();
+            document.getElementById('completion-date').textContent = 
+                new Date(completionDate).toLocaleString('ja-JP', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+
             // 統計情報の表示
+            const completionTime = completionData.completionTime || 1800; // 30分
             document.getElementById('completion-time').textContent = 
-                completionData.completionTime ? `${Math.round(completionData.completionTime / 60)}分` : '30分';
+                completionTime < 3600 ? `${Math.round(completionTime / 60)}分` : 
+                `${Math.round(completionTime / 3600 * 10) / 10}時間`;
             
-            document.getElementById('design-score').textContent = 
-                designData.score ? `${designData.score}点` : '85点';
+            const designScore = designData.score || 85;
+            document.getElementById('design-score').textContent = `${designScore}点`;
+            
+            // 最終グレード計算
+            let finalGrade = 'B';
+            if (designScore >= 95) finalGrade = 'A+';
+            else if (designScore >= 90) finalGrade = 'A';
+            else if (designScore >= 85) finalGrade = 'A-';
+            else if (designScore >= 80) finalGrade = 'B+';
+            else if (designScore >= 75) finalGrade = 'B';
+            else if (designScore >= 70) finalGrade = 'B-';
+            
+            document.getElementById('final-grade').textContent = finalGrade;
                 
             document.getElementById('optimization-attempts').textContent = 
                 completionData.optimizationAttempts || '5回';
                 
+            const scenarioTypes = {
+                'medical': '医療施設設計',
+                'nuclear': '原子力施設設計', 
+                'research': '研究施設設計'
+            };
             document.getElementById('scenario-type').textContent = 
-                designData.scenario === 'medical' ? '医療施設' :
-                designData.scenario === 'nuclear' ? '原子力施設' :
-                designData.scenario === 'research' ? '研究施設' : '医療施設';
+                scenarioTypes[designData.scenario] || '医療施設設計';
 
-            // 完了データをサーバーに送信（実際のシステムでは）
-            if (completionData.timestamp) {
-                console.log('Level 2 completion data:', completionData);
-            }
+            // 追加統計情報
+            document.getElementById('safety-margin').textContent = 
+                designData.safetyMargin ? `${Math.round(designData.safetyMargin)}%` : '35%';
+            
+            document.getElementById('cost-efficiency').textContent = 
+                designData.costEfficiency ? `${Math.round(designData.costEfficiency)}%` : '78%';
 
-            // 達成感のあるアニメーション
+            // 完了データの保存（永続化）
+            const permanentRecord = {
+                level: 2,
+                completedAt: new Date().toISOString(),
+                finalScore: designScore,
+                finalGrade: finalGrade,
+                scenario: designData.scenario || 'medical',
+                completionTime: completionTime
+            };
+            
+            localStorage.setItem('poker_mcp_level2_permanent_record', JSON.stringify(permanentRecord));
+
+            // レベル3への準備状態フラグ
+            localStorage.setItem('poker_mcp_level3_ready', 'true');
+
+            // 達成感演出
             setTimeout(() => {
                 const icon = document.querySelector('.completion-icon');
                 if (icon) {
@@ -469,14 +773,22 @@
                 }
             }, 500);
 
-            // 次のレベルへの導線強化
+            // 次レベルボタンの強調
             setTimeout(() => {
                 const nextBtn = document.querySelector('.cta-btn.primary');
                 if (nextBtn) {
-                    nextBtn.style.boxShadow = '0 0 20px rgba(126, 58, 237, 0.4)';
+                    nextBtn.style.boxShadow = '0 0 30px rgba(126, 58, 237, 0.4)';
                     nextBtn.style.animation = 'pulse 2s infinite';
                 }
             }, 3000);
+
+            // 証明書のキラキラ効果
+            const certificateSection = document.querySelector('.certificate-section');
+            if (certificateSection) {
+                setTimeout(() => {
+                    certificateSection.style.animation = 'shine 3s ease-in-out';
+                }, 2000);
+            }
         });
 
         // パルスアニメーション
@@ -492,26 +804,36 @@
 
         // Level 3への移行処理
         function proceedToLevel3() {
-            // Level 2完了フラグを設定
             localStorage.setItem('poker_mcp_level2_completed', 'true');
             localStorage.setItem('poker_mcp_level2_completion_date', new Date().toISOString());
             
-            // Level 3へリダイレクト
+            // Level 3 準備完了通知
+            alert('🚀 Level 3 高度活用の準備が完了しました！\n\n' +
+                  '習得したスキル:\n' +
+                  '• 実用設計の完全習得\n' +
+                  '• 多角的判断力の確立\n' +
+                  '• 専門分野知識の実装\n\n' +
+                  'Level 3 で更なる高度スキルを身につけましょう！');
+            
             window.location.href = 'interactive_guide_level3.html';
         }
 
-        // Level 1に戻る処理
-        function returnToLevel1() {
-            if (confirm('Level 1 に戻りますか？\n\n復習や他のシナリオ体験におすすめです。')) {
-                window.location.href = 'interactive_guide_level1.html';
-            }
+        // 実績データのエクスポート機能（研究記録用）
+        function exportLearningRecord() {
+            const record = JSON.parse(localStorage.getItem('poker_mcp_level2_permanent_record') || '{}');
+            const dataStr = JSON.stringify(record, null, 2);
+            const dataBlob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(dataBlob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `poker_mcp_level2_completion_${record.completedAt?.substring(0,10) || 'unknown'}.json`;
+            link.click();
+            URL.revokeObjectURL(url);
         }
 
-        // 証明書生成（将来機能）
-        function generateCertificate() {
-            alert('🏆 Level 2 修了証明書\n\n' +
-                  'この機能は将来実装予定です。\n' +
-                  '現在は Level 3 での高度な実務スキル習得にお進みください。');
+        // 研究室での共有用証明書印刷
+        function printCertificate() {
+            window.print();
         }
     </script>
 </body>

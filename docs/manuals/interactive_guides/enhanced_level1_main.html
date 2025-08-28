@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ 放射線遮蔽 Level 1: 4段階プロセス × シナリオベース学習</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="enhanced_level1_styles.css">
+</head>
+<body class="medical-theme" id="body">
+    <header class="main-header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🛡️</span>
+                放射線遮蔽 - Level 1
+            </div>
+            <div class="progress-section">
+                <div class="stage-progress">
+                    <div class="stage-indicator active" data-stage="1"></div>
+                    <div class="stage-indicator" data-stage="2"></div>
+                    <div class="stage-indicator" data-stage="3"></div>
+                    <div class="stage-indicator" data-stage="4"></div>
+                </div>
+                <div class="stage-labels">
+                    <span class="stage-label active">基礎</span>
+                    <span class="stage-label">材料</span>
+                    <span class="stage-label">設計</span>
+                    <span class="stage-label">評価</span>
+                </div>
+            </div>
+            <div class="level-info">
+                <div class="current-stage" id="current-stage-display">Stage 1/4: 物理基礎</div>
+                <div class="stage-subtitle">シナリオベース段階学習</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- シナリオ選択 -->
+    <div class="scenario-selector">
+        <div class="scenario-tab medical active" data-scenario="medical">
+            <span>🏥</span>
+            <span>医療施設</span>
+        </div>
+        <div class="scenario-tab research" data-scenario="research">
+            <span>🔬</span>
+            <span>研究施設</span>
+        </div>
+        <div class="scenario-tab nuclear" data-scenario="nuclear">
+            <span>⚛️</span>
+            <span>原子力施設</span>
+        </div>
+        <div class="scenario-tab industrial" data-scenario="industrial">
+            <span>🏭</span>
+            <span>工業施設</span>
+        </div>
+    </div>
+
+    <main class="main-layout" id="main-layout">
+        <!-- 学習コンテンツパネル -->
+        <div class="panel learning-panel fade-in">
+            <div class="stage-header">
+                <span class="stage-icon" id="stage-icon">🔬</span>
+                <span id="stage-title">Stage 1: 物理基礎 - 放射線と物質の相互作用</span>
+            </div>
+            
+            <div class="process-navigation">
+                <div class="process-step active" data-step="1" title="基礎理論">1</div>
+                <div class="process-step" data-step="2" title="材料特性">2</div>
+                <div class="process-step" data-step="3" title="設計手法">3</div>
+                <div class="process-step" data-step="4" title="評価・最適化">4</div>
+            </div>
+
+            <div id="learning-content">
+                <div class="scenario-context">
+                    <div class="scenario-title" id="scenario-context-title">
+                        <span>🏥</span>
+                        <span>医療施設での遮蔽設計</span>
+                    </div>
+                    <p id="scenario-description">
+                        病院の診療放射線科で使用されるCo-60治療装置の遮蔽設計を例に、
+                        放射線遮蔽の基本原理を学習します。患者・医療従事者・一般公衆の
+                        安全確保が最優先事項です。
+                    </p>
+                </div>
+
+                <div class="content-section">
+                    <div class="section-title">
+                        <span>🔬</span>
+                        <span>遮蔽の基本原理</span>
+                    </div>
+                    <p>放射線遮蔽は、<strong>光子と原子核・電子の相互作用</strong>により、放射線強度を系統的に減衰させる物理現象です。</p>
+                    
+                    <div class="equation-box">
+                        <div class="main-equation">I = I₀ × e<sup>(-μt)</sup> × B(μt)</div>
+                        <div class="equation-description">
+                            基本減衰法則（ビルドアップ効果含む）
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title">🧮 各パラメータの物理的意味</div>
+                        <div class="parameter-list">
+                            <div class="parameter-item">
+                                <span class="param-symbol">I₀</span>
+                                <span class="param-description">入射線量率 [μSv/h]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">I</span>
+                                <span class="param-description">透過線量率 [μSv/h]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">μ</span>
+                                <span class="param-description">線減衰係数 [cm⁻¹]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">t</span>
+                                <span class="param-description">遮蔽厚さ [cm]</span>
+                            </div>
+                            <div class="parameter-item">
+                                <span class="param-symbol">B</span>
+                                <span class="param-description">ビルドアップ係数 [-]</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="concept-card">
+                        <div class="concept-title" id="scenario-specific-limits">⚡ 医療施設の線量限度（ICRP 146, 2022）</div>
+                        <p id="dose-limits-content">
+                            <strong>職業被ばく:</strong> 20 mSv/年（5年平均）<br>
+                            <strong>公衆被ばく:</strong> 1 mSv/年<br>
+                            <strong>管理区域境界:</strong> 2.5 μSv/h（医療施設基準値）
+                        </p>
+                        <p><small>※ 最新のICRP Publication 146 (2022)を反映</small></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D可視化パネル -->
+        <div class="panel visualization-panel fade-in">
+            <div class="viz-header">
+                <span>🎯 3D遮蔽シミュレーション</span>
+                <span id="current-scenario-display">医療用Co-60線源</span>
+            </div>
+            
+            <div class="viz-controls">
+                <button class="viz-btn" id="rotate-view" title="自動回転">🔄</button>
+                <button class="viz-btn" id="zoom-fit" title="全体表示">🔍</button>
+                <button class="viz-btn" id="reset-view" title="視点リセット">🏠</button>
+                <button class="viz-btn" id="animation-toggle" title="放射線アニメーション">▶️</button>
+            </div>
+
+            <div id="threejs-container"></div>
+
+            <div class="stage-indicator-viz">
+                <div class="current-stage-display" id="viz-stage-display">Stage 1: 基礎理論</div>
+                <div class="stage-objectives">
+                    <div class="objective-item" id="objective-1">✓ 基本減衰法則の理解</div>
+                    <div class="objective-item" id="objective-2">◯ パラメータの物理的意味</div>
+                    <div class="objective-item" id="objective-3">◯ 実際の計算実行</div>
+                    <div class="objective-item" id="objective-4">◯ 結果の安全性評価</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 制御・結果パネル -->
+        <div class="panel control-panel fade-in">
+            <div class="control-header">
+                <span>⚙️</span>
+                <span>パラメータ制御と実習</span>
+            </div>
+
+            <div class="scenario-specific-params" id="scenario-params">
+                <div class="section-title-control" id="scenario-params-title">
+                    <span>🏥</span>
+                    <span>医療施設パラメータ</span>
+                </div>
+                <p id="scenario-params-description">
+                    病院のCo-60治療室を想定した実践的なパラメータ設定。
+                    実際の医療施設での安全基準に基づいた計算を行います。
+                </p>
+            </div>
+
+            <div class="parameter-section">
+                <div class="section-title-control">
+                    <span>🧪</span>
+                    <span>線源設定</span>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>核種</span>
+                    </div>
+                    <select class="input-control" id="nuclide-select">
+                        <option value="Co60" selected>Co-60 (1.25 MeV)</option>
+                        <option value="Cs137">Cs-137 (0.662 MeV)</option>
+                        <option value="Ir192">Ir-192 (0.38 MeV)</option>
+                        <option value="I131">I-131 (0.364 MeV)</option>
+                        <option value="Tc99m">Tc-99m (0.140 MeV)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>放射能</span>
+                        <span class="unit-display" id="activity-unit">GBq</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="activity-slider" 
+                               min="0.1" max="100" value="37" step="0.1">
+                        <span class="slider-value" id="activity-value">37.0 GBq</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="parameter-section">
+                <div class="section-title-control">
+                    <span>🛡️</span>
+                    <span>遮蔽材設定</span>
+                </div>
+                
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>材料</span>
+                    </div>
+                    <select class="input-control" id="material-select">
+                        <option value="concrete">コンクリート (ρ=2.3 g/cm³)</option>
+                        <option value="lead">鉛 (ρ=11.34 g/cm³)</option>
+                        <option value="steel">鋼鉄 (ρ=7.87 g/cm³)</option>
+                        <option value="aluminum">アルミニウム (ρ=2.70 g/cm³)</option>
+                        <option value="tungsten">タングステン (ρ=19.3 g/cm³)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>厚さ</span>
+                        <span class="unit-display">cm</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="thickness-slider" 
+                               min="0" max="100" value="10" step="0.5">
+                        <span class="slider-value" id="thickness-value">10.0 cm</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <div class="input-label">
+                        <span>測定距離</span>
+                        <span class="unit-display">cm</span>
+                    </div>
+                    <div class="slider-container">
+                        <input type="range" class="slider" id="distance-slider" 
+                               min="30" max="300" value="100" step="5">
+                        <span class="slider-value" id="distance-value">100 cm</span>
+                    </div>
+                </div>
+            </div>
+
+            <button class="execute-btn" id="execute-btn">
+                ⚡ 遮蔽効果計算実行
+            </button>
+
+            <div class="results-panel" id="results-panel" style="display: none;">
+                <div class="results-title">
+                    📊 計算結果
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">線量率:</span>
+                    <span class="result-value" id="dose-rate-result">-- μSv/h</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">減衰率:</span>
+                    <span class="result-value" id="attenuation-result">--%</span>
+                </div>
+                
+                <div class="result-item">
+                    <span class="result-label">HVL:</span>
+                    <span class="result-value" id="hvl-result">-- cm</span>
+                </div>
+
+                <div class="result-item">
+                    <span class="result-label">TVL:</span>
+                    <span class="result-value" id="tvl-result">-- cm</span>
+                </div>
+                
+                <div class="safety-indicator" id="safety-indicator">
+                    安全性評価中...
+                </div>
+
+                <div class="comparison-chart">
+                    <canvas id="comparison-chart" width="280" height="150"></canvas>
+                </div>
+
+                <div class="stage-completion" id="stage-completion" style="display: none;">
+                    <div class="completion-title">🎉 Stage 1 完了!</div>
+                    <p>基本的な遮蔽計算を習得しました。</p>
+                    <button class="next-stage-btn" id="next-stage-btn">Stage 2: 材料特性へ →</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="navigation-footer">
+        <button class="nav-btn secondary" id="prev-btn" disabled>
+            ← 前のステージ
+        </button>
+        
+        <div class="helper-actions">
+            <button class="nav-btn secondary" id="hint-btn">💡 ヒント</button>
+            <button class="nav-btn secondary" id="theory-btn">📚 理論解説</button>
+            <button class="nav-btn secondary" id="restart-btn">🔄 リスタート</button>
+        </div>
+        
+        <button class="nav-btn primary" id="next-btn">
+            次のステージ →
+        </button>
+    </footer>
+
+    <!-- JavaScriptファイルを読み込み -->
+    <script src="enhanced_level1_data.js"></script>
+    <script src="enhanced_level1_classes.js"></script>
+    <script src="enhanced_level1_main.js"></script>
+</body>
+</html>

@@ -1,0 +1,875 @@
+/* =============== CSS変数定義 =============== */
+:root {
+    --physics-blue: #1e40af;
+    --medical-green: #059669;
+    --nuclear-orange: #ea580c;
+    --research-purple: #7c3aed;
+    --industrial-cyan: #0891b2;
+    --safety-red: #dc2626;
+    --bg-gradient: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    --panel-bg: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --accent-glow: rgba(30, 64, 175, 0.1);
+    
+    /* 段階別カラーパレット */
+    --stage1-color: #3b82f6; /* 基礎 - ブルー */
+    --stage2-color: #f59e0b; /* 材料 - アンバー */
+    --stage3-color: #10b981; /* 設計 - エメラルド */
+    --stage4-color: #8b5cf6; /* 評価 - バイオレット */
+}
+
+/* =============== 基本スタイル =============== */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-gradient);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* =============== ヘッダーセクション =============== */
+.main-header {
+    background: linear-gradient(135deg, var(--physics-blue) 0%, var(--research-purple) 50%, var(--industrial-cyan) 100%);
+    color: white;
+    padding: 1.5rem 2rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+}
+
+.logo {
+    font-size: 1.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logo-icon {
+    font-size: 2rem;
+    animation: pulseGlow 2s infinite;
+}
+
+@keyframes pulseGlow {
+    0%, 100% { text-shadow: 0 0 10px rgba(255, 255, 255, 0.3); }
+    50% { text-shadow: 0 0 20px rgba(255, 255, 255, 0.6); }
+}
+
+.progress-section {
+    flex: 1;
+    max-width: 600px;
+    margin: 0 2rem;
+}
+
+.stage-progress {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+.stage-indicator {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.stage-indicator.completed {
+    background: rgba(16, 185, 129, 0.8);
+}
+
+.stage-indicator.active {
+    background: linear-gradient(90deg, 
+        rgba(255, 255, 255, 0.8) 0%, 
+        rgba(255, 255, 255, 0.4) 100%);
+    animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+.stage-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    margin-top: 0.5rem;
+}
+
+.stage-label {
+    font-weight: 600;
+    opacity: 0.8;
+}
+
+.stage-label.active {
+    opacity: 1;
+    font-weight: 700;
+}
+
+.level-info {
+    text-align: right;
+}
+
+.current-stage {
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.stage-subtitle {
+    font-size: 0.9rem;
+    opacity: 0.9;
+}
+
+/* =============== シナリオセレクター =============== */
+.scenario-selector {
+    background: var(--panel-bg);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: center;
+    gap: 1rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.scenario-tab {
+    padding: 0.75rem 1.5rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.scenario-tab.medical {
+    background: rgba(5, 150, 105, 0.1);
+    color: var(--medical-green);
+    border-color: var(--medical-green);
+}
+
+.scenario-tab.research {
+    background: rgba(124, 58, 237, 0.1);
+    color: var(--research-purple);
+    border-color: var(--research-purple);
+}
+
+.scenario-tab.nuclear {
+    background: rgba(234, 88, 12, 0.1);
+    color: var(--nuclear-orange);
+    border-color: var(--nuclear-orange);
+}
+
+.scenario-tab.industrial {
+    background: rgba(8, 145, 178, 0.1);
+    color: var(--industrial-cyan);
+    border-color: var(--industrial-cyan);
+}
+
+.scenario-tab:hover, .scenario-tab.active {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.scenario-tab.active {
+    background-color: var(--scenario-color, var(--medical-green));
+    color: white;
+}
+
+/* =============== メインレイアウト =============== */
+.main-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr 360px;
+    gap: 1.5rem;
+    padding: 1.5rem;
+    min-height: calc(100vh - 200px);
+}
+
+.panel {
+    background: var(--panel-bg);
+    border-radius: 16px;
+    box-shadow: 
+        0 4px 24px rgba(0, 0, 0, 0.08),
+        0 0 0 1px rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.panel:hover {
+    transform: translateY(-4px);
+    box-shadow: 
+        0 8px 40px rgba(0, 0, 0, 0.12),
+        0 0 0 1px rgba(255, 255, 255, 0.8);
+}
+
+/* =============== 学習コンテンツパネル =============== */
+.learning-panel {
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: 700px;
+}
+
+.stage-header {
+    background: linear-gradient(135deg, var(--current-stage-color, var(--stage1-color)), var(--stage1-color));
+    color: white;
+    padding: 1rem 1.5rem;
+    margin: -2rem -2rem 2rem -2rem;
+    font-weight: 600;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.stage-icon {
+    font-size: 1.5rem;
+}
+
+.process-navigation {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-bottom: 2rem;
+}
+
+.process-step {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 2px solid #e5e7eb;
+    background: white;
+    color: var(--text-secondary);
+}
+
+.process-step.completed {
+    background: var(--medical-green);
+    color: white;
+    border-color: var(--medical-green);
+}
+
+.process-step.active {
+    background: var(--current-stage-color, var(--stage1-color));
+    color: white;
+    border-color: var(--current-stage-color, var(--stage1-color));
+    transform: scale(1.1);
+}
+
+.content-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    color: var(--physics-blue);
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.equation-box {
+    background: linear-gradient(135deg, #1f2937 0%, #374151 100%);
+    color: #f9fafb;
+    padding: 1.5rem;
+    border-radius: 12px;
+    margin: 1.5rem 0;
+    font-family: 'Courier New', monospace;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.equation-box::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--current-stage-color, var(--stage1-color)), var(--research-purple));
+}
+
+.main-equation {
+    font-size: 1.4rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.equation-description {
+    font-size: 0.9rem;
+    color: #d1d5db;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.concept-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 2px solid #f59e0b;
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    position: relative;
+}
+
+.concept-card::before {
+    content: '💡';
+    position: absolute;
+    top: -10px;
+    left: 15px;
+    background: #f59e0b;
+    padding: 0.5rem;
+    border-radius: 50%;
+    font-size: 1rem;
+}
+
+.concept-title {
+    font-weight: 600;
+    color: var(--nuclear-orange);
+    margin-bottom: 0.75rem;
+    margin-left: 1rem;
+}
+
+.scenario-context {
+    background: linear-gradient(135deg, var(--scenario-bg, #f0fdf4) 0%, var(--scenario-bg-light, #dcfce7) 100%);
+    border: 2px solid var(--scenario-color, var(--medical-green));
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+}
+
+.scenario-title {
+    font-weight: 700;
+    color: var(--scenario-color, var(--medical-green));
+    margin-bottom: 0.75rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.parameter-list {
+    display: grid;
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+
+.parameter-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+}
+
+.param-symbol {
+    background: var(--physics-blue);
+    color: white;
+    font-weight: bold;
+    font-family: 'Courier New', monospace;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    min-width: 2rem;
+    text-align: center;
+}
+
+.param-description {
+    flex: 1;
+    font-weight: 500;
+}
+
+/* =============== 3D可視化パネル =============== */
+.visualization-panel {
+    position: relative;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.viz-header {
+    background: linear-gradient(135deg, var(--scenario-color, var(--medical-green)), var(--scenario-color-light, #10b981));
+    color: white;
+    padding: 1rem 1.5rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.viz-controls {
+    position: absolute;
+    top: 4rem;
+    right: 1rem;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.viz-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.8rem;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.viz-btn:hover {
+    background: white;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#threejs-container {
+    width: 100%;
+    height: 400px;
+    border-radius: 0 0 16px 16px;
+}
+
+.stage-indicator-viz {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 1rem;
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    min-width: 200px;
+}
+
+.current-stage-display {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: var(--current-stage-color, var(--stage1-color));
+}
+
+.stage-objectives {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.objective-item {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.objective-item.completed {
+    color: var(--medical-green);
+}
+
+/* =============== 制御・結果パネル =============== */
+.control-panel {
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: 700px;
+}
+
+.control-header {
+    background: linear-gradient(135deg, var(--industrial-cyan), #0ea5e9);
+    color: white;
+    padding: 1rem 1.5rem;
+    margin: -2rem -2rem 2rem -2rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.parameter-section {
+    margin-bottom: 2rem;
+}
+
+.section-title-control {
+    color: var(--physics-blue);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.input-group {
+    margin-bottom: 1.5rem;
+}
+
+.input-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-primary);
+}
+
+.unit-display {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+.input-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: border-color 0.3s ease;
+    background: white;
+}
+
+.input-control:focus {
+    outline: none;
+    border-color: var(--physics-blue);
+    box-shadow: 0 0 0 3px var(--accent-glow);
+}
+
+.slider-container {
+    position: relative;
+    margin: 0.75rem 0;
+}
+
+.slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 4px;
+    background: #e5e7eb;
+    outline: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--current-stage-color, var(--stage1-color)), var(--research-purple));
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    transition: transform 0.2s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.1);
+}
+
+.slider-value {
+    position: absolute;
+    top: -40px;
+    right: 0;
+    background: var(--current-stage-color, var(--stage1-color));
+    color: white;
+    padding: 0.25rem 0.75rem;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.scenario-specific-params {
+    background: rgba(var(--scenario-rgb, 5, 150, 105), 0.05);
+    border: 1px solid rgba(var(--scenario-rgb, 5, 150, 105), 0.2);
+    border-radius: 8px;
+    padding: 1rem;
+    margin: 1rem 0;
+}
+
+.execute-btn {
+    background: linear-gradient(135deg, var(--current-stage-color, var(--stage1-color)) 0%, var(--stage2-color, #f59e0b) 100%);
+    color: white;
+    border: none;
+    padding: 1.25rem 2rem;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    margin: 1.5rem 0;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.execute-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.execute-btn:hover::before {
+    left: 100%;
+}
+
+.execute-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(var(--scenario-rgb, 5, 150, 105), 0.4);
+}
+
+.results-panel {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 2px solid var(--medical-green);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1.5rem;
+    animation: slideInUp 0.5s ease-out;
+}
+
+@keyframes slideInUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+.results-title {
+    color: var(--medical-green);
+    font-size: 1.2rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.result-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 8px;
+    margin-bottom: 0.75rem;
+}
+
+.result-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.result-value {
+    font-weight: bold;
+    color: var(--physics-blue);
+    font-family: 'Courier New', monospace;
+}
+
+.safety-indicator {
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-align: center;
+    margin-top: 1rem;
+}
+
+.safety-safe { background: var(--medical-green); color: white; }
+.safety-warning { background: var(--nuclear-orange); color: white; }
+.safety-danger { background: var(--safety-red); color: white; }
+
+.comparison-chart {
+    margin-top: 1.5rem;
+    padding: 1rem;
+    background: white;
+    border-radius: 8px;
+}
+
+.stage-completion {
+    background: linear-gradient(135deg, #f0f9ff 0%, #dbeafe 100%);
+    border: 2px solid var(--physics-blue);
+    border-radius: 12px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    text-align: center;
+}
+
+.completion-title {
+    color: var(--physics-blue);
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+}
+
+.next-stage-btn {
+    background: linear-gradient(135deg, var(--stage2-color), var(--stage3-color));
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    margin-top: 1rem;
+    transition: all 0.3s ease;
+}
+
+.next-stage-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* =============== ナビゲーション =============== */
+.navigation-footer {
+    background: var(--panel-bg);
+    padding: 1.5rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.nav-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.nav-btn.primary {
+    background: linear-gradient(135deg, var(--current-stage-color, var(--stage1-color)), var(--research-purple));
+    color: white;
+}
+
+.nav-btn.secondary {
+    background: #f3f4f6;
+    color: var(--text-primary);
+    border: 2px solid #e5e7eb;
+}
+
+.nav-btn:hover {
+    transform: translateY(-2px);
+}
+
+.nav-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.helper-actions {
+    display: flex;
+    gap: 1rem;
+}
+
+/* =============== レスポンシブ対応 =============== */
+@media (max-width: 1400px) {
+    .main-layout {
+        grid-template-columns: 350px 1fr 340px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .main-layout {
+        grid-template-columns: 320px 1fr 320px;
+    }
+}
+
+@media (max-width: 768px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        gap: 1rem;
+    }
+    
+    .learning-panel, .control-panel {
+        max-height: 400px;
+    }
+    
+    #threejs-container {
+        height: 300px;
+    }
+
+    .scenario-selector {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .scenario-tab {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* =============== アニメーション効果 =============== */
+.fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.stage-transition {
+    animation: stageTransition 1s ease-in-out;
+}
+
+@keyframes stageTransition {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.7; transform: scale(0.95); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* =============== 動的カラーテーマ =============== */
+.medical-theme {
+    --scenario-color: var(--medical-green);
+    --scenario-bg: #f0fdf4;
+    --scenario-bg-light: #dcfce7;
+    --scenario-rgb: 5, 150, 105;
+}
+
+.research-theme {
+    --scenario-color: var(--research-purple);
+    --scenario-bg: #faf5ff;
+    --scenario-bg-light: #f3e8ff;
+    --scenario-rgb: 124, 58, 237;
+}
+
+.nuclear-theme {
+    --scenario-color: var(--nuclear-orange);
+    --scenario-bg: #fff7ed;
+    --scenario-bg-light: #ffedd5;
+    --scenario-rgb: 234, 88, 12;
+}
+
+.industrial-theme {
+    --scenario-color: var(--industrial-cyan);
+    --scenario-bg: #f0fdfa;
+    --scenario-bg-light: #ccfbf1;
+    --scenario-rgb: 8, 145, 178;
+}

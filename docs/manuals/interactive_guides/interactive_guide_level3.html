@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Poker MCP インタラクティブガイド Level 3 - 高度な研究ワークフロー</title>
+    <link rel="stylesheet" href="level3_styles.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>🔬 Poker MCP Level 3: 高度な研究ワークフロー</h1>
+            <p class="subtitle">放射線遮蔽研究者のための実践的統合ガイド</p>
+        </div>
+    </header>
+
+    <nav class="main-nav">
+        <div class="container">
+            <div class="nav-grid">
+                <a href="#overview" class="nav-item active">
+                    <div class="nav-icon">📋</div>
+                    <div class="nav-content">
+                        <h3>概要</h3>
+                        <p>レベル3の学習目標</p>
+                    </div>
+                </a>
+                <a href="level3_medical_shielding.html" class="nav-item">
+                    <div class="nav-icon">🏥</div>
+                    <div class="nav-content">
+                        <h3>医療施設遮蔽</h3>
+                        <p>CT・PET・核医学施設</p>
+                    </div>
+                </a>
+                <a href="level3_lab_shielding.html" class="nav-item">
+                    <div class="nav-icon">⚛️</div>
+                    <div class="nav-content">
+                        <h3>実験室遮蔽</h3>
+                        <p>加速器・RI実験室</p>
+                    </div>
+                </a>
+                <a href="level3_mcnp_integration.html" class="nav-item">
+                    <div class="nav-icon">🔗</div>
+                    <div class="nav-content">
+                        <h3>MCNP統合</h3>
+                        <p>完全ワークフロー</p>
+                    </div>
+                </a>
+                <a href="level3_parameter_studies.html" class="nav-item">
+                    <div class="nav-icon">📊</div>
+                    <div class="nav-content">
+                        <h3>パラメータスタディ</h3>
+                        <p>自動化・最適化</p>
+                    </div>
+                </a>
+                <a href="level3_quality_assurance.html" class="nav-item">
+                    <div class="nav-icon">✅</div>
+                    <div class="nav-content">
+                        <h3>品質保証</h3>
+                        <p>検証・妥当性確認</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container">
+        <section id="overview" class="section active">
+            <div class="welcome-card">
+                <h2>🎯 Level 3: 高度な研究ワークフローへようこそ</h2>
+                <div class="level-info">
+                    <div class="info-grid">
+                        <div class="info-item">
+                            <h3>🎓 前提条件</h3>
+                            <ul>
+                                <li>Level 1, 2の完了</li>
+                                <li>基本的な遮蔽計算の理解</li>
+                                <li>Poker MCPの日常的使用経験</li>
+                                <li>放射線遮蔽工学の基礎知識</li>
+                            </ul>
+                        </div>
+                        <div class="info-item">
+                            <h3>🎯 学習目標</h3>
+                            <ul>
+                                <li>実際の施設設計ワークフローの習得</li>
+                                <li>MCNP等外部コードとの統合</li>
+                                <li>パラメータスタディの自動化</li>
+                                <li>品質保証・妥当性確認手法</li>
+                                <li>研究チームでの効率的協業</li>
+                            </ul>
+                        </div>
+                        <div class="info-item">
+                            <h3>⏰ 推定学習時間</h3>
+                            <ul>
+                                <li>各セクション: 2-4時間</li>
+                                <li>全体完了: 2-3週間</li>
+                                <li>実践プロジェクト適用: 1-2ヶ月</li>
+                            </ul>
+                        </div>
+                        <div class="info-item">
+                            <h3>🛠️ 必要なツール</h3>
+                            <ul>
+                                <li>Poker MCP (最新版)</li>
+                                <li>Python 3.8+ (自動化スクリプト)</li>
+                                <li>MCNP6.2+ (推奨)</li>
+                                <li>データ可視化ツール</li>
+                                <li>バージョン管理システム</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pathway-section">
+                <h2>🗺️ 学習パス</h2>
+                <div class="pathway-grid">
+                    <div class="pathway-item recommended">
+                        <h3>🏥 推奨パス: 医療施設設計者</h3>
+                        <div class="pathway-flow">
+                            <span class="step">医療施設遮蔽</span>
+                            <span class="arrow">→</span>
+                            <span class="step">品質保証</span>
+                            <span class="arrow">→</span>
+                            <span class="step">MCNP統合</span>
+                            <span class="arrow">→</span>
+                            <span class="step">パラメータスタディ</span>
+                        </div>
+                        <p>診療放射線科、核医学科での実用的な遮蔽設計に重点</p>
+                    </div>
+
+                    <div class="pathway-item">
+                        <h3>⚛️ 原子力・加速器研究者</h3>
+                        <div class="pathway-flow">
+                            <span class="step">実験室遮蔽</span>
+                            <span class="arrow">→</span>
+                            <span class="step">MCNP統合</span>
+                            <span class="arrow">→</span>
+                            <span class="step">パラメータスタディ</span>
+                            <span class="arrow">→</span>
+                            <span class="step">品質保証</span>
+                        </div>
+                        <p>複雑な実験施設の遮蔽設計と高精度計算に重点</p>
+                    </div>
+
+                    <div class="pathway-item">
+                        <h3>🔬 研究室マネージャー</h3>
+                        <div class="pathway-flow">
+                            <span class="step">品質保証</span>
+                            <span class="arrow">→</span>
+                            <span class="step">パラメータスタディ</span>
+                            <span class="arrow">→</span>
+                            <span class="step">MCNP統合</span>
+                            <span class="arrow">→</span>
+                            <span class="step">施設設計</span>
+                        </div>
+                        <p>チーム管理と品質管理、効率的なワークフロー構築に重点</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="features-section">
+                <h2>🌟 Level 3 の特徴</h2>
+                <div class="features-grid">
+                    <div class="feature-card">
+                        <div class="feature-icon">🏢</div>
+                        <h3>実際の施設設計</h3>
+                        <p>規制要求事項を満たす実用的な遮蔽設計手法。コスト最適化と安全性の両立。</p>
+                        <ul>
+                            <li>法的要求事項の考慮</li>
+                            <li>経済性との バランス</li>
+                            <li>施工上の制約対応</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🔄</div>
+                        <h3>統合ワークフロー</h3>
+                        <p>Poker MCPを中核とした完全な計算ワークフロー。データの一貫性と効率性を実現。</p>
+                        <ul>
+                            <li>MCNP入力自動生成</li>
+                            <li>結果の自動解析</li>
+                            <li>レポート自動作成</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">📈</div>
+                        <h3>自動化・最適化</h3>
+                        <p>Python スクリプトによるパラメータスタディの自動化。研究効率の劇的向上。</p>
+                        <ul>
+                            <li>多次元パラメータ探索</li>
+                            <li>最適化アルゴリズム</li>
+                            <li>バッチ処理システム</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">🛡️</div>
+                        <h3>品質保証システム</h3>
+                        <p>計算結果の妥当性を体系的に確認。研究の信頼性と再現性を保証。</p>
+                        <ul>
+                            <li>自動妥当性チェック</li>
+                            <li>ベンチマーク比較</li>
+                            <li>不確かさ評価</li>
+                        </ul>
+                    </div>
+
+                    <div class="feature-card">
+                        <div class="feature-icon">👥</div>
+                        <h3>チーム協業</h3>
+                        <p>複数の研究者が効率的に協業するためのベストプラクティス。</p>
+                        <ul>
