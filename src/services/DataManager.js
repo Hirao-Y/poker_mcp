@@ -17,11 +17,15 @@ export class SafeDataManager {
 
   async initialize() {
     try {
-      // バックアップディレクトリ作成
-      await fs.mkdir(this.backupDir, { recursive: true });
-      await fs.mkdir('logs', { recursive: true });
-      
-      // 初期データ読み込み
+      // 必要なフォルダをすべて作成
+      await fs.mkdir(this.backupDir, { recursive: true });  // backups
+      await fs.mkdir('logs', { recursive: true });          // logs  
+      await fs.mkdir('tasks', { recursive: true });         // tasks
+
+      // 初期ファイル配置（既存ファイルがない場合のみ）
+      await this.ensureInitialFiles();
+
+      // データ読み込み
       await this.loadData();
       await this.loadPendingChanges();
       
@@ -30,6 +34,76 @@ export class SafeDataManager {
       logger.error('データマネージャーの初期化に失敗しました', { error: error.message });
       throw new DataError(`初期化に失敗: ${error.message}`, 'INITIALIZATION');
     }
+  }
+
+  // 新規メソッド: 初期ファイルの確実な配置
+  async ensureInitialFiles() {
+    try {
+      // pokerinputs.yamlの初期配置
+      await this.ensureYamlFile();
+      
+      // pending_changes.jsonの初期配置  
+      await this.ensurePendingFile();
+      
+    } catch (error) {
+      logger.error('初期ファイル配置エラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  async ensureYamlFile() {
+    try {
+      // ファイル存在チェック
+      await fs.access(this.yamlFile);
+      logger.info('YAMLファイルは既に存在します', { file: this.yamlFile });
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        // ファイルが存在しない場合のみ作成
+        const initialData = this.createInitialYamlData();
+        await fs.writeFile(this.yamlFile, yaml.dump(initialData, { flowLevel: 1 }));
+        logger.info('初期YAMLファイルを作成しました', { file: this.yamlFile });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  async ensurePendingFile() {
+    try {
+      // ファイル存在チェック
+      await fs.access(this.pendingFile);
+      logger.info('保留変更ファイルは既に存在します', { file: this.pendingFile });
+    } catch (error) {
+      if (error.code === 'ENOENT') {
+        // ファイルが存在しない場合のみ作成
+        await fs.writeFile(this.pendingFile, JSON.stringify([], null, 2));
+        logger.info('初期保留変更ファイルを作成しました', { file: this.pendingFile });
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  createInitialYamlData() {
+    return {
+      "unit": {
+        "length": "cm",
+        "angle": "radian", 
+        "density": "g/cm3",
+        "radioactivity": "Bq"
+      },
+      "transform": [],
+      "body": [],
+      "zone": [
+        {
+          "body_name": "ATMOSPHERE",
+          "material": "VOID"
+        }
+      ],
+      "buildup_factor": [],
+      "source": [],
+      "detector": []
+    };
   }
 
   async loadData() {
@@ -42,18 +116,10 @@ export class SafeDataManager {
       
       logger.info('YAMLデータを読み込みました', { file: this.yamlFile });
     } catch (error) {
-      if (error.code === 'ENOENT') {
-        logger.warn('YAMLファイルが見つかりません。初期データを作成します', { file: this.yamlFile });
-        this.data = { body: [], zone: [], transform: [], buildup_factor: [], source: [], detector: [] };
-        
-        // 初期データにunit セクションを作成
-        this.data.unit = this.createDefaultUnitSection();
-        
-        await this.saveData();
-      } else {
-        logger.error('YAMLファイルの読み込みに失敗しました', { error: error.message });
-        throw new DataError(`YAML読み込みに失敗: ${error.message}`, 'LOAD_DATA');
-      }
+      // ensureInitialFiles()で初期ファイルが既に配置されているため、
+      // 通常はENOENTエラーは発生しないはず
+      logger.error('YAMLファイルの読み込みに失敗しました', { error: error.message });
+      throw new DataError(`YAML読み込みに失敗: ${error.message}`, 'LOAD_DATA');
     }
   }
 
@@ -63,13 +129,10 @@ export class SafeDataManager {
       this.pendingChanges = JSON.parse(data || '[]');
       logger.info('保留変更を読み込みました', { count: this.pendingChanges.length });
     } catch (error) {
-      if (error.code === 'ENOENT') {
-        this.pendingChanges = [];
-        await this.savePendingChanges();
-      } else {
-        logger.error('保留変更の読み込みに失敗しました', { error: error.message });
-        throw new DataError(`保留変更読み込みに失敗: ${error.message}`, 'LOAD_PENDING');
-      }
+      // ensureInitialFiles()で初期ファイルが既に配置されているため、
+      // 通常はENOENTエラーは発生しないはず
+      logger.error('保留変更の読み込みに失敗しました', { error: error.message });
+      throw new DataError(`保留変更読み込みに失敗: ${error.message}`, 'LOAD_PENDING');
     }
   }
 

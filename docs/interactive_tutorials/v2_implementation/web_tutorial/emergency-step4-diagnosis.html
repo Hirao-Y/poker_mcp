@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🚨 Step 3→4 進行失敗 緊急診断</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #fff5f5; }
+        .emergency-panel { margin: 15px 0; padding: 20px; background: white; border-radius: 8px; border: 2px solid #e53e3e; }
+        .debug-panel { margin: 15px 0; padding: 15px; background: #f7fafc; border-radius: 6px; border-left: 4px solid #3182ce; }
+        .success { background: #f0fff4; border-color: #38a169; }
+        .error { background: #fed7d7; border-color: #e53e3e; }
+        .warning { background: #fffaf0; border-color: #dd6b20; }
+        .critical { background: #fed7d7; border: 3px solid #c53030; animation: pulse 2s infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
+        button { padding: 12px 20px; margin: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-emergency { background: #e53e3e; color: white; font-size: 16px; }
+        .btn-test { background: #3182ce; color: white; }
+        .btn-fix { background: #38a169; color: white; }
+        pre { background: #1a202c; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 11px; }
+        .log-entry { margin: 5px 0; padding: 8px; border-radius: 4px; font-family: monospace; font-size: 12px; }
+        .log-info { background: #ebf8ff; border-left: 4px solid #3182ce; }
+        .log-error { background: #fed7d7; border-left: 4px solid #e53e3e; }
+        .log-success { background: #f0fff4; border-left: 4px solid #38a169; }
+        .step-comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🚨 Step 3→4 進行失敗 緊急診断システム</h1>
+    
+    <div class="emergency-panel critical">
+        <h2>🚨 緊急事態: Step 3→4 進行不可</h2>
+        <p><strong>症状:</strong> 続けるボタンクリック後、Step 3のままでStep 4に進行しない</p>
+        <button onclick="emergencyDiagnosis()" class="btn-emergency">🔍 緊急診断実行</button>
+        <button onclick="forceStep4()" class="btn-fix">⚡ Step 4強制移行</button>
+        <button onclick="deepInvestigation()" class="btn-test">🕵️ 詳細調査</button>
+    </div>
+
+    <div id="diagnosticResults"></div>
+    
+    <div class="debug-panel">
+        <h3>📋 リアルタイム進行監視</h3>
+        <div id="progressMonitor"></div>
+        <button onclick="startProgressMonitoring()" class="btn-test">📊 進行監視開始</button>
+        <button onclick="stopProgressMonitoring()" class="btn-emergency">⏹️ 監視停止</button>
+    </div>
+
+    <script src="physics-validator.js"></script>
+    <script src="cross-section-visualizer.js"></script>
+    <script src="tutorial.js"></script>
+
+    <script>
+        let resultsDiv = document.getElementById('diagnosticResults');
+        let progressMonitor = document.getElementById('progressMonitor');
+        let monitoringInterval = null;
+
+        function addResult(title, type, message, details = '') {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `debug-panel ${type}`;
+            resultDiv.innerHTML = `
+                <h3>${getTypeIcon(type)} ${title}</h3>
+                <p><strong>結果:</strong> ${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+                <small>診断時刻: ${new Date().toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function getTypeIcon(type) {
+            switch(type) {
+                case 'success': return '✅';
+                case 'error': return '❌';
+                case 'warning': return '⚠️';
+                case 'critical': return '🚨';
+                default: return 'ℹ️';
+            }
+        }
+
+        function emergencyDiagnosis() {
+            resultsDiv.innerHTML = '<div class="debug-panel warning"><h3>🔄 緊急診断実行中...</h3></div>';
+            
+            console.log('🚨 緊急診断開始');
+            
+            // 1. チュートリアル基本状態
+            diagnoseTutorialState();
+            
+            // 2. Step 3→4の具体的問題
+            diagnoseStep3to4Problem();
+            
+            // 3. DOM要素とイベントの詳細確認
+            diagnoseDOMAndEvents();
+            
+            // 4. nextStep()メソッドの内部動作確認
+            diagnoseNextStepMethod();
+            
+            // 5. Step 4データの完全性確認
+            diagnoseStep4Data();
+        }
+
+        function diagnoseTutorialState() {
+            try {
+                if (!window.tutorial) {
+                    addResult('チュートリアル状態', 'critical', 'window.tutorialが存在しません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                const state = {
+                    currentStep: tutorial.currentStep,
+                    totalSteps: tutorial.totalSteps,
+                    stepsLoaded: tutorial.tutorialSteps?.length,
+                    stepExecutionHistory: tutorial.stepExecutionHistory?.length || 0,
+                    isFollowUpStep: tutorial.isFollowUpStep
+                };
+
+                addResult('チュートリアル基本状態', 'success', 
+                    'チュートリアルオブジェクトは存在します',
+                    `状態詳細:\n${JSON.stringify(state, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('チュートリアル状態', 'error', `状態確認エラー: ${error.message}`);
+            }
+        }
+
+        function diagnoseStep3to4Problem() {
+            try {
+                if (!window.tutorial) return;
+
+                const tutorial = window.tutorial;
+                
+                // 現在のステップが本当に3なのか確認
+                const currentStepElement = document.getElementById('stepBadge');
+                const stepTitleElement = document.getElementById('stepTitle');
+                
+                const uiState = {
+                    stepBadgeText: currentStepElement?.textContent,
+                    stepTitleText: stepTitleElement?.textContent,
+                    tutorialCurrentStep: tutorial.currentStep,
+                    expectedStep3Title: tutorial.tutorialSteps?.[2]?.title,
+                    expectedStep4Title: tutorial.tutorialSteps?.[3]?.title
+                };
+
+                const isActuallyStep3 = tutorial.currentStep === 3;
+                const titleMatchesStep3 = stepTitleElement?.textContent?.includes('検出器');
+
+                if (isActuallyStep3 && titleMatchesStep3) {
+                    addResult('Step 3→4 問題確認', 'error',
+                        '確実にStep 3で停止しています',
+                        `UI状態:\n${JSON.stringify(uiState, null, 2)}`
+                    );
+                } else {
+                    addResult('Step 3→4 問題確認', 'warning',
+                        'Step状態に不整合があります',
+                        `UI状態:\n${JSON.stringify(uiState, null, 2)}`
+                    );
+                }
+
+            } catch (error) {
+                addResult('Step 3→4 問題確認', 'error', `確認エラー: ${error.message}`);
+            }
+        }
+
+        function diagnoseDOMAndEvents() {
+            try {
+                const continueBtn = document.getElementById('continueBtn');
+                const modalOverlay = document.getElementById('modalOverlay');
+                
+                const domState = {
+                    continueBtn: {
+                        exists: !!continueBtn,
+                        disabled: continueBtn?.disabled,
+                        textContent: continueBtn?.textContent,
+                        style_display: continueBtn?.style?.display,
+                        onclick: !!continueBtn?.onclick,
+                        eventListeners: continueBtn ? 'addEventListener設定済み' : 'なし'
+                    },
+                    modalOverlay: {
+                        exists: !!modalOverlay,
+                        style_display: modalOverlay?.style?.display,
+                        computedDisplay: modalOverlay ? window.getComputedStyle(modalOverlay).display : 'なし'
+                    }
+                };
+
+                // continueBtn クリックテスト
+                if (continueBtn) {
+                    const originalOnClick = continueBtn.onclick;
+                    let hasEventListener = false;
+                    
+                    // イベントリスナーの存在を間接的に確認
+                    try {
+                        hasEventListener = window.tutorial?.continueBtn === continueBtn;
+                    } catch (e) {}
+                    
+                    domState.continueBtn.hasProperEventListener = hasEventListener;
+                }
+
+                addResult('DOM・イベント確認', continueBtn ? 'success' : 'error',
+                    continueBtn ? 'DOM要素は正常に存在します' : 'continueBtnが見つかりません',
+                    `DOM詳細:\n${JSON.stringify(domState, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('DOM・イベント確認', 'error', `確認エラー: ${error.message}`);
+            }
+        }
+
+        function diagnoseNextStepMethod() {
+            try {
+                if (!window.tutorial) return;
+
+                const tutorial = window.tutorial;
+                
+                // nextStepメソッドの存在確認
+                const methodInfo = {
+                    nextStepExists: typeof tutorial.nextStep === 'function',
+                    updateStepContentExists: typeof tutorial.updateStepContent === 'function',
+                    resetCodeExists: typeof tutorial.resetCode === 'function',
+                    updateProgressExists: typeof tutorial.updateProgress === 'function',
+                    hideCompletionModalExists: typeof tutorial.hideCompletionModal === 'function'
+                };
+
+                // nextStepメソッドの手動実行テスト
+                const beforeStep = tutorial.currentStep;
+                console.log('🧪 nextStep()手動実行テスト開始...');
+                
+                try {
+                    tutorial.nextStep();
+                    
+                    setTimeout(() => {
+                        const afterStep = tutorial.currentStep;
+                        const stepChanged = afterStep !== beforeStep;
+                        const reachedStep4 = afterStep === 4;
+                        
+                        const testResult = {
+                            beforeStep,
+                            afterStep,
+                            stepChanged,
+                            reachedStep4,
+                            stepTitle: document.getElementById('stepTitle')?.textContent
+                        };
+
+                        if (stepChanged && reachedStep4) {
+                            addResult('nextStep()手動テスト', 'success',
+                                'nextStep()は正常に動作しています！',
+                                `テスト結果:\n${JSON.stringify(testResult, null, 2)}`
+                            );
+                        } else {
+                            addResult('nextStep()手動テスト', 'error',
+                                'nextStep()が期待通りに動作していません',
+                                `テスト結果:\n${JSON.stringify(testResult, null, 2)}`
+                            );
+                        }
+                    }, 200);
+
+                } catch (error) {
+                    addResult('nextStep()手動テスト', 'error',
+                        `nextStep()実行でエラー: ${error.message}`,
+                        `エラー詳細:\n${error.stack}`
+                    );
+                }
+
+                addResult('nextStepメソッド確認', 'success',
+                    '必要なメソッドは存在します',
+                    `メソッド確認:\n${JSON.stringify(methodInfo, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('nextStepメソッド確認', 'error', `確認エラー: ${error.message}`);
+            }
+        }
+
+        function diagnoseStep4Data() {
+            try {
+                if (!window.tutorial || !window.tutorial.tutorialSteps) {
+                    addResult('Step 4データ確認', 'error', 'tutorialStepsが利用できません');
+                    return;
+                }
+
+                const steps = window.tutorial.tutorialSteps;
+                const step4 = steps[3]; // インデックス3 = Step 4
+                
+                const step4Info = {
+                    exists: !!step4,
+                    step: step4?.step,
+                    title: step4?.title,
+                    hasTemplate: !!step4?.template,
+                    templateLength: step4?.template?.length,
+                    hasPhysicsBackground: !!step4?.physics_background,
+                    hasInstructions: !!step4?.instructions
+                };
+
+                if (step4Info.exists && step4Info.hasTemplate) {
+                    // テンプレートのJSON妥当性確認
+                    try {
+                        const parsedTemplate = JSON.parse(step4.template);
+                        step4Info.templateValid = true;
+                        step4Info.templateMethod = parsedTemplate.method;
+                    } catch (e) {
+                        step4Info.templateValid = false;
+                        step4Info.templateError = e.message;
+                    }
+                }
+
+                addResult('Step 4データ確認', step4Info.exists ? 'success' : 'error',
+                    step4Info.exists ? 'Step 4データは完全に存在します' : 'Step 4データが見つかりません',
+                    `Step 4詳細:\n${JSON.stringify(step4Info, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('Step 4データ確認', 'error', `確認エラー: ${error.message}`);
+            }
+        }
+
+        function forceStep4() {
+            try {
+                if (!window.tutorial) {
+                    addResult('強制Step 4移行', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                console.log('⚡ Step 4強制移行開始...');
+                const tutorial = window.tutorial;
+                
+                // 現在の状態を保存
+                const beforeState = {
+                    step: tutorial.currentStep,
+                    stepTitle: document.getElementById('stepTitle')?.textContent
+                };
+
+                // 強制的にStep 4に設定
+                tutorial.currentStep = 4;
+                tutorial.updateStepContent();
+                tutorial.resetCode();
+                tutorial.updateProgress();
+                tutorial.clearResults();
+                tutorial.nextBtn.disabled = true;
+                
+                if (tutorial.hintSection) {
+                    tutorial.hintSection.style.display = 'none';
+                }
+
+                setTimeout(() => {
+                    const afterState = {
+                        step: tutorial.currentStep,
+                        stepTitle: document.getElementById('stepTitle')?.textContent,
+                        codeContent: document.getElementById('codeEditor')?.textContent?.substring(0, 100)
+                    };
+
+                    const success = afterState.step === 4 && 
+                                   afterState.stepTitle?.includes('複合遮蔽');
+
+                    addResult('強制Step 4移行', success ? 'success' : 'error',
+                        success ? 'Step 4への強制移行に成功しました' : 'Step 4への強制移行に失敗しました',
+                        `実行前:\n${JSON.stringify(beforeState, null, 2)}\n\n実行後:\n${JSON.stringify(afterState, null, 2)}`
+                    );
+
+                }, 300);
+
+            } catch (error) {
+                addResult('強制Step 4移行', 'error', `強制移行エラー: ${error.message}`);
+            }
+        }
+
+        function deepInvestigation() {
+            console.log('🕵️ 詳細調査開始...');
+            
+            try {
+                // コンソールからのログ履歴確認
+                const logs = [];
+                const originalLog = console.log;
+                const originalError = console.error;
+                
+                // ログキャプチャ開始
+                console.log = function(...args) {
+                    logs.push({type: 'log', message: args.join(' '), timestamp: new Date()});
+                    originalLog.apply(console, args);
+                };
+                
+                console.error = function(...args) {
+                    logs.push({type: 'error', message: args.join(' '), timestamp: new Date()});
+                    originalError.apply(console, args);
+                };
+
+                // Step 3完了からStep 4への完全シミュレーション
+                if (window.tutorial) {
+                    const tutorial = window.tutorial;
+                    
+                    // Step 3状態にリセット
+                    tutorial.currentStep = 3;
+                    tutorial.updateStepContent();
+                    tutorial.updateProgress();
+                    tutorial.nextBtn.disabled = false;
+                    
+                    // 完了モーダル表示
+                    tutorial.showCompletionModal();
+                    
+                    setTimeout(() => {
+                        // 続けるボタンクリック
+                        const continueBtn = document.getElementById('continueBtn');
+                        if (continueBtn) {
+                            continueBtn.click();
+                        } else {
+                            tutorial.nextStep();
+                        }
+                        
+                        setTimeout(() => {
+                            // ログ復元
+                            console.log = originalLog;
+                            console.error = originalError;
+                            
+                            addResult('詳細調査', 'success',
+                                '完全シミュレーションを実行しました',
+                                `キャプチャされたログ:\n${logs.map(l => `[${l.type}] ${l.message}`).join('\n')}`
+                            );
+                        }, 1000);
+                        
+                    }, 1000);
+                }
+
+            } catch (error) {
+                addResult('詳細調査', 'error', `調査エラー: ${error.message}`);
+            }
+        }
+
+        function startProgressMonitoring() {
+            if (monitoringInterval) stopProgressMonitoring();
+
+            monitoringInterval = setInterval(() => {
+                if (window.tutorial) {
+                    const tutorial = window.tutorial;
+                    const now = new Date().toLocaleTimeString();
+                    
+                    const status = {
+                        time: now,
+                        currentStep: tutorial.currentStep,
+                        stepTitle: document.getElementById('stepTitle')?.textContent?.substring(0, 30),
+                        modalVisible: document.getElementById('modalOverlay')?.style?.display === 'flex',
+                        nextBtnDisabled: tutorial.nextBtn?.disabled,
+                        continueBtnExists: !!document.getElementById('continueBtn')
+                    };
+
+                    progressMonitor.innerHTML = `
+                        <div class="log-entry log-info">
+                            ⏰ ${status.time} | 📍 Step ${status.currentStep} | 🎭 Modal: ${status.modalVisible ? 'ON' : 'OFF'}
+                            <br>📝 Title: ${status.stepTitle} | ➡️ Next: ${status.nextBtnDisabled ? 'OFF' : 'ON'} | 🔘 Continue: ${status.continueBtnExists ? 'ON' : 'OFF'}
+                        </div>
+                    ` + progressMonitor.innerHTML;
+
+                    // 最新10件のみ保持
+                    const entries = progressMonitor.querySelectorAll('.log-entry');
+                    if (entries.length > 10) {
+                        entries[entries.length - 1].remove();
+                    }
+
+                } else {
+                    progressMonitor.innerHTML = `
+                        <div class="log-entry log-error">
+                            ❌ ${new Date().toLocaleTimeString()} | tutorialオブジェクトが利用できません
+                        </div>
+                    `;
+                }
+            }, 2000);
+
+            addResult('進行監視', 'success', '進行監視を開始しました');
+        }
+
+        function stopProgressMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                addResult('進行監視', 'success', '進行監視を停止しました');
+            }
+        }
+
+        // 初期状態確認
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.tutorial) {
+                    addResult('初期状態', 'success',
+                        `チュートリアル読み込み完了 - 現在Step ${window.tutorial.currentStep}`
+                    );
+                } else {
+                    addResult('初期状態', 'critical', 'チュートリアルの読み込みに失敗');
+                }
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

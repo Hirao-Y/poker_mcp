@@ -6,10 +6,15 @@ export function createBuildupFactorHandlers(taskManager) {
   return {
     async proposeBuildupFactor(args) {
       validateBuildupFactorRequest(args);
+      
+      // デフォルト値を明示的に適用
+      const useSlantCorrection = args.use_slant_correction ?? false;
+      const useFiniteMediumCorrection = args.use_finite_medium_correction ?? false;
+      
       const result = await taskManager.proposeBuildupFactor(
         args.material, 
-        args.use_slant_correction, 
-        args.use_finite_medium_correction
+        useSlantCorrection, 
+        useFiniteMediumCorrection
       );
       return { success: true, message: result };
     },

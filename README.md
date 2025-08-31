@@ -1,6 +1,6 @@
-# PokerInput MCP Server v4 🚀
+# PokerInput MCP Server 🚀
 
-**世界クラス** YAML-based radiation shielding calculation input file management tool
+YAML-based input file management tool for radiation-shielding calculation code POKER
 
 ## 📋 クイック情報
 
@@ -24,34 +24,31 @@ node src/mcp_server_stdio_v4.js
 curl http://localhost:3020/health
 ```
 
-## 📚 完全ドキュメント
+## 📚 ドキュメント
 
-**📖 [完全なREADME](docs/README.md)** - 詳細情報・API・使用例
+**📖 [README](docs/README.md)** - 詳細情報・API・使用例
 
 **📚 [マニュアル](docs/manuals/INDEX.md)** - 包括的マニュアル (4,600行超)
 
 ## 🏆 主要機能
 
-- ✅ **23個のMCPメソッド完全実装**
-- ✅ **Detector操作完全対応** (追加実装完了)
-- ✅ **Unit操作完全対応** (4キー完全性保証)
+- ✅ **YAML入力ファイルを作成するMCPメソッド実装**
+- ✅ **YAML入力ファイルの自動バックアップシステム**
 - ✅ **本番環境対応機能完備** 
-- ✅ **自動バックアップシステム**
-- ✅ **企業レベルのプロジェクト構成**
 
-## 🎯 完全実装されたAPI
+## 🎯 API
 
-### 🔧 **23メソッド完全対応**
+### 🔧 **YAML入力ファイル管理メソッド（全23）**
 
 | **カテゴリ** | **メソッド数** | **機能** |
 |-------------|---------------|----------|
-| **📐 Geometry** | 3個 | 立体の作成・更新・削除 |
-| **🧪 Material** | 3個 | 材料ゾーンの管理 |
-| **🔄 Transform** | 3個 | 回転・移動変換 |
-| **⚛️ Physics** | 4個 | ビルドアップ係数制御 |
-| **📡 Source** | 3個 | **線源完全管理 (CRUD)** |
-| **🎯 Detector** | 3個 | **検出器完全管理 (CRUD)** |
-| **📏 Unit** | 3個 | **単位設定完全管理** |
+| **📐 Geometry** | 3個 | 立体の管理（作成・更新・削除, Create・Update・Delete) |
+| **🧪 Zone** | 3個 | 材料ゾーンの管理(CUD) |
+| **🔄 Transform** | 3個 | 回転・移動変換(CUD) |
+| **⚛️ BuildupFactor** | 4個 | ビルドアップ係数制御 (CUD+) |
+| **📡 Source** | 3個 | 線源管理 (CUD) |
+| **🎯 Detector** | 3個 | 検出器管理 (CUD) |
+| **📏 Unit** | 3個 | 単位設定管理（CU+) |
 | **🔧 System** | 1個 | 変更適用・制御 |
 
 ### 🎯 **検出器操作 (新機能)**
@@ -68,7 +65,7 @@ curl http://localhost:3020/health
 
 ```
 poker_mcp/
-├── 📁 src/                    # 🚀 本番ソースコード
+├── 📁 src/                    # 🚀 ソースコード
 │   └── mcp_server_stdio_v4.js # メインサーバープログラム (エントリポイント)
 ├── 📁 config/                 # ⚙️ 設定ファイル
 │   └── mcp-manifest.json      # MCPマニフェスト
@@ -76,8 +73,7 @@ poker_mcp/
 │   └── (YAMLデータファイル)    # アプリケーションディレクトリ内
 ├── 📁 docs/                   # 📚 完全ドキュメント (4,600行)
 ├── 📁 backups/                # 💾 自動バックアップ
-├── 📁 tests/                  # 🧪 テスト関連
-└── 📁 (その他専門フォルダ)
+└── 📁 (その他)
 ```
 
 ## 🔧 API使用例
@@ -130,7 +126,7 @@ curl -X POST http://localhost:3020/mcp \
   }'
 ```
 
-### 検出器管理 (新機能)
+### 検出器管理
 ```bash
 # 検出器作成
 curl -X POST http://localhost:3020/mcp \
@@ -163,7 +159,7 @@ curl -X POST http://localhost:3020/mcp \
   }'
 ```
 
-### 単位設定管理 (新機能)
+### 単位設定管理
 ```bash
 # 現在の単位設定取得
 curl -X POST http://localhost:3020/mcp \
@@ -193,7 +189,7 @@ curl -X POST http://localhost:3020/mcp \
   -d '{"jsonrpc":"2.0","method":"pokerinput_applyChanges","params":{},"id":8}'
 ```
 
-## 🌟 世界クラス品質
+## 🌟 品質ステートメント
 
 ### **✅ 技術的完璧性**
 - **MCP Protocol完全準拠**: 業界初の完全実装
@@ -202,12 +198,12 @@ curl -X POST http://localhost:3020/mcp \
 
 ### **✅ 実用性の極大化**
 - **完全CRUD対応**: 全エンティティでCreate/Read/Update/Delete
-- **23メソッド完全実装**: 業界最高レベルのAPI完全性
+- **23メソッド完全実装**: API完全性
 - **実証済み性能**: レスポンス時間<50ms、99.97%可用性
 - **自動品質保証**: 継続的整合性チェック
 
 ### **✅ 包括的ドキュメント**
-- **4,600行超のマニュアル**: 業界最高レベルの文書品質
+- **4,600行超のマニュアル**: 最高レベルの文書品質
 - **実用例充実**: 即座に使える具体的サンプル
 - **多分野対応**: 原子力・医療・宇宙での実証事例
 
@@ -221,7 +217,4 @@ curl -X POST http://localhost:3020/mcp \
 ---
 
 **🎯 PokerInput MCP Server v4.2.0**  
-**世界クラスの放射線遮蔽計算MCPサーバー**  
-**23メソッド完全実装・検出器・単位管理対応**
-
-**作者**: yoshihiro hirao | **ライセンス**: ISC
+**作者**: Yoshihiro Hirao | **ライセンス**: ISC

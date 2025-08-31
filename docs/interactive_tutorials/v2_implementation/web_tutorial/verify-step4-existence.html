@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🔍 Step 4存在確認 & 進行問題調査</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f8ff; }
+        .verify-panel { margin: 15px 0; padding: 20px; background: white; border-radius: 8px; border: 2px solid #2196F3; }
+        .result-panel { margin: 15px 0; padding: 15px; border-radius: 6px; }
+        .success { background: #d4edda; border: 1px solid #c3e6cb; }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; }
+        .info { background: #d1ecf1; border: 1px solid #bee5eb; }
+        .warning { background: #fff3cd; border: 1px solid #ffeaa7; }
+        button { padding: 12px 20px; margin: 8px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-test { background: #17a2b8; color: white; }
+        pre { background: #2d3748; color: #e2e8f0; padding: 15px; border-radius: 6px; overflow-x: auto; font-size: 11px; }
+        .step-data { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Step 4存在確認 & 進行問題調査</h1>
+    
+    <div class="verify-panel">
+        <h2>📋 Step 4確認項目</h2>
+        <button onclick="verifyStep4Existence()" class="btn-primary">✅ Step 4存在確認</button>
+        <button onclick="testStep4Navigation()" class="btn-test">🔄 Step 4進行テスト</button>
+        <button onclick="forceStep4Display()" class="btn-success">⚡ Step 4強制表示</button>
+        <button onclick="fullSystemCheck()" class="btn-primary">🔍 システム全体チェック</button>
+    </div>
+
+    <div id="results"></div>
+
+    <script src="physics-validator.js"></script>
+    <script src="cross-section-visualizer.js"></script>
+    <script src="tutorial.js"></script>
+
+    <script>
+        let resultsDiv = document.getElementById('results');
+
+        function addResult(title, type, message, details = '') {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `result-panel ${type}`;
+            resultDiv.innerHTML = `
+                <h3>${getIcon(type)} ${title}</h3>
+                <p><strong>結果:</strong> ${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+                <small>確認時刻: ${new Date().toLocaleTimeString()}</small>
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function getIcon(type) {
+            switch(type) {
+                case 'success': return '✅';
+                case 'error': return '❌';
+                case 'warning': return '⚠️';
+                case 'info': return 'ℹ️';
+                default: return '🔍';
+            }
+        }
+
+        async function verifyStep4Existence() {
+            resultsDiv.innerHTML = '';
+            console.log('🔍 Step 4存在確認開始...');
+
+            try {
+                // 1. steps.jsonの直接読み込み確認
+                const stepsResponse = await fetch('steps.json');
+                if (!stepsResponse.ok) {
+                    throw new Error(`steps.json読み込み失敗: ${stepsResponse.status}`);
+                }
+                
+                const stepsData = await stepsResponse.json();
+                const step4FromFile = stepsData.find(s => s.step === 4);
+
+                // 2. チュートリアルオブジェクトでの確認
+                let step4FromTutorial = null;
+                let tutorialState = 'なし';
+                
+                if (window.tutorial && window.tutorial.tutorialSteps) {
+                    step4FromTutorial = window.tutorial.tutorialSteps.find(s => s.step === 4);
+                    tutorialState = '利用可能';
+                }
+
+                // 3. 結果まとめ
+                const verification = {
+                    stepsJsonExists: !!stepsResponse.ok,
+                    totalStepsInFile: stepsData.length,
+                    step4InFile: {
+                        exists: !!step4FromFile,
+                        title: step4FromFile?.title,
+                        hasTemplate: !!step4FromFile?.template,
+                        templateMethod: step4FromFile?.template ? JSON.parse(step4FromFile.template).method : null
+                    },
+                    tutorialObject: {
+                        exists: !!window.tutorial,
+                        state: tutorialState,
+                        currentStep: window.tutorial?.currentStep,
+                        totalSteps: window.tutorial?.totalSteps,
+                        stepsLoaded: window.tutorial?.tutorialSteps?.length
+                    },
+                    step4InTutorial: {
+                        exists: !!step4FromTutorial,
+                        title: step4FromTutorial?.title,
+                        hasTemplate: !!step4FromTutorial?.template
+                    }
+                };
+
+                if (step4FromFile && step4FromTutorial) {
+                    addResult('Step 4存在確認', 'success', 
+                        'Step 4は完全に存在しています！',
+                        `検証結果:\n${JSON.stringify(verification, null, 2)}`
+                    );
+                } else {
+                    addResult('Step 4存在確認', 'error', 
+                        'Step 4にアクセス問題があります',
+                        `検証結果:\n${JSON.stringify(verification, null, 2)}`
+                    );
+                }
+
+                // 4. Step 4の詳細内容表示
+                if (step4FromFile) {
+                    const step4Details = {
+                        step: step4FromFile.step,
+                        title: step4FromFile.title,
+                        physics_background: step4FromFile.physics_background?.substring(0, 100) + '...',
+                        instructions: step4FromFile.instructions?.substring(0, 100) + '...',
+                        template: step4FromFile.template?.substring(0, 150) + '...',
+                        hasFollowUpTemplate: !!step4FromFile.follow_up_template,
+                        achievement: step4FromFile.achievement,
+                        hintsCount: step4FromFile.hints?.length || 0
+                    };
+
+                    addResult('Step 4詳細内容', 'info', 
+                        'Step 4の完全な内容が確認されました',
+                        `Step 4内容:\n${JSON.stringify(step4Details, null, 2)}`
+                    );
+                }
+
+            } catch (error) {
+                addResult('Step 4存在確認', 'error', 
+                    `確認中にエラーが発生: ${error.message}`,
+                    `エラー詳細:\n${error.stack}`
+                );
+            }
+        }
+
+        function testStep4Navigation() {
+            try {
+                if (!window.tutorial) {
+                    addResult('Step 4進行テスト', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                console.log('🔄 Step 4進行テスト開始...');
+
+                // 現在の状態を記録
+                const beforeTest = {
+                    currentStep: tutorial.currentStep,
+                    stepTitle: document.getElementById('stepTitle')?.textContent,
+                    stepBadge: document.getElementById('stepBadge')?.textContent
+                };
+
+                // Step 3に設定してからStep 4への進行をテスト
+                tutorial.currentStep = 3;
+                tutorial.updateStepContent();
+                tutorial.updateProgress();
+
+                setTimeout(() => {
+                    console.log('Step 3設定完了、nextStep()実行...');
+                    
+                    try {
+                        tutorial.nextStep();
+                        
+                        setTimeout(() => {
+                            const afterTest = {
+                                currentStep: tutorial.currentStep,
+                                stepTitle: document.getElementById('stepTitle')?.textContent,
+                                stepBadge: document.getElementById('stepBadge')?.textContent,
+                                codeContent: document.getElementById('codeEditor')?.textContent?.substring(0, 100)
+                            };
+
+                            const navigationSuccess = tutorial.currentStep === 4 && 
+                                                    afterTest.stepTitle?.includes('複合遮蔽');
+
+                            const testResult = {
+                                beforeTest,
+                                afterTest,
+                                navigationSuccess,
+                                step4ContentDetected: afterTest.codeContent?.includes('lead_inner_shield')
+                            };
+
+                            if (navigationSuccess) {
+                                addResult('Step 4進行テスト', 'success',
+                                    'Step 3→4の進行は正常に動作します！',
+                                    `テスト結果:\n${JSON.stringify(testResult, null, 2)}`
+                                );
+                            } else {
+                                addResult('Step 4進行テスト', 'error',
+                                    'Step 3→4の進行に問題があります',
+                                    `テスト結果:\n${JSON.stringify(testResult, null, 2)}`
+                                );
+                            }
+                        }, 300);
+
+                    } catch (navError) {
+                        addResult('Step 4進行テスト', 'error',
+                            `nextStep()実行でエラー: ${navError.message}`,
+                            `エラー詳細:\n${navError.stack}`
+                        );
+                    }
+                }, 200);
+
+            } catch (error) {
+                addResult('Step 4進行テスト', 'error', 
+                    `テスト実行エラー: ${error.message}`
+                );
+            }
+        }
+
+        function forceStep4Display() {
+            try {
+                if (!window.tutorial) {
+                    addResult('Step 4強制表示', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                console.log('⚡ Step 4強制表示開始...');
+
+                const beforeForce = {
+                    currentStep: tutorial.currentStep,
+                    stepTitle: document.getElementById('stepTitle')?.textContent
+                };
+
+                // 強制的にStep 4を表示
+                tutorial.currentStep = 4;
+                tutorial.updateStepContent();
+                tutorial.resetCode();
+                tutorial.updateProgress();
+                tutorial.clearResults();
+
+                // モーダルを閉じる
+                if (tutorial.modalOverlay) {
+                    tutorial.modalOverlay.style.display = 'none';
+                }
+
+                setTimeout(() => {
+                    const afterForce = {
+                        currentStep: tutorial.currentStep,
+                        stepTitle: document.getElementById('stepTitle')?.textContent,
+                        stepBadge: document.getElementById('stepBadge')?.textContent,
+                        codeContent: document.getElementById('codeEditor')?.textContent?.substring(0, 150),
+                        physicsBackground: document.getElementById('physicsExplanation')?.textContent?.substring(0, 100)
+                    };
+
+                    const displaySuccess = afterForce.currentStep === 4 && 
+                                         afterForce.stepTitle?.includes('複合遮蔽') &&
+                                         afterForce.codeContent?.includes('lead_inner_shield');
+
+                    const forceResult = {
+                        beforeForce,
+                        afterForce,
+                        displaySuccess,
+                        hasStep4Content: {
+                            titleCorrect: afterForce.stepTitle?.includes('複合遮蔽'),
+                            badgeCorrect: afterForce.stepBadge?.includes('Step 4'),
+                            codeCorrect: afterForce.codeContent?.includes('lead_inner_shield'),
+                            physicsCorrect: afterForce.physicsBackground?.includes('鉛')
+                        }
+                    };
+
+                    if (displaySuccess) {
+                        addResult('Step 4強制表示', 'success',
+                            'Step 4の強制表示に成功しました！',
+                            `強制表示結果:\n${JSON.stringify(forceResult, null, 2)}`
+                        );
+                    } else {
+                        addResult('Step 4強制表示', 'error',
+                            'Step 4の強制表示に問題があります',
+                            `強制表示結果:\n${JSON.stringify(forceResult, null, 2)}`
+                        );
+                    }
+                }, 500);
+
+            } catch (error) {
+                addResult('Step 4強制表示', 'error', 
+                    `強制表示エラー: ${error.message}`
+                );
+            }
+        }
+
+        function fullSystemCheck() {
+            console.log('🔍 システム全体チェック開始...');
+            
+            // 段階的に全ての確認を実行
+            verifyStep4Existence();
+            
+            setTimeout(() => {
+                testStep4Navigation();
+            }, 1000);
+            
+            setTimeout(() => {
+                forceStep4Display();
+            }, 2000);
+        }
+
+        // 初期状態の確認
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                addResult('初期状態', 'info', 
+                    `チュートリアル読み込み状態: ${window.tutorial ? '成功' : '失敗'}`,
+                    window.tutorial ? `現在のステップ: ${window.tutorial.currentStep}\n総ステップ数: ${window.tutorial.totalSteps}` : ''
+                );
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

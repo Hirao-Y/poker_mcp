@@ -1,0 +1,9 @@
+        <!-- 結果パネル -->
+        <div class="result-panel">
+            <div class="panel-header">
+                <h3>📊 実行結果</h3>
+                <div class="result-controls">
+                    <button id="prevBtn" class="prev-btn" disabled>◀️ 前のステップ</button>
+                    <button id="nextBtn" class="next-btn" disabled>▶️ 次のステップ</button>
+                </div>
+            </div>

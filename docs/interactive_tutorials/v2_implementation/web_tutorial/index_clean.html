@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Poker MCP 3D可視化チュートリアル</title>
+    <link rel="stylesheet" href="tutorial-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 放射線遮蔽計算 3D可視化チュートリアル</h1>
+            <p>Co-60線源を使用した医療施設遮蔽設計の学習</p>
+        </header>
+
+        <main>
+            <!-- プログレスインジケーター -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill" style="width: 20%;"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 1 / 5</span>
+            </div>
+
+            <!-- システム状態表示 -->
+            <div class="system-status">
+                <span id="systemMode" class="status-badge">システム初期化中...</span>
+                <span id="drawingStatus" class="status-badge">描画: 確認中</span>
+                <span id="canvasStatus" class="status-badge">Canvas: 確認中</span>
+            </div>
+
+            <!-- メインコンテンツ -->
+            <div class="content-area" id="contentArea">
+                <div class="step-content">
+                    <h2>Step 1: Co-60線源の設定</h2>
+                    <div class="step-description">
+                        <p><strong>概要:</strong> 医療用Co-60線源を原点に配置し、3D/2D空間での放射線源を可視化します。</p>
+                        <p><strong>学習目標:</strong> 放射線源の基本概念と視覚的理解を学習します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 可視化エリア -->
+            <div class="visualization-area">
+                <div class="viz-header">
+                    <h4>🎨 3D/2D 可視化</h4>
+                    <div class="viz-controls">
+                        <button id="testDrawBtn" class="viz-btn">🧪 テスト描画</button>
+                        <button id="clearCanvasBtn" class="viz-btn">🗑️ クリア</button>
+                        <button id="toggle3DBtn" class="viz-btn">🔄 3D切替</button>
+                        <button id="systemInfoBtn" class="viz-btn">📋 情報</button>
+                    </div>
+                </div>
+                
+                <canvas id="geometryCanvas" width="600" height="400">
+                    お使いのブラウザはCanvas要素をサポートしていません。
+                </canvas>
+                
+                <div id="visualizationMessage" class="viz-message">
+                    可視化システム初期化中...
+                </div>
+                
+                <div id="modeInfo" class="mode-info">
+                    <div id="currentModeDisplay">モード: 確認中</div>
+                    <div id="objectCountDisplay">オブジェクト: 初期化中</div>
+                </div>
+            </div>
+
+            <!-- JSON入力エリア -->
+            <div class="input-section">
+                <h3>📝 JSON-RPC 2.0 入力</h3>
+                <textarea id="jsonInput" rows="10">{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource",
+  "params": {
+    "name": "co60_medical",
+    "type": "POINT",
+    "position": "0 0 0",
+    "inventory": [
+      {
+        "nuclide": "Co60",
+        "radioactivity": 37000000000
+      }
+    ]
+  },
+  "id": 1
+}</textarea>
+                <div class="button-group">
+                    <button id="executeJsonBtn" class="primary-btn">🚀 実行</button>
+                    <button id="validateJsonBtn" class="secondary-btn">✅ 検証</button>
+                    <button id="clearJsonBtn" class="secondary-btn">🗑️ クリア</button>
+                </div>
+            </div>
+
+            <!-- 結果表示エリア -->
+            <div class="output-section">
+                <h3>📊 実行結果</h3>
+                <pre id="jsonOutput" class="output-content">結果がここに表示されます...</pre>
+            </div>
+
+            <!-- ナビゲーション -->
+            <div class="navigation">
+                <button id="prevStepBtn" class="nav-btn secondary-btn" disabled>⬅️ 前のステップ</button>
+                <button id="nextStepBtn" class="nav-btn primary-btn">次のステップ ➡️</button>
+                <button id="resetBtn" class="nav-btn secondary-btn">🔄 リセット</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>🎓 Poker MCP Tutorial System v3.2 - 分割軽量版</p>
+        </footer>
+    </div>
+
+    <script src="tutorial-core.js"></script>
+    <script src="visualization-system.js"></script>
+    <script src="main-app.js"></script>
+</body>
+</html>

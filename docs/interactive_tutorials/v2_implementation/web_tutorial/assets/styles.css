@@ -1,0 +1,594 @@
+/* Poker MCP Tutorial Styles v2.0 */
+
+/* 基本レイアウト */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+}
+
+/* ヘッダー */
+.tutorial-header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    border-bottom: 3px solid #007bff;
+}
+
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.header-content h1 {
+    color: #2c3e50;
+    font-size: 1.8rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.header-controls {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+/* プログレスバー */
+.progress-container {
+    display: flex;
+    align-items: center;
+}
+
+.progress-bar {
+    position: relative;
+    width: 200px;
+    height: 8px;
+    background: #e9ecef;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-right: 15px;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #28a745, #20c997);
+    border-radius: 4px;
+    transition: width 0.3s ease;
+    width: 20%; /* Step 1/5 */
+}
+
+.progress-text {
+    font-weight: 600;
+    color: #495057;
+    font-size: 0.9rem;
+    min-width: 70px;
+}
+
+/* ヘッダーボタン */
+.header-buttons {
+    display: flex;
+    gap: 10px;
+}
+
+.header-btn {
+    padding: 8px 15px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #dee2e6;
+}
+
+.header-btn:hover {
+    background: #e9ecef;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* メインコンテナ */
+.tutorial-container {
+    max-width: 1400px;
+    margin: 20px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+/* 指導パネル */
+.instruction-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+}
+
+.step-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.step-badge {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+}
+
+.step-header h2 {
+    color: #2c3e50;
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* 物理的背景 */
+.physics-context {
+    background: linear-gradient(135deg, #e8f4fd, #f0f8ff);
+    border-left: 4px solid #007bff;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 25px;
+}
+
+.physics-context h3 {
+    color: #0056b3;
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.physics-context p {
+    color: #2c3e50;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+/* 実習内容 */
+.instruction-content {
+    margin-bottom: 25px;
+}
+
+.instruction-content h3 {
+    color: #28a745;
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    font-weight: 600;
+}
+
+.instruction-content p {
+    color: #495057;
+    line-height: 1.7;
+    margin-bottom: 15px;
+}
+
+/* ヒント */
+.hints-container {
+    background: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-left: 4px solid #fdcb6e;
+    border-radius: 8px;
+    padding: 20px;
+    margin-top: 20px;
+}
+
+.hints-container h4 {
+    color: #8b7355;
+    font-size: 1rem;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.hint-list {
+    list-style: none;
+    padding: 0;
+}
+
+.hint-item {
+    background: rgba(255, 255, 255, 0.7);
+    margin: 8px 0;
+    padding: 10px 15px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: #6c757d;
+    border-left: 3px solid #fdcb6e;
+}
+
+/* コーディングパネル */
+.coding-panel {
+    background: white;
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 4px 25px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e9ecef;
+    position: sticky;
+    top: 100px;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f8f9fa;
+}
+
+.panel-header h3 {
+    color: #2c3e50;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin: 0;
+}
+
+.panel-controls {
+    display: flex;
+    gap: 10px;
+}
+
+/* エディタ */
+.json-editor {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.json-editor textarea {
+    width: 100%;
+    height: 300px;
+    padding: 20px;
+    border: 2px solid #e9ecef;
+    border-radius: 8px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    resize: vertical;
+    background: #f8f9fa;
+    color: #2c3e50;
+    transition: border-color 0.3s ease;
+}
+
+.json-editor textarea:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
+    background: white;
+}
+
+/* ボタン */
+.action-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.95rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(0, 123, 255, 0.4);
+}
+
+.btn-success {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+    box-shadow: 0 2px 8px rgba(40, 167, 69, 0.3);
+}
+
+.btn-success:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(40, 167, 69, 0.4);
+}
+
+.btn-secondary {
+    background: #6c757d;
+    color: white;
+}
+
+.btn-secondary:hover {
+    background: #5a6268;
+    transform: translateY(-1px);
+}
+
+.btn-warning {
+    background: #ffc107;
+    color: #212529;
+}
+
+.btn-warning:hover {
+    background: #e0a800;
+    transform: translateY(-1px);
+}
+
+/* 結果表示 */
+.response-area {
+    background: #2d3748;
+    color: #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    font-family: 'Courier New', Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #4a5568;
+}
+
+.response-area.success {
+    background: #1a202c;
+    border-color: #38a169;
+}
+
+.response-area.error {
+    background: #2d1b1f;
+    border-color: #e53e3e;
+}
+
+/* 可視化エリア */
+.visualization-area {
+    margin-top: 20px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 2px solid #dee2e6;
+}
+
+.viz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.viz-header h4 {
+    margin: 0;
+    color: #495057;
+    font-size: 1.1rem;
+}
+
+.viz-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.viz-btn {
+    padding: 6px 12px;
+    border: 1px solid #007bff;
+    border-radius: 4px;
+    background: white;
+    color: #007bff;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.viz-btn:hover {
+    background: #007bff;
+    color: white;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 123, 255, 0.2);
+}
+
+.viz-message {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(0, 123, 255, 0.1);
+    border-radius: 4px;
+    color: #0056b3;
+    font-size: 0.9rem;
+    text-align: center;
+    transition: opacity 0.3s ease;
+}
+
+.viz-fallback {
+    margin-top: 10px;
+    padding: 15px;
+    background: rgba(255, 193, 7, 0.1);
+    border: 1px solid #ffc107;
+    border-radius: 4px;
+    color: #856404;
+    text-align: center;
+    font-size: 0.9rem;
+}
+
+#geometryCanvas {
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    display: block;
+    margin: 0 auto;
+    max-width: 100%;
+    height: auto;
+}
+
+/* ナビゲーション */
+.step-navigation {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 2px solid #f8f9fa;
+}
+
+.nav-button {
+    padding: 12px 20px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nav-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.nav-button.prev {
+    background: #6c757d;
+    color: white;
+}
+
+.nav-button.next {
+    background: linear-gradient(135deg, #28a745, #20c997);
+    color: white;
+}
+
+.nav-button:not(:disabled):hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* 成果表示 */
+.achievement-badge {
+    background: linear-gradient(135deg, #ffc107, #ff8c00);
+    color: white;
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+/* レスポンシブ */
+@media (max-width: 1200px) {
+    .tutorial-container {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .coding-panel {
+        position: static;
+    }
+}
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .header-controls {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .tutorial-container {
+        padding: 0 15px;
+    }
+    
+    .instruction-panel,
+    .coding-panel {
+        padding: 20px;
+    }
+}
+
+/* アニメーション */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.tutorial-container > * {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* 構文ハイライト調整 */
+.token.property {
+    color: #79b8ff !important;
+}
+
+.token.string {
+    color: #83d183 !important;
+}
+
+.token.number {
+    color: #ffab70 !important;
+}
+
+.token.punctuation {
+    color: #e1e4e8 !important;
+}
+
+/* カスタムスクロールバー */
+.response-area::-webkit-scrollbar,
+.json-editor textarea::-webkit-scrollbar {
+    width: 8px;
+}
+
+.response-area::-webkit-scrollbar-track,
+.json-editor textarea::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.response-area::-webkit-scrollbar-thumb,
+.json-editor textarea::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.response-area::-webkit-scrollbar-thumb:hover,
+.json-editor textarea::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}

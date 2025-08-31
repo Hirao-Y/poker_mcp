@@ -1,15 +1,17 @@
 {
   "name": "pokerinput-mcp-final",
   "version": "4.0.0",
-  "description": "フル機能版 YAML-based radiation shielding calculation input file management tool with enterprise-grade MCP support",
+  "description": "YAML-based radiation shielding calculation input file management tool with MCP support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
+  "bin": {
+    "pokerinput-mcp": "./src/mcp_server_stdio_v4.js",
+    "poker-mcp": "./src/mcp_server_stdio_v4.js"
+  },
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
-    "start:legacy": "node src/mcp_server_stdio.js",
-    "test": "node test/test_full_features.js",
-    "test:simple": "echo 'Simple test completed'",
-    "dev": "nodemon src/mcp_server_stdio_v4.js"
+    "dev": "nodemon src/mcp_server_stdio_v4.js",
+    "prepare": "echo 'NPX ready: npx pokerinput-mcp-final'"
   },
   "keywords": [
     "mcp",
@@ -20,7 +22,8 @@
     "nuclear",
     "geometry",
     "physics",
-    "validation"
+    "validation",
+    "npx"
   ],
   "author": "yoshihiro hirao",
   "license": "ISC",
@@ -36,5 +39,11 @@
     "raw-body": "^3.0.0",
     "winston": "^3.17.0",
     "zod": "^3.24.2"
-  }
+  },
+  "files": [
+    "src/",
+    "config/",
+    "docs/",
+    "README.md"
+  ]
 }

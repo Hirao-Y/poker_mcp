@@ -8,6 +8,25 @@ export function createZoneHandlers(taskManager) {
     async proposeZone(args) {
       try {
         validateZoneRequest(args);
+        
+        // VOID材料での密度指定チェック
+        if (args.material === 'VOID' && args.density !== undefined) {
+          throw new ValidationError(
+            'Density cannot be specified for VOID material', 
+            'density', 
+            args.density
+          );
+        }
+
+        // 非VOID材料での密度必須チェック
+        if (args.material !== 'VOID' && args.density === undefined) {
+          throw new ValidationError(
+            'Density must be specified for non-VOID materials', 
+            'density', 
+            args.density
+          );
+        }
+
         const result = await taskManager.proposeZone(args.body_name, args.material, args.density);
         return { success: true, message: result };
       } catch (error) {
@@ -19,6 +38,28 @@ export function createZoneHandlers(taskManager) {
     async updateZone(args) {
       try {
         if (!args.body_name) throw new ValidationError('立体名は必須です', 'body_name', args.body_name);
+        
+        // 材料更新時の密度制約チェック
+        if (args.material !== undefined) {
+          // VOID材料での密度指定チェック
+          if (args.material === 'VOID' && args.density !== undefined) {
+            throw new ValidationError(
+              'Density cannot be specified for VOID material', 
+              'density', 
+              args.density
+            );
+          }
+
+          // 非VOID材料での密度必須チェック
+          if (args.material !== 'VOID' && args.density === undefined) {
+            throw new ValidationError(
+              'Density must be specified for non-VOID materials', 
+              'density', 
+              args.density
+            );
+          }
+        }
+
         const { body_name, ...updates } = args;
         const result = await taskManager.updateZone(body_name, updates);
         return { success: true, message: result };

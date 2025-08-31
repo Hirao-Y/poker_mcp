@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🔧 続けるボタン動作診断</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f8f9fa; }
+        .diagnostic-panel { margin: 15px 0; padding: 20px; background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .success { background: #d4edda; border-left: 4px solid #28a745; }
+        .error { background: #f8d7da; border-left: 4px solid #dc3545; }
+        .warning { background: #fff3cd; border-left: 4px solid #ffc107; }
+        .info { background: #d1ecf1; border-left: 4px solid #17a2b8; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+        .test-result { margin: 10px 0; padding: 10px; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <h1>🔧 続けるボタン動作診断システム</h1>
+    
+    <div class="diagnostic-panel info">
+        <h2>📋 診断メニュー</h2>
+        <button onclick="diagnoseElements()" class="btn-primary">🔍 DOM要素診断</button>
+        <button onclick="diagnoseEventListeners()" class="btn-primary">👂 イベントリスナー診断</button>
+        <button onclick="testModalFlow()" class="btn-primary">🎭 モーダル動作テスト</button>
+        <button onclick="simulateStep3Completion()" class="btn-danger">⚡ Step 3完了シミュレーション</button>
+    </div>
+
+    <div id="diagnosticResults"></div>
+    
+    <div class="diagnostic-panel">
+        <h3>🧪 リアルタイム状態監視</h3>
+        <div id="realTimeStatus"></div>
+        <button onclick="startMonitoring()" class="btn-primary">📊 監視開始</button>
+        <button onclick="stopMonitoring()" class="btn-danger">⏹️ 監視停止</button>
+    </div>
+
+    <script src="physics-validator.js"></script>
+    <script src="cross-section-visualizer.js"></script>
+    <script src="tutorial.js"></script>
+
+    <script>
+        let resultsDiv = document.getElementById('diagnosticResults');
+        let monitoringInterval = null;
+
+        function addResult(title, status, message, details = '') {
+            const resultDiv = document.createElement('div');
+            resultDiv.className = `diagnostic-panel ${status}`;
+            resultDiv.innerHTML = `
+                <h3>${getStatusIcon(status)} ${title}</h3>
+                <p><strong>結果:</strong> ${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(resultDiv);
+        }
+
+        function getStatusIcon(status) {
+            switch(status) {
+                case 'success': return '✅';
+                case 'error': return '❌';
+                case 'warning': return '⚠️';
+                case 'info': return 'ℹ️';
+                default: return '?';
+            }
+        }
+
+        function diagnoseElements() {
+            resultsDiv.innerHTML = '';
+            console.log('🔍 DOM要素診断開始...');
+
+            try {
+                // 基本要素の存在確認
+                const elements = {
+                    continueBtn: document.getElementById('continueBtn'),
+                    modalOverlay: document.getElementById('modalOverlay'),
+                    nextBtn: document.getElementById('nextBtn'),
+                    tutorial: window.tutorial
+                };
+
+                const elementStatus = {};
+                for (const [name, element] of Object.entries(elements)) {
+                    elementStatus[name] = !!element;
+                }
+
+                if (!elementStatus.continueBtn) {
+                    addResult('DOM要素診断', 'error', 'continueBtn要素が見つかりません');
+                    return;
+                }
+
+                if (!elementStatus.tutorial) {
+                    addResult('DOM要素診断', 'error', 'tutorialオブジェクトが初期化されていません');
+                    return;
+                }
+
+                // 続けるボタンの詳細情報
+                const continueBtn = elements.continueBtn;
+                const btnDetails = {
+                    id: continueBtn.id,
+                    className: continueBtn.className,
+                    textContent: continueBtn.textContent,
+                    disabled: continueBtn.disabled,
+                    style_display: continueBtn.style.display,
+                    parent: continueBtn.parentElement?.className || 'unknown',
+                    eventListeners: getEventListeners(continueBtn)
+                };
+
+                addResult('DOM要素診断', 'success', 
+                    '基本要素は正常に存在します',
+                    `続けるボタン詳細:\n${JSON.stringify(btnDetails, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('DOM要素診断', 'error', `診断エラー: ${error.message}`);
+            }
+        }
+
+        function getEventListeners(element) {
+            // 簡易的なイベントリスナー情報取得
+            return {
+                onclick: typeof element.onclick,
+                hasClickListener: !!element.onclick
+            };
+        }
+
+        function diagnoseEventListeners() {
+            try {
+                if (!window.tutorial) {
+                    addResult('イベントリスナー診断', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                
+                // メソッドの存在確認
+                const methods = {
+                    nextStep: typeof tutorial.nextStep,
+                    showCompletionModal: typeof tutorial.showCompletionModal,
+                    hideCompletionModal: typeof tutorial.hideCompletionModal,
+                    updateStepContent: typeof tutorial.updateStepContent
+                };
+
+                const continueBtn = document.getElementById('continueBtn');
+                if (!continueBtn) {
+                    addResult('イベントリスナー診断', 'error', 'continueBtn要素が見つかりません');
+                    return;
+                }
+
+                // イベントリスナーのテスト
+                const listenerTest = {
+                    hasOnClickAttribute: !!continueBtn.onclick,
+                    onClickContent: continueBtn.onclick ? continueBtn.onclick.toString() : 'none'
+                };
+
+                addResult('イベントリスナー診断', 'success',
+                    'イベントリスナーの状態を確認しました',
+                    `メソッド存在確認:\n${JSON.stringify(methods, null, 2)}\n\nクリックイベント:\n${JSON.stringify(listenerTest, null, 2)}`
+                );
+
+            } catch (error) {
+                addResult('イベントリスナー診断', 'error', `診断エラー: ${error.message}`);
+            }
+        }
+
+        function testModalFlow() {
+            try {
+                if (!window.tutorial) {
+                    addResult('モーダル動作テスト', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                
+                console.log('🎭 モーダル動作テスト開始...');
+                
+                // Step 3に設定
+                tutorial.currentStep = 3;
+                tutorial.updateProgress();
+                
+                // 完了モーダル表示テスト
+                tutorial.showCompletionModal();
+                
+                setTimeout(() => {
+                    const modalOverlay = document.getElementById('modalOverlay');
+                    const isModalVisible = modalOverlay && 
+                        (modalOverlay.style.display === 'flex' || 
+                         window.getComputedStyle(modalOverlay).display === 'flex');
+                    
+                    if (isModalVisible) {
+                        addResult('モーダル動作テスト', 'success', 
+                            'モーダルが正常に表示されました',
+                            `現在のステップ: ${tutorial.currentStep}\nモーダル表示: ${isModalVisible}`
+                        );
+                    } else {
+                        addResult('モーダル動作テスト', 'error', 'モーダルが表示されませんでした');
+                    }
+                }, 500);
+
+            } catch (error) {
+                addResult('モーダル動作テスト', 'error', `テストエラー: ${error.message}`);
+            }
+        }
+
+        function simulateStep3Completion() {
+            try {
+                if (!window.tutorial) {
+                    addResult('Step 3完了シミュレーション', 'error', 'tutorialオブジェクトが利用できません');
+                    return;
+                }
+
+                const tutorial = window.tutorial;
+                
+                console.log('⚡ Step 3完了シミュレーション開始...');
+                
+                // Step 3に強制設定
+                const originalStep = tutorial.currentStep;
+                tutorial.currentStep = 3;
+                tutorial.updateStepContent();
+                tutorial.updateProgress();
+                
+                // 成功状態をシミュレート
+                tutorial.nextBtn.disabled = false;
+                
+                // 完了モーダル表示
+                tutorial.showCompletionModal();
+                
+                // 2秒後に続けるボタンクリックをシミュレート
+                setTimeout(() => {
+                    console.log('🔄 続けるボタンクリックシミュレーション...');
+                    
+                    // nextStep()を直接呼び出し
+                    const oldStep = tutorial.currentStep;
+                    tutorial.nextStep();
+                    
+                    setTimeout(() => {
+                        const newStep = tutorial.currentStep;
+                        const stepChanged = newStep !== oldStep;
+                        const isStep4 = newStep === 4;
+                        
+                        if (stepChanged && isStep4) {
+                            addResult('Step 3完了シミュレーション', 'success',
+                                'Step 3→4への進行が成功しました！',
+                                `変更前: Step ${oldStep}\n変更後: Step ${newStep}\nStep 4到達: ${isStep4}`
+                            );
+                        } else {
+                            addResult('Step 3完了シミュレーション', 'error',
+                                'Step 4への進行に失敗しました',
+                                `変更前: Step ${oldStep}\n変更後: Step ${newStep}\nStep変更: ${stepChanged}`
+                            );
+                        }
+                    }, 100);
+                    
+                }, 2000);
+                
+            } catch (error) {
+                addResult('Step 3完了シミュレーション', 'error', `シミュレーションエラー: ${error.message}`);
+                console.error('シミュレーションエラー詳細:', error);
+            }
+        }
+
+        function startMonitoring() {
+            if (monitoringInterval) {
+                stopMonitoring();
+            }
+
+            const statusDiv = document.getElementById('realTimeStatus');
+            monitoringInterval = setInterval(() => {
+                try {
+                    if (window.tutorial) {
+                        const tutorial = window.tutorial;
+                        const modalOverlay = document.getElementById('modalOverlay');
+                        const continueBtn = document.getElementById('continueBtn');
+                        
+                        const status = {
+                            currentStep: tutorial.currentStep,
+                            totalSteps: tutorial.totalSteps,
+                            modalVisible: modalOverlay ? modalOverlay.style.display === 'flex' : false,
+                            continueBtnExists: !!continueBtn,
+                            continueBtnDisabled: continueBtn ? continueBtn.disabled : 'N/A',
+                            nextBtnDisabled: tutorial.nextBtn ? tutorial.nextBtn.disabled : 'N/A'
+                        };
+                        
+                        statusDiv.innerHTML = `
+                            <div style="font-family: monospace; font-size: 12px;">
+                                <div>⏰ 監視中 - ${new Date().toLocaleTimeString()}</div>
+                                <div>📍 現在ステップ: ${status.currentStep} / ${status.totalSteps}</div>
+                                <div>🎭 モーダル表示: ${status.modalVisible ? '表示中' : '非表示'}</div>
+                                <div>🔘 続けるボタン: ${status.continueBtnExists ? '存在' : '不存在'} (無効: ${status.continueBtnDisabled})</div>
+                                <div>➡️ 次のステップボタン: 無効 ${status.nextBtnDisabled}</div>
+                            </div>
+                        `;
+                    } else {
+                        statusDiv.innerHTML = '<div style="color: red;">❌ tutorialオブジェクトが利用できません</div>';
+                    }
+                } catch (error) {
+                    statusDiv.innerHTML = `<div style="color: red;">❌ 監視エラー: ${error.message}</div>`;
+                }
+            }, 1000);
+
+            addResult('監視システム', 'info', '監視を開始しました');
+        }
+
+        function stopMonitoring() {
+            if (monitoringInterval) {
+                clearInterval(monitoringInterval);
+                monitoringInterval = null;
+                document.getElementById('realTimeStatus').innerHTML = '監視停止中';
+                addResult('監視システム', 'info', '監視を停止しました');
+            }
+        }
+
+        // ページ読み込み時の初期診断
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.tutorial) {
+                    addResult('初期状態', 'success', 
+                        'チュートリアルが正常に読み込まれています',
+                        `現在のステップ: ${window.tutorial.currentStep}`
+                    );
+                } else {
+                    addResult('初期状態', 'error', 'チュートリアルの読み込みに失敗しています');
+                }
+            }, 1500);
+        });
+    </script>
+</body>
+</html>

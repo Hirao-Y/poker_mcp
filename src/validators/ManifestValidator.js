@@ -17,6 +17,15 @@ export class ManifestValidator {
       throw error;
     }
     
+    // ATMOSPHERE予約語チェック
+    if (name === 'ATMOSPHERE') {
+      const error = new Error(`ATMOSPHERE is reserved - cannot be used as ${fieldName}`);
+      error.field = fieldName;
+      error.value = name;
+      error.code = 'ATMOSPHERE_RESERVED';
+      throw error;
+    }
+    
     // ハイフンチェック
     if (name.includes('-')) {
       const error = new Error(`Invalid name format - hyphens not allowed: ${name}`);

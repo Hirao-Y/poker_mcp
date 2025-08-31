@@ -29,6 +29,14 @@ export class PokerMcpError extends McpError {
   static NAME_FORBIDDEN_CHARACTERS = -32020;
   static INVALID_NUCLIDE_FORMAT = -32021;
   static NUCLIDE_FORBIDDEN_HYPHEN = -32022;
+  static ATMOSPHERE_RESERVED = -32023;
+  static ATMOSPHERE_ZONE_MANDATORY = -32024;
+  static ATMOSPHERE_ZONE_DELETE_FORBIDDEN = -32025;
+  static ATMOSPHERE_ZONE_MUST_EXIST = -32026;
+  static ATMOSPHERE_MATERIAL_REQUIRED = -32027;
+  static VOID_DENSITY_PROHIBITED = -32028;
+  static NON_VOID_DENSITY_REQUIRED = -32029;
+  static MISSING_DENSITY_PARAMETER = -32030;
 
   constructor(code, message, field = null, value = null) {
     super(code, message);
@@ -124,6 +132,26 @@ export class PokerMcpError extends McpError {
   static nuclideForbiddenHyphen(nuclide) {
     return new PokerMcpError(this.NUCLIDE_FORBIDDEN_HYPHEN, `Nuclide contains forbidden hyphen: ${nuclide}`, 'nuclide', nuclide);
   }
+
+  static atmosphereReserved(name) {
+    return new PokerMcpError(this.ATMOSPHERE_RESERVED, `ATMOSPHERE is reserved - cannot be used as body name: ${name}`, 'name', name);
+  }
+
+  static atmosphereZoneDeleteForbidden() {
+    return new PokerMcpError(this.ATMOSPHERE_ZONE_DELETE_FORBIDDEN, 'ATMOSPHERE zone is mandatory and cannot be deleted');
+  }
+
+  static voidDensityProhibited(density) {
+    return new PokerMcpError(this.VOID_DENSITY_PROHIBITED, `Density cannot be specified for VOID material: ${density}`, 'density', density);
+  }
+
+  static nonVoidDensityRequired(material) {
+    return new PokerMcpError(this.NON_VOID_DENSITY_REQUIRED, `Density must be specified for non-VOID materials: ${material}`, 'material', material);
+  }
+
+  static missingDensityParameter(material) {
+    return new PokerMcpError(this.MISSING_DENSITY_PARAMETER, `Missing required density parameter for physical material: ${material}`, 'density', undefined);
+  }
 }
 
 // エラーコードマッピング（逆引き用）
@@ -149,5 +177,13 @@ export const ERROR_CODE_MAP = {
   [-32019]: 'Invalid name format - hyphens not allowed',
   [-32020]: 'Name contains forbidden characters',
   [-32021]: 'Invalid nuclide format - use concatenated format',
-  [-32022]: 'Nuclide contains forbidden hyphen'
+  [-32022]: 'Nuclide contains forbidden hyphen',
+  [-32023]: 'ATMOSPHERE is reserved - cannot be used as body name',
+  [-32024]: 'ATMOSPHERE zone is mandatory and cannot be deleted',
+  [-32025]: 'Multiple ATMOSPHERE zones not allowed',
+  [-32026]: 'ATMOSPHERE zone must exist in zone section',
+  [-32027]: 'ATMOSPHERE zone material assignment required',
+  [-32028]: 'Density cannot be specified for VOID material',
+  [-32029]: 'Density must be specified for non-VOID materials',
+  [-32030]: 'Missing required density parameter for physical material'
 };

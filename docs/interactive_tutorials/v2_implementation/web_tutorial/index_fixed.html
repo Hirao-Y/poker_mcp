@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Poker MCP 3D可視化チュートリアル</title>
+    <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 放射線遮蔽計算 3D可視化チュートリアル</h1>
+            <p>Co-60線源を使用した医療施設遮蔽設計の学習</p>
+        </header>
+
+        <main>
+            <!-- プログレスインジケーター -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 1 / 5</span>
+            </div>
+
+            <!-- メインコンテンツ -->
+            <div class="content-area" id="contentArea">
+                <!-- 動的に更新されるコンテンツ -->
+            </div>
+
+            <!-- 可視化エリア -->
+            <div class="visualization-area">
+                <div class="viz-header">
+                    <h4>🎨 3D 可視化</h4>
+                    <div class="viz-controls">
+                        <button id="toggle3DVisualization" class="viz-btn">🎯 3D表示</button>
+                        <button id="show3DControls" class="viz-btn">⚙️ 設定</button>
+                        <button id="capture3DScreenshot" class="viz-btn">📷 画面保存</button>
+                        <button id="show3DDiagnostic" class="viz-btn">🔍 診断</button>
+                        <button id="runDeepDiagnostic" class="viz-btn">🔬 詳細診断</button>
+                        <button id="fixIssues" class="viz-btn">🔧 修正実行</button>
+                    </div>
+                </div>
+                
+                <canvas id="geometryCanvas" width="400" height="300">
+                    お使いのブラウザはCanvas要素をサポートしていません。
+                </canvas>
+                
+                <div id="visualizationMessage" class="viz-message">
+                    3D可視化システム読み込み中...
+                </div>
+                
+                <div id="visualizationFallback" class="viz-fallback" style="display: none;">
+                    🎨 2D表示モード（WebGL未対応環境）
+                </div>
+            </div>
+
+            <!-- JSON入力エリア -->
+            <div class="input-section">
+                <h3>📝 JSON-RPC 2.0 入力</h3>
+                <textarea id="jsonInput" placeholder="JSON-RPC 2.0 リクエストを入力してください..." rows="8"></textarea>
+                <div class="button-group">
+                    <button id="executeJson" class="primary-btn">🚀 実行</button>
+                    <button id="clearJson" class="secondary-btn">🗑️ クリア</button>
+                    <button id="validateJson" class="secondary-btn">✅ 検証</button>
+                </div>
+            </div>
+
+            <!-- 結果表示エリア -->
+            <div class="output-section">
+                <h3>📊 実行結果</h3>
+                <pre id="jsonOutput" class="output-content">結果がここに表示されます...</pre>
+            </div>
+
+            <!-- ナビゲーション -->
+            <div class="navigation">
+                <button id="prevStep" class="nav-btn secondary-btn" disabled>⬅️ 前のステップ</button>
+                <button id="nextStep" class="nav-btn primary-btn">次のステップ ➡️</button>
+                <button id="resetTutorial" class="nav-btn secondary-btn">🔄 リセット</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>🎓 Poker MCP Tutorial System v2.0 - 放射線遮蔽計算学習プラットフォーム</p>
+        </footer>
+    </div>
+
+    <!-- エラー修正用の統合スクリプト -->
+    <script>
+        // 即座修正システム
+        console.log('🔧 統合修正システム開始...');
+        
+        // グローバル変数初期化
+        window.tutorial = null;
+        window.tutorialCore = null;
+        window.tutorialUI = null;
+        
+        // エラーハンドリング
+        window.addEventListener('error', function(e) {
+            console.error('グローバルエラー:', e.error);
+        });
+        
+        // 簡易TutorialCoreクラス（必要最小限）
+        class SimpleTutorialCore {
+            constructor() {
+                this.currentStep = 1;
+                this.totalSteps = 5;
+                this.steps = [
+                    {
+                        title: "Step 1: Co-60線源の設定",
+                        content: "医療用Co-60線源を原点に配置します。",
+                        jsonTemplate: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource",
+  "params": {
+    "name": "co60_medical",
+    "type": "POINT",
+    "position": "0 0 0",
+    "inventory": [
+      {
+        "nuclide": "Co60",
+        "radioactivity": 37000000000
+      }
+    ]
+  },
+  "id": 1
+}`
+                    },
+                    {
+                        title: "Step 2: コンクリート遮蔽体",
+                        content: "コンクリート球形遮蔽体を追加します。",
+                        jsonTemplate: `{
+  "jsonrpc": "2.0", 
+  "method": "pokerinput_proposeBody",
+  "params": {
+    "name": "concrete_shield",
+    "type": "SPH",
+    "center": "0 0 0",
+    "radius": 50
+  },
+  "id": 2
+}`
+                    },
+                    {
+                        title: "Step 3: 検出器配置", 
+                        content: "線量率測定用検出器を配置します。",
+                        jsonTemplate: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeDetector", 
+  "params": {
+    "name": "dose_survey",
+    "origin": "60 0 0",
+    "grid": [{"edge": "10 0 0", "number": 10}]
+  },
+  "id": 3
+}`
+                    },
+                    {
+                        title: "Step 4: 鉛遮蔽追加",
+                        content: "内側に鉛遮蔽球を追加します。",
+                        jsonTemplate: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeBody",
+  "params": {
+    "name": "lead_inner_shield", 
+    "type": "SPH",
+    "center": "0 0 0",
+    "radius": 18
+  },
+  "id": 4
+}`
+                    },
+                    {
+                        title: "Step 5: 完成・保存",
+                        content: "設計を完成させ、保存します。",
+                        jsonTemplate: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_applyChanges", 
+  "params": {
+    "backup_comment": "Medical Co-60 shielding design completed"
+  },
+  "id": 5
+}`
+                    }
+                ];
+                console.log('✅ SimpleTutorialCore初期化完了');
+            }
+            
+            getCurrentStep() {
+                return this.steps[this.currentStep - 1];
+            }
+            
+            updateStepContent() {
+                return this.getCurrentStep();
+            }
+            
+            nextStep() {
+                if (this.currentStep < this.totalSteps) {
+                    this.currentStep++;
+                    this.updateUI();
+                    return true;
+                }
+                return false;
+            }
+            
+            prevStep() {
+                if (this.currentStep > 1) {
+                    this.currentStep--;
+                    this.updateUI();
+                    return true;
+                }
+                return false;
+            }
+            
+            updateUI() {
+                const step = this.getCurrentStep();
+                
+                // プログレス更新
+                const progressFill = document.getElementById('progressFill');
+                const progressText = document.getElementById('progressText');
+                if (progressFill) {
+                    progressFill.style.width = `${(this.currentStep / this.totalSteps) * 100}%`;
+                }
+                if (progressText) {
+                    progressText.textContent = `Step ${this.currentStep} / ${this.totalSteps}`;
+                }
+                
+                // コンテンツ更新
+                const contentArea = document.getElementById('contentArea');
+                if (contentArea && step) {
+                    contentArea.innerHTML = `
+                        <div class="step-content">
+                            <h2>${step.title}</h2>
+                            <p>${step.content}</p>
+                        </div>
+                    `;
+                }
+                
+                // JSON入力更新
+                const jsonInput = document.getElementById('jsonInput');
+                if (jsonInput && step.jsonTemplate) {
+                    jsonInput.value = step.jsonTemplate;
+                }
+                
+                // ナビゲーションボタン更新
+                const prevBtn = document.getElementById('prevStep');
+                const nextBtn = document.getElementById('nextStep');
+                if (prevBtn) {
+                    prevBtn.disabled = this.currentStep === 1;
+                }
+                if (nextBtn) {
+                    nextBtn.disabled = this.currentStep === this.totalSteps;
+                }
+                
+                console.log(`📍 Step ${this.currentStep} に更新`);
+            }
+        }
+        
+        // 簡易可視化システム（Canvas 2D）
+        class Simple2DVisualizer {
+            constructor(canvasId) {
+                this.canvasId = canvasId;
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = null;
+                this.sources = [];
+                this.shields = [];
+                this.detectors = [];
+                
+                if (this.canvas) {
+                    this.ctx = this.canvas.getContext('2d');
+                    this.setupCanvas();
+                    this.showMessage('2D可視化システム初期化完了', 'success');
+                    console.log('✅ 2D可視化システム初期化完了');
+                } else {
+                    console.error('❌ Canvas要素が見つかりません');
+                }
+            }
+            
+            setupCanvas() {
+                this.canvas.width = this.canvas.clientWidth;
+                this.canvas.height = this.canvas.clientHeight;
+                this.render();
+            }
+            
+            addRadiationSource(name, position, nuclide, activity) {
+                this.sources.push({ name, position, nuclide, activity });
+                this.render();
+                console.log(`📍 線源追加: ${name} (${nuclide})`);
+            }
+            
+            addShield(name, type, parameters, material) {
+                this.shields.push({ name, type, parameters, material });
+                this.render();
+                console.log(`🛡️ 遮蔽体追加: ${name} (${material})`);
+            }
+            
+            addDetector(name, origin, grid) {
+                this.detectors.push({ name, origin, grid });
+                this.render();
+                console.log(`🔍 検出器追加: ${name}`);
+            }
+            
+            render() {
+                if (!this.ctx) return;
+                
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                const centerX = width / 2;
+                const centerY = height / 2;
+                
+                // 背景クリア
+                this.ctx.clearRect(0, 0, width, height);
+                this.ctx.fillStyle = '#f0f8ff';
+                this.ctx.fillRect(0, 0, width, height);
+                
+                // グリッド
+                this.drawGrid(width, height);
+                
+                // 遮蔽体描画
+                this.shields.forEach(shield => this.drawShield(shield, centerX, centerY));
+                
+                // 線源描画
+                this.sources.forEach(source => this.drawSource(source, centerX, centerY));
+                
+                // 検出器描画
+                this.detectors.forEach(detector => this.drawDetector(detector, centerX, centerY));
+                
+                // 情報表示
+                this.drawInfo();
+            }
+            
+            drawGrid(width, height) {
+                this.ctx.strokeStyle = '#ddd';
+                this.ctx.lineWidth = 1;
+                for (let i = 0; i <= width; i += 20) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(i, 0);
+                    this.ctx.lineTo(i, height);
+                    this.ctx.stroke();
+                }
+                for (let i = 0; i <= height; i += 20) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(0, i);
+                    this.ctx.lineTo(width, i);
+                    this.ctx.stroke();
+                }
+            }
+            
+            drawSource(source, centerX, centerY) {
+                this.ctx.fillStyle = '#ff0000';
+                this.ctx.beginPath();
+                this.ctx.arc(centerX, centerY, 8, 0, 2 * Math.PI);
+                this.ctx.fill();
+                
+                this.ctx.fillStyle = '#ffffff';
+                this.ctx.font = '12px Arial';
+                this.ctx.textAlign = 'center';
+                this.ctx.fillText(source.nuclide || 'Source', centerX, centerY + 4);
+            }
+            
+            drawShield(shield, centerX, centerY) {
+                this.ctx.strokeStyle = shield.material === 'LEAD' ? '#333' : '#888';
+                this.ctx.lineWidth = shield.material === 'LEAD' ? 2 : 3;
+                this.ctx.setLineDash([5, 5]);
+                
+                if (shield.type === 'SPH') {
+                    this.ctx.beginPath();
+                    this.ctx.arc(centerX, centerY, shield.parameters.radius || 50, 0, 2 * Math.PI);
+                    this.ctx.stroke();
+                    
+                    // ラベル
+                    this.ctx.fillStyle = shield.material === 'LEAD' ? '#333' : '#666';
+                    this.ctx.font = '10px Arial';
+                    this.ctx.textAlign = 'left';
+                    this.ctx.setLineDash([]);
+                    this.ctx.fillText(
+                        `${shield.material} (${shield.name})`,
+                        centerX + (shield.parameters.radius || 50) + 5,
+                        centerY - (shield.parameters.radius || 50) + 15
+                    );
+                }
+            }
+            
+            drawDetector(detector, centerX, centerY) {
+                for (let i = 0; i < 5; i++) {
+                    const x = centerX + 80 + i * 15;
+                    const y = centerY;
+                    
+                    this.ctx.fillStyle = '#00ff00';
+                    this.ctx.fillRect(x - 3, y - 3, 6, 6);
+                }
+                
+                this.ctx.fillStyle = '#006600';
+                this.ctx.font = '10px Arial';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText('Detectors', centerX + 80, centerY - 15);
+            }
+            
+            drawInfo() {
+                this.ctx.fillStyle = '#000';
+                this.ctx.font = 'bold 14px Arial';
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText('2D表示モード', 10, 25);
+                
+                this.ctx.font = '12px Arial';
+                this.ctx.fillText(`線源: ${this.sources.length}個`, 10, 45);
+                this.ctx.fillText(`遮蔽体: ${this.shields.length}個`, 10, 60);
+                this.ctx.fillText(`検出器: ${this.detectors.length}個`, 10, 75);
+            }
+            
+            clearAll() {
+                this.sources = [];
+                this.shields = [];
+                this.detectors = [];
+                this.render();
+                console.log('🗑️ 可視化要素をクリア');
+            }
+            
+            showMessage(message, type = 'info') {
+                const messageElement = document.getElementById('visualizationMessage');
+                if (messageElement) {
+                    messageElement.textContent = message;
+                    messageElement.style.display = 'block';
+                    
+                    switch (type) {
+                        case 'success':
+                            messageElement.style.color = '#28a745';
+                            messageElement.style.backgroundColor = 'rgba(40, 167, 69, 0.1)';
+                            break;
+                        case 'error':
+                            messageElement.style.color = '#dc3545';
+                            messageElement.style.backgroundColor = 'rgba(220, 53, 69, 0.1)';
+                            break;
+                        default:
+                            messageElement.style.color = '#0056b3';
+                            messageElement.style.backgroundColor = 'rgba(0, 123, 255, 0.1)';
+                    }
+                }
+            }
+        }
+        
+        // メイン初期化
+        function initializeTutorial() {
+            console.log('🚀 チュートリアル初期化開始...');
+            
+            try {
+                // コアシステム初期化
+                window.tutorialCore = new SimpleTutorialCore();
+                
+                // 可視化システム初期化
+                window.visualizer = new Simple2DVisualizer('geometryCanvas');
+                
+                // UIイベント設定
+                setupEventListeners();
+                
+                // 初期表示
+                window.tutorialCore.updateUI();
+                
+                console.log('✅ チュートリアル初期化完了');
+                
+                // 成功メッセージ
+                if (window.visualizer) {
+                    window.visualizer.showMessage('チュートリアルシステム初期化完了（2Dモード）', 'success');
+                }
+                
+            } catch (error) {
+                console.error('❌ チュートリアル初期化エラー:', error);
+                const messageElement = document.getElementById('visualizationMessage');
+                if (messageElement) {
+                    messageElement.textContent = `初期化エラー: ${error.message}`;
+                    messageElement.style.color = '#dc3545';
+                }
+            }
+        }
+        
+        // イベントリスナー設定
+        function setupEventListeners() {
+            // ナビゲーションボタン
+            document.getElementById('nextStep')?.addEventListener('click', () => {
+                if (window.tutorialCore?.nextStep()) {
+                    updateVisualizationForCurrentStep();
+                }
+            });
+            
+            document.getElementById('prevStep')?.addEventListener('click', () => {
+                if (window.tutorialCore?.prevStep()) {
+                    updateVisualizationForCurrentStep();
+                }
+            });
+            
+            document.getElementById('resetTutorial')?.addEventListener('click', () => {
+                window.tutorialCore.currentStep = 1;
+                window.tutorialCore.updateUI();
+                window.visualizer?.clearAll();
+                updateVisualizationForCurrentStep();
+            });
+            
+            // JSON実行ボタン
+            document.getElementById('executeJson')?.addEventListener('click', () => {
+                executeJsonRpc();
+            });
+            
+            document.getElementById('clearJson')?.addEventListener('click', () => {
+                document.getElementById('jsonInput').value = '';
+                document.getElementById('jsonOutput').textContent = '結果がここに表示されます...';
+            });
+            
+            document.getElementById('validateJson')?.addEventListener('click', () => {
+                validateJsonInput();
+            });
+            
+            // 可視化コントロールボタン
+            document.getElementById('toggle3DVisualization')?.addEventListener('click', () => {
+                alert('3D機能は現在2Dフォールバックモードで動作中です。\n基本機能は正常に動作します。');
+            });
+            
+            document.getElementById('runDeepDiagnostic')?.addEventListener('click', () => {
+                showDiagnosticInfo();
+            });
+            
+            document.getElementById('fixIssues')?.addEventListener('click', () => {
+                attemptAutoFix();
+            });
+        }
+        
+        // ステップに応じた可視化更新
+        function updateVisualizationForCurrentStep() {
+            if (!window.visualizer || !window.tutorialCore) return;
+            
+            const step = window.tutorialCore.currentStep;
+            
+            // 段階的に要素を追加
+            if (step >= 1) {
+                window.visualizer.addRadiationSource('co60_medical', [0, 0, 0], 'Co60', 37000000000);
+            }
+            
+            if (step >= 2) {
+                window.visualizer.addShield('concrete_shield', 'SPH', { radius: 50 }, 'CONCRETE');
+            }
+            
+            if (step >= 3) {
+                window.visualizer.addDetector('dose_survey', [60, 0, 0], [{ edge: [10, 0, 0], number: 10 }]);
+            }
+            
+            if (step >= 4) {
+                window.visualizer.addShield('lead_inner_shield', 'SPH', { radius: 18 }, 'LEAD');
+            }
+        }
+        
+        // JSON-RPC実行（シミュレーション）
+        function executeJsonRpc() {
+            const jsonInput = document.getElementById('jsonInput');
+            const jsonOutput = document.getElementById('jsonOutput');
+            
+            try {
+                const request = JSON.parse(jsonInput.value);
+                
+                // シミュレーション応答
+                const response = {
+                    jsonrpc: "2.0",
+                    result: {
+                        success: true,
+                        message: `${request.method} が正常に実行されました`,
+                        timestamp: new Date().toISOString()
+                    },
+                    id: request.id
+                };
+                
+                jsonOutput.textContent = JSON.stringify(response, null, 2);
+                jsonOutput.style.color = '#28a745';
+                
+                // 可視化更新
+                updateVisualizationFromJson(request);
+                
+            } catch (error) {
+                const errorResponse = {
+                    jsonrpc: "2.0",
+                    error: {
+                        code: -32700,
+                        message: "Parse error",
+                        data: error.message
+                    },
+                    id: null
+                };
+                
+                jsonOutput.textContent = JSON.stringify(errorResponse, null, 2);
+                jsonOutput.style.color = '#dc3545';
+            }
+        }
+        
+        // JSON検証
+        function validateJsonInput() {
+            const jsonInput = document.getElementById('jsonInput');
+            const jsonOutput = document.getElementById('jsonOutput');
+            
+            try {
+                const parsed = JSON.parse(jsonInput.value);
+                
+                if (parsed.jsonrpc !== "2.0") {
+                    throw new Error("JSON-RPC 2.0ではありません");
+                }
+                
+                if (!parsed.method) {
+                    throw new Error("methodが指定されていません");
+                }
+                
+                jsonOutput.textContent = '✅ JSON形式は正しいです';
+                jsonOutput.style.color = '#28a745';
+                
+            } catch (error) {
+                jsonOutput.textContent = `❌ JSON検証エラー: ${error.message}`;
+                jsonOutput.style.color = '#dc3545';
+            }
+        }
+        
+        // JSONから可視化更新
+        function updateVisualizationFromJson(request) {
+            if (!window.visualizer) return;
+            
+            const method = request.method;
+            const params = request.params;
+            
+            if (method === 'pokerinput_proposeSource' && params) {
+                window.visualizer.addRadiationSource(
+                    params.name,
+                    params.position?.split(' ').map(Number) || [0, 0, 0],
+                    params.inventory?.[0]?.nuclide || 'Unknown',
+                    params.inventory?.[0]?.radioactivity || 0
+                );
+            } else if (method === 'pokerinput_proposeBody' && params) {
+                const center = params.center?.split(' ').map(Number) || [0, 0, 0];
+                window.visualizer.addShield(
+                    params.name,
+                    params.type,
+                    { center, radius: params.radius },
+                    'CONCRETE'
+                );
+            } else if (method === 'pokerinput_proposeDetector' && params) {
+                const origin = params.origin?.split(' ').map(Number) || [0, 0, 0];
+                window.visualizer.addDetector(params.name, origin, params.grid || []);
+            }
+        }
+        
+        // 診断情報表示
+        function showDiagnosticInfo() {
+            const info = `
+=== システム診断情報 ===
+
+✅ 実行環境: ${window.location.protocol}//${window.location.host}
+✅ ブラウザ: ${navigator.userAgent.split(' ')[0]}
+✅ Canvas要素: ${document.getElementById('geometryCanvas') ? '存在' : '見つかりません'}
+✅ 2Dコンテキスト: ${document.getElementById('geometryCanvas')?.getContext('2d') ? '利用可能' : '利用不可'}
+✅ WebGLコンテキスト: ${document.getElementById('geometryCanvas')?.getContext('webgl') ? '利用可能' : '利用不可'}
+
+📊 現在の状態:
+• チュートリアルコア: ${window.tutorialCore ? '動作中' : '未初期化'}
+• 2D可視化システム: ${window.visualizer ? '動作中' : '未初期化'}
+• 現在のステップ: ${window.tutorialCore?.currentStep || 'Unknown'}
+
+⚠️ 制限事項:
+• file://プロトコルでの実行により、3D機能は2Dフォールバックで動作
+• ネットワーク機能（CDN読み込み）が制限される可能性があります
+• HTTPサーバーでの実行を推奨します
+
+🔧 推奨対処法:
+1. Pythonでローカルサーバー起動: python -m http.server 8000
+2. アクセス: http://localhost:8000
+3. または最新ブラウザでfile://制限を無効化
+            `;
+            
+            alert(info);
+        }
+        
+        // 自動修正試行
+        function attemptAutoFix() {
+            console.log('🔧 自動修正を試行中...');
+            
+            // Canvas要素チェック・修正
+            let canvas = document.getElementById('geometryCanvas');
+            if (!canvas) {
+                alert('❌ Canvas要素が見つかりません。HTMLファイルを確認してください。');
+                return;
+            }
+            
+            // サイズ修正
+            if (canvas.clientWidth === 0 || canvas.clientHeight === 0) {
+                canvas.style.width = '400px';
+                canvas.style.height = '300px';
+                console.log('🔧 Canvas表示サイズを修正');
+            }
+            
+            // 可視化システム再初期化
+            if (!window.visualizer) {
+                window.visualizer = new Simple2DVisualizer('geometryCanvas');
+            }
+            
+            // 現在のステップに応じた表示更新
+            updateVisualizationForCurrentStep();
+            
+            alert('✅ 自動修正を実行しました。\n基本機能が正常に動作することを確認してください。');
+        }
+        
+        // ページ読み込み完了時に初期化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeTutorial);
+        } else {
+            initializeTutorial();
+        }
+        
+        console.log('🔧 統合修正システム読み込み完了');
+    </script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>🔧 Poker MCP チュートリアル - 動作テスト</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        .info { background: #d1ecf1; border-color: #b8daff; }
+        button { padding: 10px 15px; margin: 5px; cursor: pointer; }
+        pre { background: #f8f9fa; padding: 10px; border-radius: 3px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔧 Poker MCP チュートリアル - 動作テスト</h1>
+    
+    <div class="test-section info">
+        <h2>📋 テスト項目</h2>
+        <button onclick="testStepsJson()">steps.json読み込みテスト</button>
+        <button onclick="testTutorialClass()">チュートリアルクラステスト</button>
+        <button onclick="testVisualization()">可視化システムテスト</button>
+        <button onclick="testPhysicsValidator()">物理検証テスト</button>
+        <button onclick="runAllTests()">🚀 全テスト実行</button>
+    </div>
+
+    <div id="testResults"></div>
+
+    <script src="physics-validator.js"></script>
+    <script src="cross-section-visualizer.js"></script>
+    <script src="tutorial.js"></script>
+    
+    <script>
+        function logResult(title, success, message, details = '') {
+            const resultsDiv = document.getElementById('testResults');
+            const testDiv = document.createElement('div');
+            testDiv.className = `test-section ${success ? 'success' : 'error'}`;
+            testDiv.innerHTML = `
+                <h3>${success ? '✅' : '❌'} ${title}</h3>
+                <p><strong>結果:</strong> ${message}</p>
+                ${details ? `<pre>${details}</pre>` : ''}
+            `;
+            resultsDiv.appendChild(testDiv);
+        }
+
+        async function testStepsJson() {
+            try {
+                const response = await fetch('steps.json');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                const data = await response.json();
+                
+                if (!Array.isArray(data) || data.length === 0) {
+                    throw new Error('steps.jsonの形式が不正です（配列でないか空です）');
+                }
+                
+                // 各ステップの必須フィールドチェック
+                const requiredFields = ['step', 'title', 'template'];
+                for (let i = 0; i < data.length; i++) {
+                    const step = data[i];
+                    for (const field of requiredFields) {
+                        if (!step[field]) {
+                            throw new Error(`Step ${i + 1} に必須フィールド '${field}' がありません`);
+                        }
+                    }
+                    
+                    // テンプレートがJSONとしてパース可能かチェック
+                    try {
+                        JSON.parse(step.template);
+                    } catch (e) {
+                        throw new Error(`Step ${i + 1} のtemplateが無効なJSON: ${e.message}`);
+                    }
+                }
+                
+                logResult('steps.json読み込み', true, 
+                    `${data.length}ステップのデータを正常に読み込みました`,
+                    `ステップ: ${data.map(s => s.title).join(', ')}`
+                );
+                
+            } catch (error) {
+                logResult('steps.json読み込み', false, error.message);
+            }
+        }
+
+        function testTutorialClass() {
+            try {
+                // チュートリアルクラスのインスタンス化テスト
+                if (typeof PokerMCPTutorial === 'undefined') {
+                    throw new Error('PokerMCPTutorialクラスが定義されていません');
+                }
+                
+                // 必要なメソッドの存在確認
+                const requiredMethods = [
+                    'initializeElements', 'loadTutorialData', 'updateStepContent', 
+                    'resetCode', 'executeCode', 'validateJSON'
+                ];
+                
+                const proto = PokerMCPTutorial.prototype;
+                const missingMethods = requiredMethods.filter(method => typeof proto[method] !== 'function');
+                
+                if (missingMethods.length > 0) {
+                    throw new Error(`必須メソッドが不足: ${missingMethods.join(', ')}`);
+                }
+                
+                logResult('チュートリアルクラス', true, 
+                    'PokerMCPTutorialクラスは正常に定義されています',
+                    `利用可能メソッド: ${requiredMethods.join(', ')}`
+                );
+                
+            } catch (error) {
+                logResult('チュートリアルクラス', false, error.message);
+            }
+        }
+
+        function testVisualization() {
+            try {
+                // キャンバス要素を作成
+                const canvas = document.createElement('canvas');
+                canvas.id = 'testCanvas';
+                canvas.width = 400;
+                canvas.height = 300;
+                document.body.appendChild(canvas);
+                
+                // CrossSectionVisualizerのインスタンス化テスト
+                if (typeof CrossSectionVisualizer === 'undefined') {
+                    throw new Error('CrossSectionVisualizerクラスが定義されていません');
+                }
+                
+                const visualizer = new CrossSectionVisualizer('testCanvas');
+                
+                // 基本的な描画メソッドテスト
+                visualizer.clear();
+                visualizer.addSource('test_source', '0 0 0', 1e10, 'Co60');
+                visualizer.addSphere('test_sphere', '0 0 0', 50, 'CONCRETE');
+                visualizer.render();
+                
+                // キャンバスをクリーンアップ
+                document.body.removeChild(canvas);
+                
+                logResult('可視化システム', true, 
+                    'CrossSectionVisualizerは正常に動作しています',
+                    '線源追加、球体追加、描画が正常に実行されました'
+                );
+                
+            } catch (error) {
+                logResult('可視化システム', false, error.message);
+            }
+        }
+
+        function testPhysicsValidator() {
+            try {
+                if (typeof PhysicsValidator === 'undefined') {
+                    throw new Error('PhysicsValidatorクラスが定義されていません');
+                }
+                
+                const validator = new PhysicsValidator();
+                
+                // 線源強度検証テスト
+                const sourceValidation = validator.validateSourceStrength('Co60', 3.7e10);
+                if (!sourceValidation || typeof sourceValidation.isValid === 'undefined') {
+                    throw new Error('validateSourceStrengthメソッドが正常な結果を返しません');
+                }
+                
+                // 遮蔽厚さ検証テスト
+                const shieldValidation = validator.validateShieldingThickness('CONCRETE', 50, 3.7e10, 'Co60');
+                if (!shieldValidation || typeof shieldValidation.isValid === 'undefined') {
+                    throw new Error('validateShieldingThicknessメソッドが正常な結果を返しません');
+                }
+                
+                logResult('物理検証システム', true, 
+                    'PhysicsValidatorは正常に動作しています',
+                    `Co60線源検証: ${sourceValidation.isValid ? '妥当' : '不適切'}\n遮蔽厚さ検証: ${shieldValidation.isValid ? '妥当' : '不適切'}`
+                );
+                
+            } catch (error) {
+                logResult('物理検証システム', false, error.message);
+            }
+        }
+
+        async function runAllTests() {
+            document.getElementById('testResults').innerHTML = '';
+            
+            console.log('🚀 全テスト開始...');
+            
+            await testStepsJson();
+            testTutorialClass();
+            testVisualization();
+            testPhysicsValidator();
+            
+            // 統合テスト
+            try {
+                if (window.tutorial) {
+                    logResult('統合テスト', true, 'チュートリアルインスタンスが正常に作成されています');
+                } else {
+                    logResult('統合テスト', false, 'チュートリアルインスタンスが作成されていません');
+                }
+            } catch (error) {
+                logResult('統合テスト', false, error.message);
+            }
+            
+            console.log('✅ 全テスト完了');
+        }
+
+        // ページ読み込み時に基本チェック
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                const basicInfo = {
+                    tutorial: !!window.tutorial,
+                    steps: window.tutorial?.tutorialSteps?.length || 0,
+                    currentStep: window.tutorial?.currentStep || 0
+                };
+                
+                console.log('📊 基本情報:', basicInfo);
+                
+                if (basicInfo.tutorial && basicInfo.steps > 0) {
+                    logResult('初期化確認', true, 
+                        `チュートリアルが正常に初期化されました`,
+                        `ステップ数: ${basicInfo.steps}, 現在のステップ: ${basicInfo.currentStep}`
+                    );
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

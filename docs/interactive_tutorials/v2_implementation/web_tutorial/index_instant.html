@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Poker MCP 可視化チュートリアル</title>
+    <style>
+        /* インライン軽量CSS */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            min-height: 100vh;
+        }
+        
+        header {
+            background: #007bff;
+            color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .progress-container {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        
+        .progress-bar {
+            background: #e9ecef;
+            border-radius: 10px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #28a745, #20c997);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            width: 20%;
+        }
+        
+        .progress-text {
+            font-weight: 600;
+            color: #495057;
+            text-align: center;
+            display: block;
+        }
+        
+        .system-status {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .status-badge {
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            background: #28a745;
+            border: 2px solid #20c997;
+            color: white;
+        }
+        
+        .content-area, .visualization-area, .input-section, .output-section {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .step-content h2 {
+            color: #007bff;
+            margin-bottom: 15px;
+        }
+        
+        .step-description {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #007bff;
+        }
+        
+        .viz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .viz-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .viz-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            background: #007bff;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .viz-btn:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        #geometryCanvas {
+            width: 100%;
+            height: 400px;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            background: #f8f9fa;
+            display: block;
+            margin: 15px 0;
+            cursor: crosshair;
+        }
+        
+        .viz-message {
+            padding: 12px;
+            border-radius: 6px;
+            margin: 10px 0;
+            background: rgba(40, 167, 69, 0.1);
+            color: #155724;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .mode-info {
+            margin-top: 15px;
+            padding: 12px;
+            background: rgba(40, 167, 69, 0.1);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(40, 167, 69, 0.2);
+        }
+        
+        .mode-info div {
+            margin: 4px 0;
+            color: #155724;
+            font-weight: 500;
+        }
+        
+        #jsonInput {
+            width: 100%;
+            min-height: 200px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            background: #f8f9fa;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .primary-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .primary-btn:hover {
+            background: #0056b3;
+            transform: translateY(-2px);
+        }
+        
+        .secondary-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .secondary-btn:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+        
+        .secondary-btn:disabled {
+            background: #adb5bd;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .output-content {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            color: #495057;
+        }
+        
+        .output-content.success {
+            border-color: #28a745;
+            color: #155724;
+            background: rgba(40, 167, 69, 0.05);
+        }
+        
+        .output-content.error {
+            border-color: #dc3545;
+            color: #721c24;
+            background: rgba(220, 53, 69, 0.05);
+        }
+        
+        .navigation {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+        }
+        
+        /* レスポンシブ */
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            #geometryCanvas { height: 300px; }
+            .viz-header { flex-direction: column; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 放射線遮蔽計算 可視化チュートリアル</h1>
+            <p>Co-60線源を使用した医療施設遮蔽設計の学習</p>
+        </header>
+
+        <main>
+            <!-- プログレス -->
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <span class="progress-text" id="progressText">Step 1 / 5</span>
+            </div>
+
+            <!-- システム状態 -->
+            <div class="system-status">
+                <span class="status-badge">🎨 システム動作中</span>
+                <span class="status-badge">📊 Canvas2D利用可能</span>
+                <span class="status-badge">✅ 初期化完了</span>
+            </div>
+
+            <!-- コンテンツ -->
+            <div class="content-area" id="contentArea">
+                <div class="step-content">
+                    <h2>Step 1: Co-60線源の設定</h2>
+                    <div class="step-description">
+                        <p><strong>概要:</strong> 医療用Co-60線源を原点に配置し、放射線源を可視化します。</p>
+                        <p><strong>学習目標:</strong> 放射線源の基本概念と視覚的理解を学習します。</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 可視化エリア -->
+            <div class="visualization-area">
+                <div class="viz-header">
+                    <h4>🎨 2D 可視化システム</h4>
+                    <div class="viz-controls">
+                        <button id="testDrawBtn" class="viz-btn">🧪 テスト描画</button>
+                        <button id="clearBtn" class="viz-btn">🗑️ クリア</button>
+                        <button id="infoBtn" class="viz-btn">📋 情報</button>
+                    </div>
+                </div>
+                
+                <canvas id="geometryCanvas" width="600" height="400"></canvas>
+                
+                <div class="viz-message" id="vizMessage">
+                    ✅ 可視化システム準備完了 - テスト描画ボタンを押してください
+                </div>
+                
+                <div class="mode-info">
+                    <div>モード: 2D | 解像度: 600x400</div>
+                    <div id="objectInfo">オブジェクト: 線源 0個 | 遮蔽体 0個 | 検出器 0個</div>
+                </div>
+            </div>
+
+            <!-- JSON入力 -->
+            <div class="input-section">
+                <h3>📝 JSON-RPC 2.0 入力</h3>
+                <textarea id="jsonInput" rows="8">{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource",
+  "params": {
+    "name": "co60_medical",
+    "type": "POINT",
+    "position": "0 0 0",
+    "inventory": [
+      {
+        "nuclide": "Co60",
+        "radioactivity": 37000000000
+      }
+    ]
+  },
+  "id": 1
+}</textarea>
+                <div class="button-group">
+                    <button id="executeBtn" class="primary-btn">🚀 実行</button>
+                    <button id="validateBtn" class="secondary-btn">✅ 検証</button>
+                    <button id="clearJsonBtn" class="secondary-btn">🗑️ クリア</button>
+                </div>
+            </div>
+
+            <!-- 結果表示 -->
+            <div class="output-section">
+                <h3>📊 実行結果</h3>
+                <pre id="jsonOutput" class="output-content">結果がここに表示されます...</pre>
+            </div>
+
+            <!-- ナビゲーション -->
+            <div class="navigation">
+                <button id="prevBtn" class="secondary-btn" disabled>⬅️ 前のステップ</button>
+                <button id="nextBtn" class="primary-btn">次のステップ ➡️</button>
+                <button id="resetBtn" class="secondary-btn">🔄 リセット</button>
+            </div>
+        </main>
+
+        <footer>
+            <p>🎓 Poker MCP Tutorial System v3.3 - 即座動作版</p>
+        </footer>
+    </div>
+
+    <script>
+        // 即座動作版統合JavaScript
+        console.log('🚀 即座動作版システム開始...');
+        
+        // グローバル変数
+        let currentStep = 1;
+        const totalSteps = 5;
+        let canvas, ctx;
+        let sources = new Map();
+        let shields = new Map();
+        let detectors = new Map();
+        let animationId;
+        let animationTime = 0;
+        let interactions = 0;
+        
+        // ステップデータ
+        const steps = [
+            {
+                title: "Step 1: Co-60線源の設定",
+                content: "医療用Co-60線源を原点に配置し、放射線源を可視化します。",
+                learning: "放射線源の基本概念と視覚的理解を学習します。",
+                json: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeSource",
+  "params": {
+    "name": "co60_medical",
+    "type": "POINT",
+    "position": "0 0 0",
+    "inventory": [{"nuclide": "Co60", "radioactivity": 37000000000}]
+  },
+  "id": 1
+}`
+            },
+            {
+                title: "Step 2: コンクリート遮蔽体",
+                content: "コンクリート球形遮蔽体を追加し、基本的な遮蔽構造を構築します。",
+                learning: "遮蔽体の形状と材料特性を視覚的に理解します。",
+                json: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeBody",
+  "params": {
+    "name": "concrete_shield",
+    "type": "SPH",
+    "center": "0 0 0",
+    "radius": 50
+  },
+  "id": 2
+}`
+            },
+            {
+                title: "Step 3: 検出器配置",
+                content: "線量率測定用検出器アレイを配置し、測定系を構築します。",
+                learning: "検出器配置と線量率分布の可視化を学習します。",
+                json: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeDetector",
+  "params": {
+    "name": "dose_survey",
+    "origin": "60 0 0",
+    "grid": [{"edge": "10 0 0", "number": 10}]
+  },
+  "id": 3
+}`
+            },
+            {
+                title: "Step 4: 鉛遮蔽追加",
+                content: "内側に鉛遮蔽球を追加し、複合遮蔽構造を完成させます。",
+                learning: "複合材料による高効率遮蔽設計を理解します。",
+                json: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_proposeBody",
+  "params": {
+    "name": "lead_inner_shield",
+    "type": "SPH",
+    "center": "0 0 0",
+    "radius": 18
+  },
+  "id": 4
+}`
+            },
+            {
+                title: "Step 5: 完成・保存",
+                content: "遮蔽設計を完成させ、計算結果を保存します。",
+                learning: "実用的な遮蔽設計の完成と実務への応用を学習します。",
+                json: `{
+  "jsonrpc": "2.0",
+  "method": "pokerinput_applyChanges",
+  "params": {
+    "backup_comment": "Medical Co-60 shielding design completed"
+  },
+  "id": 5
+}`
+            }
+        ];
+        
+        // 初期化
+        function init() {
+            console.log('🎯 システム初期化開始...');
+            
+            // Canvas初期化
+            canvas = document.getElementById('geometryCanvas');
+            ctx = canvas.getContext('2d');
+            
+            if (!ctx) {
+                console.error('❌ Canvas初期化失敗');
+                return;
+            }
+            
+            // Canvas設定
+            setupCanvas();
+            
+            // イベントリスナー
+            setupEvents();
+            
+            // 初期描画
+            render();
+            startAnimation();
+            
+            // UI更新
+            updateUI();
+            
+            console.log('✅ システム初期化完了');
+        }
+        
+        // Canvas設定
+        function setupCanvas() {
+            const rect = canvas.getBoundingClientRect();
+            canvas.width = 600;
+            canvas.height = 400;
+            canvas.style.width = '100%';
+            canvas.style.height = '400px';
+        }
+        
+        // イベント設定
+        function setupEvents() {
+            // テスト描画
+            document.getElementById('testDrawBtn').onclick = testDraw;
+            
+            // クリア
+            document.getElementById('clearBtn').onclick = clearAll;
+            
+            // 情報
+            document.getElementById('infoBtn').onclick = showInfo;
+            
+            // JSON実行
+            document.getElementById('executeBtn').onclick = executeJson;
+            
+            // JSON検証
+            document.getElementById('validateBtn').onclick = validateJson;
+            
+            // JSONクリア
+            document.getElementById('clearJsonBtn').onclick = clearJson;
+            
+            // ナビゲーション
+            document.getElementById('nextBtn').onclick = nextStep;
+            document.getElementById('prevBtn').onclick = prevStep;
+            document.getElementById('resetBtn').onclick = resetTutorial;
+        }
+        
+        // テスト描画
+        function testDraw() {
+            console.log('🧪 テスト描画実行');
+            
+            // サンプルデータ
+            addSource('co60_test', [0, 0, 0], 'Co-60', 37000000000);
+            addShield('concrete_shield', 'SPH', {center: [0, 0, 0], radius: 60}, 'CONCRETE');
+            addShield('lead_shield', 'SPH', {center: [0, 0, 0], radius: 25}, 'LEAD');
+            addDetector('detector_array', [100, 0, 0], [{edge: [10, 0, 0], number: 5}]);
+            
+            showMessage('✅ テスト描画完了：Co-60医療遮蔽モデル');
+            updateObjectInfo();
+        }
+        
+        // データ追加
+        function addSource(name, position, nuclide, activity) {
+            sources.set(name, {name, position, nuclide, activity});
+            render();
+        }
+        
+        function addShield(name, type, params, material) {
+            shields.set(name, {name, type, params, material});
+            render();
+        }
+        
+        function addDetector(name, origin, grid) {
+            detectors.set(name, {name, origin, grid});
+            render();
+        }
+        
+        // 全クリア
+        function clearAll() {
+            sources.clear();
+            shields.clear();
+            detectors.clear();
+            render();
+            showMessage('🗑️ 全要素をクリアしました');
+            updateObjectInfo();
+        }
+        
+        // レンダリング
+        function render() {
+            const width = canvas.width;
+            const height = canvas.height;
+            const centerX = width / 2;
+            const centerY = height / 2;
+            
+            // 背景
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#f0f8ff';
+            ctx.fillRect(0, 0, width, height);
+            
+            // グリッド
+            drawGrid();
+            
+            // 軸
+            drawAxes(centerX, centerY);
+            
+            // オブジェクト
+            drawShields(centerX, centerY);
+            drawSources(centerX, centerY);
+            drawDetectors(centerX, centerY);
+            
+            // 情報
+            drawInfo();
+        }
+        
+        // グリッド描画
+        function drawGrid() {
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x <= canvas.width; x += 20) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y <= canvas.height; y += 20) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+        }
+        
+        // 軸描画
+        function drawAxes(centerX, centerY) {
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 2;
+            
+            // X軸
+            ctx.beginPath();
+            ctx.moveTo(0, centerY);
+            ctx.lineTo(canvas.width, centerY);
+            ctx.stroke();
+            
+            // Y軸
+            ctx.beginPath();
+            ctx.moveTo(centerX, 0);
+            ctx.lineTo(centerX, canvas.height);
+            ctx.stroke();
+            
+            // ラベル
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 14px Arial';
+            ctx.fillText('X', canvas.width - 20, centerY - 10);
+            ctx.fillText('Y', centerX + 10, 20);
+        }
+        
+        // 遮蔽体描画
+        function drawShields(centerX, centerY) {
+            shields.forEach(shield => {
+                const isLead = shield.material === 'LEAD';
+                const radius = shield.params.radius * 0.8;
+                
+                ctx.fillStyle = isLead ? 'rgba(80, 80, 80, 0.3)' : 'rgba(192, 192, 192, 0.3)';
+                ctx.strokeStyle = isLead ? '#333' : '#888';
+                ctx.lineWidth = isLead ? 4 : 3;
+                
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                ctx.fill();
+                ctx.stroke();
+                
+                // ラベル
+                ctx.fillStyle = ctx.strokeStyle;
+                ctx.font = 'bold 12px Arial';
+                ctx.fillText(shield.material, centerX + radius + 10, centerY - radius + 15);
+            });
+        }
+        
+        // 線源描画
+        function drawSources(centerX, centerY) {
+            sources.forEach(source => {
+                const time = animationTime * 0.003;
+                const glow = 0.4 + Math.sin(time) * 0.3;
+                
+                // 輝き
+                const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, 25);
+                gradient.addColorStop(0, `rgba(255, 100, 100, ${glow})`);
+                gradient.addColorStop(1, 'rgba(255, 100, 100, 0)');
+                
+                ctx.fillStyle = gradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 25, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 線源本体
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, 10, 0, 2 * Math.PI);
+                ctx.fill();
+                
+                // 放射線
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2 + time * 0.5;
+                    const x1 = centerX + Math.cos(angle) * 15;
+                    const y1 = centerY + Math.sin(angle) * 15;
+                    const x2 = centerX + Math.cos(angle) * 22;
+                    const y2 = centerY + Math.sin(angle) * 22;
+                    
+                    ctx.strokeStyle = `rgba(255, 200, 0, ${glow})`;
+                    ctx.lineWidth = 3;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.stroke();
+                }
+                
+                // ラベル
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(source.nuclide, centerX, centerY + 4);
+            });
+        }
+        
+        // 検出器描画
+        function drawDetectors(centerX, centerY) {
+            detectors.forEach(detector => {
+                const count = detector.grid[0] ? detector.grid[0].number || 5 : 1;
+                const time = animationTime * 0.002;
+                
+                for (let i = 0; i < count; i++) {
+                    const x = centerX + 120 + i * 20;
+                    const y = centerY + (i - count/2) * 15;
+                    const activity = 0.6 + Math.sin(time + i) * 0.4;
+                    
+                    // 検出器
+                    ctx.fillStyle = '#00ff00';
+                    ctx.fillRect(x - 6, y - 6, 12, 12);
+                    
+                    // 活動表示
+                    ctx.fillStyle = `rgba(0, 255, 0, ${activity})`;
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // 枠
+                    ctx.strokeStyle = '#006600';
+                    ctx.lineWidth = 2;
+                    ctx.strokeRect(x - 6, y - 6, 12, 12);
+                }
+                
+                // ラベル
+                ctx.fillStyle = '#006600';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'left';
+                ctx.fillText(detector.name, centerX + 120, centerY - 30);
+            });
+        }
+        
+        // 情報描画
+        function drawInfo() {
+            ctx.fillStyle = '#000';
+            ctx.font = 'bold 16px Arial';
+            ctx.textAlign = 'left';
+            ctx.fillText('2D可視化システム', 15, 25);
+            
+            ctx.font = '12px Arial';
+            ctx.fillText(`線源: ${sources.size}個`, 15, 45);
+            ctx.fillText(`遮蔽体: ${shields.size}個`, 15, 60);
+            ctx.fillText(`検出器: ${detectors.size}個`, 15, 75);
+            
+            // 時刻
+            const time = new Date().toLocaleTimeString();
+            ctx.fillStyle = '#666';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'right';
+            ctx.fillText(time, canvas.width - 15, 20);
+        }
+        
+        // アニメーション
+        function startAnimation() {
+            function animate() {
+                animationTime = Date.now();
+                render();
+                animationId = requestAnimationFrame(animate);
+            }
+            animate();
+        }
+        
+        // ステップ制御
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepVisualization();
+                updateUI();
+                interactions++;
+            } else {
+                alert('🎉 チュートリアル完了！\n\n放射線遮蔽計算の基本をマスターしました。');
+            }
+        }
+        
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepVisualization();
+                updateUI();
+            }
+        }
+        
+        function resetTutorial() {
+            if (confirm('チュートリアルをリセットしますか？')) {
+                currentStep = 1;
+                clearAll();
+                updateUI();
+                interactions = 0;
+            }
+        }
+        
+        // ステップ可視化更新
+        function updateStepVisualization() {
+            clearAll();
+            
+            if (currentStep >= 1) {
+                addSource('co60_medical', [0, 0, 0], 'Co60', 37000000000);
+            }
+            if (currentStep >= 2) {
+                addShield('concrete_shield', 'SPH', {center: [0, 0, 0], radius: 50}, 'CONCRETE');
+            }
+            if (currentStep >= 3) {
+                addDetector('dose_survey', [60, 0, 0], [{edge: [10, 0, 0], number: 10}]);
+            }
+            if (currentStep >= 4) {
+                addShield('lead_inner_shield', 'SPH', {center: [0, 0, 0], radius: 18}, 'LEAD');
+            }
+            
+            updateObjectInfo();
+        }
+        
+        // UI更新
+        function updateUI() {
+            const step = steps[currentStep - 1];
+            
+            // プログレス
+            document.getElementById('progressFill').style.width = (currentStep / totalSteps * 100) + '%';
+            document.getElementById('progressText').textContent = `Step ${currentStep} / ${totalSteps}`;
+            
+            // コンテンツ
+            document.getElementById('contentArea').innerHTML = `
+                <div class="step-content">
+                    <h2>${step.title}</h2>
+                    <div class="step-description">
+                        <p><strong>概要:</strong> ${step.content}</p>
+                        <p><strong>学習目標:</strong> ${step.learning}</p>
+                    </div>
+                </div>
+            `;
+            
+            // JSON
+            document.getElementById('jsonInput').value = step.json;
+            
+            // ボタン
+            document.getElementById('prevBtn').disabled = currentStep === 1;
+            document.getElementById('nextBtn').textContent = currentStep === totalSteps ? '🎉 完了' : '次のステップ ➡️';
+        }
+        
+        // JSON操作
+        function executeJson() {
+            const input = document.getElementById('jsonInput').value;
+            const output = document.getElementById('jsonOutput');
+            interactions++;
+            
+            try {
+                const request = JSON.parse(input);
+                
+                // シミュレーション応答
+                const response = {
+                    jsonrpc: "2.0",
+                    result: {
+                        success: true,
+                        message: `${request.method} が正常に実行されました`,
+                        timestamp: new Date().toISOString()
+                    },
+                    id: request.id
+                };
+                
+                output.textContent = JSON.stringify(response, null, 2);
+                output.className = 'output-content success';
+                
+                // 可視化更新
+                updateFromJson(request);
+                
+            } catch (error) {
+                const errorResponse = {
+                    jsonrpc: "2.0",
+                    error: { code: -32700, message: "Parse error", data: error.message },
+                    id: null
+                };
+                
+                output.textContent = JSON.stringify(errorResponse, null, 2);
+                output.className = 'output-content error';
+            }
+        }
+        
+        function validateJson() {
+            const input = document.getElementById('jsonInput').value;
+            const output = document.getElementById('jsonOutput');
+            
+            try {
+                const parsed = JSON.parse(input);
+                const validations = [];
+                
+                if (parsed.jsonrpc !== "2.0") validations.push("⚠️ JSON-RPC 2.0ではありません");
+                if (!parsed.method) validations.push("❌ methodが指定されていません");
+                if (parsed.id === undefined) validations.push("⚠️ idが指定されていません");
+                
+                if (validations.length === 0) {
+                    output.textContent = '✅ JSON形式は正しいです';
+                    output.className = 'output-content success';
+                } else {
+                    output.textContent = '検証結果:\n' + validations.join('\n');
+                    output.className = 'output-content error';
+                }
+            } catch (error) {
+                output.textContent = `❌ JSON構文エラー: ${error.message}`;
+                output.className = 'output-content error';
+            }
+        }
+        
+        function clearJson() {
+            document.getElementById('jsonInput').value = '';
+            document.getElementById('jsonOutput').textContent = '結果がここに表示されます...';
+            document.getElementById('jsonOutput').className = 'output-content';
+        }
+        
+        // JSON->可視化
+        function updateFromJson(request) {
+            const method = request.method;
+            const params = request.params;
+            
+            try {
+                if (method === 'pokerinput_proposeSource' && params) {
+                    const pos = params.position ? params.position.split(' ').map(Number) : [0, 0, 0];
+                    const nuclide = params.inventory?.[0]?.nuclide || 'Unknown';
+                    const activity = params.inventory?.[0]?.radioactivity || 0;
+                    addSource(params.name, pos, nuclide, activity);
+                    
+                } else if (method === 'pokerinput_proposeBody' && params) {
+                    const center = params.center ? params.center.split(' ').map(Number) : [0, 0, 0];
+                    const material = params.name?.includes('lead') ? 'LEAD' : 'CONCRETE';
+                    addShield(params.name, params.type, {center, radius: params.radius}, material);
+                    
+                } else if (method === 'pokerinput_proposeDetector' && params) {
+                    const origin = params.origin ? params.origin.split(' ').map(Number) : [0, 0, 0];
+                    addDetector(params.name, origin, params.grid || []);
+                }
+                
+                updateObjectInfo();
+                
+            } catch (error) {
+                showMessage(`更新エラー: ${error.message}`);
+            }
+        }
+        
+        // ユーティリティ
+        function showMessage(text) {
+            document.getElementById('vizMessage').textContent = text;
+            setTimeout(() => {
+                document.getElementById('vizMessage').textContent = '✅ 可視化システム動作中';
+            }, 3000);
+        }
+        
+        function updateObjectInfo() {
+            document.getElementById('objectInfo').textContent = 
+                `オブジェクト: 線源 ${sources.size}個 | 遮蔽体 ${shields.size}個 | 検出器 ${detectors.size}個`;
+        }
+        
+        function showInfo() {
+            const info = `=== システム情報 ===
+
+📊 現在の状態:
+• モード: 2D可視化
+• Canvas: 600x400
+• アニメーション: 動作中
+
+🎨 オブジェクト:
+• 線源: ${sources.size}個
+• 遮蔽体: ${shields.size}個
+• 検出器: ${detectors.size}個
+
+📚 学習進捗:
+• ステップ: ${currentStep}/${totalSteps}
+• インタラクション: ${interactions}回
+
+💡 操作方法:
+• テスト描画: サンプル表示
+• 実行: JSON-RPCコマンド実行
+• 次のステップ: 段階的学習進行`;
+            
+            alert(info);
+        }
+        
+        // 初期化実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+        
+        console.log('✅ 即座動作版システム読み込み完了');
+    </script>
+</body>
+</html>

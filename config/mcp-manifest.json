@@ -1,8 +1,8 @@
 {
   "name": "pokerinput-mcp-final",
   "version": "4.2.0",
-  "description": "本番環境対応 YAML-based radiation shielding calculation input file management tool with complete MCP support and production features - 23メソッド完全実装",
-  "author": "yoshihiro hirao",
+  "description": "YAML-based radiation shielding calculation input file management tool with complete MCP support",
+  "author": "Yoshihiro Hirao",
   "license": "ISC",
   "homepage": "http://localhost:3020",
   "repository": {
@@ -13,7 +13,7 @@
   "server": {
     "name": "pokerinput-mcp-final-server",
     "version": "4.2.0",
-    "description": "Complete MCP Server v4.2 - 23メソッド完全実装版（Detector系メソッド追加完了）",
+    "description": "Complete MCP Server v4.2 - 23メソッド完全実装版",
     "port": 3020,
     "features": [
       "23メソッド完全実装",
@@ -70,7 +70,9 @@
     "unit_section_integrity": "guaranteed",
     "default_value_compensation": true,
     "load_time_validation": true,
-    "rollback_support": true
+    "rollback_support": true,
+    "atmosphere_zone_management": true,
+    "reserved_keyword_validation": true
   },
   "tools": [
     {
@@ -81,7 +83,7 @@
         "properties": {
         "name": {
           "$ref": "#/definitions/object_name",
-          "description": "立体の一意な名前"
+          "description": "立体の一意な名前（ATMOSPHERE は予約語のため使用不可）"
         },
         "type": {
           "type": "string",
@@ -130,7 +132,16 @@
         },
         "expression": {
           "type": "string",
-          "description": "組み合わせ式 - CMB用"
+          "description": "集合演算式（CMB用）\n構文: 立体名を演算子で結合\n演算子: + (UNION), - (DIFFERENCE), & (INTERSECTION)\n優先順位: 括弧()で指定可能\n⚠️ 制約: 演算式で参照する立体名は事前に定義済みである必要があります\n例: 'cylinder + sphere', 'box1 - (cylinder & sphere)', '(body1 + body2) - body3'",
+          "minLength": 3,
+          "maxLength": 500,
+          "pattern": "^[a-zA-Z0-9_()\\s+\\-&]+$",
+          "constraint": "referenced_bodies_must_exist",
+          "validation": {
+            "body_existence_check": "演算式内の全立体名存在確認",
+            "circular_reference_check": "循環参照の検出",
+            "error_on_missing": "-32031エラー"
+          }
         },
         "normal": {
           "$ref": "#/definitions/coordinate_string",
@@ -305,7 +316,7 @@
         },
         "density": {
           "$ref": "#/definitions/density_value",
-          "description": "密度 (g/cm³)"
+          "description": "密度 (g/cm³) - VOID材料では指定禁止、その他材料では必須"
         }
         },
         "required": ["body_name", "material"],
@@ -347,7 +358,7 @@
         "properties": {
         "body_name": {
           "type": "string",
-          "description": "削除するゾーンの立体名",
+          "description": "削除するゾーンの立体名（ATMOSPHERE は削除不可）",
           "pattern": "^[a-zA-Z0-9_]+$",
           "maxLength": 50
         }
@@ -1311,7 +1322,7 @@
     },
     "supported_material": {
       "type": "string",
-      "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"],
+      "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"],
       "description": "サポートされる材料名"
     },
     "supported_length_unit": {
@@ -1347,8 +1358,39 @@
     }
   },
   "validation_enhanced": {
+    "atmosphere_zone_constraints": {
+      "reserved_name": "ATMOSPHERE",
+      "uniqueness": "必須かつ唯一",
+      "role": "complement_zone",
+      "physical_meaning": "他のゾーンで定義されていない全領域を表現",
+      "naming_restrictions": {
+        "forbidden_as_body_name": true,
+        "reserved_keyword": true,
+        "case_sensitive": true
+      },
+      "zone_section_requirements": {
+        "mandatory_presence": true,
+        "quantity": "exactly_one",
+        "deletion": "prohibited",
+        "material_assignment": "required"
+      },
+      "material_constraints": {
+        "VOID": {
+          "density_specification": "prohibited",
+          "reason": "真空は密度を持たないため記載不要"
+        },
+        "non_void_materials": {
+          "density_specification": "mandatory",
+          "reason": "すべての物理材料は密度値が必須"
+        }
+      }
+    },
     "material_constraints": {
-      "supported_materials": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil"]
+      "supported_materials": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"],
+      "density_validation": {
+        "VOID": "density パラメータ指定禁止",
+        "other_materials": "density パラメータ必須"
+      }
     },
     "nuclide_constraints": {
       "format": "element_symbol_mass_number_concatenated",
@@ -1416,6 +1458,27 @@
       "CMB": {
         "required_parameters": ["name", "type", "expression"]
       }
+    },
+    "cmb_expression_constraints": {
+      "body_reference_validation": {
+        "requirement": "all_referenced_bodies_must_exist",
+        "check_timing": "before_cmb_creation",
+        "error_handling": "detailed_error_with_missing_body_list",
+        "circular_reference_detection": true,
+        "max_reference_depth": 10
+      },
+      "expression_parsing": {
+        "supported_operators": ["+", "-", "&"],
+        "forbidden_operators": ["*", "/", "^", "|"],
+        "bracket_validation": "balanced_parentheses_required",
+        "body_name_extraction": "regex_based_parsing",
+        "operator_precedence": "left_to_right_with_parentheses"
+      },
+      "physical_validation": {
+        "void_material_warning": "VOIDと物理材料の組み合わせ時に警告",
+        "geometric_feasibility": "重複しない立体のINTERSECTION警告",
+        "result_volume_check": "演算結果が空集合の可能性チェック"
+      }
     }
   },
   "error_handling": {
@@ -1442,7 +1505,21 @@
       "-32019": "Invalid name format - hyphens not allowed",
       "-32020": "Name contains forbidden characters",
       "-32021": "Invalid nuclide format - use concatenated format (e.g., Cs137)",
-      "-32022": "Nuclide contains forbidden hyphen"
+      "-32022": "Nuclide contains forbidden hyphen",
+      "-32023": "ATMOSPHERE is reserved - cannot be used as body name",
+      "-32024": "ATMOSPHERE zone is mandatory and cannot be deleted",
+      "-32025": "Multiple ATMOSPHERE zones not allowed",
+      "-32026": "ATMOSPHERE zone must exist in zone section",
+      "-32027": "ATMOSPHERE zone material assignment required",
+      "-32028": "Density cannot be specified for VOID material",
+      "-32029": "Density must be specified for non-VOID materials",
+      "-32030": "Missing required density parameter for physical material",
+      "-32031": "Referenced body not found in CMB expression",
+      "-32032": "Circular reference detected in CMB expression",
+      "-32033": "Invalid operator in CMB expression",
+      "-32034": "Unbalanced parentheses in CMB expression",
+      "-32035": "Empty CMB expression",
+      "-32036": "CMB expression too complex (max depth exceeded)"
     }
   },
   "data_files": {
