@@ -425,12 +425,12 @@ export const sourceTools = [
         cutoff_rate: {
           type: 'number',
           description: 'カットオフレート',
-          minimum: 0,
+          minimum: 0.0001,
           maximum: 1,
-          default: 0.01
+          default: 0.0001
         }
       },
-      required: ['name', 'type', 'inventory']
+      required: ['name', 'type', 'inventory', 'cutoff_rate']
     }
   },
   {

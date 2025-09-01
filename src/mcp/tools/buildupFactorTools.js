@@ -21,7 +21,7 @@ export const buildupFactorTools = [
           default: false
         }
       },
-      required: ['material']
+      required: ['material', 'use_slant_correction', 'use_finite_medium_correction']
     }
   },
   {

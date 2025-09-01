@@ -6,6 +6,7 @@ import { createBuildupFactorHandlers } from './buildupFactorHandlers.js';
 import { createSourceHandlers } from './sourceHandlers.js';
 import { createDetectorHandlers } from './detectorHandlers.js';
 import { createUnitHandlers } from './unitHandlers.js';
+import { createCalculationHandlers } from './calculationHandlers.js';
 
 export function createAllHandlers(taskManager) {
   return {
@@ -29,6 +30,9 @@ export function createAllHandlers(taskManager) {
     
     // 単位操作
     ...createUnitHandlers(taskManager),
+    
+    // 計算操作
+    ...createCalculationHandlers(taskManager),
     
     // 共通操作
     async applyChanges(args) {

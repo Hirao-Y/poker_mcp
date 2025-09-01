@@ -2,6 +2,7 @@
 import { z } from 'zod';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
+import { CMBValidator } from './CMBValidator.js';
 
 export class PhysicsValidator {
   static getMaterialProperties() {
@@ -115,7 +116,7 @@ export class PhysicsValidator {
     return true;
   }
 
-  static validateGeometry(type, params) {
+  static validateGeometry(type, params, context = null) {
     const geometryDef = this.GEOMETRY_TYPES[type];
     
     if (!geometryDef) {
@@ -152,7 +153,7 @@ export class PhysicsValidator {
         this.validateBox(params);
         break;
       case 'CMB':
-        this.validateCombination(params);
+        this.validateCombination(params, context);
         break;
       case 'TOR':
         this.validateTorus(params);
@@ -234,7 +235,7 @@ export class PhysicsValidator {
     }
   }
 
-  static validateCombination(params) {
+  static validateCombination(params, context = null) {
     if (!params.expression || typeof params.expression !== 'string' || params.expression.trim() === '') {
       throw new ValidationError(
         'CMB型にはexpressionパラメータが必要です',
@@ -242,15 +243,13 @@ export class PhysicsValidator {
         params.expression
       );
     }
-    
-    // 簡単な式の構文チェック（英数字、スペース、演算子のみ）
-    const allowedChars = /^[a-zA-Z0-9\s+\-*()&|!]+$/;
-    if (!allowedChars.test(params.expression)) {
-      throw new ValidationError(
-        'CMBのexpressionに不正な文字が含まれています',
-        'expression',
-        params.expression
-      );
+
+    // 新しいCMBValidatorを使用した詳細バリデーション
+    if (context && context.name && context.existingBodies) {
+      CMBValidator.validateExpression(params.expression, context.name, context.existingBodies);
+    } else {
+      // contextがない場合は基本チェックのみ
+      CMBValidator.validateBasicSyntax(params.expression);
     }
   }
 

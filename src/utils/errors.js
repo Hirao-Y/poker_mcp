@@ -25,3 +25,13 @@ export class DataError extends Error {
     this.code = 'DATA_ERROR';
   }
 }
+
+export class CalculationError extends Error {
+  constructor(message, type = 'CALCULATION_ERROR', context = {}, mcpErrorCode = null) {
+    super(message);
+    this.name = 'CalculationError';
+    this.code = type;
+    this.context = context;
+    this.mcpErrorCode = mcpErrorCode;
+  }
+}

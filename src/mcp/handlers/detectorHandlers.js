@@ -7,13 +7,19 @@ export function createDetectorHandlers(taskManager) {
     // 検出器提案
     async proposeDetector(args) {
       try {
-        const { name, origin, grid = [], show_path_trace = false, transform = null } = args;
+        const { name, origin, grid = [], show_path_trace, transform = null } = args;
+        
+        // show_path_trace が必須になったことを確認
+        if (show_path_trace === undefined) {
+          throw new ValidationError('show_path_trace は必須パラメータです');
+        }
         
         logger.info('検出器提案開始', { 
           name, 
           origin, 
           gridCount: grid.length,
-          hasTransform: !!transform 
+          hasTransform: !!transform,
+          pathTrace: show_path_trace
         });
         
         // DetectorValidator統合のため、TaskManagerの包括的検証を利用

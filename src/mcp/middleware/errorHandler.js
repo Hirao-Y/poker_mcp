@@ -1,6 +1,6 @@
 // mcp/middleware/errorHandler.js
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
-import { ValidationError, PhysicsError } from '../../utils/errors.js';
+import { ValidationError, PhysicsError, CalculationError } from '../../utils/errors.js';
 import { PokerMcpError } from '../../utils/mcpErrors.js';
 import { logger } from '../../utils/logger.js';
 
@@ -10,6 +10,12 @@ export function handleMcpError(error, context = {}) {
   // PokerMcpErrorは既に適切なMcpErrorなのでそのまま返す
   if (error instanceof PokerMcpError) {
     return error;
+  }
+  
+  // CalculationError の処理 - MCPエラーコードが指定されている場合は使用
+  if (error instanceof CalculationError) {
+    const mcpCode = error.mcpErrorCode || ErrorCode.InternalError;
+    return new McpError(mcpCode, `計算エラー: ${error.message}`, error.context);
   }
   
   // 従来の ValidationError を適切な PokerMcpError に変換

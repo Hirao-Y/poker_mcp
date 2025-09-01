@@ -8,6 +8,7 @@ import { SourceValidator } from '../validators/SourceValidator.js';
 import { DetectorValidator } from '../validators/DetectorValidator.js';
 import { UnitValidator } from '../validators/UnitValidator.js';
 import { PokerMcpError } from '../utils/mcpErrors.js';
+import { MaterialAlternatives } from '../utils/MaterialAlternatives.js';
 import { logger } from '../utils/logger.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
@@ -604,6 +605,13 @@ export class TaskManager {
     return this.data.body?.find(b => b.name === name);
   }
 
+  // 全立体の取得（pending changes含む）
+  getAllBodies() {
+    const currentBodies = this.data.body || [];
+    const pendingBodies = this.dataManager.getPendingBodies() || [];
+    return [...currentBodies, ...pendingBodies];
+  }
+
   findZoneByBodyName(bodyName) {
     return this.data.zone?.find(z => z.body_name === bodyName);
   }
@@ -676,11 +684,8 @@ export class TaskManager {
       logger.warn('体積線源にdivisionがありません', { name: sourceData.name, type: sourceData.type });
     }
     
-    // cutoff_rateのデフォルト値設定
-    if (normalized.cutoff_rate === undefined) {
-      normalized.cutoff_rate = 0.01;
-      logger.info('cutoff_rateデフォルト値設定', { cutoff_rate: normalized.cutoff_rate });
-    }
+    // cutoff_rateは必須パラメータのため、デフォルト値設定を削除
+    // バリデーション時に必須チェックが実行される
     
     logger.info('Sourceデータ正規化完了', {
       name: normalized.name,
@@ -741,10 +746,8 @@ export class TaskManager {
       }));
     }
     
-    // show_path_traceのデフォルト値設定
-    if (normalized.show_path_trace === undefined) {
-      normalized.show_path_trace = false;
-    }
+    // show_path_traceは必須パラメータのため、デフォルト値設定を削除
+    // バリデーション時に必須チェックが実行される
     
     // transformが空文字列の場合は削除
     if (!normalized.transform) {
@@ -816,7 +819,23 @@ export class TaskManager {
       // 入力バリデーション
       this.validateBodyName(name);
       ManifestValidator.validateBodyType(type, 'type');
-      PhysicsValidator.validateGeometry(type, options);
+      
+      // CMB専用処理
+      if (type === 'CMB') {
+        // 現在の立体一覧を取得（pending changesも含む）
+        const existingBodies = this.getAllBodies();
+        
+        // CMB専用バリデーション（context付き）
+        const context = {
+          name,
+          existingBodies,
+          allBodies: existingBodies
+        };
+        PhysicsValidator.validateGeometry(type, options, context);
+      } else {
+        // 通常のバリデーション
+        PhysicsValidator.validateGeometry(type, options);
+      }
       
       // Transform参照チェック
       if (options.transform) {
@@ -983,6 +1002,14 @@ export class TaskManager {
     if (existingZone) {
       throw new ValidationError(`ゾーン ${body_name} は既に存在します`, 'body_name', body_name);
     }
+    
+    // 材料代替機能付きバリデーション
+    try {
+      MaterialAlternatives.validateMaterialWithSuggestion(material, 'material');
+    } catch (error) {
+      // MaterialAlternativesからのエラーをValidationErrorに変換
+      throw new ValidationError(error.message, 'material', material);
+    }
   }
 
   async deleteZone(body_name) {
@@ -1101,6 +1128,14 @@ export class TaskManager {
   async proposeBuildupFactor(material, useSlantCorrection, useFiniteMediumCorrection) {
     try {
       if (!material) throw new ValidationError('materialは必須です', 'material', material);
+      
+      // 材料代替機能付きバリデーション
+      try {
+        MaterialAlternatives.validateMaterialWithSuggestion(material, 'material');
+      } catch (error) {
+        // MaterialAlternativesからのエラーをValidationErrorに変換
+        throw new ValidationError(error.message, 'material', material);
+      }
       
       await this.dataManager.addPendingChange({
         action: 'proposeBuildupFactor',

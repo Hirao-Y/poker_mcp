@@ -12,6 +12,27 @@ export function createBodyHandlers(taskManager) {
         return { success: true, message: result };
       } catch (error) {
         logger.error('proposeBodyハンドラーエラー', { args, error: error.message });
+        
+        // CMB専用エラーハンドリング
+        if (error.message && (
+          error.message.includes('演算式で参照されている立体が存在しません') ||
+          error.message.includes('循環参照が検出されました') ||
+          error.message.includes('禁止された演算子') ||
+          error.message.includes('括弧が正しく対応していません') ||
+          error.message.includes('CMB演算式は空にできません') ||
+          error.message.includes('参照が複雑すぎます')
+        )) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              field: error.field || 'expression',
+              value: error.value,
+              type: 'CMB_VALIDATION_ERROR'
+            }
+          };
+        }
+        
         throw error;
       }
     },

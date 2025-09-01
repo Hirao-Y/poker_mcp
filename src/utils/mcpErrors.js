@@ -37,6 +37,15 @@ export class PokerMcpError extends McpError {
   static VOID_DENSITY_PROHIBITED = -32028;
   static NON_VOID_DENSITY_REQUIRED = -32029;
   static MISSING_DENSITY_PARAMETER = -32030;
+  
+  // 新しい必須パラメータエラーコード（Phase 1追加）
+  static CUTOFF_RATE_REQUIRED = -32050;
+  static SHOW_PATH_TRACE_REQUIRED = -32051;
+  static USE_SLANT_CORRECTION_REQUIRED = -32052;
+  static USE_FINITE_MEDIUM_CORRECTION_REQUIRED = -32053;
+  
+  // 材料制約強化エラーコード
+  static UNSUPPORTED_MATERIAL_WITH_SUGGESTION = -32054;
 
   constructor(code, message, field = null, value = null) {
     super(code, message);
@@ -152,6 +161,28 @@ export class PokerMcpError extends McpError {
   static missingDensityParameter(material) {
     return new PokerMcpError(this.MISSING_DENSITY_PARAMETER, `Missing required density parameter for physical material: ${material}`, 'density', undefined);
   }
+
+  // 新しい必須パラメータエラー用便利メソッド
+  static cutoffRateRequired() {
+    return new PokerMcpError(this.CUTOFF_RATE_REQUIRED, 'cutoff_rate parameter is required for radiation shielding calculation accuracy', 'cutoff_rate', undefined);
+  }
+
+  static showPathTraceRequired() {
+    return new PokerMcpError(this.SHOW_PATH_TRACE_REQUIRED, 'show_path_trace parameter is required for radiation path analysis', 'show_path_trace', undefined);
+  }
+
+  static useSlantCorrectionRequired() {
+    return new PokerMcpError(this.USE_SLANT_CORRECTION_REQUIRED, 'use_slant_correction parameter is required for high-precision radiation shielding calculation', 'use_slant_correction', undefined);
+  }
+
+  static useFiniteMediumCorrectionRequired() {
+    return new PokerMcpError(this.USE_FINITE_MEDIUM_CORRECTION_REQUIRED, 'use_finite_medium_correction parameter is required for accurate boundary effect analysis', 'use_finite_medium_correction', undefined);
+  }
+
+  static unsupportedMaterialWithSuggestion(material, suggestedSubstitute, supportedList = []) {
+    const message = `Unsupported material '${material}'. Did you mean '${suggestedSubstitute}'? Supported materials: ${supportedList.join(', ')}`;
+    return new PokerMcpError(this.UNSUPPORTED_MATERIAL_WITH_SUGGESTION, message, 'material', material);
+  }
 }
 
 // エラーコードマッピング（逆引き用）
@@ -185,5 +216,10 @@ export const ERROR_CODE_MAP = {
   [-32027]: 'ATMOSPHERE zone material assignment required',
   [-32028]: 'Density cannot be specified for VOID material',
   [-32029]: 'Density must be specified for non-VOID materials',
-  [-32030]: 'Missing required density parameter for physical material'
+  [-32030]: 'Missing required density parameter for physical material',
+  [-32050]: 'cutoff_rate parameter is required',
+  [-32051]: 'show_path_trace parameter is required',
+  [-32052]: 'use_slant_correction parameter is required',
+  [-32053]: 'use_finite_medium_correction parameter is required',
+  [-32054]: 'Unsupported material with suggestion'
 };

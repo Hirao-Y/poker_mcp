@@ -391,7 +391,7 @@
           "note": "薄い遮蔽体での精度向上"
         }
         },
-        "required": ["material"],
+        "required": ["material", "use_slant_correction", "use_finite_medium_correction"],
         "additionalProperties": false
       },
       "validation": {
@@ -809,11 +809,10 @@
         },
         "cutoff_rate": {
           "$ref": "#/definitions/cutoff_rate",
-          "description": "放出率カットオフ",
-          "default": 0.0001
+          "description": "放出率カットオフ"
         }
         },
-        "required": ["name", "type", "inventory"],
+        "required": ["name", "type", "inventory", "cutoff_rate"],
         "additionalProperties": false
       }
     },
@@ -1047,7 +1046,7 @@
           "default": false
         }
         },
-        "required": ["name", "origin"],
+        "required": ["name", "origin", "show_path_trace"],
         "additionalProperties": false
       },
       "validation": {
@@ -1227,6 +1226,72 @@
         "completeness_maintained": "4つのキー完全性維持",
         "unit_value_validation": "単位選択肢の妥当性チェック"
       }
+    },
+    {
+      "name": "pokerinput_executeCalculation",
+      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "yaml_file": {
+            "type": "string",
+            "description": "計算に使用するYAMLファイル名（拡張子.yamlを含む）",
+            "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+            "examples": ["shielding_model.yaml", "hospital_design.yaml", "reactor_shield.yaml"]
+          },
+          "summary_options": {
+            "type": "object",
+            "description": "サマリー出力オプション（注意: show_source_dataとshow_total_doseの少なくとも一方は必須です）",
+            "properties": {
+              "show_parameters": {
+                "type": "boolean",
+                "description": "入力パラメータをサマリーに表示（-pオプション）",
+                "default": false
+              },
+              "show_source_data": {
+                "type": "boolean",
+                "description": "各線源による計算データ及び線量をサマリーに表示（-sオプション）",
+                "default": true
+              },
+              "show_total_dose": {
+                "type": "boolean", 
+                "description": "各検出器に対する全線源からの総和線量をサマリーに表示（-tオプション）",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "output_files": {
+            "type": "object",
+            "description": "出力ファイル指定（全てYAML形式）",
+            "properties": {
+              "summary_file": {
+                "type": "string",
+                "description": "出力サマリーファイル名（-oオプション、YAML形式）",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+                "examples": ["calculation_summary.yaml", "shield_analysis.yml", "result_summary.yaml"]
+              },
+              "dose_file": {
+                "type": "string", 
+                "description": "線量ファイル名（-dオプション、YAML形式）",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+                "examples": ["dose_rates.yaml", "detector_doses.yml", "dose_distribution.yaml"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["yaml_file"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "yaml_file_existence": "YAMLファイルの存在確認",
+        "yaml_syntax_check": "YAML構文の妥当性確認", 
+        "completeness_check": "必要セクション（body, zone, source等）の存在確認",
+        "poker_cui_availability": "poker_cuiコマンドの利用可能性確認",
+        "summary_options_validation": "show_source_dataまたはshow_total_doseの少なくとも一方が必須。両方がfalseの場合はエラー、またはshow_total_doseを強制的にtrueに設定",
+        "output_directory_check": "出力ディレクトリの作成可能性確認"
+      }
     }
   ],
   "definitions": {
@@ -1269,6 +1334,7 @@
       "type": "number",
       "minimum": 0.0001,
       "maximum": 1.0,
+      "default": 0.0001,
       "description": "カットオフ率"
     },
     "buildup_index": {
@@ -1519,7 +1585,18 @@
       "-32033": "Invalid operator in CMB expression",
       "-32034": "Unbalanced parentheses in CMB expression",
       "-32035": "Empty CMB expression",
-      "-32036": "CMB expression too complex (max depth exceeded)"
+      "-32036": "CMB expression too complex (max depth exceeded)",
+      "-32040": "YAML file not found",
+      "-32041": "Invalid YAML syntax", 
+      "-32042": "poker_cui command not available",
+      "-32043": "Calculation execution failed",
+      "-32044": "Calculation timeout",
+      "-32045": "Insufficient system resources",
+      "-32046": "Output directory access denied",
+      "-32047": "Invalid calculation parameters",
+      "-32048": "Calculation cancelled by user",
+      "-32049": "Results parsing failed",
+      "-32054": "Unsupported material with suggestion"
     }
   },
   "data_files": {
@@ -1539,5 +1616,98 @@
     "graceful_shutdown": true,
     "memory_management": "optimized",
     "performance": "production_ready"
+  },
+  "material_alternatives": {
+    "description": "一般的な材料名からサポート材料への代替マッピング（放射線遮蔽計算用）",
+    "STEEL": { "substitute": "Iron", "note": "一般的な構造用鋼はIronで代替" },
+    "STAINLESS_STEEL": { "substitute": "Iron", "note": "ステンレス鋼もIronで代替可能" },
+    "BRASS": { "substitute": "Copper", "note": "真鍮はCopperで代替" },
+    "BRONZE": { "substitute": "Copper", "note": "青銅はCopperで代替" },
+    "GLASS": { "substitute": "PyrexGlass", "note": "一般ガラスはPyrexGlassで代替" },
+    "PLASTIC": { "substitute": "AcrylicResin", "note": "一般プラスチックはAcrylicResinで代替" },
+    "EARTH": { "substitute": "Soil", "note": "土壌はSoilで代替" },
+    "VOID_SPACE": { "substitute": "VOID", "note": "真空空間はVOIDで代替" },
+    "ATMOSPHERE": { "substitute": "Air", "note": "大気はAirで代替" }
+  },
+  "material_constraints": {
+    "description": "材料制約と物理的特性情報（放射線遮蔽研究用）",
+    "strict_validation": true,
+    "allow_alternatives": true,
+    "error_with_suggestions": true,
+    "supported_materials": {
+      "Carbon": { 
+        "typical_use": "グラファイト、炭素繊維構造材",
+        "shielding_properties": "軽量遮蔽材"
+      },
+      "Concrete": { 
+        "typical_use": "建築構造、放射線遮蔽壁",
+        "shielding_properties": "汎用遮蔽材、経済的"
+      },
+      "Iron": { 
+        "typical_use": "鉄鋼構造、STEEL代替",
+        "shielding_properties": "中重量遮蔽材、構造材兼用"
+      },
+      "Lead": { 
+        "typical_use": "高効率遮蔽材",
+        "shielding_properties": "高密度γ線遮蔽材"
+      },
+      "Aluminum": { 
+        "typical_use": "軽量構造材",
+        "shielding_properties": "軽量遮蔽材、耐食性"
+      },
+      "Copper": { 
+        "typical_use": "BRASS/BRONZE代替",
+        "shielding_properties": "中重量遮蔽材、導電性"
+      },
+      "Tungsten": { 
+        "typical_use": "超高密度遮蔽材",
+        "shielding_properties": "最高密度遮蔽材"
+      },
+      "Air": { 
+        "typical_use": "大気、ATMOSPHERE代替",
+        "shielding_properties": "透明媒体"
+      },
+      "Water": { 
+        "typical_use": "中性子減速材、冷却材",
+        "shielding_properties": "中性子遮蔽材"
+      },
+      "PyrexGlass": { 
+        "typical_use": "GLASS代替、耐熱ガラス",
+        "shielding_properties": "透明遮蔽材"
+      },
+      "AcrylicResin": { 
+        "typical_use": "PLASTIC代替、透明樹脂",
+        "shielding_properties": "軽量透明遮蔽材"
+      },
+      "Polyethylene": { 
+        "typical_use": "中性子遮蔽樹脂",
+        "shielding_properties": "中性子減速・遮蔽材"
+      },
+      "Soil": { 
+        "typical_use": "EARTH代替、土壌遮蔽",
+        "shielding_properties": "天然遮蔽材"
+      },
+      "VOID": { 
+        "density_specification": "prohibited",
+        "typical_use": "真空、VOID_SPACE代替",
+        "shielding_properties": "非遮蔽領域"
+      }
+    }
+  },
+  "error_handling_enhancement": {
+    "description": "材料制約エラーの改善されたハンドリング",
+    "unsupported_material_error": {
+      "code": -32054,
+      "message_template": "Unsupported material '{material}'. Did you mean '{suggested_substitute}'? Supported materials: {supported_list}",
+      "suggestion_logic": "fuzzy_match_with_alternatives"
+    },
+    "material_suggestion_examples": {
+      "STEEL": "Use 'Iron' instead of 'STEEL' for structural steel approximation",
+      "STAINLESS": "Use 'Iron' instead of 'STAINLESS' for stainless steel approximation", 
+      "BRASS": "Use 'Copper' instead of 'BRASS' for brass alloy approximation",
+      "GLASS": "Use 'PyrexGlass' instead of 'GLASS' for glass material approximation",
+      "PLASTIC": "Use 'AcrylicResin' instead of 'PLASTIC' for plastic material approximation",
+      "EARTH": "Use 'Soil' instead of 'EARTH' for earth material approximation"
+    }
   }
 }

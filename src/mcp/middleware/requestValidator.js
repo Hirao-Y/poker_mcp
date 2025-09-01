@@ -1,5 +1,6 @@
 // mcp/middleware/requestValidator.js
 import { ValidationError } from '../../utils/errors.js';
+import { MaterialAlternatives } from '../../utils/MaterialAlternatives.js';
 
 export function validateBodyRequest(args) {
   if (!args.name || typeof args.name !== 'string') {
@@ -23,6 +24,14 @@ export function validateZoneRequest(args) {
   
   if (!args.material || typeof args.material !== 'string') {
     throw new ValidationError('材料名は必須です', 'material', args.material);
+  }
+  
+  // 材料代替機能付きバリデーション
+  try {
+    MaterialAlternatives.validateMaterialWithSuggestion(args.material, 'material');
+  } catch (error) {
+    // MaterialAlternativesからのエラーをValidationErrorに変換
+    throw new ValidationError(error.message, 'material', args.material);
   }
 }
 
@@ -53,6 +62,40 @@ export function validateSourceRequest(args) {
 export function validateBuildupFactorRequest(args) {
   if (!args.material || typeof args.material !== 'string') {
     throw new ValidationError('材料名は必須です', 'material', args.material);
+  }
+  
+  // スラント補正パラメータの必須チェック
+  if (args.use_slant_correction === undefined) {
+    throw new ValidationError(
+      'use_slant_correction parameter is required for high-precision radiation shielding calculation',
+      'use_slant_correction',
+      args.use_slant_correction
+    );
+  }
+  
+  if (typeof args.use_slant_correction !== 'boolean') {
+    throw new ValidationError(
+      'use_slant_correction must be boolean',
+      'use_slant_correction', 
+      args.use_slant_correction
+    );
+  }
+  
+  // 有限媒体補正パラメータの必須チェック
+  if (args.use_finite_medium_correction === undefined) {
+    throw new ValidationError(
+      'use_finite_medium_correction parameter is required for accurate boundary effect analysis',
+      'use_finite_medium_correction',
+      args.use_finite_medium_correction
+    );
+  }
+  
+  if (typeof args.use_finite_medium_correction !== 'boolean') {
+    throw new ValidationError(
+      'use_finite_medium_correction must be boolean',
+      'use_finite_medium_correction',
+      args.use_finite_medium_correction
+    );
   }
 }
 

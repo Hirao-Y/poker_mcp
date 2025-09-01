@@ -7,6 +7,7 @@ import { sourceTools } from './sourceTools.js';
 import { detectorTools } from './detectorTools.js';
 import { commonTools } from './commonTools.js';
 import { unitTools } from './unitTools.js';
+import { calculationTools } from './calculationTools.js';
 
 export const allTools = [
   ...bodyTools,
@@ -16,7 +17,8 @@ export const allTools = [
   ...sourceTools,
   ...detectorTools,
   ...commonTools,
-  ...unitTools
+  ...unitTools,
+  ...calculationTools
 ];
 
 export {
@@ -27,5 +29,6 @@ export {
   sourceTools,
   detectorTools,
   commonTools,
-  unitTools
+  unitTools,
+  calculationTools
 };

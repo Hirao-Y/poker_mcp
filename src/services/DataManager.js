@@ -209,6 +209,15 @@ export class SafeDataManager {
     logger.info('保留変更を追加しました', { action: change.action });
   }
 
+  // pending changesからbody情報を取得する新規メソッド
+  getPendingBodies() {
+    const pending = this.pendingChanges.filter(change => 
+      change.action === 'add_body' || change.action === 'update_body'
+    );
+    
+    return pending.map(change => change.data.body).filter(Boolean);
+  }
+
   async applyChanges() {
     if (this.pendingChanges.length === 0) {
       return '適用する変更がありません';
@@ -409,7 +418,7 @@ export class SafeDataManager {
             inventory: data.inventory
           };
           
-          // cutoff_rateの追加（デフォルト値処理）
+          // cutoff_rateの追加（必須パラメータ）
           if (data.cutoff_rate !== undefined) {
             sourceObject.cutoff_rate = data.cutoff_rate;
           }
@@ -488,7 +497,7 @@ export class SafeDataManager {
             name: data.name,
             origin: data.origin,
             grid: data.grid || [],
-            show_path_trace: data.show_path_trace || false
+            show_path_trace: data.show_path_trace  // 必須パラメータのためデフォルト値適用削除
           };
           
           // transformが指定されている場合は追加

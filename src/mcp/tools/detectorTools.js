@@ -53,7 +53,7 @@ export const detectorTools = [
           default: false
         }
       },
-      required: ['name', 'origin'],
+      required: ['name', 'origin', 'show_path_trace'],
       additionalProperties: false
     }
   },

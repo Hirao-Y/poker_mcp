@@ -1,5 +1,6 @@
 // validators/ManifestValidator.js
 // 最終的なエラー処理は呈出先で実装（循環依存解消のため）
+import { MaterialAlternatives } from '../utils/MaterialAlternatives.js';
 
 /**
  * マニフェスト仕様準拠バリデーター（循環依存解消版）
@@ -178,23 +179,15 @@ export class ManifestValidator {
     return true;
   }
 
-  // サポートされる材料の検証
+  // サポートされる材料の検証（代替提案機能付き）
   static validateSupportedMaterial(material, fieldName) {
-    const supportedMaterials = [
-      'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum', 
-      'Copper', 'Tungsten', 'Air', 'Water', 'PyrexGlass', 
-      'AcrylicResin', 'Polyethylene', 'Soil'
-    ];
-    
-    if (!supportedMaterials.includes(material)) {
-      throw PokerMcpError.validationError(
-        `${fieldName} must be one of supported materials: ${supportedMaterials.join(', ')}`,
-        fieldName,
-        material
-      );
+    // MaterialAlternativesクラスを使用して包括的なチェック
+    try {
+      return MaterialAlternatives.validateMaterialWithSuggestion(material, fieldName);
+    } catch (error) {
+      // エラーをそのまま再スロー（代替提案付きエラー含む）
+      throw error;
     }
-    
-    return true;
   }
 
   // 単位検証

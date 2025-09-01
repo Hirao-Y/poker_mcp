@@ -404,11 +404,16 @@ export class SourceValidator {
   }
 
   /**
-   * カットオフ率の検証
+   * カットオフ率の検証（必須パラメータ）
    */
   static validateCutoffRate(cutoff_rate) {
     if (cutoff_rate === undefined) {
-      return true; // オプショナル
+      throw PokerMcpError.validationError(
+        'cutoff_rate parameter is required for radiation shielding calculation accuracy',
+        'cutoff_rate',
+        cutoff_rate,
+        -32050
+      );
     }
     
     ManifestValidator.validateCutoffRate(cutoff_rate, 'cutoff_rate');

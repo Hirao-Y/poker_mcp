@@ -7,14 +7,15 @@ export function createBuildupFactorHandlers(taskManager) {
     async proposeBuildupFactor(args) {
       validateBuildupFactorRequest(args);
       
-      // デフォルト値を明示的に適用
-      const useSlantCorrection = args.use_slant_correction ?? false;
-      const useFiniteMediumCorrection = args.use_finite_medium_correction ?? false;
+      // 必須パラメータとして扱い
+      if (args.use_slant_correction === undefined || args.use_finite_medium_correction === undefined) {
+        throw new ValidationError('use_slant_correction と use_finite_medium_correction は必須パラメータです');
+      }
       
       const result = await taskManager.proposeBuildupFactor(
         args.material, 
-        useSlantCorrection, 
-        useFiniteMediumCorrection
+        args.use_slant_correction, 
+        args.use_finite_medium_correction
       );
       return { success: true, message: result };
     },

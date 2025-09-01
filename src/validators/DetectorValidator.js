@@ -60,8 +60,17 @@ export class DetectorValidator {
     
     ManifestValidator.validateCoordinateString(origin, 'origin');
     
-    // show_path_traceの検証
-    if (show_path_trace !== undefined && typeof show_path_trace !== 'boolean') {
+    // show_path_traceの検証（必須パラメータ）
+    if (show_path_trace === undefined) {
+      throw PokerMcpError.validationError(
+        'show_path_trace parameter is required for radiation path analysis',
+        'show_path_trace',
+        show_path_trace,
+        -32051
+      );
+    }
+    
+    if (typeof show_path_trace !== 'boolean') {
       throw PokerMcpError.validationError(
         'show_path_trace must be boolean',
         'show_path_trace',
