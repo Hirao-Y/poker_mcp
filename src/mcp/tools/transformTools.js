@@ -1,7 +1,7 @@
 // mcp/tools/transformTools.js
 export const transformTools = [
   {
-    name: 'pokerinput_proposeTransform',
+    name: 'poker_proposeTransform',
     description: '回転・移動変換を提案します',
     inputSchema: {
       type: 'object',
@@ -30,7 +30,7 @@ export const transformTools = [
     }
   },
   {
-    name: 'pokerinput_updateTransform',
+    name: 'poker_updateTransform',
     description: '既存変換の操作を更新します',
     inputSchema: {
       type: 'object',
@@ -57,7 +57,7 @@ export const transformTools = [
     }
   },
   {
-    name: 'pokerinput_deleteTransform',
+    name: 'poker_deleteTransform',
     description: '変換を削除します',
     inputSchema: {
       type: 'object',

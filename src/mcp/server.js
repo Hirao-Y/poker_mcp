@@ -9,11 +9,11 @@ import { safeExecute } from './middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
 export class PokerMcpServer {
-  constructor(yamlFile = 'tasks/pokerinputs.yaml', pendingFile = 'tasks/pending_changes.json') {
+  constructor(yamlFile = 'tasks/poker.yaml', pendingFile = 'tasks/pending_changes.json') {
     this.server = new Server(
       {
-        name: 'pokerinput-mcp-final',
-        version: '4.2.0',
+        name: 'poker-mcp',
+        version: '1.0.0',
       },
       {
         capabilities: {
@@ -46,7 +46,7 @@ export class PokerMcpServer {
         logger.info(`MCP Tool実行: ${name}`, { args });
         
         // ハンドラー名をツール名から生成（プレフィックス除去）
-        const handlerName = name.replace('pokerinput_', '');
+        const handlerName = name.replace('poker_', '');
         
         const handler = this.handlers[handlerName];
         if (!handler) {

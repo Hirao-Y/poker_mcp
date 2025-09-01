@@ -41,7 +41,7 @@ curl -s http://localhost:3020/health | jq '.pendingChanges'
 {
   "status": "healthy",
   "timestamp": "2025-08-21T12:30:15.123Z",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "uptime": 86400,
   "pendingChanges": 0,
   "features": {

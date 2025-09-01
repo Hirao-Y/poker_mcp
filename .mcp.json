@@ -1,6 +1,6 @@
 {
-  "name": "pokerinput-mcp-final",
-  "version": "4.2.0", 
+  "name": "poker-mcp",
+  "version": "1.0.0", 
   "description": "放射線遮蔽計算入力ファイル管理ツール",
   "url": "stdio://",
   "server": {

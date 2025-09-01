@@ -1,7 +1,7 @@
 // mcp/tools/buildupFactorTools.js
 export const buildupFactorTools = [
   {
-    name: 'pokerinput_proposeBuildupFactor',
+    name: 'poker_proposeBuildupFactor',
     description: 'ビルドアップ係数を提案します',
     inputSchema: {
       type: 'object',
@@ -25,7 +25,7 @@ export const buildupFactorTools = [
     }
   },
   {
-    name: 'pokerinput_updateBuildupFactor',
+    name: 'poker_updateBuildupFactor',
     description: '既存ビルドアップ係数の設定を更新します',
     inputSchema: {
       type: 'object',
@@ -47,7 +47,7 @@ export const buildupFactorTools = [
     }
   },
   {
-    name: 'pokerinput_deleteBuildupFactor',
+    name: 'poker_deleteBuildupFactor',
     description: 'ビルドアップ係数を削除します',
     inputSchema: {
       type: 'object',
@@ -61,7 +61,7 @@ export const buildupFactorTools = [
     }
   },
   {
-    name: 'pokerinput_changeOrderBuildupFactor',
+    name: 'poker_changeOrderBuildupFactor',
     description: 'ビルドアップ係数の順序を変更します',
     inputSchema: {
       type: 'object',

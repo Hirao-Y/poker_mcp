@@ -25,7 +25,7 @@
     }
   },
   {
-    name: 'pokerinput_deleteSource',
+    name: 'poker_deleteSource',
     description: '放射線源を削除します',
     inputSchema: {
       type: 'object',

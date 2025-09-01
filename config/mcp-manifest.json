@@ -1,18 +1,18 @@
 {
-  "name": "pokerinput-mcp-final",
-  "version": "4.2.0",
+  "name": "poker-mcp",
+  "version": "1.0.0",
   "description": "YAML-based radiation shielding calculation input file management tool with complete MCP support",
   "author": "Yoshihiro Hirao",
   "license": "ISC",
   "homepage": "http://localhost:3020",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Hirao-Y/pokerinput-mcp-final"
+    "url": "https://github.com/Hirao-Y/poker-mcp"
   },
-  "mcp_version": "4.2.0",
+  "mcp_version": "1.0.0",
   "server": {
-    "name": "pokerinput-mcp-final-server",
-    "version": "4.2.0",
+    "name": "poker-mcp-server",
+    "version": "1.0.0",
     "description": "Complete MCP Server v4.2 - 23メソッド完全実装版",
     "port": 3020,
     "features": [
@@ -76,7 +76,7 @@
   },
   "tools": [
     {
-      "name": "pokerinput_proposeBody",
+      "name": "poker_proposeBody",
       "description": "新しい3D立体を提案します（自動バックアップ付き）",
       "parameters": {
         "type": "object",
@@ -197,7 +197,7 @@
       }
     },
     {
-      "name": "pokerinput_updateBody",
+      "name": "poker_updateBody",
       "description": "既存立体のパラメータを更新します",
       "parameters": {
         "type": "object",
@@ -284,7 +284,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteBody",
+      "name": "poker_deleteBody",
       "description": "立体を削除します（依存関係チェック付き）",
       "parameters": {
         "type": "object",
@@ -301,7 +301,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeZone",
+      "name": "poker_proposeZone",
       "description": "材料ゾーンを提案します（物理検証付き）",
       "parameters": {
         "type": "object",
@@ -324,7 +324,7 @@
       }
     },
     {
-      "name": "pokerinput_updateZone",
+      "name": "poker_updateZone",
       "description": "既存ゾーンの材料や密度を更新します",
       "parameters": {
         "type": "object",
@@ -351,7 +351,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteZone",
+      "name": "poker_deleteZone",
       "description": "ゾーンを削除します（ATMOSPHERE以外）",
       "parameters": {
         "type": "object",
@@ -368,7 +368,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeBuildupFactor",
+      "name": "poker_proposeBuildupFactor",
       "description": "ビルドアップ係数を提案します（物理計算パラメータ付き）",
       "parameters": {
         "type": "object",
@@ -401,7 +401,7 @@
       }
     },
     {
-      "name": "pokerinput_updateBuildupFactor",
+      "name": "poker_updateBuildupFactor",
       "description": "既存ビルドアップ係数の設定を更新します（計算精度パラメータ変更）",
       "parameters": {
         "type": "object",
@@ -433,7 +433,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteBuildupFactor",
+      "name": "poker_deleteBuildupFactor",
       "description": "ビルドアップ係数を削除します（計算から除外）",
       "parameters": {
         "type": "object",
@@ -455,7 +455,7 @@
       }
     },
     {
-      "name": "pokerinput_changeOrderBuildupFactor",
+      "name": "poker_changeOrderBuildupFactor",
       "description": "ビルドアップ係数の計算順序を変更します（物理計算最適化）",
       "parameters": {
         "type": "object",
@@ -482,7 +482,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeTransform",
+      "name": "poker_proposeTransform",
       "description": "回転・移動変換を提案します（立体の幾何変換）",
       "parameters": {
         "type": "object",
@@ -529,7 +529,7 @@
       }
     },
     {
-      "name": "pokerinput_updateTransform",
+      "name": "poker_updateTransform",
       "description": "既存変換の操作を更新します（幾何変換の再設定）",
       "parameters": {
         "type": "object",
@@ -577,7 +577,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteTransform",
+      "name": "poker_deleteTransform",
       "description": "変換を削除します（依存関係チェック付き）",
       "parameters": {
         "type": "object",
@@ -602,7 +602,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeSource",
+      "name": "poker_proposeSource",
       "description": "新しい線源を提案します",
       "parameters": {
         "type": "object",
@@ -817,7 +817,7 @@
       }
     },
     {
-      "name": "pokerinput_updateSource",
+      "name": "poker_updateSource",
       "description": "既存線源のパラメータを更新します",
       "parameters": {
         "type": "object",
@@ -988,7 +988,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteSource",
+      "name": "poker_deleteSource",
       "description": "線源を削除します",
       "parameters": {
         "type": "object",
@@ -1005,7 +1005,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeDetector",
+      "name": "poker_proposeDetector",
       "description": "新しい検出器を提案します",
       "parameters": {
         "type": "object",
@@ -1056,7 +1056,7 @@
       }
     },
     {
-      "name": "pokerinput_updateDetector",
+      "name": "poker_updateDetector",
       "description": "既存検出器のパラメータを更新します",
       "parameters": {
         "type": "object",
@@ -1108,7 +1108,7 @@
       }
     },
     {
-      "name": "pokerinput_deleteDetector",
+      "name": "poker_deleteDetector",
       "description": "検出器を削除します",
       "parameters": {
         "type": "object",
@@ -1129,7 +1129,7 @@
       }
     },
     {
-      "name": "pokerinput_applyChanges",
+      "name": "poker_applyChanges",
       "description": "全ての保留中の変更を実際のYAMLファイルに適用します。自動的にバックアップが作成されます。",
       "parameters": {
         "type": "object",
@@ -1148,7 +1148,7 @@
       }
     },
     {
-      "name": "pokerinput_proposeUnit",
+      "name": "poker_proposeUnit",
       "description": "単位設定セクションを提案します（YAMLファイルに未存在の場合のみ）",
       "parameters": {
         "type": "object",
@@ -1184,7 +1184,7 @@
       }
     },
     {
-      "name": "pokerinput_getUnit",
+      "name": "poker_getUnit",
       "description": "現在の単位設定を取得します（4つのキーすべてを返却）",
       "parameters": {
         "type": "object",
@@ -1196,7 +1196,7 @@
       }
     },
     {
-      "name": "pokerinput_updateUnit",
+      "name": "poker_updateUnit",
       "description": "既存単位設定を更新します（部分更新だが4つのキーは常に維持）",
       "parameters": {
         "type": "object",
@@ -1228,7 +1228,7 @@
       }
     },
     {
-      "name": "pokerinput_executeCalculation",
+      "name": "poker_executeCalculation",
       "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します",
       "parameters": {
         "type": "object",
@@ -1600,7 +1600,7 @@
     }
   },
   "data_files": {
-    "input": "tasks/pokerinputs.yaml",
+    "input": "tasks/poker.yaml",
     "pending_changes": "tasks/pending_changes.json",
     "backup_directory": "backups/"
   },

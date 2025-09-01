@@ -39,7 +39,7 @@ export class SafeDataManager {
   // 新規メソッド: 初期ファイルの確実な配置
   async ensureInitialFiles() {
     try {
-      // pokerinputs.yamlの初期配置
+      // poker.yamlの初期配置
       await this.ensureYamlFile();
       
       // pending_changes.jsonの初期配置  

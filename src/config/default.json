@@ -8,7 +8,7 @@
     }
   },
   "data": {
-    "yamlFile": "tasks/pokerinputs.yaml",
+    "yamlFile": "tasks/poker.yaml",
     "pendingFile": "tasks/pending_changes.json",
     "backupDir": "backups",
     "maxBackups": 10

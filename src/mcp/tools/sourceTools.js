@@ -1,7 +1,7 @@
 // mcp/tools/sourceTools.js - Enhanced with oneOf geometry structure (マニフェスト完全対応版)
 export const sourceTools = [
   {
-    name: 'pokerinput_proposeSource',
+    name: 'poker_proposeSource',
     description: '新しい線源を提案します',
     inputSchema: {
       type: 'object',
@@ -434,7 +434,7 @@ export const sourceTools = [
     }
   },
   {
-    name: 'pokerinput_updateSource',
+    name: 'poker_updateSource',
     description: '既存放射線源のパラメータを更新します',
     inputSchema: {
       type: 'object',
@@ -710,7 +710,7 @@ export const sourceTools = [
     }
   },
   {
-    name: 'pokerinput_deleteSource',
+    name: 'poker_deleteSource',
     description: '放射線源を削除します',
     inputSchema: {
       type: 'object',

@@ -1,7 +1,7 @@
 // mcp/tools/unitTools.js
 export const unitTools = [
   {
-    name: 'pokerinput_proposeUnit',
+    name: 'poker_proposeUnit',
     description: '単位設定セクションを提案します（YAMLファイルに未存在の場合のみ）- 4キー完全性保証',
     inputSchema: {
       type: 'object',
@@ -38,7 +38,7 @@ export const unitTools = [
     }
   },
   {
-    name: 'pokerinput_getUnit',
+    name: 'poker_getUnit',
     description: '現在の単位設定を取得します（4つのキーすべてを返却）- 完全性保証',
     inputSchema: {
       type: 'object',
@@ -50,7 +50,7 @@ export const unitTools = [
     }
   },
   {
-    name: 'pokerinput_updateUnit',
+    name: 'poker_updateUnit',
     description: '既存単位設定を更新します（部分更新可能だが4つのキーは常に維持）- 完全性保証',
     inputSchema: {
       type: 'object',
@@ -83,7 +83,7 @@ export const unitTools = [
     }
   },
   {
-    name: 'pokerinput_validateUnitIntegrity',
+    name: 'poker_validateUnitIntegrity',
     description: '単位系の4キー完全性と物理的整合性を包括検証します',
     inputSchema: {
       type: 'object',
@@ -105,7 +105,7 @@ export const unitTools = [
     }
   },
   {
-    name: 'pokerinput_analyzeUnitConversion',
+    name: 'poker_analyzeUnitConversion',
     description: '異なる単位系間の変換係数を分析・計算します',
     inputSchema: {
       type: 'object',

@@ -137,7 +137,7 @@ export function createRestApiRoutes(taskManager) {
     res.json({
       success: true,
       data: {
-        version: '2.0.0',
+        version: '1.0.0',
         status: 'running',
         bodies_count: taskManager.data.body?.length || 0,
         zones_count: taskManager.data.zone?.length || 0,

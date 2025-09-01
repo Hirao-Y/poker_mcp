@@ -190,7 +190,7 @@ curl http://localhost:3020/health
 # 期待される応答
 {
   "status": "healthy",
-  "version": "4.0.0",
+  "version": "1.0.0",
   "features": {
     "sourceManagement": "complete",
     "updateSource": true,

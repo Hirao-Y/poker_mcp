@@ -1,7 +1,7 @@
 // mcp/tools/zoneTools.js
 export const zoneTools = [
   {
-    name: 'pokerinput_proposeZone',
+    name: 'poker_proposeZone',
     description: '材料ゾーンを提案します（物理検証付き）',
     inputSchema: {
       type: 'object',
@@ -25,7 +25,7 @@ export const zoneTools = [
     }
   },
   {
-    name: 'pokerinput_updateZone',
+    name: 'poker_updateZone',
     description: '既存ゾーンの材料や密度を更新します',
     inputSchema: {
       type: 'object',
@@ -49,7 +49,7 @@ export const zoneTools = [
     }
   },
   {
-    name: 'pokerinput_deleteZone',
+    name: 'poker_deleteZone',
     description: 'ゾーンを削除します（ATMOSPHERE以外）',
     inputSchema: {
       type: 'object',

@@ -1,10 +1,10 @@
-# PokerInput MCP Server 🚀
+# Poker MCP Server 🚀
 
 YAML-based input file management tool for radiation-shielding calculation code POKER
 
 ## 📋 クイック情報
 
-- **バージョン**: 4.2.0 (23メソッド完全実装版)
+- **バージョン**: 1.0.0 (安定版リリース)
 - **ステータス**: ✅ **世界クラス品質達成**
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **マニフェスト**: `config/mcp-manifest.json`
@@ -51,16 +51,6 @@ curl http://localhost:3020/health
 | **📏 Unit** | 3個 | 単位設定管理（CU+) |
 | **🔧 System** | 1個 | 変更適用・制御 |
 
-### 🎯 **検出器操作 (新機能)**
-- ✅ **proposeDetector**: 検出器の提案
-- ✅ **updateDetector**: 検出器パラメータ更新 *(実装済み)*
-- ✅ **deleteDetector**: 検出器の安全削除 *(実装済み)*
-
-### 📏 **単位操作 (新機能)**
-- ✅ **proposeUnit**: 単位設定の提案 (4キー完全性保証)
-- ✅ **getUnit**: 現在の単位設定取得
-- ✅ **updateUnit**: 単位設定更新 (4キー維持)
-
 ## 📁 プロジェクト構造
 
 ```
@@ -85,7 +75,7 @@ curl -X POST http://localhost:3020/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_proposeBody",
+    "method": "poker_proposeBody",
     "params": {
       "name": "sphere1",
       "type": "SPH", 
@@ -102,7 +92,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_proposeSource",
+    "method": "poker_proposeSource",
     "params": {
       "name": "cs137_source",
       "type": "POINT",
@@ -117,7 +107,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_updateSource",
+    "method": "poker_updateSource",
     "params": {
       "name": "cs137_source",
       "inventory": [{"nuclide": "Cs137", "radioactivity": 2.5e10}]
@@ -132,7 +122,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_proposeDetector",
+    "method": "poker_proposeDetector",
     "params": {
       "name": "detector1",
       "origin": "0 0 100",
@@ -149,7 +139,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_updateDetector",
+    "method": "poker_updateDetector",
     "params": {
       "name": "detector1",
       "origin": "0 0 150",
@@ -165,7 +155,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_getUnit",
+    "method": "poker_getUnit",
     "params": {},
     "id": 6
   }'
@@ -174,7 +164,7 @@ curl -X POST http://localhost:3020/mcp \
 curl -X POST http://localhost:3020/mcp \
   -d '{
     "jsonrpc": "2.0",
-    "method": "pokerinput_updateUnit",
+    "method": "poker_updateUnit",
     "params": {
       "length": "mm",
       "angle": "degree"
@@ -186,7 +176,7 @@ curl -X POST http://localhost:3020/mcp \
 ### 変更適用
 ```bash
 curl -X POST http://localhost:3020/mcp \
-  -d '{"jsonrpc":"2.0","method":"pokerinput_applyChanges","params":{},"id":8}'
+  -d '{"jsonrpc":"2.0","method":"poker_applyChanges","params":{},"id":8}'
 ```
 
 ## 🌟 品質ステートメント

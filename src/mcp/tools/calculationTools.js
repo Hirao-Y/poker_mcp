@@ -1,7 +1,7 @@
 // mcp/tools/calculationTools.js
 export const calculationTools = [
   {
-    name: 'pokerinput_executeCalculation',
+    name: 'poker_executeCalculation',
     description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します',
     inputSchema: {
       type: 'object',

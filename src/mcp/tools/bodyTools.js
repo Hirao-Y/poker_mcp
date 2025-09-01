@@ -1,7 +1,7 @@
 // mcp/tools/bodyTools.js
 export const bodyTools = [
   {
-    name: 'pokerinput_proposeBody',
+    name: 'poker_proposeBody',
     description: '新しい3D立体を提案します（自動バックアップ付き）',
     inputSchema: {
       type: 'object',
@@ -128,7 +128,7 @@ export const bodyTools = [
     }
   },
   {
-    name: 'pokerinput_updateBody',
+    name: 'poker_updateBody',
     description: '既存立体のパラメータを更新します',
     inputSchema: {
       type: 'object',
@@ -169,7 +169,7 @@ export const bodyTools = [
     }
   },
   {
-    name: 'pokerinput_deleteBody',
+    name: 'poker_deleteBody',
     description: '立体を削除します（依存関係チェック付き）',
     inputSchema: {
       type: 'object',

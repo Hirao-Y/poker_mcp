@@ -1,7 +1,7 @@
 // mcp/tools/detectorTools.js
 export const detectorTools = [
   {
-    name: 'pokerinput_proposeDetector',
+    name: 'poker_proposeDetector',
     description: '新しい検出器を提案します',
     inputSchema: {
       type: 'object',
@@ -59,7 +59,7 @@ export const detectorTools = [
   },
   
   {
-    name: 'pokerinput_updateDetector',
+    name: 'poker_updateDetector',
     description: '既存検出器のパラメータを更新します',
     inputSchema: {
       type: 'object',
@@ -114,7 +114,7 @@ export const detectorTools = [
   },
   
   {
-    name: 'pokerinput_deleteDetector',
+    name: 'poker_deleteDetector',
     description: '検出器を削除します',
     inputSchema: {
       type: 'object',

@@ -1,7 +1,7 @@
 // mcp/tools/commonTools.js
 export const commonTools = [
   {
-    name: 'pokerinput_applyChanges',
+    name: 'poker_applyChanges',
     description: '保留中の全変更を実際のYAMLファイルに適用します（自動バックアップ実行）',
     inputSchema: {
       type: 'object',

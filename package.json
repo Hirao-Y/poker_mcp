@@ -1,17 +1,16 @@
 {
-  "name": "pokerinput-mcp-final",
-  "version": "4.0.0",
+  "name": "poker-mcp",
+  "version": "1.0.0",
   "description": "YAML-based radiation shielding calculation input file management tool with MCP support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
   "bin": {
-    "pokerinput-mcp": "./src/mcp_server_stdio_v4.js",
     "poker-mcp": "./src/mcp_server_stdio_v4.js"
   },
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
     "dev": "nodemon src/mcp_server_stdio_v4.js",
-    "prepare": "echo 'NPX ready: npx pokerinput-mcp-final'"
+    "prepare": "echo 'NPX ready: npx poker-mcp'"
   },
   "keywords": [
     "mcp",
