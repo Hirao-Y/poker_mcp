@@ -1,7 +1,0 @@
-unit: {length: cm, angle: radian, density: g/cm3, radioactivity: Bq}
-transform: []
-body: []
-zone: [{body_name: ATMOSPHERE, material: VOID}]
-buildup_factor: []
-source: []
-detector: []

@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚛️ 実験室遮蔽設計実践ガイド - Poker MCP Level 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2.3em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+            justify-content: center;
+        }
+
+        .tab-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #2c3e50;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 3px solid #6c5ce7;
+            padding-bottom: 10px;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #6c5ce7, #a29bfe);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(108, 92, 231, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.8em; }
+            .navigation-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        header class="header">
+            <h1>⚛️ 実験室遮蔽設計実践ガイド</h1>
+            <p>RI実験室・管理区域・貯蔵施設の実用設計技術</p>
+            <p><strong>Level 3:</strong> 使用許可申請 | 運用管理計画 | 実務即応</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('overview')">📋 概要</button>
+            <button class="tab-button" onclick="showTab('ri-lab-design')">🧪 RI実験室設計</button>
+            <button class="tab-button" onclick="showTab('storage-design')">📦 貯蔵施設設計</button>
+            <button class="tab-button" onclick="showTab('waste-design')">🗑️ 廃棄物施設</button>
+            <button class="tab-button" onclick="showTab('permit-application')">📜 使用許可申請</button>
+            <button class="tab-button" onclick="showTab('operation-management')">🔧 運用管理</button>
+        </nav>
+
+        <!-- 概要タブ -->
+        <div id="overview" class="tab-content active">
+            <div class="section-card">
+                <h2 class="section-title">🎯 実験室遮蔽設計の実務重要性</h2>
+                <p>大学・研究機関でのRI利用施設設計は、使用許可取得から日常運用まで、実用的かつ効率的なアプローチが求められます。法規制対応と経済性を両立し、研究活動を最大限支援する施設づくりが重要です。</p>
+                
+                <h3>🏛️ 対象施設と利用形態</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li><strong>大学RI実験室</strong>：生化学・分子生物学・医学研究</li>
+                    <li><strong>企業研究所</strong>：薬品開発・材料研究・品質管理</li>
+                    <li><strong>医療機関</strong>：院内製剤・研究部門</li>
+                    <li><strong>検査機関</strong>：環境測定・食品検査・分析業務</li>
+                </ul>
+
+                <h3>⚖️ 関連法規制の体系（実験室特化）</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4>🔹 放射性同位元素等規制法（RI規制法）</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>使用許可申請（許可使用・届出使用）</li>
+                        <li>施設基準（第14条の7～第14条の12）</li>
+                        <li>使用基準・管理基準の遵守</li>
+                        <li>線量限度：放射線業務従事者20mSv/年、公衆1mSv/年</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 15px;">🔹 関連法規・基準</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>労働安全衛生法（電離放射線障害防止規則）</li>
+                        <li>IAEA安全基準・ICRP勧告</li>
+                        <li>日本アイソトープ協会ガイドライン</li>
+                    </ul>
+                </div>
+
+                <h3>💼 実験室設計の重要考慮事項</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>🛡️ 安全性・法規制適合</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>放射線防護の最適化</li>
+                            <li>汚染拡散防止</li>
+                            <li>緊急時対応体制</li>
+                            <li>定期検査対応</li>
+                        </ul>
+                    </div>
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
+                        <h4>💡 研究効率・利便性</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>実験動線の最適化</li>
+                            <li>設備の使いやすさ</li>
+                            <li>将来拡張への対応</li>
+                            <li>メンテナンス性確保</li>
+                        </ul>
+                    </div>
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                        <h4>🔧 経済性・運用効率</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>建設・改修コスト最小化</li>
+                            <li>運用コストの最適化</li>
+                            <li>人的資源の効率活用</li>
+                            <li>エネルギー効率の考慮</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-card">
+                <h2 class="section-title">📋 本モジュールの実用学習内容</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="background: linear-gradient(135deg, #74b9ff, #0984e3); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🧪 RI実験室設計</h4>
+                        <p>非密封・密封線源対応、汚染管理、動線計画の完全設計</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fd79a8, #e84393); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📦 貯蔵施設設計</h4>
+                        <p>線源保管・廃棄物保管、セキュリティ、管理効率の統合</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🗑️ 廃棄物施設</h4>
+                        <p>分別・減衰保管・処理、排水排気、最終処分対応</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fdcb6e, #e17055); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📜 使用許可申請</h4>
+                        <p>申請書作成・添付書類・審査対応・変更届の完全実務</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🔧 運用管理</h4>
+                        <p>日常管理・定期点検・記録管理・法定報告の実践</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RI実験室設計タブ -->
+        <div id="ri-lab-design" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🧪 RI実験室設計実践</h2>
+                
+                <h3>🔬 RI実験室の分類と特徴</h3>
+                <div style="background: #f0f8ff; border: 2px solid #4169e1; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                    <h4>📊 使用形態による分類</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h5>🧪 非密封線源実験室</h5>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>主要核種</strong>：³²P、³⁵S、¹²⁵I、¹⁴C</li>
+                                <li><strong>用途</strong>：標識化合物、トレーサー実験</li>
+                                <li><strong>特徴</strong>：汚染リスク、排気・排水対策必須</li>
+                                <li><strong>設備</strong>：ドラフト、シンク、汚染検査</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h5>🔒 密封線源実験室</h5>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>主要核種</strong>：⁶⁰Co、¹³⁷Cs、²⁴¹Am</li>
+                                <li><strong>用途</strong>：照射実験、標準線源</li>
+                                <li><strong>特徴</strong>：外部被ばく主体、遮蔽重要</li>
+                                <li><strong>設備</strong>：遮蔽容器、照射装置、線量計</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🏗️ 実験室設計の基本原則</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>🌊 汚染拡散防止</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>実験室内での完結</li>
+                            <li>表面材料の選択（除染容易）</li>
+                            <li>陰圧維持・排気システム</li>
+                            <li>出入口でのゾーニング</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                        <h4>🛡️ 被ばく低減化</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>時間・距離・遮蔽の最適化</li>
+                            <li>作業動線の効率化</li>
+                            <li>自動化・遠隔操作の導入</li>
+                            <li>個人防護具の整備</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <h4>📋 管理・記録システム</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>入退室管理システム</li>
+                            <li>線源管理・在庫追跡</li>
+                            <li>作業記録・被ばく記録</li>
+                            <li>定期点検・校正記録</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>📐 遮蔽計算の実践例</h3>
+                <div style="background: #f1f8e9; border: 1px solid #4caf50; padding: 20px; border-radius: 10px;">
+                    <h4>🧮 ³²P（β線）実験室の設計例</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="padding: 10px; text-align: left;">項目</th>
+                                <th style="padding: 10px; text-align: left;">仕様・数値</th>
+                                <th style="padding: 10px; text-align: left;">根拠・注意点</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">最大使用量</td>
+                                <td style="padding: 10px;">37 MBq (1 mCi)</td>
+                                <td style="padding: 10px;">実験規模に応じた設定</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">β線エネルギー</td>
+                                <td style="padding: 10px;">最大1.71 MeV</td>
+                                <td style="padding: 10px;">飛程：アクリル約8mm</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">作業台遮蔽</td>
+                                <td style="padding: 10px;">アクリル20mm</td>
+                                <td style="padding: 10px;">十分な遮蔽厚確保</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">排気能力</td>
+                                <td style="padding: 10px;">毎時10回以上</td>
+                                <td style="padding: 10px;">汚染拡散防止</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 15px;">⚛️ ⁶⁰Co（γ線）実験室の設計例</h4>
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <strong>使用条件：</strong>線源強度 3.7 GBq、実験時間2時間/日<br>
+                        <strong>設計目標：</strong>隣接区域で週1.5μSv以下<br>
+                        <strong>遮蔽計算：</strong><br>
+                        • 距離2mでの線量率：約90 μSv/h<br>
+                        • 必要減衰率：1/60 → 鉛当量約35mm<br>
+                        <strong>設計仕様：</strong>壁 鉛ボード40mm、扉 鉛当量40mm
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用許可申請タブ -->
+        <div id="permit-application" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">📜 RI使用許可申請実務</h2>
+                
+                <h3>📋 申請の種類と適用基準</h3>
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>🔓 許可使用</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>対象</strong>：下限数量以上の使用</li>
+                                <li><strong>審査</strong>：原子力規制委員会</li>
+                                <li><strong>期間</strong>：標準6ヶ月</li>
+                                <li><strong>有効期限</strong>：5年（更新可能）</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>📄 届出使用</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>対象</strong>：下限数量未満の使用</li>
+                                <li><strong>審査</strong>：形式的審査のみ</li>
+                                <li><strong>期間</strong>：標準1ヶ月</li>
+                                <li><strong>有効期限</strong>：制限なし</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📝 申請書作成の実践プロセス</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                    <div style="background: linear-gradient(135deg, #4fc3f7, #29b6f6); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📊 Phase 1: 事前準備</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>使用計画の詳細策定</li>
+                            <li>施設設計図面作成</li>
+                            <li>遮蔽計算・安全評価</li>
+                            <li>管理体制の整備</li>
+                        </ul>
+                        <div style="margin-top: 10px; font-weight: bold;">期間: 2-3ヶ月</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #66bb6a, #4caf50); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📋 Phase 2: 書類作成</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>申請書本体の記載</li>
+                            <li>添付書類の整備</li>
+                            <li>技術的書面の作成</li>
+                            <li>内部査読・校正</li>
+                        </ul>
+                        <div style="margin-top: 10px; font-weight: bold;">期間: 1-2ヶ月</div>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #ffb74d, #ffa726); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📤 Phase 3: 提出・審査</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>原子力規制委員会提出</li>
+                            <li>審査官との面談対応</li>
+                            <li>補正・追加説明</li>
+                            <li>許可証受領</li>
+                        </ul>
+                        <div style="margin-top: 10px; font-weight: bold;">期間: 標準6ヶ月</div>
+                    </div>
+                </div>
+
+                <h3>✅ 申請書類のチェックリスト</h3>
+                <div style="background: #e8f4fd; border: 2px solid #2196f3; padding: 20px; border-radius: 10px;">
+                    <h4>📋 必須添付書類（RI許可使用）</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div>
+                            <h5>🏗️ 施設関連書類</h5>
+                            <ul style="margin-left: 20px;">
+                                <li>工場・事業所の概要</li>
+                                <li>使用施設の構造設備図面</li>
+                                <li>貯蔵施設の構造設備図面</li>
+                                <li>廃棄施設の構造設備図面</li>
+                                <li>遮蔽計算書</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h5>👥 管理体制関連</h5>
+                            <ul style="margin-left: 20px;">
+                                <li>放射線取扱主任者の選任</li>
+                                <li>放射線障害予防規程</li>
+                                <li>教育訓練計画</li>
+                                <li>健康診断計画</li>
+                                <li>個人被ばく線量管理計画</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>💡 申請成功のポイント</h3>
+                <div style="background: #f1f8e9; border: 1px solid #4caf50; padding: 20px; border-radius: 10px;">
+                    <h4>🎯 審査官視点での重要ポイント</h4>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li><strong>法令適合性</strong>：施設基準・使用基準の完全遵守</li>
+                        <li><strong>安全確保</strong>：ALARA原則に基づく設計</li>
+                        <li><strong>実現可能性</strong>：計画の具体性・実行性</li>
+                        <li><strong>継続性</strong>：長期にわたる管理体制</li>
+                    </ul>
+                    
+                    <h4>⚠️ よくある審査指摘事項</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>遮蔽計算の前提条件が不明確</li>
+                        <li>管理区域境界の設定が不適切</li>
+                        <li>廃棄物管理計画の具体性不足</li>
+                        <li>緊急時対応計画の不備</li>
+                        <li>教育訓練内容の具体性不足</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 貯蔵施設設計タブ -->
+        <div id="storage-design" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">📦 貯蔵施設設計実践</h2>
+                
+                <h3>🏗️ 貯蔵施設の分類と設計要件</h3>
+                <div style="background: #f0f8ff; border: 2px solid #1e90ff; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>🧪 非密封線源貯蔵設備</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>貯蔵量</strong>：最大使用数量の3ヶ月分</li>
+                                <li><strong>構造</strong>：鉛・鉄製遮蔽容器</li>
+                                <li><strong>管理</strong>：施錠・立入制限・在庫管理</li>
+                                <li><strong>換気</strong>：漏洩時の汚染拡散防止</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>🔒 密封線源貯蔵設備</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>強度</strong>：地震・衝撃に対する耐性</li>
+                                <li><strong>遮蔽</strong>：線源強度に応じた適切遮蔽</li>
+                                <li><strong>セキュリティ</strong>：盗取・紛失防止</li>
+                                <li><strong>識別</strong>：個別識別・追跡システム</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🔢 遮蔽計算の実用例</h3>
+                <div style="background: #f1f8e9; border: 1px solid #4caf50; padding: 20px; border-radius: 10px;">
+                    <h4>💿 密封線源貯蔵庫の設計例</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="padding: 10px; text-align: left;">線源</th>
+                                <th style="padding: 10px; text-align: left;">放射能</th>
+                                <th style="padding: 10px; text-align: left;">必要遮蔽厚</th>
+                                <th style="padding: 10px; text-align: left;">設計仕様</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">⁶⁰Co線源</td>
+                                <td style="padding: 10px;">3.7 GBq</td>
+                                <td style="padding: 10px;">鉛35mm</td>
+                                <td style="padding: 10px;">鉛当量40mm</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">¹³⁷Cs線源</td>
+                                <td style="padding: 10px;">1.85 GBq</td>
+                                <td style="padding: 10px;">鉛25mm</td>
+                                <td style="padding: 10px;">鉛当量30mm</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">²⁴¹Am線源</td>
+                                <td style="padding: 10px;">370 MBq</td>
+                                <td style="padding: 10px;">鉛1mm</td>
+                                <td style="padding: 10px;">鉛当量2mm</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 15px;">🏗️ 設計考慮事項</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>複数線源の配置</strong>：相互の放射線影響を考慮</li>
+                        <li><strong>作業者の被ばく</strong>：出し入れ時の時間短縮</li>
+                        <li><strong>遮蔽計算</strong>：最大貯蔵時の線量評価</li>
+                        <li><strong>将来拡張</strong>：線源増加への対応</li>
+                    </ul>
+                </div>
+
+                <h3>🔐 セキュリティと管理システム</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                        <h4>🔒 物理的セキュリティ</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>二重施錠システム</li>
+                            <li>監視カメラ・警報装置</li>
+                            <li>入退室記録システム</li>
+                            <li>緊急時通報システム</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <h4>📋 在庫管理システム</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>RFID・バーコード管理</li>
+                            <li>リアルタイム在庫追跡</li>
+                            <li>減衰計算・有効期限</li>
+                            <li>法定帳簿との連携</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
+                        <h4>⚠️ 緊急時対応</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>漏洩・破損時の対応</li>
+                            <li>盗取・紛失時の通報</li>
+                            <li>自然災害時の安全確保</li>
+                            <li>復旧・点検プロトコル</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 廃棄物施設タブ -->
+        <div id="waste-design" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🗑️ RI廃棄物施設設計実践</h2>
+                
+                <h3>♻️ RI廃棄物の分類と処理フロー</h3>
+                <div style="background: #fff8e1; border-left: 4px solid #ff9800; padding: 15px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>🧪 可燃物廃棄物</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>対象</strong>：ペーパータオル、手袋、プラスチック</li>
+                                <li><strong>処理</strong>：減衰保管→焼却→埋設処分</li>
+                                <li><strong>容器</strong>：200L・400Lドラム缶</li>
+                                <li><strong>期間</strong>：10半減期減衰保管</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>⚗️ 不燃物廃棄物</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>対象</strong>：ガラス器具、金属類、コンクリート</li>
+                                <li><strong>処理</strong>：減衰保管→圧縮→埋設処分</li>
+                                <li><strong>容器</strong>：専用コンテナ・ドラム缶</li>
+                                <li><strong>期間</strong>：核種に応じた減衰保管</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 8px;">
+                            <h4>💧 液体廃棄物</h4>
+                            <ul style="margin-left: 15px;">
+                                <li><strong>対象</strong>：実験廃液、洗浄液、有機溶媒</li>
+                                <li><strong>処理</strong>：固化・蒸発濃縮→固化体化</li>
+                                <li><strong>容器</strong>：専用液体容器・固化体容器</li>
+                                <li><strong>処理</strong>：前処理→減衰→最終処分</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>🏗️ 保管廃棄設備の設計要件</h3>
+                <div style="background: #e8f4fd; border: 2px solid #2196f3; padding: 20px; border-radius: 10px;">
+                    <h4>📏 法定基準（RI規制法施行規則第14条の11）</h4>
+                    <ul style="margin-left: 20px; margin-bottom: 15px;">
+                        <li><strong>容量</strong>：3ヶ月間発生量の貯蔵能力</li>
+                        <li><strong>遮蔽</strong>：境界で法定限度以下</li>
+                        <li><strong>漏洩防止</strong>：二重構造・液体回収</li>
+                        <li><strong>換気</strong>：汚染拡散防止・排気浄化</li>
+                        <li><strong>識別</strong>：廃棄物種別・放射能明示</li>
+                    </ul>
+                    
+                    <h4>🎯 実用設計のポイント</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>分別保管</strong>：核種・物性別の効率的配置</li>
+                        <li><strong>作業性</strong>：運搬・積み上げの効率化</li>
+                        <li><strong>拡張性</strong>：将来の廃棄物量増加対応</li>
+                        <li><strong>コスト効率</strong>：集荷・処理費用の最適化</li>
+                    </ul>
+                </div>
+
+                <h3>📊 減衰保管計画の実践</h3>
+                <div style="background: #f1f8e9; border: 1px solid #4caf50; padding: 20px; border-radius: 10px;">
+                    <h4>⏱️ 主要核種の減衰保管期間</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="padding: 10px; text-align: left;">核種</th>
+                                <th style="padding: 10px; text-align: left;">半減期</th>
+                                <th style="padding: 10px; text-align: left;">10半減期</th>
+                                <th style="padding: 10px; text-align: left;">実用保管期間</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">³²P</td>
+                                <td style="padding: 10px;">14.3日</td>
+                                <td style="padding: 10px;">143日</td>
+                                <td style="padding: 10px;">6ヶ月</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">³⁵S</td>
+                                <td style="padding: 10px;">87.5日</td>
+                                <td style="padding: 10px;">875日</td>
+                                <td style="padding: 10px;">3年</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">¹²⁵I</td>
+                                <td style="padding: 10px;">60.1日</td>
+                                <td style="padding: 10px;">601日</td>
+                                <td style="padding: 10px;">2年</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">¹⁴C</td>
+                                <td style="padding: 10px;">5,730年</td>
+                                <td style="padding: 10px;">57,300年</td>
+                                <td style="padding: 10px;">永続保管→処分</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <h4 style="margin-top: 15px;">📋 効率的な保管管理</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div style="background: #f0f8ff; padding: 15px; border-radius: 8px;">
+                            <h5>📅 保管計画</h5>
+                            <ul style="margin-left: 15px;">
+                                <li>核種別保管エリア</li>
+                                <li>減衰期間カレンダー</li>
+                                <li>処分スケジュール</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px;">
+                            <h5>📊 在庫管理</h5>
+                            <ul style="margin-left: 15px;">
+                                <li>放射能減衰計算</li>
+                                <li>保管容量監視</li>
+                                <li>処分適期通知</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                            <h5>💰 コスト管理</h5>
+                            <ul style="margin-left: 15px;">
+                                <li>集荷費用最適化</li>
+                                <li>減衰による費用削減</li>
+                                <li>処分時期の調整</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 運用管理タブ -->
+        <div id="operation-management" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🔧 RI施設運用管理実践</h2>
+                
+                <h3>📊 日常管理業務の体系</h3>
+                <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 20px; border-radius: 15px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>📅 日常管理</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>入退室管理・記録</li>
+                                <li>線源受払・在庫確認</li>
+                                <li>個人被ばく線量管理</li>
+                                <li>汚染検査・除染作業</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>🔍 定期点検</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>測定器の校正・点検</li>
+                                <li>施設・設備の点検</li>
+                                <li>排気・排水性能確認</li>
+                                <li>緊急設備の動作確認</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>📋 法定報告</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>放射線管理状況報告</li>
+                                <li>個人被ばく線量報告</li>
+                                <li>事故・トラブル報告</li>
+                                <li>定期確認結果報告</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📈 効率的な運用のコツ</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>🔄 自動化・省力化</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>ICカード入退室システム</li>
+                            <li>在庫管理システム</li>
+                            <li>線量記録の電子化</li>
+                            <li>定期点検チェックリスト</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                        <h4>👥 人材育成・体制</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>主任者・管理者の複数化</li>
+                            <li>定期的な教育訓練</li>
+                            <li>外部研修への参加</li>
+                            <li>ノウハウの文書化</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons">
+            <a href="level3_medical_shielding.html" class="nav-button">
+                ← 前: 医療施設遮蔽設計
+            </a>
+            <a href="level3_main_guide.html" class="nav-button">
+                メインガイドに戻る →
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // タブ切り替え機能
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

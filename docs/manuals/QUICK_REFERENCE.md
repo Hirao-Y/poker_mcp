@@ -9,7 +9,7 @@
 
 ## 📖 第1章: コマンド・API早見表
 
-### 🔷 1.1 立体作成コマンド（全9タイプ）
+### 🔷 1.1 立体作成コマンド（全10タイプ完全対応）
 
 #### **SPH（球体）- 点線源遮蔽用**
 ```yaml
@@ -19,6 +19,10 @@ type: "SPH"
 center: "0 0 0"        # 中心座標 [cm]
 radius: 50.0           # 半径 [cm]
 transform: "move_up"   # 変換名（オプション）
+
+# Claude指示例
+「球体遮蔽を作成：center="0 0 0", radius=50.0, name="shield_sphere"」
+→ poker_proposeBody実行
 
 # 実用例：Co-60点線源遮蔽
 Co60_Shield:
@@ -36,6 +40,10 @@ bottom_center: "0 0 0"     # 底面中心 [cm]
 height_vector: "0 0 200"   # 高さベクトル [cm]
 radius: 100.0              # 半径 [cm]
 
+# Claude指示例
+「円柱作成：bottom_center="0 0 0", height_vector="0 0 200", radius=100.0」
+→ poker_proposeBody実行
+
 # 実用例：廃液貯蔵タンク
 Waste_Tank:
   type: RCC
@@ -44,13 +52,17 @@ Waste_Tank:
   radius: 150.0
 ```
 
-#### **RPP（直方体）- 室内遮蔽用**
+#### **RPP（軸平行直方体）- 室内遮蔽用**
 ```yaml
 # 基本構文
 name: "room_shield"
 type: "RPP"
 min: "-200 -150 0"     # 最小座標 [cm]
 max: "200 150 250"     # 最大座標 [cm]
+
+# Claude指示例
+「直方体作成：min="-200 -150 0", max="200 150 250", name="room_shield"」
+→ poker_proposeBody実行
 
 # 実用例：CT室遮蔽壁
 CT_Room:
@@ -59,15 +71,19 @@ CT_Room:
   max: "300 200 280"   # 高さ2.8m
 ```
 
-#### **BOX（直方体・ベクトル指定）- 複雑配置用**
+#### **BOX（任意方向直方体）- 複雑配置用**
 ```yaml
 # 基本構文
 name: "tilted_shield"
 type: "BOX"
 vertex: "0 0 0"           # 基準点 [cm]
 edge_1: "100 0 0"         # エッジ1ベクトル
-edge_2: "0 80 0"          # エッジ2ベクトル
+edge_2: "0 80 0"          # エッジ2ベクトル  
 edge_3: "0 0 50"          # エッジ3ベクトル
+
+# Claude指示例
+「BOX作成：vertex="0 0 0", edge_1="100 0 0", edge_2="0 80 0", edge_3="0 0 50"」
+→ poker_proposeBody実行
 
 # 実用例：傾斜遮蔽壁
 Slope_Wall:
@@ -78,7 +94,78 @@ Slope_Wall:
   edge_3: "0 0 200"
 ```
 
-#### **TRC（円錐台）- 漏斗型遮蔽用**
+#### **TOR（トーラス）- 環状構造用**
+```yaml
+# 基本構文
+name: "torus_chamber"
+type: "TOR"
+center: "0 0 0"                    # 中心座標 [cm]
+normal: "0 0 1"                    # 法線ベクトル
+major_radius: 300.0                # 主半径 [cm]
+minor_radius_horizontal: 100.0     # 水平方向副半径 [cm]
+minor_radius_vertical: 100.0       # 垂直方向副半径 [cm]
+
+# Claude指示例
+「トーラス作成：center="0 0 0", major_radius=300.0, minor_radius=100.0」
+→ poker_proposeBody実行
+
+# 実用例：トカマク型核融合炉
+Tokamak_Chamber:
+  type: TOR
+  center: "0 0 0"
+  normal: "0 0 1"
+  major_radius: 650.0
+  minor_radius_horizontal: 200.0
+  minor_radius_vertical: 200.0
+```
+
+#### **ELL（楕円体）- 特殊形状遮蔽用**
+```yaml
+# 基本構文
+name: "ellipsoid_tank"
+type: "ELL"
+center: "0 0 0"            # 中心座標 [cm]
+radius_vector_1: "100 0 0" # X軸半径ベクトル
+radius_vector_2: "0 80 0"  # Y軸半径ベクトル
+radius_vector_3: "0 0 60"  # Z軸半径ベクトル
+
+# Claude指示例
+「楕円体作成：center="0 0 0", X半径100cm, Y半径80cm, Z半径60cm」
+→ poker_proposeBody実行
+
+# 実用例：楕円形圧力容器
+Ellipse_Vessel:
+  type: ELL
+  center: "0 0 150"
+  radius_vector_1: "200 0 0"
+  radius_vector_2: "0 150 0"
+  radius_vector_3: "0 0 100"
+```
+
+#### **REC（楕円柱）- 特殊配管用**
+```yaml
+# 基本構文
+name: "ellipse_pipe"
+type: "REC"
+bottom_center: "0 0 0"      # 底面中心 [cm]
+height_vector: "0 0 200"    # 高さベクトル [cm]
+radius_vector_1: "50 0 0"   # 楕円半径1
+radius_vector_2: "0 30 0"   # 楕円半径2
+
+# Claude指示例
+「楕円柱作成：bottom_center="0 0 0", height_vector="0 0 200", 楕円半径50x30cm」
+→ poker_proposeBody実行
+
+# 実用例：楕円断面配管
+Oval_Pipe:
+  type: REC
+  bottom_center: "100 0 0"
+  height_vector: "0 0 500"
+  radius_vector_1: "40 0 0"
+  radius_vector_2: "0 25 0"
+```
+
+#### **TRC（切頭円錐）- 漏斗型遮蔽用**
 ```yaml
 # 基本構文
 name: "funnel_shield"
@@ -87,6 +174,10 @@ bottom_center: "0 0 0"     # 底面中心
 height_vector: "0 0 100"   # 高さベクトル
 bottom_radius: 50.0        # 底面半径
 top_radius: 20.0           # 上面半径
+
+# Claude指示例
+「円錐台作成：bottom_center="0 0 0", height_vector="0 0 100", 底面半径50cm, 上面半径20cm」
+→ poker_proposeBody実行
 
 # 実用例：廃棄物投入口
 Waste_Funnel:
@@ -97,7 +188,50 @@ Waste_Funnel:
   top_radius: 15.0
 ```
 
-#### **ELL（楕円体）- 特殊形状遮蔽用**
+#### **WED（楔形）- 角度調整遮蔽用**
+```yaml
+# 基本構文
+name: "wedge_shield"
+type: "WED"
+vertex: "0 0 0"           # 頂点座標 [cm]
+width_vector: "100 0 0"   # 幅ベクトル
+depth_vector: "0 50 0"    # 奥行きベクトル
+height_vector: "0 0 80"   # 高さベクトル
+
+# Claude指示例
+「楔形作成：vertex="0 0 0", width_vector="100 0 0", depth_vector="0 50 0", height_vector="0 0 80"」
+→ poker_proposeBody実行
+
+# 実用例：角度調整遮蔽
+Angle_Shield:
+  type: WED
+  vertex: "200 0 0"
+  width_vector: "150 0 0"
+  depth_vector: "0 100 50"   # 奥行き方向に傾斜
+  height_vector: "0 0 200"
+```
+
+#### **CMB（組み合わせ立体）- 複合形状用**
+```yaml
+# 基本構文
+name: "complex_shape"
+type: "CMB"
+expression: "sphere1 - cylinder1"  # 論理式
+
+# Claude指示例
+「組み合わせ立体作成：球体sphere1から円柱cylinder1を差し引く」
+→ poker_proposeBody実行
+
+# 実用例：穴あき遮蔽球
+Holed_Sphere:
+  type: CMB
+  expression: "shield_sphere - access_hole"
+  
+# 複雑な組み合わせ例
+Complex_Shield:
+  type: CMB
+  expression: "(main_block + side_block) - (hole1 + hole2)"
+```
 ```yaml
 # 基本構文
 name: "ellipsoid_shield"
@@ -264,11 +398,103 @@ Aluminum_Shield:
   material: "ALUMINUM"
   density: 2.70            # [g/cm³] 純アルミ
 
-# 土壌（地中遮蔽）
-Soil_Shield:
-  body_name: "earth_fill"
-  material: "SOIL"
-  density: 1.6             # [g/cm³] 一般的土壌
+### ⚙️ 1.4 単位系設定（4キー完全性保証）
+
+#### **4キー必須単位系の管理**
+
+現在のPoker MCPサーバーは単位系の4キー完全性を保証しています：
+- `length`: 長さの単位 (m, cm, mm)
+- `angle`: 角度の単位 (radian, degree)  
+- `density`: 密度の単位 (g/cm3)
+- `radioactivity`: 放射能の単位 (Bq)
+
+```yaml
+# 基本単位系設定
+units:
+  length: "cm"          # 必須：長さ単位
+  angle: "radian"       # 必須：角度単位
+  density: "g/cm3"      # 必須：密度単位
+  radioactivity: "Bq"   # 必須：放射能単位
+
+# Claude指示例
+「単位系を設定してください：長さcm、角度degree、密度g/cm3、放射能Bq」
+→ poker_proposeUnit(length="cm", angle="degree", density="g/cm3", radioactivity="Bq")
+
+# 単位系確認
+「現在の単位設定を確認してください」
+→ poker_getUnit() - 常に4キーすべてを返却
+
+# 単位系更新（部分更新可能）
+「長さ単位をmに変更してください」
+→ poker_updateUnit(length="m") - 他の3キーは維持
+```
+
+#### **単位系の完全性検証**
+
+```yaml
+# 完全性検証の実行
+「単位系の完全性を検証してください」
+→ poker_validateUnitIntegrity(includeSystemAnalysis=true, generateReport=true)
+
+# 検証内容:
+# 1. 4キー構造の完全性
+# 2. 物理的整合性（単位組み合わせの妥当性）
+# 3. システム全体での単位使用状況
+# 4. 自動修復の必要性判定
+
+# 単位変換分析
+「現在の単位系からmm-degree-g/cm3-Bqへの変換係数を計算してください」
+→ poker_analyzeUnitConversion(
+    targetUnits={length="mm", angle="degree", density="g/cm3", radioactivity="Bq"},
+    includePhysicalAnalysis=true
+  )
+```
+
+#### **推奨単位系パターン**
+
+```yaml
+# パターン1: SI基本系（国際標準）
+SI_Units:
+  length: "m"
+  angle: "radian"
+  density: "g/cm3"        # 密度はg/cm3が標準
+  radioactivity: "Bq"
+
+# パターン2: 遮蔽計算実用系（推奨）
+Practical_Units:
+  length: "cm"            # 遮蔽厚計算に便利
+  angle: "degree"         # 角度指定が直感的
+  density: "g/cm3"
+  radioactivity: "Bq"
+
+# パターン3: 精密計算系
+Precision_Units:
+  length: "mm"            # 高精度形状指定
+  angle: "radian"         # 数値計算精度向上
+  density: "g/cm3"  
+  radioactivity: "Bq"
+
+# Claude指示による単位系選択
+「実用的な遮蔽計算用の単位系を設定してください」
+→ 自動的にPractical_Unitsパターンを適用
+```
+
+#### **単位系変更時の自動調整**
+
+```yaml
+# システムによる自動調整機能
+# - 既存データの単位変換
+# - 物理的整合性の維持
+# - バックアップ作成
+# - 変更ログの記録
+
+「単位系をcm系からm系に変更してください、既存データも自動変換お願いします」
+→ 以下が自動実行：
+   1. 現在データのバックアップ作成
+   2. 単位系変更 (poker_updateUnit)  
+   3. 全データの単位変換
+   4. 整合性検証 (poker_validateUnitIntegrity)
+   5. 変更完了確認
 ```
 
 ### ☢️ 1.3 線源配置

@@ -1,5 +1,0 @@
-{"file":"tasks/pokerinputs.yaml","level":"info","message":"初期YAMLファイルを作成しました","timestamp":"2025-08-31T06:10:28.806Z"}
-{"file":"tasks/pending_changes.json","level":"info","message":"初期保留変更ファイルを作成しました","timestamp":"2025-08-31T06:10:28.808Z"}
-{"file":"tasks/pokerinputs.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-08-31T06:10:28.810Z"}
-{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-08-31T06:10:28.810Z"}
-{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-08-31T06:10:28.810Z"}

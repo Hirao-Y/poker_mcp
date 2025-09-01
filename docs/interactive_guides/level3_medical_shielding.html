@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🏥 医療施設遮蔽設計実践ガイド - Poker MCP Level 3</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2.3em;
+        }
+
+        .nav-tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 30px 0;
+            justify-content: center;
+        }
+
+        .tab-button {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            color: #2c3e50;
+        }
+
+        .tab-button.active {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(231, 76, 60, 0.3);
+        }
+
+        .tab-content {
+            display: none;
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .section-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        .section-title {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .nav-button {
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            h1 { font-size: 1.8em; }
+            .nav-tabs { flex-direction: column; }
+            .navigation-buttons { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>🏥 医療施設遮蔽設計実践ガイド</h1>
+            <p>CT・PET・核医学・放射線治療施設の実用的遮蔽設計手法</p>
+            <p><strong>Level 3:</strong> 規制要求対応 | 経済性最適化 | 実務即応</p>
+        </header>
+
+        <nav class="nav-tabs">
+            <button class="tab-button active" onclick="showTab('overview')">📋 概要</button>
+            <button class="tab-button" onclick="showTab('ct-design')">🔍 CT室設計</button>
+            <button class="tab-button" onclick="showTab('pet-design')">⚛️ PET/CT設計</button>
+            <button class="tab-button" onclick="showTab('nuclear-medicine')">🧪 核医学</button>
+            <button class="tab-button" onclick="showTab('radiotherapy')">⚡ 放射線治療</button>
+            <button class="tab-button" onclick="showTab('regulations')">📜 規制対応</button>
+            <button class="tab-button" onclick="showTab('integration')">🔗 統合ワークフロー</button>
+        </nav>
+
+        <!-- 概要タブ -->
+        <div id="overview" class="tab-content active">
+            <div class="section-card">
+                <h2 class="section-title">🎯 医療施設遮蔽設計の重要性</h2>
+                <p>医療施設における放射線遮蔽設計は、患者・職員・公衆の安全確保と、医療サービスの継続的提供のために不可欠です。近年の医療技術進歩に伴い、遮蔽要求も高度化・複雑化しています。</p>
+                
+                <h3>🏥 対象施設と装置</h3>
+                <ul style="margin-left: 20px; margin-bottom: 20px;">
+                    <li><strong>診療放射線科</strong>：一般撮影、CT、透視、マンモグラフィ</li>
+                    <li><strong>核医学科</strong>：PET/CT、SPECT、ガンマカメラ、ホットラボ</li>
+                    <li><strong>放射線治療部</strong>：リニアック、トモセラピー、サイバーナイフ</li>
+                    <li><strong>歯科</strong>：パノラマ撮影、CT、口内法撮影</li>
+                </ul>
+
+                <h3>⚖️ 関連法規制の体系</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4>🔹 医療法関連</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>医療法施行規則（第三十条の四～第三十条の十二）</li>
+                        <li>「病院又は診療所における診療用放射線の取扱いについて」通知</li>
+                        <li>線量限度：公衆1mSv/年、放射線業務従事者20mSv/年</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 15px;">🔹 関連基準・ガイドライン</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>IAEA Safety Standards</li>
+                        <li>AAPM Report No. 102（PET/CT施設設計）</li>
+                        <li>日本医学放射線学会ガイドライン</li>
+                    </ul>
+                </div>
+
+                <h3>💰 設計における重要考慮事項</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>🛡️ 安全性確保</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>法定線量限度の遵守</li>
+                            <li>ALARA原則の実践</li>
+                            <li>非常時対応の考慮</li>
+                        </ul>
+                    </div>
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
+                        <h4>💡 経済性最適化</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>建設コストの最小化</li>
+                            <li>運用効率の最大化</li>
+                            <li>将来拡張への配慮</li>
+                        </ul>
+                    </div>
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                        <h4>🔧 施工性・運用性</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>建築構造への適合</li>
+                            <li>メンテナンス性確保</li>
+                            <li>患者・スタッフ動線</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="section-card">
+                <h2 class="section-title">📋 本モジュールの学習内容</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="background: linear-gradient(135deg, #74b9ff, #0984e3); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🔍 CT室設計</h4>
+                        <p>一般・多列・cone beam CTの遮蔽計算から申請書類作成まで</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fd79a8, #e84393); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>⚛️ PET/CT設計</h4>
+                        <p>511keV対応・ホットラボ・投与室・排水設備の統合設計</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #a29bfe, #6c5ce7); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🧪 核医学設計</h4>
+                        <p>SPECT・ガンマカメラ・院内製剤調製の専門設計</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #fdcb6e, #e17055); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>⚡ 放射線治療設計</h4>
+                        <p>リニアック・高エネルギー対応・迷路最適化設計</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #55a3ff, #2d3436); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📜 規制対応</h4>
+                        <p>届出書類・設計仕様書・安全管理計画の実用作成</p>
+                    </div>
+                    <div style="background: linear-gradient(135deg, #00b894, #00a085); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>🔗 統合ワークフロー</h4>
+                        <p>設計から施工・検査・運用開始までの完全フロー</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CT室設計タブ -->
+        <div id="ct-design" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🔍 CT室遮蔽設計実践</h2>
+                
+                <h3>📊 CT装置の放射線特性</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                    <h4>典型的なCT装置のパラメータ</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>管電圧</strong>：80-140 kV（通常120 kV）</li>
+                        <li><strong>管電流×時間</strong>：100-500 mAs/回転</li>
+                        <li><strong>漏洩線</strong>：装置表面1mで100 μGy/h以下</li>
+                        <li><strong>散乱線</strong>：患者体からの散乱が主要線源</li>
+                    </ul>
+                </div>
+
+                <h3>🧮 遮蔽厚計算の実践手法</h3>
+                <div style="border: 2px solid #3498db; background: #f8faff; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                    <h4>🎯 基本計算式</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; font-family: monospace;">
+                        <strong>主線遮蔽：</strong><br>
+                        H = (W × U × T) / (d² × P) × B<br><br>
+                        
+                        <strong>散乱線遮蔽：</strong><br>
+                        H = (W × U × T × α × A) / (d₁² × d₂² × P) × B<br><br>
+                        
+                        <strong>漏洩線遮蔽：</strong><br>
+                        H = (W × U × T × L) / (d² × P)
+                    </div>
+                    
+                    <h4 style="margin-top: 15px;">📝 パラメータ説明</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>W</strong>：ワークロード [mA・分/週]</li>
+                        <li><strong>U</strong>：使用係数（主線方向の使用頻度）</li>
+                        <li><strong>T</strong>：居住係数（評価点の使用頻度）</li>
+                        <li><strong>d</strong>：線源から評価点までの距離 [m]</li>
+                        <li><strong>P</strong>：許容線量率 [μGy/週]</li>
+                        <li><strong>B</strong>：ビルドアップ係数</li>
+                    </ul>
+                </div>
+
+                <h3>🏗️ 実用設計プロセス</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>Step 1: 条件設定</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>装置仕様の確認</li>
+                            <li>年間使用予定の算定</li>
+                            <li>室内レイアウト計画</li>
+                            <li>隣接区域の用途確認</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e8f4fd; padding: 15px; border-radius: 8px;">
+                        <h4>Step 2: 遮蔽計算</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>主線・散乱線・漏洩線</li>
+                            <li>各壁・天井・床の厚さ</li>
+                            <li>扉・観察窓の仕様</li>
+                            <li>ダクト貫通部の検討</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #fff8e1; padding: 15px; border-radius: 8px;">
+                        <h4>Step 3: 経済性検討</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>コンクリート vs 鉛ボード</li>
+                            <li>建築構造への影響</li>
+                            <li>施工性・工期の考慮</li>
+                            <li>コスト最適化</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #ffedef; padding: 15px; border-radius: 8px;">
+                        <h4>Step 4: 図面・書類作成</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>遮蔽設計図面</li>
+                            <li>計算書・根拠資料</li>
+                            <li>届出書類の準備</li>
+                            <li>施工仕様書</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>📋 実用計算例（64列CT）</h3>
+                <div style="background: #f1f8e9; border: 1px solid #4caf50; padding: 20px; border-radius: 10px;">
+                    <h4>🏥 設計条件</h4>
+                    <ul style="margin-left: 20px;">
+                        <li>装置：64列CT、120kV、300mAs/検査</li>
+                        <li>使用予定：30人/日、250日/年</li>
+                        <li>隣接：北側-廊下、東側-診察室、南側-外部</li>
+                        <li>評価基準：管理区域境界2.5μSv/h、非管理区域1.3μSv/h</li>
+                    </ul>
+                    
+                    <h4 style="margin-top: 15px;">🧮 計算結果例</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin-top: 10px;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <tr style="background: #f5f5f5; border-bottom: 1px solid #ddd;">
+                                <th style="padding: 10px; text-align: left;">壁面</th>
+                                <th style="padding: 10px; text-align: left;">用途</th>
+                                <th style="padding: 10px; text-align: left;">必要厚</th>
+                                <th style="padding: 10px; text-align: left;">設計厚</th>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">北壁</td>
+                                <td style="padding: 10px;">廊下（公衆）</td>
+                                <td style="padding: 10px;">Pb 1.2mm</td>
+                                <td style="padding: 10px;">Pb 1.5mm</td>
+                            </tr>
+                            <tr style="border-bottom: 1px solid #ddd;">
+                                <td style="padding: 10px;">東壁</td>
+                                <td style="padding: 10px;">診察室（職員）</td>
+                                <td style="padding: 10px;">Pb 0.8mm</td>
+                                <td style="padding: 10px;">Pb 1.0mm</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 10px;">操作室窓</td>
+                                <td style="padding: 10px;">操作室</td>
+                                <td style="padding: 10px;">Pb 2.0mm</td>
+                                <td style="padding: 10px;">Pb 2.0mm</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PET/CT設計タブ -->
+        <div id="pet-design" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">⚛️ PET/CT施設設計実践</h2>
+                
+                <h3>🔬 PET/CT施設の特殊性</h3>
+                <div style="background: #fff3e0; border-left: 4px solid #ff9800; padding: 15px; margin: 15px 0;">
+                    <h4>🎯 主要な設計課題</h4>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>511keV γ線</strong>：高エネルギーによる貫通力の高さ</li>
+                        <li><strong>多方向放射</strong>：患者からの360度放射</li>
+                        <li><strong>時間減衰</strong>：F-18の半減期110分の考慮</li>
+                        <li><strong>複合施設</strong>：ホットラボ・投与室・検査室の統合</li>
+                    </ul>
+                </div>
+
+                <h3>🧮 511keV γ線遮蔽計算</h3>
+                <div style="background: #f3e5f5; border: 1px solid #9c27b0; padding: 20px; border-radius: 10px;">
+                    <h4>📊 実用計算パラメータ</h4>
+                    <div style="background: white; padding: 15px; border-radius: 5px; margin: 10px 0; font-family: monospace;">
+                        <strong>基本パラメータ：</strong><br>
+                        • エネルギー：511 keV<br>
+                        • 線減弱係数（鉛）：μ = 1.23 cm⁻¹<br>
+                        • 半価層（鉛）：HVL = 0.56 cm<br>
+                        • 十分の一価層（鉛）：TVL = 1.86 cm<br><br>
+                        
+                        <strong>遮蔽厚計算：</strong><br>
+                        t = (1/μ) × ln(H₀/H) = 0.813 × ln(H₀/H)<br>
+                        または<br>
+                        n = log₁₀(H₀/H) → t = n × TVL
+                    </div>
+                    
+                    <h4>💡 実用設計例</h4>
+                    <div style="background: #f0f8ff; padding: 15px; border-radius: 5px; margin-top: 15px;">
+                        <strong>条件：</strong>投与室（370MBq FDG投与後患者）<br>
+                        <strong>目標：</strong>隣接診察室で2.5 μSv/h以下<br>
+                        <strong>距離：</strong>壁厚考慮で実効距離2m<br>
+                        <strong>計算：</strong>必要減弱率 = 1/200 → TVL×2.3 = Pb 4.3mm<br>
+                        <strong>設計値：</strong>Pb 5.0mm（安全余裕考慮）
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 規制対応タブ -->
+        <div id="regulations" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">📜 医療施設の規制対応実務</h2>
+                
+                <h3>⚖️ 主要な法規制体系</h3>
+                <div style="background: #f8f9fa; border: 2px solid #28a745; padding: 20px; border-radius: 10px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                            <h4>🏥 医療法関連</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>医療法施行規則 第30条の4～12</li>
+                                <li>エックス線装置届出（10日以内）</li>
+                                <li>放射線診療従事者の教育訓練</li>
+                                <li>医療放射線安全管理責任者</li>
+                            </ul>
+                        </div>
+                        
+                        <div style="background: #fff3cd; padding: 15px; border-radius: 8px;">
+                            <h4>📋 届出・申請書類</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>エックス線装置備付届</li>
+                                <li>診療用放射性同位元素届</li>
+                                <li>構造設備概要書</li>
+                                <li>遮蔽計算書・図面</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>📝 実用書類作成フロー</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">
+                    <div style="background: linear-gradient(135deg, #4fc3f7, #29b6f6); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📊 Step 1: 事前準備</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>装置仕様書の収集</li>
+                            <li>建築図面の確認</li>
+                            <li>使用計画の策定</li>
+                            <li>管理体制の整備</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #66bb6a, #4caf50); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📋 Step 2: 計算・設計</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>遮蔽計算の実施</li>
+                            <li>構造設備図面作成</li>
+                            <li>安全管理計画策定</li>
+                            <li>使用方法の明文化</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #ffb74d, #ffa726); color: white; padding: 20px; border-radius: 10px;">
+                        <h4>📤 Step 3: 申請・届出</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>届出書類の作成</li>
+                            <li>添付資料の整理</li>
+                            <li>所管部局への提出</li>
+                            <li>照会対応・修正</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <h3>✅ 届出書類のチェックリスト</h3>
+                <div style="background: #e8f4fd; border: 2px solid #2196f3; padding: 20px; border-radius: 10px;">
+                    <h4>📋 CT装置届出の必須項目</h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; margin-top: 15px;">
+                        <div>
+                            <h5>🔧 装置仕様関連</h5>
+                            <ul style="margin-left: 20px;">
+                                <li>製造業者・型式</li>
+                                <li>定格出力・管電圧</li>
+                                <li>設置場所・使用目的</li>
+                                <li>管理責任者</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h5>🏗️ 構造設備関連</h5>
+                            <ul style="margin-left: 20px;">
+                                <li>室の構造・材料・寸法</li>
+                                <li>遮蔽計算書</li>
+                                <li>扉・窓の仕様</li>
+                                <li>警報装置・表示</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 統合ワークフロータブ -->
+        <div id="integration" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🔗 医療施設設計統合ワークフロー</h2>
+                
+                <h3>🏗️ 完全設計プロセス</h3>
+                <div style="background: linear-gradient(135deg, #e3f2fd, #bbdefb); padding: 20px; border-radius: 15px; margin: 15px 0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>🎯 Phase 1: 企画・基本設計</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>ニーズ調査・基本方針</li>
+                                <li>配置計画・ゾーニング</li>
+                                <li>概算費用・スケジュール</li>
+                                <li>関係者合意形成</li>
+                            </ul>
+                            <div style="margin-top: 10px; color: #1976d2; font-weight: bold;">期間: 2-3ヶ月</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>🔧 Phase 2: 実施設計</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>詳細遮蔽計算</li>
+                                <li>施工図面作成</li>
+                                <li>設備計画との統合</li>
+                                <li>コスト精査・VE</li>
+                            </ul>
+                            <div style="margin-top: 10px; color: #1976d2; font-weight: bold;">期間: 3-4ヶ月</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>📜 Phase 3: 申請・許可</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>届出書類作成</li>
+                                <li>所管部局との協議</li>
+                                <li>建築確認申請</li>
+                                <li>各種許可取得</li>
+                            </ul>
+                            <div style="margin-top: 10px; color: #1976d2; font-weight: bold;">期間: 2-3ヶ月</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>🏗️ Phase 4: 施工・検査</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>施工管理・品質管理</li>
+                                <li>中間検査・竣工検査</li>
+                                <li>装置設置・試運転</li>
+                                <li>使用前検査</li>
+                            </ul>
+                            <div style="margin-top: 10px; color: #1976d2; font-weight: bold;">期間: 6-8ヶ月</div>
+                        </div>
+                        
+                        <div style="background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+                            <h4>🚀 Phase 5: 運用開始</h4>
+                            <ul style="margin-left: 15px;">
+                                <li>スタッフ研修</li>
+                                <li>運用マニュアル整備</li>
+                                <li>定期点検計画</li>
+                                <li>品質保証体制</li>
+                            </ul>
+                            <div style="margin-top: 10px; color: #1976d2; font-weight: bold;">期間: 1-2ヶ月</div>
+                        </div>
+                    </div>
+                </div>
+
+                <h3>⚡ 効率化のポイント</h3>
+                <div style="background: #fff8e1; border: 2px solid #ffc107; padding: 20px; border-radius: 10px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                        <div>
+                            <h4>🎯 早期の関係者調整</h4>
+                            <ul style="margin-left: 20px;">
+                                <li>医療スタッフとの密な連携</li>
+                                <li>建築・設備設計者との統合</li>
+                                <li>行政との事前相談</li>
+                                <li>装置メーカーとの協力</li>
+                            </ul>
+                        </div>
+                        
+                        <div>
+                            <h4>📋 標準化・テンプレート活用</h4>
+                            <ul style="margin-left: 20px;">
+                                <li>計算シートのテンプレート化</li>
+                                <li>図面・書類の標準フォーマット</li>
+                                <li>チェックリストの活用</li>
+                                <li>過去事例のデータベース化</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 核医学タブ -->
+        <div id="nuclear-medicine" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">🧪 核医学施設設計実践</h2>
+                
+                <div style="background: #e1f5fe; border: 2px solid #0288d1; padding: 20px; border-radius: 10px;">
+                    <h3>🎯 核医学施設の特徴</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>多種類核種</strong>：Tc-99m、I-131、Ga-67等</li>
+                        <li><strong>液体・気体放出</strong>：汚染管理・排水排気</li>
+                        <li><strong>患者体内分布</strong>：時間経過による線量変化</li>
+                        <li><strong>廃棄物管理</strong>：減衰保管・分別処理</li>
+                    </ul>
+                </div>
+
+                <h3>🏥 主要設備の遮蔽設計</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #f3e5f5; padding: 15px; border-radius: 8px;">
+                        <h4>📷 SPECT・ガンマカメラ</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>Tc-99m: 140keV → Pb 0.3mm程度</li>
+                            <li>I-131: 364keV → Pb 2-3mm</li>
+                            <li>操作室: Pb 2-5mm</li>
+                            <li>患者動線の考慮</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e8f5e8; padding: 15px; border-radius: 8px;">
+                        <h4>💉 投与・調製室</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>ホットラボ: 遮蔽付きフード</li>
+                            <li>分注作業台: Pb 20-30mm</li>
+                            <li>廃液タンク: 専用遮蔽室</li>
+                            <li>汚染検査室の設置</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 放射線治療タブ -->
+        <div id="radiotherapy" class="tab-content">
+            <div class="section-card">
+                <h2 class="section-title">⚡ 放射線治療施設設計実践</h2>
+                
+                <div style="background: #ffebee; border: 2px solid #d32f2f; padding: 20px; border-radius: 10px;">
+                    <h3>⚡ 高エネルギー治療装置の特徴</h3>
+                    <ul style="margin-left: 20px;">
+                        <li><strong>高エネルギー</strong>：6-25MV X線・電子線</li>
+                        <li><strong>中性子生成</strong>：10MV以上で中性子発生</li>
+                        <li><strong>大型装置</strong>：リニアック・トモセラピー</li>
+                        <li><strong>厚い遮蔽</strong>：コンクリート1.5-2.5m級</li>
+                    </ul>
+                </div>
+
+                <h3>🏗️ 遮蔽設計の要点</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px;">
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px;">
+                        <h4>🎯 主線遮蔽</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>治療室: コンクリート2-2.5m</li>
+                            <li>迷路設計: 散乱中性子対策</li>
+                            <li>扉: 超重量扉・インターロック</li>
+                            <li>ダクト: 屈曲・遮蔽</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px;">
+                        <h4>🛡️ 漏洩・散乱線</h4>
+                        <ul style="margin-left: 15px;">
+                            <li>装置周囲: 均一遮蔽</li>
+                            <li>天井・床: 上下階対応</li>
+                            <li>操作室: 完全遮蔽・監視</li>
+                            <li>緊急停止システム</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation-buttons">
+            <a href="level3_main_guide.html" class="nav-button">
+                ← メインガイドに戻る
+            </a>
+            <a href="level3_lab_shielding.html" class="nav-button">
+                次: 実験室遮蔽設計 →
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // タブ切り替え機能
+        function showTab(tabName) {
+            const contents = document.querySelectorAll('.tab-content');
+            contents.forEach(content => content.classList.remove('active'));
+            
+            const buttons = document.querySelectorAll('.tab-button');
+            buttons.forEach(button => button.classList.remove('active'));
+            
+            document.getElementById(tabName).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

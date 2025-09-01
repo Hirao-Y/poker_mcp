@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔬 Poker MCP Level 3 - 放射線遮蔽研究者向け実践ガイド</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            margin-bottom: 30px;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 2.5em;
+            font-weight: 700;
+        }
+
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        .level-badge {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            display: inline-block;
+        }
+
+        .overview-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .card h2 {
+            color: #2c3e50;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card h3 {
+            color: #34495e;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+
+        .card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .card li {
+            padding: 8px 0;
+            border-left: 3px solid #3498db;
+            padding-left: 15px;
+            margin-bottom: 5px;
+            background: rgba(52, 152, 219, 0.1);
+        }
+
+        .learning-paths {
+            margin: 40px 0;
+        }
+
+        .path-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .path-card {
+            background: linear-gradient(135deg, #74b9ff, #0984e3);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .path-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .path-card:hover::before {
+            opacity: 1;
+        }
+
+        .path-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .path-flow {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .step {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-weight: 500;
+        }
+
+        .arrow {
+            font-size: 1.2em;
+            opacity: 0.8;
+        }
+
+        .modules-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin: 40px 0;
+        }
+
+        .module-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+
+        .module-card:hover {
+            transform: translateY(-5px);
+            border-color: #3498db;
+            box-shadow: 0 10px 30px rgba(52, 152, 219, 0.2);
+        }
+
+        .module-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .module-title {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+
+        .module-description {
+            color: #7f8c8d;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .module-features {
+            list-style: none;
+            padding: 0;
+        }
+
+        .module-features li {
+            padding: 5px 0;
+            color: #34495e;
+            font-size: 0.9em;
+        }
+
+        .module-features li::before {
+            content: "✓";
+            color: #27ae60;
+            font-weight: bold;
+            margin-right: 8px;
+        }
+
+        .start-button {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .start-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(46, 204, 113, 0.3);
+        }
+
+        .prerequisites {
+            background: linear-gradient(135deg, #fdcb6e, #e84393);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            margin: 30px 0;
+        }
+
+        .prerequisites h2 {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .prereq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .prereq-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .overview-grid,
+            .path-grid,
+            .modules-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .path-flow {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Poker MCP Level 3</h1>
+            <p class="subtitle">放射線遮蔽研究者のための実践的統合ガイド</p>
+            <span class="level-badge">上級レベル - 実務応用</span>
+        </header>
+
+        <div class="prerequisites">
+            <h2>⚡ 学習準備チェック</h2>
+            <div class="prereq-grid">
+                <div class="prereq-item">
+                    <h3>🎓 前提知識</h3>
+                    <ul>
+                        <li>Level 1, 2の完了</li>
+                        <li>基本遮蔽計算の理解</li>
+                        <li>Poker MCPの日常使用経験</li>
+                        <li>放射線遮蔽工学の基礎</li>
+                    </ul>
+                </div>
+                <div class="prereq-item">
+                    <h3>🛠️ 必要ツール</h3>
+                    <ul>
+                        <li>Poker MCP (最新版)</li>
+                        <li>計算機・電卓</li>
+                        <li>設計図面作成ソフト (推奨)</li>
+                        <li>文書作成ソフト (Word等)</li>
+                        <li>法規制資料・基準書</li>
+                    </ul>
+                </div>
+                <div class="prereq-item">
+                    <h3>⏰ 学習目安</h3>
+                    <ul>
+                        <li>各モジュール: 3-4時間</li>
+                        <li>全体完了: 1週間</li>
+                        <li>実践適用: 即座開始可能</li>
+                        <li>マスター習得: 1-2ヶ月</li>
+                    </ul>
+                </div>
+                <div class="prereq-item">
+                    <h3>🎯 習得目標</h3>
+                    <ul>
+                        <li>医療施設の完全設計技術</li>
+                        <li>実験室・RI施設設計技術</li>
+                        <li>法規制対応・申請業務</li>
+                        <li>経済性・実用性最適化</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <section class="learning-paths">
+            <div class="card">
+                <h2>🗺️ 学習パス選択</h2>
+                <p>あなたの専門分野に応じて最適な学習順序を選択してください：</p>
+                
+                <div class="path-grid">
+                    <div class="path-card">
+                        <div class="path-title">🏥 医療施設設計者パス</div>
+                        <div class="path-flow">
+                            <span class="step">診療放射線科設計</span>
+                            <span class="arrow">→</span>
+                            <span class="step">PET/CT・核医学</span>
+                            <span class="arrow">→</span>
+                            <span class="step">放射線治療室</span>
+                            <span class="arrow">→</span>
+                            <span class="step">申請書類作成</span>
+                        </div>
+                        <p>診療放射線科、核医学科、放射線治療部門での実用的な遮蔽設計に重点。規制要求事項と経済性の両立、完全な実務遂行能力を習得。</p>
+                    </div>
+
+                    <div class="path-card">
+                        <div class="path-title">⚛️ 実験室・研究施設設計者パス</div>
+                        <div class="path-flow">
+                            <span class="step">RI実験室設計</span>
+                            <span class="arrow">→</span>
+                            <span class="step">貯蔵・廃棄物施設</span>
+                            <span class="arrow">→</span>
+                            <span class="step">管理区域設計</span>
+                            <span class="arrow">→</span>
+                            <span class="step">許可申請対応</span>
+                        </div>
+                        <p>大学・研究機関でのRI利用施設設計に重点。使用許可申請から運用管理まで、実験室設計の完全な実務能力を習得。</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="overview-grid">
+            <div class="card">
+                <h2>🎯 Level 3 の学習目標</h2>
+                <h3>🏢 実務応用力</h3>
+                <ul>
+                    <li>規制要求事項を満たす実際の施設設計</li>
+                    <li>コスト効率と安全性の最適バランス</li>
+                    <li>施工上の制約を考慮した現実的設計</li>
+                    <li>法的届出・申請書類の完全作成</li>
+                </ul>
+                
+                <h3>⚡ 実用性重視</h3>
+                <ul>
+                    <li>医療施設での即座適用可能な設計技術</li>
+                    <li>実験室・研究施設での実践的遮蔽計算</li>
+                    <li>経済性を考慮した最適化手法</li>
+                    <li>運用効率と安全性の両立</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <h2>🌟 Level 3 の特徴</h2>
+                <h3>🏥 医療施設設計マスター</h3>
+                <ul>
+                    <li>診療放射線科の完全設計ワークフロー</li>
+                    <li>PET/CT・核医学施設の特殊対応</li>
+                    <li>放射線治療施設の高度設計技術</li>
+                    <li>法規制適合と経済性の最適バランス</li>
+                </ul>
+                
+                <h3>⚛️ 実験室設計エキスパート</h3>
+                <ul>
+                    <li>RI実験室・管理区域の実用設計</li>
+                    <li>貯蔵・廃棄物施設の専門技術</li>
+                    <li>許可申請・変更届の完全対応</li>
+                    <li>運用管理計画の実践的策定</li>
+                </ul>
+            </div>
+        </section>
+
+        <div class="modules-grid">
+            <div class="module-card" onclick="window.location.href='level3_medical_shielding.html'">
+                <div class="module-icon">🏥</div>
+                <div class="module-title">医療施設遮蔽設計実践</div>
+                <div class="module-description">診療放射線科・核医学・放射線治療施設の完全設計ワークフロー</div>
+                <ul class="module-features">
+                    <li>診療放射線科の実用設計技術</li>
+                    <li>PET/CT・核医学施設の特殊対応</li>
+                    <li>放射線治療室の高度設計</li>
+                    <li>法規制適合・経済性最適化</li>
+                    <li>設計書・申請書類作成</li>
+                </ul>
+                <a href="level3_medical_shielding.html" class="start-button">実践学習開始</a>
+            </div>
+
+            <div class="module-card" onclick="window.location.href='level3_lab_shielding.html'">
+                <div class="module-icon">⚛️</div>
+                <div class="module-title">実験室遮蔽設計実践</div>
+                <div class="module-description">RI実験室・管理区域・貯蔵施設の実用設計技術</div>
+                <ul class="module-features">
+                    <li>RI実験室・管理区域設計</li>
+                    <li>貯蔵・廃棄物施設設計</li>
+                    <li>使用許可申請・変更届対応</li>
+                    <li>運用管理計画策定</li>
+                    <li>経済性・効率性最適化</li>
+                </ul>
+                <a href="level3_lab_shielding.html" class="start-button">実践学習開始</a>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚀 学習を始める前に</h2>
+            <h3>📋 推奨準備事項</h3>
+            <ul>
+                <li>Level 1, 2のガイドを完了し、基本操作に習熟していること</li>
+                <li>実際の遮蔽設計プロジェクトを準備（練習用）</li>
+                <li>関連法規制資料の準備（放射線障害防止法等）</li>
+                <li>設計図面・文書作成環境の準備</li>
+                <li>十分な時間の確保（各モジュール3-4時間の集中学習）</li>
+            </ul>
+            
+            <h3>💡 効果的な学習のコツ</h3>
+            <ul>
+                <li>実際のプロジェクトに即座に適用する</li>
+                <li>法規制要求事項を常に意識する</li>
+                <li>経済性と安全性のバランスを重視する</li>
+                <li>同僚や専門家との議論を積極的に行う</li>
+                <li>実際の申請書類作成まで体験する</li>
+            </ul>
+        </div>
+
+        <footer style="text-align: center; margin-top: 50px; padding: 30px; color: rgba(255,255,255,0.8);">
+            <p>🔬 <strong>Poker MCP Level 3 Interactive Guide</strong></p>
+            <p>放射線遮蔽研究者の実践的スキル向上を支援</p>
+            <p style="margin-top: 15px; font-size: 0.9em;">
+                © 2025 Poker MCP Project | 最新の放射線遮蔽計算技術を提供
+            </p>
+        </footer>
+    </div>
+
+    <script>
+        // モジュールカードのホバー効果
+        const moduleCards = document.querySelectorAll('.module-card');
+        moduleCards.forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-10px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // 学習パスのアニメーション
+        const pathCards = document.querySelectorAll('.path-card');
+        pathCards.forEach((card, index) => {
+            card.style.animationDelay = `${index * 0.2}s`;
+        });
+
+        // スムーススクロール
+        document.addEventListener('DOMContentLoaded', () => {
+            const links = document.querySelectorAll('a[href^="#"]');
+            links.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const target = document.querySelector(link.getAttribute('href'));
+                    if (target) {
+                        target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

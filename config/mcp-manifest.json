@@ -16,7 +16,7 @@
     "description": "Complete MCP Server v4.2 - 23メソッド完全実装版",
     "port": 3020,
     "features": [
-      "23メソッド完全実装",
+      "24メソッド完全実装",
       "Body操作系: 作成・更新・削除",
       "Zone操作系: 作成・更新・削除",
       "BuildupFactor操作系: 作成・更新・削除・順序変更",
