@@ -5,7 +5,7 @@
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
   "bin": {
-    "poker-mcp": "./src/mcp_server_stdio_v4.js"
+    "poker-mcp": "src/mcp_server_stdio_v4.js"
   },
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
@@ -26,7 +26,7 @@
     "physics",
     "validation",
     "npx",
-    "point-kernel"    
+    "point-kernel"
   ],
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
