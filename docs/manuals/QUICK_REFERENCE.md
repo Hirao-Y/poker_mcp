@@ -1679,29 +1679,19 @@ def check_statistical_quality(results):
 
 レベル1: 基本サポート
 - 対象: 操作方法、設定方法の質問
-- 連絡先: support@poker-mcp.org
-- 応答時間: 営業時間内24時間以内
+- 連絡先: https://pointkernel.com/inquiry/
 
 レベル2: 技術サポート  
 - 対象: 計算結果の解釈、物理的妥当性の質問
-- 連絡先: technical@poker-mcp.org
-- 応答時間: 営業日48時間以内
-
-レベル3: 緊急サポート
-- 対象: システム障害、安全性に関わる問題
-- 連絡先: emergency@poker-mcp.org  
-- 応答時間: 24時間365日・6時間以内
+- 連絡先: https://pointkernel.com/docs/support/
 
 🌐 オンラインリソース
-- FAQ: https://docs.poker-mcp.org/faq
-- フォーラム: https://forum.poker-mcp.org
-- ドキュメント: https://docs.poker-mcp.org
-- 更新情報: https://updates.poker-mcp.org
+- FAQ: https://pointkernel.com/docs/support/
+- ドキュメント: https://pointkernel.com/docs/
+- 更新情報: https://pointkernel.com/docs/history/
 
 🎓 研修・教育サポート
-- オンライン研修: 毎月第2水曜日 14:00-16:00
-- 個別指導: 要予約・research@poker-mcp.org
-- 講師派遣: 研究機関・教育機関向け
+- 講師派遣: 機関・団体向け（要予約）https://pointkernel.com/inquiry/
 ```
 
 ---
@@ -2561,9 +2551,6 @@ def perform_sensitivity_analysis(input_uncertainties, output_samples):
 - [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) - 基本操作と実用例  
 - [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 物理的理論と計算背景
 - [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 研究分野別ワークフロー
-
-**⚡ 緊急時サポート**  
-システム障害・計算異常時は：emergency@poker-mcp.org（24時間対応）
 
 ---
 *© 2025 Poker MCP Project. 研究者のための実用クイックリファレンス*
