@@ -1,7 +1,7 @@
 {
   "name": "poker-mcp",
   "version": "1.0.0",
-  "description": "YAML-based radiation shielding calculation input file management tool with MCP support",
+  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
   "bin": {
@@ -19,12 +19,16 @@
     "radiation",
     "shielding",
     "nuclear",
-    "geometry",
+    "radioisotope",
+    "medical",
+    "accelerator",
+    "POKER",
     "physics",
     "validation",
-    "npx"
+    "npx",
+    "point-kernel"    
   ],
-  "author": "Yoshihiro Hirao",
+  "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
   "engines": {
     "node": ">=18.0.0"
@@ -42,7 +46,6 @@
   "files": [
     "src/",
     "config/",
-    "docs/",
     "README.md"
   ]
 }
