@@ -1,7 +1,7 @@
 {
   "name": "poker-mcp",
   "version": "1.0.0", 
-  "description": "放射線遮蔽計算入力ファイル管理ツール",
+  "description": "YAML-Based input file management tool for radiation shielding calculation code POKER with MCP support",
   "url": "stdio://",
   "server": {
     "command": "node",
