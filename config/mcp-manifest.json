@@ -1,7 +1,7 @@
 {
   "name": "poker-mcp",
   "version": "1.0.0",
-  "description": "YAML-based radiation shielding calculation input file management tool with complete MCP support",
+  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support",
   "author": "Yoshihiro Hirao",
   "license": "ISC",
   "homepage": "http://localhost:3020",
@@ -13,7 +13,7 @@
   "server": {
     "name": "poker-mcp-server",
     "version": "1.0.0",
-    "description": "Complete MCP Server v4.2 - 23メソッド完全実装版",
+    "description": "Complete Poker MCP Server v1.0.0 - 24メソッド実装版",
     "port": 3020,
     "features": [
       "24メソッド完全実装",
