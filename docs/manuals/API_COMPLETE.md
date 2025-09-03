@@ -20,7 +20,7 @@
 ### 📋 読み方ガイド
 - **日常利用**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) を推奨
 - **基礎学習**: [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) から開始
-- **実用ワークフロー**: [research_workflows.md](research_workflows.md) を参照
+- **実用ワークフロー**: [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) を参照
 
 ---
 
@@ -452,5 +452,5 @@
 - [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md): 基本操作・15分スタート  
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
 - [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md): システム統合・自動化
-- [research_workflows.md](research_workflows.md): 分野別実用ワークフロー
+- [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md): 分野別実用ワークフロー
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決・復旧手順
