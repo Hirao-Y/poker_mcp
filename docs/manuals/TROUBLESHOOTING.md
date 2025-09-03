@@ -629,7 +629,7 @@ RPP（直方体）エラー診断:
 
 対応方法:
 1. 専門マニュアルの参照
-   - research_workflows.md（分野別問題）
+   - RESEARCH_WORKFLOWS.md（分野別問題）
    - INTEGRATION_GUIDE.md（統合問題）
    - PHYSICS_REFERENCE.md（物理的問題）
 
@@ -649,7 +649,7 @@ RPP（直方体）エラー診断:
 
 対応方法:
 1. 技術マニュアルの詳細参照
-   - admin_guide.md（システム管理）
+   - ADMIN_GUIDE.md（システム管理）
    - API_COMPLETE.md（技術詳細）
 2. 緊急復旧手順の実行
 3. システム管理者への相談
@@ -718,6 +718,6 @@ immediate対応（5分以内）:
 **📚 関連マニュアル**
 - [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md): 基本操作・15分スタート
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
-- [research_workflows.md](research_workflows.md): 分野別業務フロー
+- [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md): 分野別業務フロー
 - [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md): システム統合・自動化
-- [admin_guide.md](admin_guide.md): システム管理・運用
+- [ADMIN_GUIDE.md](ADMIN_GUIDE.md): システム管理・運用
