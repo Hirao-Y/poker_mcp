@@ -106,8 +106,9 @@ poker_mcp/
 │   └── mcp-manifest.json         # MCPマニフェスト（1,700行）
 ├── docs/
 │   ├── README.md                 # このファイル
-│   ├── manuals/                  # 詳細マニュアル
-│   └── interactive_tutorials/    # インタラクティブチュートリアル
+│   ├── NPX_USAGE.md              # NPX使用方法
+│   ├── manuals/                  # 詳細マニュアル（10ファイル）
+│   └── interactive_guides/       # インタラクティブガイド
 ├── [Claude App Dir]/サブフォルダ/ # YAMLデータファイル
 └── backups/                      # 自動バックアップ
 ```
@@ -191,19 +192,22 @@ poker_mcp/
 ## 📚 ドキュメント体系
 
 ### 🌟 エッセンシャル（必須）
-- **[MANUAL_01_OVERVIEW.md](manuals/MANUAL_01_OVERVIEW.md)**: 概要・セットアップ・基本操作
+- **[ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)**: 概要・セットアップ・基本操作
 - **[QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)**: 早見表・よく使う操作・Tips
 
 ### 📖 詳細マニュアル
-- **[MANUAL_02_API_REFERENCE.md](manuals/MANUAL_02_API_REFERENCE.md)**: 完全API仕様
-- **[MANUAL_03_EXAMPLES.md](manuals/MANUAL_03_EXAMPLES.md)**: 詳細使用例
-- **[MANUAL_04_TROUBLESHOOTING.md](manuals/MANUAL_04_TROUBLESHOOTING.md)**: 問題解決
+- **[API_COMPLETE.md](manuals/API_COMPLETE.md)**: 完全API仕様
+- **[RESEARCH_WORKFLOWS.md](manuals/RESEARCH_WORKFLOWS.md)**: 研究ワークフローと使用例
+- **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)**: 問題解決
+- **[PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)**: 物理的背景と理論
+- **[INTEGRATION_GUIDE.md](manuals/INTEGRATION_GUIDE.md)**: 外部システム連携
+- **[ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)**: 管理者向けガイド
 
 ### 📖 利用シーン別ガイド
-- **初回利用**: MANUAL_01_OVERVIEW.md → QUICK_REFERENCE.md
-- **日常業務**: QUICK_REFERENCE.md → MANUAL_03_EXAMPLES.md
-- **API詳細**: MANUAL_02_API_REFERENCE.md
-- **問題発生時**: MANUAL_04_TROUBLESHOOTING.md
+- **初回利用**: ESSENTIAL_GUIDE.md → QUICK_REFERENCE.md
+- **日常業務**: QUICK_REFERENCE.md → RESEARCH_WORKFLOWS.md
+- **API詳細**: API_COMPLETE.md
+- **問題発生時**: TROUBLESHOOTING.md
 
 ---
 
@@ -300,14 +304,14 @@ poker_mcp/
 ## 📞 サポート
 
 ### 🆘 問題発生時
-1. **[MANUAL_04_TROUBLESHOOTING.md](manuals/MANUAL_04_TROUBLESHOOTING.md)** を確認
+1. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認
 2. **バックアップからの復旧**を試行（poker_applyChanges で自動復旧可能）
 3. **依存関係チェック**でデータ整合性確認
 
 ### 📧 技術サポート
-- **基本操作**: [MANUAL_01_OVERVIEW.md](manuals/MANUAL_01_OVERVIEW.md)参照
-- **API詳細**: [MANUAL_02_API_REFERENCE.md](manuals/MANUAL_02_API_REFERENCE.md)参照
-- **トラブル**: [MANUAL_04_TROUBLESHOOTING.md](manuals/MANUAL_04_TROUBLESHOOTING.md)参照
+- **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
+- **API詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
+- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照
 
 ---
 
@@ -342,3 +346,4 @@ poker_mcp/
 **🚀 今すぐ始める**: Claude Desktopで「放射線遮蔽計算を始めたい」と入力
 **📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照
 **⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)をブックマーク
+**💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認
