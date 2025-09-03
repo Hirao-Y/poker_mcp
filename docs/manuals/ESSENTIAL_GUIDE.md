@@ -835,7 +835,7 @@ Claude指示例:
 ---
 
 **📚 関連マニュアル**
-- [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
-- [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md): 物理的背景詳細
-- [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md): 分野別業務フロー
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決ガイド
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表
+- **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細
+- **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決ガイド
