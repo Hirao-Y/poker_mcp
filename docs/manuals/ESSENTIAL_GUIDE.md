@@ -755,7 +755,7 @@ Claude指示例:
 - トラブル時の即座対応
 
 #### **分野別の専門活用**  
-→ **[research_workflows.md](research_workflows.md)**
+→ **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**
 - 医療施設遮蔽設計の詳細
 - 原子力施設評価の実例
 - 研究実験計画の立案
@@ -837,5 +837,5 @@ Claude指示例:
 **📚 関連マニュアル**
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
 - [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md): 物理的背景詳細
-- [research_workflows.md](research_workflows.md): 分野別業務フロー
+- [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md): 分野別業務フロー
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決ガイド
