@@ -82,7 +82,7 @@
 ### ⚙️ **テクニカル層** - 専門知識 (2ファイル)
 システム管理者・上級者向け詳細情報（v1.0.0完全対応）
 
-#### 🔧 [admin_guide.md](admin_guide.md) - 管理者ガイド (v1.0.0対応)
+#### 🔧 [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - 管理者ガイド (v1.0.0対応)
 - **🏗️ v1.0.0システムセットアップ**: 最新インストール・環境構築
 - **📊 24メソッド監視**: 全メソッド個別監視・パフォーマンス管理
 - **🔒 MCP v1.0準拠セキュリティ**: アクセス制御・データ保護
@@ -129,11 +129,11 @@
 ### 💻 **システム統合エンジニア**
 1. **[API_COMPLETE.md](API_COMPLETE.md)** で24メソッド完全仕様を確認
 2. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でシステム統合手法を実装
-3. **[admin_guide.md](admin_guide.md)** で運用監視・セキュリティを設定
+3. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** で運用監視・セキュリティを設定
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で障害対応体制を整備
 
 ### 🔧 **システム管理者**
-1. **[admin_guide.md](admin_guide.md)** でv1.0.0システム構築・運用
+1. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でv1.0.0システム構築・運用
 2. **[API_COMPLETE.md](API_COMPLETE.md)** で技術仕様を確認
 3. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で保守手順を習得
 4. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** で統合監視システムを構築
@@ -228,7 +228,7 @@ System系 (2メソッド):
 | **実用** | 1週間 | +QUICK_REFERENCE | 効率的操作 | 日常業務効率化 |
 | **応用** | 2週間 | +RESEARCH_WORKFLOWS | 分野特化活用 | 専門業務完全対応 |
 | **統合** | 1ヶ月 | +INTEGRATION_GUIDE | システム統合 | 自動化・高度活用 |
-| **管理** | 2ヶ月 | +admin_guide | 運用管理 | 組織的品質管理 |
+| **管理** | 2ヶ月 | +ADMIN_GUIDE | 運用管理 | 組織的品質管理 |
 
 ### 💰 **ROI（投資対効果）予測**
 
@@ -291,7 +291,7 @@ v1.0.0導入効果:
 成功要因:
 1. PHYSICS_REFERENCEでの理論的理解
 2. API_COMPLETEでの高度API活用
-3. admin_guideでの品質管理体制構築
+3. ADMIN_GUIDEでの品質管理体制構築
 ```
 
 ### 🎯 **推奨学習パス**
@@ -324,7 +324,7 @@ Week 4: INTEGRATION_GUIDE 高度活用
 #### **組織導入パス（管理者向け）**
 ```yaml
 Phase 1 (Month 1): 基盤整備
-- admin_guideでシステム構築
+- ADMIN_GUIDEでシステム構築
 - セキュリティ・監視体制構築
 - 初期ユーザー研修実施
 
