@@ -339,6 +339,6 @@ npx poker-mcp --show-logs
 1. NPX起動確認
 2. Claude Desktop設定
 3. 基本操作テスト
-4. [マニュアル](../manuals/README.md)で詳細学習
+4. [マニュアル](./manuals/)で詳細学習
 
 これで**Poker MCP Server**のNPX起動が完了です！
