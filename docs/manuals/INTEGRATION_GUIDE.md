@@ -878,5 +878,5 @@ Claude Desktop で「システム統合を始めたい」と入力して、統�
 - [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md): 基本操作・15分スタート
 - [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
 - [API_COMPLETE.md](API_COMPLETE.md): 完全API仕様・開発者向け
-- [research_workflows.md](research_workflows.md): 分野別実用ワークフロー
+- [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md): 分野別実用ワークフロー
 - [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決・復旧手順
