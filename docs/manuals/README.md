@@ -57,7 +57,7 @@
 ### 📖 **プラクティカル層** - 実践知識 (3ファイル)
 実際に必要になる実用情報（v1.0.0機能フル活用）
 
-#### 🧬 [research_workflows.md](research_workflows.md) - 業務ワークフロー
+#### 🧬 [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 業務ワークフロー
 - **🏥 医療施設遮蔽**: リニアック・PET・RI施設の設計
 - **⚛️ 原子力施設遮蔽**: 原子炉・燃料施設の遮蔽評価  
 - **🔬 実験室遮蔽**: 加速器・RI実験室の遮蔽計画
@@ -110,19 +110,19 @@
 
 ### 🏥 **医療施設の遮蔽設計者**
 1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で基本操作を習得
-2. **[research_workflows.md](research_workflows.md)** で医療施設設計ワークフローを実践
+2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** で医療施設設計ワークフローを実践
 3. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でMCNP連携を活用
 4. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** で効率的な日常操作
 
 ### ⚛️ **原子力施設の安全解析者**
 1. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で理論的背景を確認
-2. **[research_workflows.md](research_workflows.md)** で原子力施設評価手法を習得
+2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** で原子力施設評価手法を習得
 3. **[API_COMPLETE.md](API_COMPLETE.md)** で高度なAPI活用
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で品質保証手法
 
 ### 🔬 **研究機関の研究者**
 1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で10立体活用の基礎
-2. **[research_workflows.md](research_workflows.md)** で実験室遮蔽計画
+2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** で実験室遮蔽計画
 3. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でPython自動化・データ可視化
 4. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で結果の妥当性評価
 
@@ -226,7 +226,7 @@ System系 (2メソッド):
 | **入門** | 半日 | ESSENTIAL_GUIDE | 基本操作習得 | 簡単計算実行可能 |
 | **基礎** | 1-2日 | +PHYSICS_REFERENCE | 物理背景理解 | 妥当性評価可能 |
 | **実用** | 1週間 | +QUICK_REFERENCE | 効率的操作 | 日常業務効率化 |
-| **応用** | 2週間 | +research_workflows | 分野特化活用 | 専門業務完全対応 |
+| **応用** | 2週間 | +RESEARCH_WORKFLOWS | 分野特化活用 | 専門業務完全対応 |
 | **統合** | 1ヶ月 | +INTEGRATION_GUIDE | システム統合 | 自動化・高度活用 |
 | **管理** | 2ヶ月 | +admin_guide | 運用管理 | 組織的品質管理 |
 
@@ -271,7 +271,7 @@ v1.0.0導入効果:
 
 成功要因:
 1. ESSENTIAL_GUIDEでの段階的学習
-2. research_workflowsでの実践的活用
+2. RESEARCH_WORKFLOWSでの実践的活用
 3. INTEGRATION_GUIDEでのMCNP連携活用
 ```
 
@@ -308,7 +308,7 @@ Week 2: PHYSICS_REFERENCE + QUICK_REFERENCE
 - 4キー単位系完全性理解
 - 日常操作パターンの効率化
 
-Week 3: research_workflows 分野特化
+Week 3: RESEARCH_WORKFLOWS 分野特化
 - 所属分野（医療・原子力・研究）特化学習
 - 実際業務での活用実践
 - 品質保証手法の習得
@@ -330,7 +330,7 @@ Phase 1 (Month 1): 基盤整備
 
 Phase 2 (Month 2): 試行運用  
 - 小規模チームでの試験運用
-- research_workflowsでの実践検証
+- RESEARCH_WORKFLOWSでの実践検証
 - 問題点の抽出・改善
 
 Phase 3 (Month 3): 本格展開
