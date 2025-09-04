@@ -7,7 +7,6 @@ YAML-based input file management tool for radiation-shielding calculation code P
 - **バージョン**: 1.0.0 (安定版リリース)
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
-- **マニフェスト**: `config/mcp-manifest.json`
 - **データ保存**: Claude Application Directory内のサブフォルダ
 - **実行方式**: STDIO通信（MCPプロトコル標準）
 
