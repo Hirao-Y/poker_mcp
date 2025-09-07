@@ -83,12 +83,42 @@ export function createCalculationHandlers(taskManager) {
           resolvedOutputFiles
         });
 
-        // 計算実行（絶対パス化済みの出力ファイルパスを使用）
-        const result = await calculationService.executeCalculation(
+        // 計算実行（統合検証付き、絶対パス化済みの出力ファイルパスを使用）
+        const result = await calculationService.executeWithValidation(
           args.yaml_file,
           summaryOptions,
-          resolvedOutputFiles  // 絶対パス化済み
+          resolvedOutputFiles,  // 絶対パス化済み
+          undefined,           // timeout（デフォルト値を使用）
+          taskManager.dataManager  // 事前検証用DataManager
         );
+
+        // 事前検証で重大エラーが検出された場合の処理
+        if (result.success === false && result.stage === 'pre_validation') {
+          logger.error('Pre-calculation validation failed', {
+            yamlFile: args.yaml_file,
+            criticalErrors: result.criticalErrors
+          });
+          
+          return {
+            success: false,
+            error: result.error,
+            error_type: 'PRE_VALIDATION_FAILED',
+            message: result.message,
+            mcp_error_code: -32048, // Custom code for pre-validation failure
+            validation_details: result.validationResult,
+            critical_errors: result.criticalErrors,
+            details: {
+              category: 'pre_validation_error',
+              recoverable: true,
+              suggestions: [
+                'Resolve geometry collisions if detected',
+                'Check daughter nuclide configurations',
+                'Review enhanced validation warnings',
+                'Ensure all bodies, zones, and sources are properly defined'
+              ]
+            }
+          };
+        }
 
         // 出力ファイル検証（絶対パス化済みのパスを使用）
         const fileVerification = await calculationService.verifyOutputFiles(resolvedOutputFiles);
@@ -102,6 +132,11 @@ export function createCalculationHandlers(taskManager) {
             execution_time_ms: result.executionTime,
             timestamp: result.summary.timestamp,
             options: result.summary.options
+          },
+          validation: {
+            pre_calculation_performed: result.preValidation?.performed || false,
+            pre_calculation_passed: result.preValidation?.passed || false,
+            details: result.preValidation?.details || 'No pre-validation performed'
           },
           outputs: {
             console: {

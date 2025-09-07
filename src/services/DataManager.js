@@ -4,6 +4,9 @@ import path from 'path';
 import yaml from 'js-yaml';
 import { logger } from '../utils/logger.js';
 import { DataError } from '../utils/errors.js';
+import CollisionDetector from '../utils/CollisionDetector.js';
+import NuclideManager from '../utils/NuclideManager.js';
+import EnhancedValidator from '../utils/EnhancedValidator.js';
 
 export class SafeDataManager {
   constructor(yamlFile, pendingFile) {
@@ -13,6 +16,27 @@ export class SafeDataManager {
     this.maxBackups = 10;
     this.data = null;
     this.pendingChanges = [];
+    
+    // 干渉検出器の初期化
+    this.collisionDetector = new CollisionDetector({
+      overlap_tolerance: 1e-6,
+      contact_tolerance: 1e-9,
+      max_auto_corrections: 10
+    });
+    
+    // 核種管理の初期化
+    this.nuclideManager = new NuclideManager({
+      contribution_threshold: 0.05,
+      user_confirmation: true,
+      database_file: 'src/data/ICRP-07.NDX'
+    });
+    
+    // 強化検証の初期化
+    this.enhancedValidator = new EnhancedValidator();
+    
+    // 子孫核種確認状態管理
+    this.pendingDaughterNuclideCheck = null;
+    this.daughterNuclideCheckDisabled = false;
   }
 
   async initialize() {
@@ -92,7 +116,6 @@ export class SafeDataManager {
         "density": "g/cm3",
         "radioactivity": "Bq"
       },
-      "transform": [],
       "body": [],
       "zone": [
         {
@@ -100,6 +123,7 @@ export class SafeDataManager {
           "material": "VOID"
         }
       ],
+      "transform": [],
       "buildup_factor": [],
       "source": [],
       "detector": []
@@ -496,9 +520,13 @@ export class SafeDataManager {
           const detectorObject = {
             name: data.name,
             origin: data.origin,
-            grid: data.grid || [],
             show_path_trace: data.show_path_trace  // 必須パラメータのためデフォルト値適用削除
           };
+          
+          // gridが存在し、かつ空でない場合のみ追加（点検出器は除外）
+          if (data.grid && Array.isArray(data.grid) && data.grid.length > 0) {
+            detectorObject.grid = data.grid;
+          }
           
           // transformが指定されている場合は追加
           if (data.transform) {
@@ -517,6 +545,13 @@ export class SafeDataManager {
               if (key !== 'name') {
                 if (data[key] === null) {
                   delete detector[key];
+                } else if (key === 'grid') {
+                  // gridの特別処理：空配列や空の場合は削除
+                  if (Array.isArray(data[key]) && data[key].length > 0) {
+                    detector[key] = data[key];
+                  } else {
+                    delete detector[key];
+                  }
                 } else {
                   detector[key] = data[key];
                 }
@@ -583,15 +618,13 @@ export class SafeDataManager {
         throw new DataError('unit セクションが存在しません', 'UNIT_NOT_FOUND');
       }
       
-      // データ完全性チェック
+      // 部分更新用データ検証
       this.validateUnitOperation('updateUnit', data);
       
-      // Unit セクション更新（4つのキー全て更新）
+      // Unit セクション部分更新（既存値を保持してマージ）
       this.data.unit = {
-        length: data.length,
-        angle: data.angle,
-        density: data.density,
-        radioactivity: data.radioactivity
+        ...this.data.unit,
+        ...data
       };
       
       logger.info('unit セクションを更新しました', this.data.unit);
@@ -603,15 +636,22 @@ export class SafeDataManager {
   }
   
   validateUnitOperation(action, data) {
-    // 4つのキー完全性チェック
-    const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
-    for (const key of requiredKeys) {
-      if (!data[key]) {
-        throw new DataError(`unit ${action}に必須キー ${key} がありません`, 'UNIT_KEY_MISSING');
+    if (action === 'proposeUnit') {
+      // proposeUnitは4キー完全性必須
+      const requiredKeys = ['length', 'angle', 'density', 'radioactivity'];
+      for (const key of requiredKeys) {
+        if (!data[key]) {
+          throw new DataError(`unit ${action}に必須キー ${key} がありません`, 'UNIT_KEY_MISSING');
+        }
+      }
+    } else if (action === 'updateUnit') {
+      // updateUnitは部分更新許可、提供されたキーのみ検証
+      if (Object.keys(data).length === 0) {
+        throw new DataError('updateUnitには少なくとも1つのキーが必要です', 'UNIT_NO_UPDATES');
       }
     }
     
-    // 単位値妥当性チェック
+    // 単位値妥当性チェック（提供されたキーのみ）
     const validUnits = {
       length: ['m', 'cm', 'mm'],
       angle: ['radian', 'degree'],
@@ -733,6 +773,784 @@ export class SafeDataManager {
     // 特別ログ: 重要な自動修復情報
     for (const action of actions) {
       logger.warn('Unit自動修復', { action });
+    }
+  }
+
+  /**
+   * 立体干渉チェック (マニフェスト enhanced_features.geometry_validation.collision_detection)
+   * @param {string} timing - チェックタイミング ('realtime_basic', 'batch_detailed', 'pre_calculation')
+   * @returns {Object} 干渉チェック結果
+   */
+  async performCollisionCheck(timing = 'batch_detailed') {
+    try {
+      logger.info(`立体干渉チェックを開始 (${timing})`);
+      
+      if (!this.data || !this.data.body) {
+        return { hasCollisions: false, message: '立体データが存在しません' };
+      }
+
+      const bodies = this.data.body;
+      let result;
+
+      switch (timing) {
+        case 'realtime_basic':
+          // リアルタイム: 基本的な重複のみ
+          result = this.collisionDetector.detectCollisions(bodies);
+          break;
+          
+        case 'batch_detailed':
+          // バッチ: 詳細な干渉解析
+          result = this.collisionDetector.detectCollisions(bodies);
+          if (result.hasCollisions) {
+            result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
+          }
+          break;
+          
+        case 'pre_calculation':
+          // 計算前: 完全な検証
+          result = this.collisionDetector.detectCollisions(bodies);
+          if (result.hasCollisions) {
+            result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
+            result.mustResolve = true;
+          }
+          break;
+          
+        default:
+          throw new Error(`無効なタイミング指定: ${timing}`);
+      }
+
+      if (result.hasCollisions) {
+        logger.warn('立体干渉を検出', {
+          collisionCount: result.collisions.length,
+          contactCount: result.contacts.length,
+          timing
+        });
+      } else {
+        logger.info('立体干渉は検出されませんでした', { timing });
+      }
+
+      return result;
+      
+    } catch (error) {
+      logger.error('立体干渉チェック中にエラーが発生', { error: error.message, timing });
+      throw new DataError(`干渉チェックエラー: ${error.message}`, 'COLLISION_CHECK');
+    }
+  }
+
+  /**
+   * 干渉解決の実行
+   * @param {Array} resolutions - 解決策配列
+   * @param {boolean} userConfirmation - ユーザー確認済みかどうか
+   * @returns {Object} 解決結果
+   */
+  async applyCollisionResolutions(resolutions, userConfirmation = false) {
+    try {
+      logger.info('干渉解決を開始', { resolutionCount: resolutions.length, userConfirmation });
+      
+      const appliedActions = [];
+      
+      for (const resolution of resolutions) {
+        switch (resolution.type) {
+          case 'delete':
+            if (userConfirmation) {
+              await this.removeBody(resolution.target);
+              appliedActions.push({
+                type: 'body_deleted',
+                name: resolution.target,
+                reason: resolution.reason
+              });
+            }
+            break;
+            
+          case 'boolean_operation':
+            // CMB立体として新しい立体を作成
+            const cmbName = `resolved_${Date.now()}`;
+            await this.addCombinationBody(cmbName, resolution.expression);
+            appliedActions.push({
+              type: 'cmb_created',
+              name: cmbName,
+              expression: resolution.expression
+            });
+            break;
+        }
+      }
+
+      logger.info('干渉解決完了', { appliedCount: appliedActions.length });
+      return { success: true, appliedActions };
+      
+    } catch (error) {
+      logger.error('干渉解決中にエラー', { error: error.message });
+      throw new DataError(`干渉解決エラー: ${error.message}`, 'RESOLUTION_ERROR');
+    }
+  }
+
+  /**
+   * CMB立体の追加 (内部用)
+   */
+  async addCombinationBody(name, expression) {
+    const cmbBody = {
+      name,
+      type: 'CMB',
+      expression
+    };
+    
+    if (!this.data.body) {
+      this.data.body = [];
+    }
+    
+    this.data.body.push(cmbBody);
+    logger.info('CMB立体を追加', { name, expression });
+  }
+
+  /**
+   * 立体の削除 (内部用)
+   */
+  async removeBody(bodyName) {
+    if (!this.data.body) {
+      return;
+    }
+    
+    const index = this.data.body.findIndex(body => body.name === bodyName);
+    if (index !== -1) {
+      this.data.body.splice(index, 1);
+      logger.info('立体を削除', { bodyName });
+    }
+  }
+
+  /**
+   * 子孫核種自動補間チェック (マニフェスト enhanced_features.nuclide_management.daughter_auto_completion)
+   * @param {Array} sources - 線源配列
+   * @returns {Object} 補間結果
+   */
+  async performDaughterNuclideCheck(sources = null) {
+    try {
+      logger.info('子孫核種自動補間チェックを開始');
+      
+      // 線源データの取得
+      const sourcesToCheck = sources || (this.data && this.data.source) || [];
+      
+      if (sourcesToCheck.length === 0) {
+        return { 
+          success: true, 
+          message: '線源データが存在しません',
+          additionsCount: 0 
+        };
+      }
+
+      const allResults = [];
+      let totalAdditions = 0;
+
+      // 各線源の inventory をチェック
+      for (const source of sourcesToCheck) {
+        if (!source.inventory || source.inventory.length === 0) {
+          continue;
+        }
+
+        logger.info(`線源 ${source.name} の核種をチェック中`, { 
+          inventoryCount: source.inventory.length 
+        });
+
+        const result = await this.nuclideManager.autoCompleteDaughters(source.inventory);
+        
+        if (result.additionsCount > 0) {
+          allResults.push({
+            sourceName: source.name,
+            result: result
+          });
+          totalAdditions += result.additionsCount;
+        }
+      }
+
+      logger.info('子孫核種チェック完了', { 
+        checkedSources: sourcesToCheck.length,
+        totalAdditions: totalAdditions
+      });
+
+      return {
+        success: true,
+        checkedSources: sourcesToCheck.length,
+        sourcesWithAdditions: allResults.length,
+        totalAdditions,
+        results: allResults,
+        requiresConfirmation: totalAdditions > 0
+      };
+
+    } catch (error) {
+      logger.error('子孫核種チェック中にエラー', { error: error.message });
+      throw new DataError(`子孫核種チェックエラー: ${error.message}`, 'DAUGHTER_NUCLIDE_CHECK');
+    }
+  }
+
+  /**
+   * 子孫核種の自動追加実行
+   * @param {Array} additionResults - 追加結果配列
+   * @param {boolean} userConfirmation - ユーザー確認済み
+   * @returns {Object} 実行結果
+   */
+  async applyDaughterNuclideAdditions(additionResults, userConfirmation = false) {
+    try {
+      logger.info('子孫核種の自動追加を開始', { 
+        resultCount: additionResults.length,
+        userConfirmation 
+      });
+
+      if (!userConfirmation) {
+        return { 
+          success: false, 
+          message: 'ユーザー確認が必要です',
+          requiresConfirmation: true 
+        };
+      }
+
+      let totalAdded = 0;
+      const appliedActions = [];
+
+      for (const sourceResult of additionResults) {
+        const source = this.data.source.find(s => s.name === sourceResult.sourceName);
+        
+        if (!source) {
+          logger.warn('線源が見つかりません', { sourceName: sourceResult.sourceName });
+          continue;
+        }
+
+        for (const addition of sourceResult.result.additions) {
+          // 重複チェック
+          const duplicate = source.inventory.find(inv => 
+            inv.nuclide === addition.nuclide
+          );
+          
+          if (!duplicate) {
+            source.inventory.push({
+              nuclide: addition.nuclide,
+              radioactivity: addition.radioactivity
+            });
+            
+            appliedActions.push({
+              type: 'daughter_added',
+              sourceName: source.name,
+              nuclide: addition.nuclide,
+              radioactivity: addition.radioactivity,
+              parent: addition.parent,
+              branchingRatio: addition.branchingRatio
+            });
+            
+            totalAdded++;
+            
+            logger.info('子孫核種を追加', {
+              source: source.name,
+              nuclide: addition.nuclide,
+              parent: addition.parent,
+              activity: addition.radioactivity
+            });
+          }
+        }
+      }
+
+      logger.info('子孫核種追加完了', { totalAdded });
+      
+      return {
+        success: true,
+        totalAdded,
+        appliedActions
+      };
+
+    } catch (error) {
+      logger.error('子孫核種追加中にエラー', { error: error.message });
+      throw new DataError(`子孫核種追加エラー: ${error.message}`, 'DAUGHTER_ADDITION_ERROR');
+    }
+  }
+
+  /**
+   * 核種データベース統計の取得
+   * @returns {Object} データベース統計
+   */
+  async getNuclideDatabaseStats() {
+    try {
+      if (this.nuclideManager.nuclideData.size === 0) {
+        await this.nuclideManager.loadNuclideDatabase();
+      }
+      
+      return this.nuclideManager.getDatabaseStats();
+    } catch (error) {
+      logger.error('核種データベース統計取得エラー', { error: error.message });
+      throw new DataError(`データベース統計エラー: ${error.message}`, 'DATABASE_STATS_ERROR');
+    }
+  }
+
+  /**
+   * 強化された検証の実行 (マニフェスト enhanced_features.enhanced_validation)
+   * @param {string} validationType - 検証タイプ ('full', 'physics', 'units', 'materials')
+   * @returns {Object} 検証結果
+   */
+  async performEnhancedValidation(validationType = 'full') {
+    try {
+      logger.info(`強化検証を開始 (${validationType})`);
+      
+      if (!this.data) {
+        return { 
+          success: false, 
+          message: 'データが存在しません',
+          overall: false
+        };
+      }
+
+      let validationResult;
+
+      switch (validationType) {
+        case 'full':
+          validationResult = await this.enhancedValidator.performComprehensiveValidation(this.data);
+          break;
+        case 'physics':
+          validationResult = await this.runSpecificValidation('physics_consistency');
+          break;
+        case 'units':
+          validationResult = await this.runSpecificValidation('units_compatibility');
+          break;
+        case 'materials':
+          validationResult = await this.runSpecificValidation('material_property');
+          break;
+        default:
+          throw new Error(`無効な検証タイプ: ${validationType}`);
+      }
+
+      if (validationResult.overall) {
+        logger.info('強化検証成功', {
+          type: validationType,
+          warningCount: validationResult.warnings.length
+        });
+      } else {
+        logger.warn('強化検証で問題を検出', {
+          type: validationType,
+          errorCount: validationResult.errors.length
+        });
+      }
+
+      return {
+        success: true,
+        validationType,
+        ...validationResult
+      };
+
+    } catch (error) {
+      logger.error('強化検証中にエラー', { error: error.message });
+      throw new DataError(`強化検証エラー: ${error.message}`, 'ENHANCED_VALIDATION_ERROR');
+    }
+  }
+
+  /**
+   * 計算実行前の統合検証
+   * @returns {Object} 統合検証結果
+   */
+  async performPreCalculationValidation() {
+    try {
+      logger.info('計算実行前の統合検証を開始');
+      
+      const validationResults = {
+        overall: true,
+        collisionCheck: null,
+        daughterNuclideCheck: null,
+        enhancedValidation: null,
+        criticalErrors: [],
+        warnings: [],
+        mustResolve: false
+      };
+
+      // 1. 立体干渉チェック
+      try {
+        validationResults.collisionCheck = await this.performCollisionCheck('pre_calculation');
+        if (validationResults.collisionCheck.hasCollisions) {
+          validationResults.overall = false;
+          validationResults.mustResolve = true;
+          validationResults.criticalErrors.push({
+            type: 'collision_detected',
+            message: '立体干渉が検出されました'
+          });
+        }
+      } catch (error) {
+        validationResults.warnings.push({
+          type: 'collision_check_failed',
+          message: '立体干渉チェックに失敗'
+        });
+      }
+
+      // 2. 子孫核種チェック
+      try {
+        validationResults.daughterNuclideCheck = await this.performDaughterNuclideCheck();
+        if (validationResults.daughterNuclideCheck.totalAdditions > 0) {
+          validationResults.warnings.push({
+            type: 'missing_daughter_nuclides',
+            count: validationResults.daughterNuclideCheck.totalAdditions,
+            message: `${validationResults.daughterNuclideCheck.totalAdditions}個の重要な子孫核種が未設定`
+          });
+        }
+      } catch (error) {
+        validationResults.warnings.push({
+          type: 'daughter_check_failed',
+          message: '子孫核種チェックに失敗'
+        });
+      }
+
+      // 3. 強化検証
+      try {
+        validationResults.enhancedValidation = await this.performEnhancedValidation('full');
+        if (!validationResults.enhancedValidation.overall) {
+          validationResults.overall = false;
+          
+          const criticalErrors = validationResults.enhancedValidation.errors.filter(err => 
+            err.type === 'density_out_of_range' || 
+            err.type === 'detector_too_close' ||
+            err.type === 'missing_unit_section'
+          );
+          
+          if (criticalErrors.length > 0) {
+            validationResults.mustResolve = true;
+            validationResults.criticalErrors.push(...criticalErrors);
+          }
+        }
+      } catch (error) {
+        validationResults.warnings.push({
+          type: 'enhanced_validation_failed',
+          message: '強化検証に失敗'
+        });
+      }
+
+      logger.info('統合検証完了', {
+        overall: validationResults.overall,
+        mustResolve: validationResults.mustResolve,
+        criticalErrorCount: validationResults.criticalErrors.length
+      });
+
+      return validationResults;
+
+    } catch (error) {
+      logger.error('統合検証中にエラー', { error: error.message });
+      throw new DataError(`統合検証エラー: ${error.message}`, 'INTEGRATED_VALIDATION_ERROR');
+    }
+  }
+
+  /**
+   * 特定カテゴリの検証実行
+   */
+  async runSpecificValidation(category) {
+    const rules = this.enhancedValidator.validationRules.get(category);
+    if (!rules) {
+      throw new Error(`未知の検証カテゴリ: ${category}`);
+    }
+
+    const result = await this.enhancedValidator.runCategoryValidation(category, rules, this.data);
+    
+    return {
+      overall: result.passed,
+      categories: { [category]: result },
+      errors: result.errors,
+      warnings: result.warnings,
+      recommendations: result.recommendations
+    };
+  }
+
+  /**
+   * YAML初期化メソッド - poker_resetYaml用
+   * ATMOSPHEREゾーンの保護と段階的リセットを実装
+   */
+  async resetToInitialState(options = {}) {
+    const {
+      backupComment = 'Manual reset before initialization',
+      preserveUnits = true,
+      resetLevel = 'standard',
+      atmosphereMaterial = 'VOID',
+      atmosphereDensity = undefined,
+      force = false
+    } = options;
+
+    try {
+      logger.info('YAML初期化を開始', { resetLevel, preserveUnits, atmosphereMaterial });
+
+      // 1. 現在の単位設定を保存（必要に応じて）
+      let currentUnits = null;
+      if (preserveUnits && this.data && this.data.unit) {
+        currentUnits = { ...this.data.unit };
+        logger.info('既存の単位設定を保持します', currentUnits);
+      }
+
+      // 2. 自動バックアップ作成
+      await this.createBackup(backupComment);
+      logger.info('リセット前のバックアップを作成しました');
+
+      // 3. 保留中の変更をクリア
+      this.pendingChanges = [];
+      await fs.writeFile(this.pendingFile, JSON.stringify([], null, 2));
+      logger.info('保留中の変更をクリアしました');
+
+      // 4. リセットレベルに応じた初期データ作成
+      const initialData = await this.createResetData(resetLevel, currentUnits, atmosphereMaterial, atmosphereDensity);
+
+      // 5. ATMOSPHEREゾーンの必須検証
+      await this.validateAtmosphereZone(initialData);
+
+      // 6. YAMLファイルを初期状態で上書き
+      const yaml = await import('js-yaml');
+      await fs.writeFile(this.yamlFile, yaml.dump(initialData, { flowLevel: 1 }));
+
+      // 7. データを再読み込み
+      await this.loadData();
+
+      // 8. リセット後の検証
+      await this.validateAfterReset();
+
+      const result = {
+        success: true,
+        message: 'YAMLファイルが初期状態にリセットされました',
+        backup_created: true,
+        reset_level: resetLevel,
+        units_preserved: preserveUnits,
+        atmosphere_zone: {
+          material: atmosphereMaterial,
+          density: atmosphereDensity,
+          body_name: 'ATMOSPHERE'
+        }
+      };
+
+      logger.info('YAML初期化が完了しました', result);
+      return result;
+
+    } catch (error) {
+      logger.error('YAML初期化に失敗しました', { error: error.message });
+      throw new DataError(`YAML初期化失敗: ${error.message}`, 'RESET_FAILED');
+    }
+  }
+
+  /**
+   * リセットレベルに応じたデータ作成
+   */
+  async createResetData(resetLevel, currentUnits, atmosphereMaterial, atmosphereDensity) {
+    // 基本的な初期データを作成
+    let initialData = this.createInitialYamlData();
+
+    switch (resetLevel) {
+      case 'minimal':
+        // 単位・変換・ビルドアップ係数・ゾーンを保持
+        if (currentUnits) {
+          initialData.unit = currentUnits;
+        }
+        if (this.data && this.data.transform) {
+          initialData.transform = this.data.transform;
+        }
+        if (this.data && this.data.buildup_factor) {
+          initialData.buildup_factor = this.data.buildup_factor;
+        }
+        if (this.data && this.data.zone) {
+          // ATMOSPHEREを含む全ゾーンを保持
+          initialData.zone = this.data.zone;
+        }
+        break;
+
+      case 'standard':
+        // 単位とATMOSPHEREゾーンのみ保持
+        if (currentUnits) {
+          initialData.unit = currentUnits;
+        }
+        // ATMOSPHEREゾーンは後で設定
+        break;
+
+      case 'complete':
+        // 完全初期化（デフォルトの初期データを使用）
+        break;
+
+      default:
+        throw new DataError(`無効なリセットレベル: ${resetLevel}`, 'INVALID_RESET_LEVEL');
+    }
+
+    // ATMOSPHEREゾーンの設定
+    await this.configureAtmosphereZone(initialData, atmosphereMaterial, atmosphereDensity);
+
+    return initialData;
+  }
+
+  /**
+   * ATMOSPHEREゾーンの設定
+   */
+  async configureAtmosphereZone(data, material, density) {
+    // ゾーンセクションが配列でない場合は初期化
+    if (!data.zone || !Array.isArray(data.zone)) {
+      data.zone = [];
+    }
+
+    // ATMOSPHEREゾーンの設定
+    const atmosphereZone = {
+      body_name: "ATMOSPHERE",
+      material: material
+    };
+
+    // VOID以外の材料の場合は密度を設定
+    if (material !== 'VOID') {
+      if (density === undefined) {
+        throw new DataError(`材料 ${material} には密度の指定が必要です`, 'ATMOSPHERE_DENSITY_REQUIRED');
+      }
+      atmosphereZone.density = density;
+    } else {
+      // VOID材料の場合、密度が指定されていれば警告して削除
+      if (density !== undefined) {
+        logger.warn('VOID材料では密度指定を無視します', { density });
+      }
+    }
+
+    // 既存のATMOSPHEREゾーンを削除して新しいものを追加
+    data.zone = data.zone.filter(z => z.body_name !== 'ATMOSPHERE');
+    data.zone.push(atmosphereZone);
+    logger.info('ATMOSPHEREゾーンを設定しました', atmosphereZone);
+  }
+
+  /**
+   * ATMOSPHEREゾーンの必須検証
+   */
+  async validateAtmosphereZone(data) {
+    if (!data.zone || !Array.isArray(data.zone)) {
+      throw new DataError('ゾーンセクションが存在しないか配列ではありません', 'ATMOSPHERE_VALIDATION');
+    }
+
+    const atmosphereZone = data.zone.find(z => z.body_name === 'ATMOSPHERE');
+    if (!atmosphereZone) {
+      throw new DataError('ATMOSPHEREゾーンが存在しません', 'ATMOSPHERE_MISSING');
+    }
+
+    if (!atmosphereZone.material) {
+      throw new DataError('ATMOSPHEREゾーンに材料が指定されていません', 'ATMOSPHERE_NO_MATERIAL');
+    }
+
+    // VOID材料の場合、密度指定は禁止
+    if (atmosphereZone.material === 'VOID' && atmosphereZone.density !== undefined) {
+      logger.warn('VOID材料では密度指定を削除します');
+      delete atmosphereZone.density;
+    }
+
+    // VOID以外の材料で密度が未指定の場合はエラー
+    if (atmosphereZone.material !== 'VOID' && atmosphereZone.density === undefined) {
+      throw new DataError(`材料 ${atmosphereZone.material} には密度の指定が必要です`, 'ATMOSPHERE_DENSITY_MISSING');
+    }
+
+    logger.info('ATMOSPHEREゾーンの検証が完了しました', atmosphereZone);
+    return true;
+  }
+
+  /**
+   * リセット後の検証
+   */
+  async validateAfterReset() {
+    try {
+      // 基本的な構造検証
+      if (!this.data.unit) {
+        throw new DataError('単位セクションが存在しません', 'POST_RESET_VALIDATION');
+      }
+
+      if (!this.data.zone || !Array.isArray(this.data.zone)) {
+        throw new DataError('ゾーンセクションが存在しないか配列ではありません', 'POST_RESET_VALIDATION');
+      }
+
+      const atmosphereZone = this.data.zone.find(z => z.body_name === 'ATMOSPHERE');
+      if (!atmosphereZone) {
+        throw new DataError('ATMOSPHEREゾーンが存在しません', 'POST_RESET_VALIDATION');
+      }
+
+      // 単位セクションの4キー検証
+      const requiredUnitKeys = ['length', 'angle', 'density', 'radioactivity'];
+      const missingKeys = requiredUnitKeys.filter(key => !this.data.unit[key]);
+      if (missingKeys.length > 0) {
+        throw new DataError(`単位セクションに不足キー: ${missingKeys.join(', ')}`, 'POST_RESET_VALIDATION');
+      }
+
+      logger.info('リセット後の検証が完了しました');
+      return true;
+
+    } catch (error) {
+      logger.error('リセット後の検証に失敗', { error: error.message });
+      throw new DataError(`リセット後検証失敗: ${error.message}`, 'POST_RESET_VALIDATION_FAILED');
+    }
+  }
+
+  /**
+   * 子孫核種チェック無効化の設定
+   * @param {boolean} disabled - 無効化するかどうか
+   */
+  setDaughterNuclideCheckDisabled(disabled) {
+    this.daughterNuclideCheckDisabled = disabled;
+    logger.info('子孫核種チェック無効化設定', { disabled });
+  }
+
+  /**
+   * 修正された子孫核種データを適用
+   * @param {Array} modifications - 修正データ配列
+   * @returns {Object} 適用結果
+   */
+  async applyModifiedDaughterNuclides(modifications) {
+    try {
+      logger.info('修正された子孫核種データの適用開始', { 
+        modificationCount: modifications.length 
+      });
+
+      let appliedCount = 0;
+      const appliedActions = [];
+
+      for (const mod of modifications) {
+        if (!mod.include) {
+          continue; // 含めないものはスキップ
+        }
+
+        const source = this.data.source.find(s => s.name === mod.source_name);
+        if (!source) {
+          logger.warn('線源が見つかりません', { sourceName: mod.source_name });
+          continue;
+        }
+
+        // 既存の核種をチェック
+        const existingIndex = source.inventory.findIndex(inv => 
+          this.nuclideManager.normalizeNuclideName(inv.nuclide) === 
+          this.nuclideManager.normalizeNuclideName(mod.nuclide)
+        );
+
+        if (existingIndex >= 0) {
+          // 既存の核種を更新
+          source.inventory[existingIndex].radioactivity = mod.radioactivity;
+          appliedActions.push({
+            action: 'update',
+            source: mod.source_name,
+            nuclide: mod.nuclide,
+            radioactivity: mod.radioactivity
+          });
+        } else {
+          // 新しい核種を追加
+          source.inventory.push({
+            nuclide: mod.nuclide,
+            radioactivity: mod.radioactivity
+          });
+          appliedActions.push({
+            action: 'add',
+            source: mod.source_name,
+            nuclide: mod.nuclide,
+            radioactivity: mod.radioactivity
+          });
+        }
+
+        appliedCount++;
+      }
+
+      // データを保存
+      await this.saveData();
+
+      logger.info('修正された子孫核種データの適用完了', { 
+        appliedCount,
+        appliedActions: appliedActions.length
+      });
+
+      return {
+        success: true,
+        appliedCount,
+        appliedActions,
+        message: `${appliedCount}個の子孫核種を適用しました`
+      };
+
+    } catch (error) {
+      logger.error('修正された子孫核種データの適用エラー', { error: error.message });
+      throw new DataError(`修正子孫核種適用エラー: ${error.message}`, 'MODIFIED_DAUGHTER_APPLY');
     }
   }
 }

@@ -13,6 +13,20 @@ export function createBodyHandlers(taskManager) {
       } catch (error) {
         logger.error('proposeBodyハンドラーエラー', { args, error: error.message });
         
+        // マニフェスト仕様のpropose専用エラーコード処理
+        if (error.code === -32064) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'updateBodyメソッドを使用してください',
+              existingObject: args.name,
+              objectType: '立体'
+            }
+          };
+        }
+        
         // CMB専用エラーハンドリング
         if (error.message && (
           error.message.includes('演算式で参照されている立体が存在しません') ||
@@ -45,6 +59,21 @@ export function createBodyHandlers(taskManager) {
         return { success: true, message: result };
       } catch (error) {
         logger.error('updateBodyハンドラーエラー', { args, error: error.message });
+        
+        // マニフェスト仕様のupdate専用エラーコード処理
+        if (error.code === -32065) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'proposeBodyメソッドを使用してください',
+              missingObject: args.name,
+              objectType: '立体'
+            }
+          };
+        }
+        
         throw error;
       }
     },

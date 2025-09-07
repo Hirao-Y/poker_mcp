@@ -2,7 +2,7 @@
 export const buildupFactorTools = [
   {
     name: 'poker_proposeBuildupFactor',
-    description: 'ビルドアップ係数を提案します',
+    description: 'ビルドアップ係数を提案します。【重要】use_slant_correction と use_finite_medium_correction は必須パラメータですが、標準的な遮蔽計算では両方ともfalseを指定してください。特殊な高精度計算が明確に必要な場合のみtrueを使用します。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -12,12 +12,12 @@ export const buildupFactorTools = [
         },
         use_slant_correction: {
           type: 'boolean',
-          description: 'スラント補正を使用するか',
+          description: 'スラント補正: false=標準計算（推奨）、true=複雑角度幾何学のみ',
           default: false
         },
         use_finite_medium_correction: {
           type: 'boolean',
-          description: '有限媒体補正を使用するか',
+          description: '有限媒体補正: false=標準計算（推奨）、true=境界効果高精度計算のみ',
           default: false
         }
       },

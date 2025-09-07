@@ -47,6 +47,22 @@ export class PokerMcpError extends McpError {
   // 材料制約強化エラーコード
   static UNSUPPORTED_MATERIAL_WITH_SUGGESTION = -32054;
 
+  // propose/update専用エラーコード（マニフェスト仕様準拠）
+  static ZONE_ALREADY_EXISTS_FOR_PROPOSE = -32060;
+  static ZONE_NOT_FOUND_FOR_UPDATE = -32061;
+  static BODY_ALREADY_EXISTS_FOR_PROPOSE = -32064;
+  static BODY_NOT_FOUND_FOR_UPDATE = -32065;
+  static BUILDUP_FACTOR_ALREADY_EXISTS_FOR_PROPOSE = -32070;
+  static BUILDUP_FACTOR_NOT_FOUND_FOR_UPDATE = -32071;
+  static TRANSFORM_ALREADY_EXISTS_FOR_PROPOSE = -32074;
+  static TRANSFORM_NOT_FOUND_FOR_UPDATE = -32075;
+  static SOURCE_ALREADY_EXISTS_FOR_PROPOSE = -32078;
+  static SOURCE_NOT_FOUND_FOR_UPDATE = -32079;
+  static DETECTOR_ALREADY_EXISTS_FOR_PROPOSE = -32082;
+  static DETECTOR_NOT_FOUND_FOR_UPDATE = -32083;
+  static UNIT_ALREADY_EXISTS_FOR_PROPOSE = -32086;
+  static UNIT_NOT_FOUND_FOR_UPDATE = -32087;
+
   constructor(code, message, field = null, value = null) {
     super(code, message);
     this.field = field;
@@ -183,6 +199,63 @@ export class PokerMcpError extends McpError {
     const message = `Unsupported material '${material}'. Did you mean '${suggestedSubstitute}'? Supported materials: ${supportedList.join(', ')}`;
     return new PokerMcpError(this.UNSUPPORTED_MATERIAL_WITH_SUGGESTION, message, 'material', material);
   }
+
+  // propose/update専用エラー用便利メソッド（マニフェスト仕様準拠）
+  static bodyAlreadyExistsForPropose(name) {
+    return new PokerMcpError(this.BODY_ALREADY_EXISTS_FOR_PROPOSE, `立体'${name}'は既に存在します。更新する場合はupdateBodyメソッドを使用してください`, 'name', name);
+  }
+
+  static bodyNotFoundForUpdate(name) {
+    return new PokerMcpError(this.BODY_NOT_FOUND_FOR_UPDATE, `立体'${name}'が存在しません。新規作成する場合はproposeBodyメソッドを使用してください`, 'name', name);
+  }
+
+  static zoneAlreadyExistsForPropose(bodyName) {
+    return new PokerMcpError(this.ZONE_ALREADY_EXISTS_FOR_PROPOSE, `ゾーン'${bodyName}'は既に存在します。更新する場合はupdateZoneメソッドを使用してください`, 'body_name', bodyName);
+  }
+
+  static zoneNotFoundForUpdate(bodyName) {
+    return new PokerMcpError(this.ZONE_NOT_FOUND_FOR_UPDATE, `ゾーン'${bodyName}'が存在しません。新規作成する場合はproposeZoneメソッドを使用してください`, 'body_name', bodyName);
+  }
+
+  static buildupFactorAlreadyExistsForPropose(material) {
+    return new PokerMcpError(this.BUILDUP_FACTOR_ALREADY_EXISTS_FOR_PROPOSE, `ビルドアップ係数'${material}'は既に存在します。更新する場合はupdateBuildupFactorメソッドを使用してください`, 'material', material);
+  }
+
+  static buildupFactorNotFoundForUpdate(material) {
+    return new PokerMcpError(this.BUILDUP_FACTOR_NOT_FOUND_FOR_UPDATE, `ビルドアップ係数'${material}'が存在しません。新規作成する場合はproposeBuildupFactorメソッドを使用してください`, 'material', material);
+  }
+
+  static transformAlreadyExistsForPropose(name) {
+    return new PokerMcpError(this.TRANSFORM_ALREADY_EXISTS_FOR_PROPOSE, `変換'${name}'は既に存在します。更新する場合はupdateTransformメソッドを使用してください`, 'name', name);
+  }
+
+  static transformNotFoundForUpdate(name) {
+    return new PokerMcpError(this.TRANSFORM_NOT_FOUND_FOR_UPDATE, `変換'${name}'が存在しません。新規作成する場合はproposeTransformメソッドを使用してください`, 'name', name);
+  }
+
+  static sourceAlreadyExistsForPropose(name) {
+    return new PokerMcpError(this.SOURCE_ALREADY_EXISTS_FOR_PROPOSE, `線源'${name}'は既に存在します。更新する場合はupdateSourceメソッドを使用してください`, 'name', name);
+  }
+
+  static sourceNotFoundForUpdate(name) {
+    return new PokerMcpError(this.SOURCE_NOT_FOUND_FOR_UPDATE, `線源'${name}'が存在しません。新規作成する場合はproposeSourceメソッドを使用してください`, 'name', name);
+  }
+
+  static detectorAlreadyExistsForPropose(name) {
+    return new PokerMcpError(this.DETECTOR_ALREADY_EXISTS_FOR_PROPOSE, `検出器'${name}'は既に存在します。更新する場合はupdateDetectorメソッドを使用してください`, 'name', name);
+  }
+
+  static detectorNotFoundForUpdate(name) {
+    return new PokerMcpError(this.DETECTOR_NOT_FOUND_FOR_UPDATE, `検出器'${name}'が存在しません。新規作成する場合はproposeDetectorメソッドを使用してください`, 'name', name);
+  }
+
+  static unitAlreadyExistsForPropose() {
+    return new PokerMcpError(this.UNIT_ALREADY_EXISTS_FOR_PROPOSE, `単位設定は既に存在します。更新する場合はupdateUnitメソッドを使用してください`);
+  }
+
+  static unitNotFoundForUpdate() {
+    return new PokerMcpError(this.UNIT_NOT_FOUND_FOR_UPDATE, `単位設定が存在しません。新規作成する場合はproposeUnitメソッドを使用してください`);
+  }
 }
 
 // エラーコードマッピング（逆引き用）
@@ -221,5 +294,19 @@ export const ERROR_CODE_MAP = {
   [-32051]: 'show_path_trace parameter is required',
   [-32052]: 'use_slant_correction parameter is required',
   [-32053]: 'use_finite_medium_correction parameter is required',
-  [-32054]: 'Unsupported material with suggestion'
+  [-32054]: 'Unsupported material with suggestion',
+  [-32060]: 'Zone already exists for propose',
+  [-32061]: 'Zone not found for update',
+  [-32064]: 'Body already exists for propose',
+  [-32065]: 'Body not found for update',
+  [-32070]: 'Buildup factor already exists for propose',
+  [-32071]: 'Buildup factor not found for update',
+  [-32074]: 'Transform already exists for propose',
+  [-32075]: 'Transform not found for update',
+  [-32078]: 'Source already exists for propose',
+  [-32079]: 'Source not found for update',
+  [-32082]: 'Detector already exists for propose',
+  [-32083]: 'Detector not found for update',
+  [-32086]: 'Unit already exists for propose',
+  [-32087]: 'Unit not found for update'
 };

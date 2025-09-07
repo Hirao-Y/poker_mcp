@@ -31,6 +31,21 @@ export function createZoneHandlers(taskManager) {
         return { success: true, message: result };
       } catch (error) {
         logger.error('proposeZoneハンドラーエラー', { args, error: error.message });
+        
+        // マニフェスト仕様のpropose専用エラーコード処理
+        if (error.code === -32060) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'updateZoneメソッドを使用してください',
+              existingObject: args.body_name,
+              objectType: 'ゾーン'
+            }
+          };
+        }
+        
         throw error;
       }
     },
@@ -49,8 +64,8 @@ export function createZoneHandlers(taskManager) {
               args.density
             );
           }
-
-          // 非VOID材料での密度必須チェック
+          
+          // 非VOID材料への変更時の密度必須チェック
           if (args.material !== 'VOID' && args.density === undefined) {
             throw new ValidationError(
               'Density must be specified for non-VOID materials', 
@@ -65,6 +80,21 @@ export function createZoneHandlers(taskManager) {
         return { success: true, message: result };
       } catch (error) {
         logger.error('updateZoneハンドラーエラー', { args, error: error.message });
+        
+        // マニフェスト仕様のupdate専用エラーコード処理
+        if (error.code === -32061) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'proposeZoneメソッドを使用してください',
+              missingObject: args.body_name,
+              objectType: 'ゾーン'
+            }
+          };
+        }
+        
         throw error;
       }
     },

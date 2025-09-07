@@ -295,7 +295,8 @@ export class CalculationService {
     }
 
     // コマンドライン引数の構築
-    const args = [yamlFile];
+    const absoluteYamlPath = path.resolve(yamlFile);
+    const args = [absoluteYamlPath];
     
     // サマリーオプション
     if (normalizedSummary.show_parameters) args.push('-p');
@@ -521,5 +522,135 @@ export class CalculationService {
     }
 
     return verification;
+  }
+
+  /**
+   * 計算実行（統合検証付き）
+   * @param {string} yamlFile - 入力YAMLファイル
+   * @param {Object} summaryOptions - サマリーオプション
+   * @param {Object} outputFiles - 出力ファイル設定
+   * @param {number} timeout - タイムアウト時間（ミリ秒）
+   * @param {Object} dataManager - データマネージャーインスタンス（オプション）
+   * @returns {Promise<Object>} 実行結果
+   */
+  async executeWithValidation(yamlFile, summaryOptions = {}, outputFiles = {}, timeout = this.defaultTimeout, dataManager = null) {
+    try {
+      logger.info('統合検証付き計算実行を開始', { yamlFile });
+
+      // 事前検証の実行
+      if (dataManager) {
+        logger.info('計算実行前の統合検証を実行中...');
+        
+        const validationResult = await dataManager.performPreCalculationValidation();
+        
+        if (validationResult.mustResolve) {
+          logger.error('計算実行前に解決が必要な重大エラーを検出', {
+            criticalErrorCount: validationResult.criticalErrors.length
+          });
+          
+          return {
+            success: false,
+            stage: 'pre_validation',
+            error: 'CRITICAL_VALIDATION_ERRORS',
+            message: '計算実行前に解決が必要な重大エラーがあります',
+            validationResult,
+            criticalErrors: validationResult.criticalErrors
+          };
+        }
+
+        // 子孫核種検出時の処理
+        if (validationResult.daughterNuclideCheck?.totalAdditions > 0 && 
+            !dataManager.daughterNuclideCheckDisabled) {
+          logger.info('子孫核種が検出されました - 計算を中断してユーザー確認を要求');
+          
+          return {
+            success: false,
+            stage: 'requires_confirmation',
+            status: 'requires_confirmation',
+            calculation_blocked: true,
+            error: 'DAUGHTER_NUCLIDE_CONFIRMATION_REQUIRED',
+            message: '子孫核種が検出されました。poker_confirmDaughterNuclidesで確認してください',
+            daughter_nuclide_suggestions: this.formatDaughterNuclideSuggestions(validationResult.daughterNuclideCheck),
+            total_additions: validationResult.daughterNuclideCheck.totalAdditions,
+            available_actions: [
+              'poker_confirmDaughterNuclides action="check" - 詳細確認',
+              'poker_confirmDaughterNuclides action="confirm" - 承認して適用',
+              'poker_confirmDaughterNuclides action="confirm_with_modifications" - 修正して適用',
+              'poker_confirmDaughterNuclides action="reject" - 拒否'
+            ],
+            next_step: 'poker_confirmDaughterNuclidesを実行後、再度poker_executeCalculationを実行してください'
+          };
+        }
+
+        if (!validationResult.overall) {
+          logger.warn('検証で警告が検出されましたが、計算を継続します', {
+            warningCount: validationResult.warnings.length
+          });
+        }
+
+        // 検証結果をログに記録
+        logger.info('事前検証完了', {
+          overall: validationResult.overall,
+          collisionCheck: validationResult.collisionCheck?.hasCollisions || false,
+          daughterNuclideIssues: validationResult.daughterNuclideCheck?.totalAdditions || 0,
+          enhancedValidationPassed: validationResult.enhancedValidation?.overall || false
+        });
+      }
+
+      // 通常の計算実行
+      const calculationResult = await this.executeCalculation(yamlFile, summaryOptions, outputFiles, timeout);
+
+      // 結果に検証情報を追加
+      if (dataManager) {
+        calculationResult.preValidation = {
+          performed: true,
+          passed: true,
+          details: 'Pre-calculation validation completed successfully'
+        };
+      }
+
+      return calculationResult;
+
+    } catch (error) {
+      logger.error('統合検証付き計算実行でエラー', { error: error.message, yamlFile });
+      throw new CalculationError(`統合計算実行エラー: ${error.message}`, 'INTEGRATED_EXECUTION_ERROR');
+    }
+  }
+
+  /**
+   * 子孫核種提案のフォーマット
+   * @param {Object} daughterNuclideCheck - 子孫核種チェック結果
+   * @returns {Array} フォーマットされた提案
+   */
+  formatDaughterNuclideSuggestions(daughterNuclideCheck) {
+    const suggestions = [];
+    
+    if (daughterNuclideCheck.results) {
+      for (const sourceResult of daughterNuclideCheck.results) {
+        const sourceData = {
+          source_name: sourceResult.sourceName,
+          detected_daughters: []
+        };
+        
+        if (sourceResult.result && sourceResult.result.additions) {
+          for (const addition of sourceResult.result.additions) {
+            sourceData.detected_daughters.push({
+              nuclide: addition.nuclide,
+              radioactivity: addition.radioactivity,
+              parent_nuclide: addition.parent,
+              branching_ratio: addition.branchingRatio,
+              equilibrium_type: addition.equilibriumType,
+              calculation_basis: `${addition.parent} → ${addition.nuclide} (分岐比: ${(addition.branchingRatio * 100).toFixed(2)}%)`
+            });
+          }
+        }
+        
+        if (sourceData.detected_daughters.length > 0) {
+          suggestions.push(sourceData);
+        }
+      }
+    }
+    
+    return suggestions;
   }
 }

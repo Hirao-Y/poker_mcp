@@ -78,6 +78,30 @@ export class DetectorValidator {
       );
     }
     
+    // 点検出器とグリッド検出器の仕様チェック
+    const hasGrid = grid && Array.isArray(grid) && grid.length > 0;
+    const hasGridParameter = 'grid' in detectorData;
+    
+    if (!hasGrid && hasGridParameter) {
+      // 点検出器の場合：gridパラメータの存在チェック
+      throw PokerMcpError.validationError(
+        '点検出器にはgridパラメータを指定できません。gridパラメータを削除してください。',
+        'grid',
+        grid,
+        -32052
+      );
+    }
+    
+    if (hasGrid && (!Array.isArray(grid) || grid.length === 0)) {
+      // グリッド検出器の場合：gridの必須チェック
+      throw PokerMcpError.validationError(
+        'グリッド検出器にはgridパラメータが必須です。有効なgrid配列を指定してください。',
+        'grid',
+        grid,
+        -32053
+      );
+    }
+    
     return true;
   }
 
@@ -322,7 +346,7 @@ export class DetectorValidator {
     
     // グリッドの完全検証
     let gridAnalysis = null;
-    if (grid && grid.length > 0) {
+    if (grid?.length > 0) {
       gridAnalysis = this.validateCompleteGrid(grid);
     }
     

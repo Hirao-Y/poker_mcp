@@ -124,6 +124,21 @@ export function createUnitHandlers(taskManager) {
         
       } catch (error) {
         logger.error('単位設定提案エラー', { args, error: error.message });
+        
+        // マニフェスト仕様のpropose専用エラーコード処理
+        if (error.code === -32086) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'updateUnitメソッドを使用してください',
+              existingObject: 'unit',
+              objectType: '単位設定'
+            }
+          };
+        }
+        
         throw error;
       }
     },
@@ -180,6 +195,21 @@ export function createUnitHandlers(taskManager) {
         
       } catch (error) {
         logger.error('単位設定更新エラー', { args, error: error.message });
+        
+        // マニフェスト仕様のupdate専用エラーコード処理
+        if (error.code === -32087) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'proposeUnitメソッドを使用してください',
+              missingObject: 'unit',
+              objectType: '単位設定'
+            }
+          };
+        }
+        
         throw error;
       }
     },

@@ -229,10 +229,8 @@ export class TaskManager {
       // UnitValidatorによる4キー完全性検証
       UnitValidator.validateFourKeyCompleteness(unitData);
       
-      // 既存単位設定の確認
-      if (this.data.unit) {
-        throw PokerMcpError.duplicateName('unit', 'unit section already exists');
-      }
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('unit', 'unit', (n) => this.data.unit ? 'unit' : null);
       
       // 物理的整合性検証
       const physicalConsistency = UnitValidator.validatePhysicalConsistency(unitData);
@@ -355,9 +353,8 @@ export class TaskManager {
 
   async updateUnit(updates) {
     try {
-      if (!this.data.unit) {
-        throw new ValidationError('単位設定が存在しません', 'unit', null);
-      }
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('unit', 'unit', (n) => this.data.unit ? 'unit' : null);
       
       // 部分更新での4キー保持検証
       const validationResult = UnitValidator.validatePartialUpdate(this.data.unit, updates);
@@ -605,6 +602,86 @@ export class TaskManager {
     return this.data.body?.find(b => b.name === name);
   }
 
+  /**
+   * propose系メソッド用の前提条件チェック（新規作成専用）
+   * マニフェスト仕様準拠: オブジェクトが既に存在する場合は専用エラーで拒否
+   */
+  validateProposalPrerequisites(objectType, name, existingCheckMethod) {
+    const exists = existingCheckMethod(name);
+    if (exists) {
+      const errorCodes = {
+        'body': -32064,
+        'zone': -32060, 
+        'buildup_factor': -32070,
+        'transform': -32074,
+        'source': -32078,
+        'detector': -32082,
+        'unit': -32086
+      };
+      
+      const objectTypeDisplayName = {
+        'body': '立体',
+        'zone': 'ゾーン',
+        'buildup_factor': 'ビルドアップ係数',
+        'transform': '変換',
+        'source': '線源',
+        'detector': '検出器',
+        'unit': '単位設定'
+      };
+      
+      const methodSuffix = objectType.charAt(0).toUpperCase() + objectType.slice(1);
+      throw new PokerMcpError(
+        errorCodes[objectType],
+        `${objectTypeDisplayName[objectType]}'${name}'は既に存在します。更新する場合はupdate${methodSuffix}メソッドを使用してください`,
+        { 
+          name, 
+          suggestion: `update${methodSuffix}`,
+          objectType: objectTypeDisplayName[objectType]
+        }
+      );
+    }
+  }
+
+  /**
+   * update系メソッド用の前提条件チェック（既存更新専用）
+   * マニフェスト仕様準拠: オブジェクトが存在しない場合は専用エラーで拒否
+   */
+  validateUpdatePrerequisites(objectType, name, existingCheckMethod) {
+    const exists = existingCheckMethod(name);
+    if (!exists) {
+      const errorCodes = {
+        'body': -32065,
+        'zone': -32061,
+        'buildup_factor': -32071, 
+        'transform': -32075,
+        'source': -32079,
+        'detector': -32083,
+        'unit': -32087
+      };
+      
+      const objectTypeDisplayName = {
+        'body': '立体',
+        'zone': 'ゾーン',
+        'buildup_factor': 'ビルドアップ係数',
+        'transform': '変換',
+        'source': '線源',
+        'detector': '検出器',
+        'unit': '単位設定'
+      };
+      
+      const methodSuffix = objectType.charAt(0).toUpperCase() + objectType.slice(1);
+      throw new PokerMcpError(
+        errorCodes[objectType],
+        `${objectTypeDisplayName[objectType]}'${name}'が存在しません。新規作成する場合はpropose${methodSuffix}メソッドを使用してください`,
+        { 
+          name, 
+          suggestion: `propose${methodSuffix}`,
+          objectType: objectTypeDisplayName[objectType]
+        }
+      );
+    }
+  }
+
   // 全立体の取得（pending changes含む）
   getAllBodies() {
     const currentBodies = this.data.body || [];
@@ -622,6 +699,14 @@ export class TaskManager {
 
   findDetectorByName(name) {
     return this.data.detector?.find(d => d.name === name);
+  }
+
+  findBuildupFactorByMaterial(material) {
+    return this.data.buildup_factor?.find(bf => bf.material === material);
+  }
+
+  findTransformByName(name) {
+    return this.data.transform?.find(t => t.name === name);
   }
 
   validatePosition(position) {
@@ -739,11 +824,14 @@ export class TaskManager {
     }
     
     // グリッドデータの正規化
-    if (normalized.grid && Array.isArray(normalized.grid)) {
+    if (normalized.grid && Array.isArray(normalized.grid) && normalized.grid.length > 0) {
       normalized.grid = normalized.grid.map(gridItem => ({
         edge: this.normalizeCoordinates(gridItem.edge),
         number: Number(gridItem.number)
       }));
+    } else if ('grid' in normalized && (!normalized.grid || normalized.grid.length === 0)) {
+      // 空配列または空の場合はgridプロパティ自体を削除
+      delete normalized.grid;
     }
     
     // show_path_traceは必須パラメータのため、デフォルト値設定を削除
@@ -820,6 +908,9 @@ export class TaskManager {
       this.validateBodyName(name);
       ManifestValidator.validateBodyType(type, 'type');
       
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('body', name, (n) => this.findBodyByName(n));
+      
       // CMB専用処理
       if (type === 'CMB') {
         // 現在の立体一覧を取得（pending changesも含む）
@@ -845,11 +936,6 @@ export class TaskManager {
           'body', 
           name
         );
-      }
-
-      // 重複チェック
-      if (this.findBodyByName(name)) {
-        throw PokerMcpError.duplicateName(name, 'body');
       }
 
       const newBody = this.createBodyObject(name, type, options);
@@ -967,9 +1053,27 @@ export class TaskManager {
   // ゾーン関連メソッド
   async proposeZone(body_name, material, density) {
     try {
-      // バリデーション
-      this.validateZoneProposal(body_name, material, density);
+      // 既存のバリデーション
       PhysicsValidator.validateMaterialDensity(material, density);
+      
+      // ゾーン新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('zone', body_name, (n) => this.findZoneByBodyName(n));
+      
+      // 立体存在チェック（ATMOSPHERE除く）
+      if (body_name !== 'ATMOSPHERE') {
+        const body = this.findBodyByName(body_name);
+        if (!body) {
+          throw new ValidationError(`立体 ${body_name} が存在しません`, 'body_name', body_name);
+        }
+      }
+      
+      // 材料代替機能付きバリデーション
+      try {
+        MaterialAlternatives.validateMaterialWithSuggestion(material, 'material');
+      } catch (error) {
+        // MaterialAlternativesからのエラーをValidationErrorに変換
+        throw new ValidationError(error.message, 'material', material);
+      }
 
       const newZone = { body_name, material };
       if (material !== 'VOID') {
@@ -987,28 +1091,6 @@ export class TaskManager {
     } catch (error) {
       logger.error('ゾーン提案エラー', { body_name, material, error: error.message });
       throw error;
-    }
-  }
-
-  validateZoneProposal(body_name, material, density) {
-    if (body_name !== 'ATMOSPHERE') {
-      const body = this.findBodyByName(body_name);
-      if (!body) {
-        throw new ValidationError(`立体 ${body_name} が存在しません`, 'body_name', body_name);
-      }
-    }
-
-    const existingZone = this.findZoneByBodyName(body_name);
-    if (existingZone) {
-      throw new ValidationError(`ゾーン ${body_name} は既に存在します`, 'body_name', body_name);
-    }
-    
-    // 材料代替機能付きバリデーション
-    try {
-      MaterialAlternatives.validateMaterialWithSuggestion(material, 'material');
-    } catch (error) {
-      // MaterialAlternativesからのエラーをValidationErrorに変換
-      throw new ValidationError(error.message, 'material', material);
     }
   }
 
@@ -1056,11 +1138,11 @@ export class TaskManager {
         throw new ValidationError('operationは配列で1つ以上必要です', 'operation', operations);
       }
 
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('transform', name, (n) => this.findTransformByName(n));
+
       // 基本バリデーション
       TransformValidator.validateTransformOperations(operations);
-      
-      // 一意性チェック
-      TransformValidator.validateTransformUniqueness(name, this.data.transform, this.pendingChanges);
       
       // 物理的妥当性チェック
       const physicsAnalysis = TransformValidator.validateTransformPhysics(operations, name);
@@ -1087,6 +1169,9 @@ export class TaskManager {
   async updateTransform(name, updates) {
     try {
       if (!name) throw new ValidationError('変換のnameは必須です', 'name', name);
+      
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('transform', name, (n) => this.findTransformByName(n));
       
       await this.dataManager.addPendingChange({
         action: 'updateTransform',
@@ -1129,6 +1214,9 @@ export class TaskManager {
     try {
       if (!material) throw new ValidationError('materialは必須です', 'material', material);
       
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('buildup_factor', material, (m) => this.findBuildupFactorByMaterial(m));
+      
       // 材料代替機能付きバリデーション
       try {
         MaterialAlternatives.validateMaterialWithSuggestion(material, 'material');
@@ -1157,6 +1245,9 @@ export class TaskManager {
   async updateBuildupFactor(material, updates) {
     try {
       if (!material) throw new ValidationError('materialは必須です', 'material', material);
+      
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('buildup_factor', material, (m) => this.findBuildupFactorByMaterial(m));
       
       await this.dataManager.addPendingChange({
         action: 'updateBuildupFactor',
@@ -1224,17 +1315,15 @@ export class TaskManager {
       if (!name) throw PokerMcpError.validationError('線源のnameは必須です', 'name', name);
       ManifestValidator.validateObjectName(name, 'source name');
       
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('source', name, (n) => this.findSourceByName(n));
+      
       if (!type) throw PokerMcpError.validationError('線源のtypeは必須です', 'type', type);
       if (!inventory) throw PokerMcpError.validationError('線源のinventoryは必須です', 'inventory', inventory);
       
       // Source構造の包括的検証（SourceValidatorを使用）
       const validationResult = SourceValidator.validateCompleteSourceStructure(params);
       logger.info('SourceValidator検証結果', validationResult);
-      
-      // 重複チェック
-      if (this.findSourceByName(name)) {
-        throw PokerMcpError.duplicateName(name, 'source');
-      }
       
       // Transform参照チェック（geometry内にある場合）
       if (geometry && geometry.transform) {
@@ -1305,11 +1394,11 @@ export class TaskManager {
     try {
       if (!name) throw new ValidationError('線源のnameは必須です', 'name', name);
       
-      // 既存線源の存在確認
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('source', name, (n) => this.findSourceByName(n));
+      
+      // 既存線源の存在確認（詳細情報取得のため）
       const existingSource = this.findSourceByName(name);
-      if (!existingSource) {
-        throw new ValidationError(`線源 ${name} が見つかりません`, 'name', name);
-      }
 
       // 更新内容のバリデーションと正規化
       const normalizedUpdates = { ...updates };
@@ -1414,6 +1503,9 @@ export class TaskManager {
     try {
       if (!name) throw new ValidationError('立体のnameは必須です', 'name', name);
       
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('body', name, (n) => this.findBodyByName(n));
+      
       // 座標データの正規化
       const normalizedUpdates = { ...updates };
       if (normalizedUpdates.min) normalizedUpdates.min = this.normalizeCoordinates(normalizedUpdates.min);
@@ -1450,6 +1542,9 @@ export class TaskManager {
     try {
       if (!bodyName) throw new ValidationError('ゾーンのbody_nameは必須です', 'body_name', bodyName);
       
+      // 既存ゾーン更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('zone', bodyName, (n) => this.findZoneByBodyName(n));
+      
       await this.dataManager.addPendingChange({
         action: 'updateZone',
         data: { body_name: bodyName, ...updates }
@@ -1464,16 +1559,20 @@ export class TaskManager {
   }
 
   // Detector操作
-  async proposeDetector(name, origin, grid = [], show_path_trace = false, transform = null) {
+  async proposeDetector(name, origin, show_path_trace = false, options = {}) {
     try {
+      const { grid, transform } = options;
+      
       // 基本パラメータの構築
       const detectorData = {
         name,
         origin,
-        grid,
-        show_path_trace,
-        transform
+        show_path_trace
       };
+      
+      // 明示的に指定された場合のみプロパティを追加
+      if (grid !== undefined) detectorData.grid = grid;
+      if (transform) detectorData.transform = transform;
       
       // DetectorValidatorによる包括的検証
       const validationResult = DetectorValidator.validateCompleteDetectorStructure(
@@ -1481,10 +1580,8 @@ export class TaskManager {
         this.data
       );
       
-      // 重複チェック
-      if (this.findDetectorByName(name)) {
-        throw PokerMcpError.duplicateName(name, 'detector');
-      }
+      // 新規作成専用チェック - マニフェスト仕様準拠
+      this.validateProposalPrerequisites('detector', name, (n) => this.findDetectorByName(n));
       
       // Transform参照チェック（指定されている場合）
       if (transform) {
@@ -1533,11 +1630,11 @@ export class TaskManager {
     try {
       if (!name) throw new ValidationError('検出器のnameは必須です', 'name', name);
       
-      // 既存検出器の存在確認
+      // 既存更新専用チェック - マニフェスト仕様準拠
+      this.validateUpdatePrerequisites('detector', name, (n) => this.findDetectorByName(n));
+      
+      // 既存検出器の存在確認（詳細情報取得のため）
       const existingDetector = this.findDetectorByName(name);
-      if (!existingDetector) {
-        throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
-      }
 
       // 更新データの構築
       const updatedDetectorData = { ...existingDetector, ...updates, name };
@@ -1617,6 +1714,169 @@ export class TaskManager {
     } catch (error) {
       logger.error('検出器削除エラー', { name, error: error.message });
       throw error;
+    }
+  }
+
+  /**
+   * YAML初期化メソッド - poker_resetYaml用
+   * マニフェストのreset_level_definitionsに基づく段階的リセット
+   */
+  async resetYaml(options) {
+    try {
+      const {
+        backupComment = 'Manual reset before initialization',
+        force = false,
+        preserveUnits = true,
+        resetLevel = 'standard',
+        atmosphereMaterial = 'VOID',
+        atmosphereDensity = undefined
+      } = options;
+
+      logger.info('YAML初期化を開始', {
+        resetLevel,
+        preserveUnits,
+        atmosphereMaterial,
+        atmosphereDensity
+      });
+
+      // リセットレベルの検証
+      const validLevels = ['minimal', 'standard', 'complete'];
+      if (!validLevels.includes(resetLevel)) {
+        throw new ValidationError(`無効なリセットレベル: ${resetLevel}。有効な値: ${validLevels.join(', ')}`, 'resetLevel', resetLevel);
+      }
+
+      // 材料の検証
+      const validMaterials = [
+        'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum', 'Copper', 'Tungsten',
+        'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
+      ];
+      if (!validMaterials.includes(atmosphereMaterial)) {
+        throw new ValidationError(`無効な材料: ${atmosphereMaterial}。有効な値: ${validMaterials.join(', ')}`, 'atmosphereMaterial', atmosphereMaterial);
+      }
+
+      // VOID材料の密度指定チェック
+      if (atmosphereMaterial === 'VOID' && atmosphereDensity !== undefined) {
+        logger.warn('VOID材料では密度指定を無視します', { atmosphereDensity });
+      }
+
+      // VOID以外の材料で密度未指定チェック
+      if (atmosphereMaterial !== 'VOID' && atmosphereDensity === undefined) {
+        throw new ValidationError(`材料 ${atmosphereMaterial} には密度の指定が必要です`, 'atmosphereDensity', atmosphereDensity);
+      }
+
+      // 密度の範囲チェック
+      if (atmosphereDensity !== undefined) {
+        if (atmosphereDensity < 0.001 || atmosphereDensity > 30.0) {
+          throw new ValidationError(`密度は0.001から30.0の範囲で指定してください: ${atmosphereDensity}`, 'atmosphereDensity', atmosphereDensity);
+        }
+      }
+
+      // DataManagerでリセット実行
+      const result = await this.dataManager.resetToInitialState({
+        backupComment,
+        preserveUnits,
+        resetLevel,
+        atmosphereMaterial,
+        atmosphereDensity,
+        force
+      });
+
+      // リセット後の追加検証
+      await this.validateResetResult(resetLevel);
+
+      const response = {
+        success: true,
+        action: 'resetYaml',
+        result: result,
+        parameters: {
+          resetLevel,
+          preserveUnits,
+          atmosphereMaterial,
+          atmosphereDensity: atmosphereMaterial === 'VOID' ? undefined : atmosphereDensity
+        },
+        timestamp: new Date().toISOString()
+      };
+
+      logger.info('YAML初期化が正常に完了しました', response);
+      return response;
+
+    } catch (error) {
+      logger.error('YAML初期化エラー', { error: error.message });
+      
+      // エラーの種類に応じた適切なエラーコード設定
+      if (error instanceof ValidationError) {
+        if (error.message.includes('無効なリセットレベル')) {
+          error.code = 'INVALID_RESET_LEVEL';
+        } else if (error.message.includes('材料')) {
+          error.code = 'ATMOSPHERE_VALIDATION_FAILED';
+        }
+      }
+      
+      throw error;
+    }
+  }
+
+  /**
+   * リセット結果の検証
+   */
+  async validateResetResult(resetLevel) {
+    try {
+      // 基本的な構造検証
+      if (!this.data) {
+        throw new ValidationError('データが読み込まれていません', 'data', null);
+      }
+
+      // 単位セクションの検証
+      if (!this.data.unit) {
+        throw new ValidationError('単位セクションが存在しません', 'unit', null);
+      }
+
+      const requiredUnitKeys = ['length', 'angle', 'density', 'radioactivity'];
+      const missingKeys = requiredUnitKeys.filter(key => !this.data.unit[key]);
+      if (missingKeys.length > 0) {
+        throw new ValidationError(`単位セクションに不足キー: ${missingKeys.join(', ')}`, 'unit', missingKeys);
+      }
+
+      // ATMOSPHEREゾーンの検証
+      if (!this.data.zone || !Array.isArray(this.data.zone)) {
+        throw new ValidationError('ゾーンセクションが存在しません', 'zone', null);
+      }
+
+      const atmosphere = this.data.zone.find(z => z.body_name === 'ATMOSPHERE');
+      if (!atmosphere) {
+        throw new ValidationError('ATMOSPHEREゾーンが存在しません', 'zone', null);
+      }
+
+      if (!atmosphere.material) {
+        throw new ValidationError('ATMOSPHEREゾーンに材料が指定されていません', 'atmosphere', atmosphere);
+      }
+
+      // リセットレベル別の検証
+      switch (resetLevel) {
+        case 'minimal':
+          // minimalでは一部のセクションが保持されているはず
+          logger.info('minimal リセットの検証完了');
+          break;
+        case 'standard':
+          // standardでは単位とATMOSPHEREのみ保持
+          if (this.data.body && this.data.body.length > 0) {
+            logger.warn('standard リセット後に立体が残っています', { bodies: this.data.body.map(b => b.name) });
+          }
+          break;
+        case 'complete':
+          // completeでは全て初期状態
+          if (this.data.body && this.data.body.length > 0) {
+            logger.warn('complete リセット後に立体が残っています', { bodies: this.data.body.map(b => b.name) });
+          }
+          break;
+      }
+
+      logger.info('リセット結果の検証が完了しました', { resetLevel });
+      return true;
+
+    } catch (error) {
+      logger.error('リセット結果の検証に失敗', { error: error.message });
+      throw new ValidationError(`リセット後検証失敗: ${error.message}`, 'postResetValidation', null);
     }
   }
 }

@@ -1,0 +1,2276 @@
+{
+  "name": "poker-mcp",
+  "version": "1.1.0",
+  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection and daughter nuclide auto-completion",
+  "author": "Yoshihiro Hirao",
+  "license": "ISC",
+  "homepage": "http://localhost:3020",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hirao-Y/poker_mcp"
+  },
+  "mcp_version": "1.0.0",
+  "server": {
+    "name": "poker-mcp-server",
+    "version": "1.0.0",
+    "description": "Complete Poker MCP Server v1.0.0 - 24メソッド実装版",
+    "port": 3020,
+    "features": [
+      "24メソッド完全実装",
+      "Body操作系: 作成・更新・削除",
+      "Zone操作系: 作成・更新・削除",
+      "BuildupFactor操作系: 作成・更新・削除・順序変更",
+      "Transform操作系: 作成・更新・削除",
+      "Source操作系: 作成・更新・削除",
+      "Detector操作系: 作成・更新・削除",
+      "立体10タイプ完全対応",
+      "材料13種類完全対応",
+      "Unit操作系: 作成・更新・取得（削除不可）",
+      "単位設定4キー完全性保証 (length, angle, density, radioactivity)",
+      "単位データ自動修復機能",
+      "読み込み時unit整合性チェック",
+      "unit セクション一意性強制",
+      "物理係数計算機能強化",
+      "依存関係チェック機能",
+      "実際のYAMLファイル更新",
+      "自動バックアップ・ロールバック機能",
+      "完全なエラーハンドリング",
+      "JSON-RPC 2.0完全準拠"
+    ]
+  },
+  "endpoints": {
+    "jsonrpc": "/mcp",
+    "root": "/",
+    "health": "/health"
+  },
+  "capabilities": {
+    "real_data_update": true,
+    "automatic_backup": true,
+    "error_handling": "complete",
+    "validation": "comprehensive",
+    "production_ready": true,
+    "parameter_validation": "enhanced",
+    "conditional_parameters": true,
+    "structured_geometry": true,
+    "structured_division": true,
+    "body_operations": true,
+    "zone_operations": true,
+    "buildup_factor_operations": true,
+    "transform_operations": true,
+    "source_operations": true,
+    "detector_operations": true,
+    "dependency_checking": true,
+    "order_management": true,
+    "unit_operations": true,
+    "unit_completeness_guarantee": true,
+    "unit_auto_repair": true,
+    "unit_validation": "comprehensive",
+    "unit_uniqueness_enforcement": true,
+    "auto_data_repair": true,
+    "unit_section_integrity": "guaranteed",
+    "default_value_compensation": true,
+    "load_time_validation": true,
+    "rollback_support": true,
+    "atmosphere_zone_management": true,
+    "reserved_keyword_validation": true,
+    "yaml_reset_operation": true,
+    "graduated_reset_levels": true,
+    "atmosphere_zone_protection": true,
+    "unit_setting_preservation": true,
+    "automatic_backup_on_reset": true,
+    "dependency_safe_cleanup": true,
+    "post_reset_validation": true,
+    "rollback_support": true
+  },
+  "enhanced_features": {
+    "geometry_validation": {
+      "collision_detection": {
+        "enabled": true,
+        "timing": {
+          "realtime_basic": true,
+          "batch_detailed": true,
+          "pre_calculation": true
+        },
+        "resolution_methods": {
+          "auto_deletion": {
+            "priority_rules": ["creation_order", "size", "density"],
+            "user_confirmation": true
+          },
+          "boolean_operations": {
+            "auto_subtraction": true,
+            "auto_union": true,
+            "auto_intersection": false
+          },
+          "geometry_adjustment": {
+            "auto_resize": false,
+            "suggest_moves": true,
+            "parameter_optimization": true
+          }
+        },
+        "thresholds": {
+          "overlap_tolerance": 1e-6,
+          "contact_tolerance": 1e-9,
+          "max_auto_corrections": 10
+        }
+      },
+      "interference_check": true,
+      "pre_calculation_validation": true
+    },
+    "nuclide_management": {
+      "daughter_auto_completion": {
+        "enabled": true,
+        "contribution_threshold": 0.05,
+        "equilibrium_calculation": true,
+        "user_confirmation": true
+      },
+      "decay_chain_analysis": true,
+      "icrp_database_integration": {
+        "database_file": "src/data/ICRP-07.NDX",
+        "format": "ICRP-107"
+      },
+      "supported_equilibrium_types": [
+        "secular_equilibrium",
+        "transient_equilibrium", 
+        "no_equilibrium"
+      ],
+      "auto_detection_nuclides": [
+        "Cs-137",
+        "Sr-90",
+        "Ra-226",
+        "Co-60"
+      ]
+    },
+    "enhanced_validation": {
+      "physics_consistency_check": true,
+      "units_compatibility_verification": true,
+      "material_property_validation": true,
+      "cmb_expression_validation": true
+    }
+  },
+  "data_sources": {
+    "nuclide_database": "src/data/ICRP-07.NDX",
+    "decay_data_format": "ICRP-107",
+    "material_properties": "built-in",
+    "validation_rules": "physics-based"
+  },
+  "reset_level_definitions": {
+    "minimal": {
+      "description": "最小限のリセット - 立体・線源・検出器のみクリア",
+      "preserves": [
+        "unit section",
+        "transform section", 
+        "ATMOSPHERE zone",
+        "other zones",
+        "buildup_factor section"
+      ],
+      "clears": [
+        "bodies section",
+        "sources section", 
+        "detectors section"
+      ],
+      "use_case": "モデル構築のやり直し時"
+    },
+    "standard": {
+      "description": "標準リセット - 単位とATMOSPHEREゾーンのみ保持（推奨）",
+      "preserves": [
+        "unit section",
+        "ATMOSPHERE zone"
+      ],
+      "clears": [
+        "bodies section",
+        "other zones (except ATMOSPHERE)",
+        "transforms section",
+        "buildup_factor section", 
+        "sources section",
+        "detectors section"
+      ],
+      "use_case": "新しいプロジェクト開始時"
+    },
+    "complete": {
+      "description": "完全リセット - 全て初期状態に戻す",
+      "preserves": [],
+      "clears": [
+        "all sections"
+      ],
+      "recreates": [
+        "default unit section",
+        "ATMOSPHERE zone with specified material"
+      ],
+      "use_case": "完全な初期化が必要な場合"
+    }
+  },
+  "tools": [
+    {
+      "name": "poker_proposeBody",
+      "description": "新しい3D立体を作成します（立体が存在しない名前専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "$ref": "#/definitions/object_name",
+          "description": "立体の一意な名前（既存立体名を使用する場合はupdateBodyメソッドを使用してください。ATMOSPHERE は予約語のため使用不可）"
+        },
+        "type": {
+          "type": "string",
+          "description": "立体タイプ",
+          "enum": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"]
+        },
+        "center": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "中心座標 (x y z形式) - SPH,ELL,TOR用"
+        },
+        "radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "半径 - SPH, RCC用"
+        },
+        "bottom_center": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "底面中心座標 (x y z形式) - RCC,TRC,REC用"
+        },
+        "height_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "高さベクトル (x y z形式) - RCC,TRC,REC用"
+        },
+        "min": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "最小座標 (x y z形式) - RPP用"
+        },
+        "max": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "最大座標 (x y z形式) - RPP用"
+        },
+        "vertex": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "頂点座標 (x y z形式) - BOX,WED用"
+        },
+        "edge_1": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "エッジ1ベクトル (x y z形式) - BOX用"
+        },
+        "edge_2": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "エッジ2ベクトル (x y z形式) - BOX用"
+        },
+        "edge_3": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "エッジ3ベクトル (x y z形式) - BOX用"
+        },
+        "expression": {
+          "type": "string",
+          "description": "集合演算式（CMB用）\n構文: 立体名を演算子で結合\n演算子: + (UNION), - (DIFFERENCE), & (INTERSECTION)\n優先順位: 括弧()で指定可能\n⚠️ 制約: 演算式で参照する立体名は事前に定義済みである必要があります\n例: 'cylinder + sphere', 'box1 - (cylinder & sphere)', '(body1 + body2) - body3'",
+          "minLength": 3,
+          "maxLength": 500,
+          "pattern": "^[a-zA-Z0-9_()\\s+\\-&]+$",
+          "constraint": "referenced_bodies_must_exist",
+          "validation": {
+            "body_existence_check": "演算式内の全立体名存在確認",
+            "circular_reference_check": "循環参照の検出",
+            "error_on_missing": "-32031エラー"
+          }
+        },
+        "normal": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "法線ベクトル (x y z形式) - TOR用"
+        },
+        "major_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "主半径 - TOR用"
+        },
+        "minor_radius_horizontal": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "水平方向副半径 - TOR用"
+        },
+        "minor_radius_vertical": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "垂直方向副半径 - TOR用"
+        },
+        "radius_vector_1": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "半径ベクトル1 (x y z形式) - ELL,REC用"
+        },
+        "radius_vector_2": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "半径ベクトル2 (x y z形式) - ELL,REC用"
+        },
+        "radius_vector_3": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "半径ベクトル3 (x y z形式) - ELL用"
+        },
+        "bottom_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "底面半径 - TRC用"
+        },
+        "top_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "上面半径 - TRC用"
+        },
+        "width_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "幅ベクトル (x y z形式) - WED用"
+        },
+        "depth_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "奥行きベクトル (x y z形式) - WED用"
+        },
+        "transform": {
+          "$ref": "#/definitions/transform_reference",
+          "description": "適用する変換名"
+        }
+        },
+        "required": ["name", "type"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の立体が存在しないこと",
+        "validation": "既存立体名の場合は-32064エラーで拒否",
+        "recommended_check": "事前に立体名存在確認を推奨",
+        "naming_constraints": "ATMOSPHERE予約語チェック"
+      },
+      "error_handling": {
+        "existing_body_error": "立体名が既存の場合は専用エラーコードで案内",
+        "reserved_name_error": "ATMOSPHERE使用時の適切な案内"
+      }
+    },
+    {
+      "name": "poker_updateBody",
+      "description": "既存立体の幾何パラメータを変更します（立体が存在する名前専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "$ref": "#/definitions/object_name",
+          "description": "更新する既存立体名（立体が存在しない場合はproposeBodyメソッドを使用してください）"
+        },
+        "center": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい中心座標 (x y z形式)"
+        },
+        "radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい半径"
+        },
+        "bottom_center": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい底面中心座標 (x y z形式)"
+        },
+        "height_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい高さベクトル (x y z形式)"
+        },
+        "min": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい最小座標 (x y z形式)"
+        },
+        "max": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい最大座標 (x y z形式)"
+        },
+        "normal": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい法線ベクトル (x y z形式)"
+        },
+        "major_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい主半径"
+        },
+        "minor_radius_horizontal": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい水平方向副半径"
+        },
+        "minor_radius_vertical": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい垂直方向副半径"
+        },
+        "radius_vector_1": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい半径ベクトル1 (x y z形式)"
+        },
+        "radius_vector_2": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい半径ベクトル2 (x y z形式)"
+        },
+        "radius_vector_3": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい半径ベクトル3 (x y z形式)"
+        },
+        "bottom_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい底面半径"
+        },
+        "top_radius": {
+          "$ref": "#/definitions/positive_radius",
+          "description": "新しい上面半径"
+        },
+        "width_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい幅ベクトル (x y z形式)"
+        },
+        "depth_vector": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい奥行きベクトル (x y z形式)"
+        },
+        "transform": {
+          "$ref": "#/definitions/transform_reference",
+          "description": "適用する変換名"
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の立体が既に存在すること",
+        "validation": "立体が存在しない場合は-32065エラーで拒否",
+        "geometry_change": "幾何変更時は依存関係への影響を考慮",
+        "transform_compatibility": "変換参照の妥当性確認"
+      },
+      "error_handling": {
+        "missing_body_error": "立体が存在しない場合は専用エラーコードで案内",
+        "dependency_warning": "Zone、CMB参照等の依存関係への影響通知"
+      }
+    },
+    {
+      "name": "poker_deleteBody",
+      "description": "立体を削除します（依存関係チェック付き）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "削除する立体名",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_proposeZone",
+      "description": "新しい材料ゾーンを作成します（ゾーンが存在しない立体専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "body_name": {
+          "$ref": "#/definitions/object_name",
+          "description": "新しいゾーンを作成する立体名（既存ゾーンがある場合はupdateZoneメソッドを使用してください）"
+        },
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "材料名"
+        },
+        "density": {
+          "$ref": "#/definitions/density_value",
+          "description": "密度 (g/cm³) - VOID材料では指定禁止、その他材料では必須"
+        }
+        },
+        "required": ["body_name", "material"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "対象立体にゾーンが存在しないこと",
+        "validation": "既存ゾーンがある場合は-32060エラーで拒否",
+        "recommended_check": "事前にゾーン存在確認を推奨"
+      },
+      "error_handling": {
+        "existing_zone_error": "立体に既存ゾーンがある場合は専用エラーコードで案内"
+      }
+    },
+    {
+      "name": "poker_updateZone",
+      "description": "既存ゾーンの材料・密度を変更します（ゾーンが存在する立体専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "body_name": {
+          "$ref": "#/definitions/object_name",
+          "description": "更新するゾーンの立体名（ゾーンが存在しない場合はproposeZoneメソッドを使用してください）"
+        },
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "新しい材料名"
+        },
+        "density": {
+          "description": "新しい密度 (g/cm³)",
+          "$ref": "#/definitions/density_value"
+        }
+        },
+        "required": ["body_name"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "対象立体にゾーンが既に存在すること",
+        "validation": "ゾーンが存在しない場合は-32061エラーで拒否",
+        "material_change": "材料変更時は密度の再設定も推奨"
+      },
+      "error_handling": {
+        "missing_zone_error": "ゾーンが存在しない場合は専用エラーコードで案内"
+      }
+    },
+    {
+      "name": "poker_deleteZone",
+      "description": "ゾーンを削除します（ATMOSPHERE以外）。削除後は立体が材料未設定状態になります",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "body_name": {
+          "$ref": "#/definitions/object_name",
+          "description": "削除するゾーンの立体名（ATMOSPHERE は削除不可）（注意：削除後に新しいゾーンを作成する場合はproposeZoneを使用してください）"
+        }
+        },
+        "required": ["body_name"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_proposeBuildupFactor",
+      "description": "新しい材料のビルドアップ係数を作成します（材料が未登録の場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "材料名（未登録材料専用。既に登録済みの場合はupdateBuildupFactorメソッドを使用してください）",
+          "examples": ["Concrete", "Lead", "Iron"]
+        },
+        "use_slant_correction": {
+          "type": "boolean",
+          "description": "スラント補正を使用するか（斜め入射補正）",
+          "default": false,
+          "note": "高精度計算時に有効"
+        },
+        "use_finite_medium_correction": {
+          "type": "boolean",
+          "description": "有限媒体補正を使用するか（境界効果補正）",
+          "default": false,
+          "note": "薄い遮蔽体での精度向上"
+        }
+        },
+        "required": ["material", "use_slant_correction", "use_finite_medium_correction"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された材料のビルドアップ係数が存在しないこと",
+        "validation": "既存材料の場合は-32070エラーで拒否",
+        "recommended_check": "事前に材料登録状況確認を推奨"
+      },
+      "error_handling": {
+        "existing_material_error": "材料が既に登録されている場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "material_uniqueness": "材料の重複チェック",
+        "correction_combination": "補正組み合わせの物理妥当性チェック",
+        "calculation_impact": "計算コストへの影響評価"
+      }
+    },
+    {
+      "name": "poker_updateBuildupFactor",
+      "description": "既存材料のビルドアップ係数設定を変更します（材料が登録済みの場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "更新する既存登録済み材料名（未登録の場合はproposeBuildupFactorメソッドを使用してください）",
+          "pattern": "^[A-Za-z]+$",
+          "maxLength": 20
+        },
+        "use_slant_correction": {
+          "type": "boolean",
+          "description": "新しいスラント補正設定（斜め入射時の補正）",
+          "note": "変更により計算精度と処理時間が変化"
+        },
+        "use_finite_medium_correction": {
+          "type": "boolean",
+          "description": "新しい有限媒体補正設定（境界効果の補正）",
+          "note": "薄い遮蔽材での精度向上効果"
+        }
+        },
+        "required": ["material"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された材料のビルドアップ係数が既に存在すること",
+        "validation": "材料が未登録の場合は-32071エラーで拒否",
+        "parameter_change": "補正パラメータ変更時は計算への影響を考慮"
+      },
+      "error_handling": {
+        "missing_material_error": "材料が登録されていない場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "existence_check": "材料の存在確認",
+        "parameter_combination": "補正パラメータの組み合わせ妥当性",
+        "calculation_consistency": "計算設定の一貫性チェック"
+      }
+    },
+    {
+      "name": "poker_deleteBuildupFactor",
+      "description": "ビルドアップ係数を削除します（計算から除外）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "削除する材料名",
+          "pattern": "^[A-Za-z]+$",
+          "maxLength": 20
+        }
+        },
+        "required": ["material"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "existence_check": "ビルドアップ係数の存在確認",
+        "usage_dependency": "計算での使用状況チェック",
+        "safety_check": "削除の安全性確認"
+      }
+    },
+    {
+      "name": "poker_changeOrderBuildupFactor",
+      "description": "ビルドアップ係数の計算順序を変更します（物理計算最適化）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "material": {
+          "$ref": "#/definitions/supported_material",
+          "description": "順序を変更する材料名",
+          "pattern": "^[A-Za-z]+$",
+          "maxLength": 20
+        },
+        "newIndex": {
+          "$ref": "#/definitions/buildup_index",
+          "description": "新しいインデックス位置（0から開始）",
+          "note": "小さい値ほど優先度が高い"
+        }
+        },
+        "required": ["material", "newIndex"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "existence_check": "材料の存在確認",
+        "index_range": "インデックス範囲の妥当性チェック",
+        "order_conflict": "順序変更による影響の評価"
+      }
+    },
+    {
+      "name": "poker_proposeTransform",
+      "description": "新しい変換を作成します（変換名が未登録の場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "$ref": "#/definitions/object_name",
+          "description": "変換の一意な名前（未登録変換名専用。既に登録済みの場合はupdateTransformメソッドを使用してください）"
+        },
+        "operations": {
+          "type": "array",
+          "description": "変換操作の配列（順序あり）",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "translate": {
+                "$ref": "#/definitions/coordinate_string",
+                "description": "平行移動ベクトル (x y z形式)"
+              },
+              "rotate_around_x": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "X軸周りの回転角度（度）"
+              },
+              "rotate_around_y": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "Y軸周りの回転角度（度）"
+              },
+              "rotate_around_z": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "Z軸周りの回転角度（度）"
+              }
+            },
+            "note": "各操作は排他的（一つのオブジェクトに一つの操作のみ）"
+          }
+        }
+        },
+        "required": ["name", "operations"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の変換が存在しないこと",
+        "validation": "既存変換名の場合は-32074エラーで拒否",
+        "recommended_check": "事前に変換名存在確認を推奨"
+      },
+      "error_handling": {
+        "existing_transform_error": "変換名が既に登録されている場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "name_uniqueness": "変換名の重複チェック",
+        "operation_sequence": "操作順序の妥当性チェック",
+        "geometric_validity": "幾何学的妥当性の確認"
+      }
+    },
+    {
+      "name": "poker_updateTransform",
+      "description": "既存変換の操作設定を変更します（変換名が登録済みの場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "更新する既存登録済み変換名（未登録の場合はproposeTransformメソッドを使用してください）",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        },
+        "operations": {
+          "type": "array",
+          "description": "新しい変換操作の配列",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "translate": {
+                "$ref": "#/definitions/coordinate_string",
+                "description": "平行移動ベクトル (x y z形式)"
+              },
+              "rotate_around_x": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "X軸周りの回転角度（度）"
+              },
+              "rotate_around_y": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "Y軸周りの回転角度（度）"
+              },
+              "rotate_around_z": {
+                "$ref": "#/definitions/rotation_angle",
+                "description": "Z軸周りの回転角度（度）"
+              }
+            }
+          }
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の変換が既に存在すること",
+        "validation": "変換が未登録の場合は-32075エラーで拒否",
+        "operation_change": "変換操作変更時は依存立体への影響を考慮"
+      },
+      "error_handling": {
+        "missing_transform_error": "変換が登録されていない場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "existence_check": "変換の存在確認",
+        "operation_validity": "操作パラメータの妥当性チェック",
+        "usage_impact": "変換更新の影響範囲確認"
+      }
+    },
+    {
+      "name": "poker_deleteTransform",
+      "description": "変換を削除します（依存関係チェック付き）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "削除する変換名",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "existence_check": "変換の存在確認",
+        "dependency_check": "依存する立体の確認",
+        "safety_validation": "削除の安全性確認"
+      },
+      "warnings": {
+        "dependency_impact": "依存する立体がある場合は削除できません"
+      }
+    },
+    {
+      "name": "poker_proposeSource",
+      "description": "新しい線源を作成します（線源名が未登録の場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "$ref": "#/definitions/object_name",
+          "description": "線源の名前（未登録線源名専用。既に登録済みの場合はupdateSourceメソッドを使用してください）（一意である必要があります）"
+        },
+        "type": {
+          "type": "string",
+          "description": "線源タイプ",
+          "enum": ["POINT", "SPH", "RCC", "RPP", "BOX"]
+        },
+        "position": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "線源の位置（x y z形式）、typeがPOINTの場合のみ必須"
+        },
+        "inventory": {
+          "type": "array",
+          "description": "核種と放射能の組の配列",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "nuclide": {
+                "type": "string",
+                "description": "核種名（元素記号と質量数の連結形式）",
+                "pattern": "^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$",
+                "examples": ["Cs137", "Co60", "U235", "Tc99m"],
+                "note": "末尾のアルファベットは同重体識別子（例：m for metastable）"
+              },
+              "radioactivity": {
+                "$ref": "#/definitions/radioactivity_value",
+                "description": "放射能（単位Bq）"
+              }
+            },
+            "required": ["nuclide", "radioactivity"],
+            "additionalProperties": false
+          }
+        },
+        "geometry": {
+          "type": "object",
+          "description": "線源形状パラメータ（typeがPOINT以外の場合に必須）",
+          "oneOf": [
+            {
+              "title": "BOX線源形状",
+              "properties": {
+                "vertex": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "頂点座標（x y z形式）"
+                },
+                "edge_1": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "エッジ1ベクトル（x y z形式）"
+                },
+                "edge_2": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "エッジ2ベクトル（x y z形式）"
+                },
+                "edge_3": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "エッジ3ベクトル（x y z形式）"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["vertex", "edge_1", "edge_2", "edge_3"],
+              "additionalProperties": false
+            },
+            {
+              "title": "RPP線源形状",
+              "properties": {
+                "min": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "最小座標（x y z形式）"
+                },
+                "max": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "最大座標（x y z形式）"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["min", "max"],
+              "additionalProperties": false
+            },
+            {
+              "title": "SPH線源形状",
+              "properties": {
+                "center": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "中心座標（x y z形式）"
+                },
+                "radius": {
+                  "$ref": "#/definitions/positive_radius",
+                  "description": "半径"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["center", "radius"],
+              "additionalProperties": false
+            },
+            {
+              "title": "RCC線源形状",
+              "properties": {
+                "bottom_center": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "底面中心座標（x y z形式）"
+                },
+                "height_vector": {
+                  "$ref": "#/definitions/coordinate_string",
+                  "description": "高さベクトル（x y z形式）"
+                },
+                "radius": {
+                  "$ref": "#/definitions/positive_radius",
+                  "description": "半径"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["bottom_center", "height_vector", "radius"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "division": {
+          "type": "object",
+          "description": "線源の領域分割パラメータ（typeがPOINT以外の場合に必須）",
+          "oneOf": [
+            {
+              "title": "BOX線源分割",
+              "properties": {
+                "edge_1": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "edge_2": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "edge_3": {
+                  "$ref": "#/definitions/division_axis"
+                }
+              },
+              "required": ["edge_1", "edge_2", "edge_3"],
+              "additionalProperties": false
+            },
+            {
+              "title": "RPP線源分割",
+              "properties": {
+                "edge_1": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "edge_2": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "edge_3": {
+                  "$ref": "#/definitions/division_axis"
+                }
+              },
+              "required": ["edge_1", "edge_2", "edge_3"],
+              "additionalProperties": false
+            },
+            {
+              "title": "SPH線源分割",
+              "properties": {
+                "r": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "theta": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "phi": {
+                  "$ref": "#/definitions/division_axis"
+                }
+              },
+              "required": ["r", "theta", "phi"],
+              "additionalProperties": false
+            },
+            {
+              "title": "RCC線源分割",
+              "properties": {
+                "r": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "phi": {
+                  "$ref": "#/definitions/division_axis"
+                },
+                "z": {
+                  "$ref": "#/definitions/division_axis"
+                }
+              },
+              "required": ["r", "phi", "z"],
+              "additionalProperties": false
+            }
+          ]
+        },
+        "cutoff_rate": {
+          "$ref": "#/definitions/cutoff_rate",
+          "description": "放出率カットオフ"
+        }
+        },
+        "required": ["name", "type", "inventory", "cutoff_rate"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の線源が存在しないこと",
+        "validation": "既存線源名の場合は-32078エラーで拒否",
+        "recommended_check": "事前に線源名存在確認を推奨"
+      },
+      "error_handling": {
+        "existing_source_error": "線源名が既に登録されている場合は専用エラーコードで案内"
+      }
+    },
+    {
+      "name": "poker_updateSource",
+      "description": "既存線源のパラメータを変更します（線源名が登録済みの場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "更新する既存登録済み線源名（未登録の場合はproposeSourceメソッドを使用してください）",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        },
+        "position": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい線源の位置（x y z形式）"
+        },
+        "inventory": {
+          "type": "array",
+          "description": "新しい核種と放射能の組の配列",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "properties": {
+              "nuclide": {
+                "type": "string",
+                "description": "核種名（元素記号と質量数の連結形式）",
+                "pattern": "^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$",
+                "examples": ["Cs137", "Co60", "U235", "Tc99m"],
+                "note": "末尾のアルファベットは同重体識別子（例：m for metastable）"
+              },
+              "radioactivity": {
+                "$ref": "#/definitions/radioactivity_value",
+                "description": "放射能（単位Bq）"
+              }
+            },
+            "required": ["nuclide", "radioactivity"],
+            "additionalProperties": false
+          }
+        },
+        "geometry": {
+          "type": "object",
+          "description": "新しい線源形状パラメータ",
+          "oneOf": [
+            {
+              "title": "BOX線源形状",
+              "properties": {
+                "vertex": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "edge_1": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "edge_2": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "edge_3": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["vertex", "edge_1", "edge_2", "edge_3"]
+            },
+            {
+              "title": "RPP線源形状",
+              "properties": {
+                "min": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "max": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["min", "max"]
+            },
+            {
+              "title": "SPH線源形状",
+              "properties": {
+                "center": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "radius": {
+                  "$ref": "#/definitions/positive_radius"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["center", "radius"]
+            },
+            {
+              "title": "RCC線源形状",
+              "properties": {
+                "bottom_center": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "height_vector": {
+                  "$ref": "#/definitions/coordinate_string"
+                },
+                "radius": {
+                  "$ref": "#/definitions/positive_radius"
+                },
+                "transform": {
+                  "$ref": "#/definitions/transform_reference",
+                  "description": "適用する変換名"
+                }
+              },
+              "required": ["bottom_center", "height_vector", "radius"]
+            }
+          ]
+        },
+        "division": {
+          "type": "object",
+          "description": "新しい線源の領域分割パラメータ",
+          "oneOf": [
+            {
+              "title": "BOX線源分割",
+              "properties": {
+                "edge_1": { "$ref": "#/definitions/division_axis" },
+                "edge_2": { "$ref": "#/definitions/division_axis" },
+                "edge_3": { "$ref": "#/definitions/division_axis" }
+              },
+              "required": ["edge_1", "edge_2", "edge_3"]
+            },
+            {
+              "title": "RPP線源分割",
+              "properties": {
+                "edge_1": { "$ref": "#/definitions/division_axis" },
+                "edge_2": { "$ref": "#/definitions/division_axis" },
+                "edge_3": { "$ref": "#/definitions/division_axis" }
+              },
+              "required": ["edge_1", "edge_2", "edge_3"]
+            },
+            {
+              "title": "SPH線源分割",
+              "properties": {
+                "r": { "$ref": "#/definitions/division_axis" },
+                "theta": { "$ref": "#/definitions/division_axis" },
+                "phi": { "$ref": "#/definitions/division_axis" }
+              },
+              "required": ["r", "theta", "phi"]
+            },
+            {
+              "title": "RCC線源分割",
+              "properties": {
+                "r": { "$ref": "#/definitions/division_axis" },
+                "phi": { "$ref": "#/definitions/division_axis" },
+                "z": { "$ref": "#/definitions/division_axis" }
+              },
+              "required": ["r", "phi", "z"]
+            }
+          ]
+        },
+        "cutoff_rate": {
+          "type": "number",
+          "description": "新しい放出率カットオフ",
+          "minimum": 0.0001,
+          "maximum": 1.0
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の線源が既に存在すること",
+        "validation": "線源が未登録の場合は-32079エラーで拒否",
+        "parameter_change": "線源パラメータ変更時は計算結果への影響を考慮"
+      },
+      "error_handling": {
+        "missing_source_error": "線源が登録されていない場合は専用エラーコードで案内"
+      }
+    },
+    {
+      "name": "poker_deleteSource",
+      "description": "線源を削除します",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "削除する線源の名前",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_proposeDetector",
+      "description": "新しい検出器を作成します（検出器名が未登録の場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "$ref": "#/definitions/object_name",
+          "description": "検出器の名前（未登録検出器名専用。既に登録済みの場合はupdateDetectorメソッドを使用してください）（一意である必要があります）"
+        },
+        "origin": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "検出器の基準位置（x y z形式）"
+        },
+        "grid": {
+          "type": "array",
+          "description": "エッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）",
+          "items": {
+            "type": "object",
+            "properties": {
+              "edge": {
+                "$ref": "#/definitions/coordinate_string",
+                "description": "エッジベクトル（x y z形式）"
+              },
+              "number": {
+                "$ref": "#/definitions/grid_division",
+                "description": "分割数"
+              }
+            },
+            "required": ["edge", "number"]
+          }
+        },
+        "transform": {
+          "$ref": "#/definitions/transform_reference",
+          "description": "適用する変換名"
+        },
+        "show_path_trace": {
+          "type": "boolean",
+          "description": "透過線の経路トレースをサマリーに出力するか",
+          "default": false
+        }
+        },
+        "required": ["name", "origin", "show_path_trace"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の検出器が存在しないこと",
+        "validation": "既存検出器名の場合は-32082エラーで拒否",
+        "recommended_check": "事前に検出器名存在確認を推奨"
+      },
+      "error_handling": {
+        "existing_detector_error": "検出器名が既に登録されている場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "name_uniqueness": "検出器名の重複チェック",
+        "grid_dimension": "グリッド次元の妥当性チェック",
+        "coordinate_validity": "座標とベクトルの妥当性確認"
+      }
+    },
+    {
+      "name": "poker_updateDetector",
+      "description": "既存検出器のパラメータを変更します（検出器名が登録済みの場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "更新する既存登録済み検出器名（未登録の場合はproposeDetectorメソッドを使用してください）",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        },
+        "origin": {
+          "$ref": "#/definitions/coordinate_string",
+          "description": "新しい検出器の基準位置（x y z形式）"
+        },
+        "grid": {
+          "type": "array",
+          "description": "新しいエッジベクトルと分割数の組の配列（配列の数が検出器の次元を表す）",
+          "items": {
+            "type": "object",
+            "properties": {
+              "edge": {
+                "$ref": "#/definitions/coordinate_string",
+                "description": "エッジベクトル（x y z形式）"
+              },
+              "number": {
+                "$ref": "#/definitions/grid_division",
+                "description": "分割数"
+              }
+            },
+            "required": ["edge", "number"]
+          }
+        },
+        "transform": {
+          "$ref": "#/definitions/transform_reference",
+          "description": "適用する変換名"
+        },
+        "show_path_trace": {
+          "type": "boolean",
+          "description": "透過線の経路トレースをサマリーに出力するか"
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "指定された名前の検出器が既に存在すること",
+        "validation": "検出器が未登録の場合は-32083エラーで拒否",
+        "parameter_change": "検出器パラメータ変更時は測定結果への影響を考慮"
+      },
+      "error_handling": {
+        "missing_detector_error": "検出器が登録されていない場合は専用エラーコードで案内"
+      },
+      "validation": {
+        "existence_check": "検出器の存在確認",
+        "parameter_validity": "更新パラメータの妥当性チェック",
+        "grid_consistency": "グリッド設定の一貫性確認"
+      }
+    },
+    {
+      "name": "poker_deleteDetector",
+      "description": "検出器を削除します",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "name": {
+          "type": "string",
+          "description": "削除する検出器の名前",
+          "pattern": "^[a-zA-Z0-9_]+$",
+          "maxLength": 50
+        }
+        },
+        "required": ["name"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "existence_check": "検出器の存在確認",
+        "safety_validation": "削除の安全性確認"
+      }
+    },
+    {
+      "name": "poker_applyChanges",
+      "description": "全ての保留中の変更を実際のYAMLファイルに適用します。自動的にバックアップが作成されます。",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "force": {
+          "type": "boolean",
+          "description": "強制適用フラグ（警告を無視）",
+          "default": false
+        },
+        "backup_comment": {
+          "$ref": "#/definitions/comment_length",
+          "description": "バックアップのコメント"
+        }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_proposeUnit",
+      "description": "単位設定セクションを初期作成します（YAMLファイルに単位設定が存在しない場合専用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "length": {
+          "$ref": "#/definitions/supported_length_unit",
+          "description": "長さの単位",
+          "default": "cm"
+        },
+        "angle": {
+          "$ref": "#/definitions/supported_angle_unit",
+          "description": "角度の単位",
+          "default": "radian"
+        },
+        "density": {
+          "$ref": "#/definitions/supported_density_unit",
+          "description": "密度の単位",
+          "default": "g/cm3"
+        },
+        "radioactivity": {
+          "$ref": "#/definitions/supported_radioactivity_unit",
+          "description": "放射能の単位",
+          "default": "Bq"
+        }
+        },
+        "required": ["length", "angle", "density", "radioactivity"],
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "YAMLファイルに単位設定セクションが存在しないこと",
+        "validation": "単位設定が既存の場合は-32086エラーで拒否",
+        "four_key_requirement": "必ず4つの単位キー全てを指定する必要がある"
+      },
+      "validation": {
+        "existence_check": "unit セクションの非存在チェック",
+        "completeness_check": "4つのキー存在確認",
+        "unit_value_validation": "単位選択肢の妥当性チェック"
+      }
+    },
+    {
+      "name": "poker_getUnit",
+      "description": "現在の単位設定を取得します（4つのキーすべてを返却）",
+      "parameters": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "validation": {
+        "completeness_check": "4つのキー存在確認",
+        "auto_repair": "不完全な場合はデフォルト値で補完"
+      }
+    },
+    {
+      "name": "poker_updateUnit",
+      "description": "既存単位設定を部分変更します（単位設定が既に存在する場合に使用）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+        "length": {
+          "$ref": "#/definitions/supported_length_unit",
+          "description": "新しい長さの単位"
+        },
+        "angle": {
+          "$ref": "#/definitions/supported_angle_unit",
+          "description": "新しい角度の単位"
+        },
+        "density": {
+          "$ref": "#/definitions/supported_density_unit",
+          "description": "新しい密度の単位"
+        },
+        "radioactivity": {
+          "$ref": "#/definitions/supported_radioactivity_unit",
+          "description": "新しい放射能の単位"
+        }
+        },
+        "minProperties": 1,
+        "additionalProperties": false
+      },
+      "usage_conditions": {
+        "prerequisite": "YAMLファイルに単位設定セクションが既に存在すること",
+        "validation": "単位設定が未存在の場合は-32087エラーで拒否",
+        "partial_update_allowed": "4つのキーのうち一部のみの更新が可能"
+      },
+      "validation": {
+        "existence_check": "unit セクションの存在チェック",
+        "completeness_maintained": "4つのキー完全性維持",
+        "unit_value_validation": "単位選択肢の妥当性チェック"
+      }
+    },
+    {
+      "name": "poker_executeCalculation",
+      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "yaml_file": {
+            "type": "string",
+            "description": "計算に使用するYAMLファイル名（拡張子.yamlを含む）",
+            "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+            "examples": ["shielding_model.yaml", "hospital_design.yaml", "reactor_shield.yaml"]
+          },
+          "summary_options": {
+            "type": "object",
+            "description": "サマリー出力オプション（注意: show_source_dataとshow_total_doseの少なくとも一方は必須です）",
+            "properties": {
+              "show_parameters": {
+                "type": "boolean",
+                "description": "入力パラメータをサマリーに表示（-pオプション）",
+                "default": false
+              },
+              "show_source_data": {
+                "type": "boolean",
+                "description": "各線源による計算データ及び線量をサマリーに表示（-sオプション）",
+                "default": true
+              },
+              "show_total_dose": {
+                "type": "boolean", 
+                "description": "各検出器に対する全線源からの総和線量をサマリーに表示（-tオプション）",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "output_files": {
+            "type": "object",
+            "description": "出力ファイル指定（全てYAML形式）",
+            "properties": {
+              "summary_file": {
+                "type": "string",
+                "description": "出力サマリーファイル名（-oオプション、YAML形式）",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+                "examples": ["calculation_summary.yaml", "shield_analysis.yml", "result_summary.yaml"]
+              },
+              "dose_file": {
+                "type": "string", 
+                "description": "線量ファイル名（-dオプション、YAML形式）",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$",
+                "examples": ["dose_rates.yaml", "detector_doses.yml", "dose_distribution.yaml"]
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": ["yaml_file"],
+        "additionalProperties": false
+      },
+      "validation": {
+        "yaml_file_existence": "YAMLファイルの存在確認",
+        "yaml_syntax_check": "YAML構文の妥当性確認", 
+        "completeness_check": "必要セクション（body, zone, source等）の存在確認",
+        "poker_cui_availability": "poker_cuiコマンドの利用可能性確認",
+        "summary_options_validation": "show_source_dataまたはshow_total_doseの少なくとも一方が必須。両方がfalseの場合はエラー、またはshow_total_doseを強制的にtrueに設定",
+        "output_directory_check": "出力ディレクトリの作成可能性確認"
+      }
+    },
+    {
+      "name": "poker_resetYaml",
+      "description": "poker.yamlファイルを初期状態にリセットします（自動バックアップ・ATMOSPHERE保護付き）",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "backup_comment": {
+            "$ref": "#/definitions/comment_length",
+            "description": "リセット前バックアップのコメント",
+            "default": "Manual reset before initialization"
+          },
+          "force": {
+            "type": "boolean",
+            "description": "強制リセットフラグ（確認をスキップ）",
+            "default": false
+          },
+          "preserve_units": {
+            "type": "boolean", 
+            "description": "既存の単位設定を保持するか",
+            "default": true,
+            "note": "研究の一貫性維持のため推奨"
+          },
+          "reset_level": {
+            "type": "string",
+            "description": "リセットレベル",
+            "enum": ["minimal", "standard", "complete"],
+            "default": "standard"
+          },
+          "atmosphere_material": {
+            "$ref": "#/definitions/supported_material",
+            "description": "ATMOSPHEREゾーンに設定する材料",
+            "default": "VOID",
+            "note": "VOID以外の場合は密度指定が必要"
+          },
+          "atmosphere_density": {
+            "$ref": "#/definitions/density_value",
+            "description": "ATMOSPHERE材料がVOID以外の場合の密度値",
+            "note": "atmosphere_materialがVOIDの場合は無視される"
+          }
+        },
+        "additionalProperties": false
+      },
+      "validation": {
+        "atmosphere_protection": "ATMOSPHEREゾーンの必須性維持",
+        "backup_creation": "リセット前の自動バックアップ作成",
+        "unit_consistency": "単位設定の一貫性チェック",
+        "dependency_cleanup": "参照関係の安全なクリア",
+        "void_density_check": "VOID材料での密度指定禁止確認"
+      },
+      "safety_features": {
+        "automatic_backup": "リセット前に必ずバックアップ作成",
+        "atmosphere_enforcement": "ATMOSPHEREゾーンの強制維持",
+        "rollback_support": "バックアップからの復元サポート",
+        "validation_after_reset": "リセット後の整合性確認"
+      }
+    }
+  ],
+  "definitions": {
+    "coordinate_string": {
+      "type": "string",
+      "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$",
+      "description": "x y z形式の座標文字列"
+    },
+    "positive_radius": {
+      "type": "number",
+      "minimum": 0.001,
+      "maximum": 10000,
+      "description": "正の半径値 (cm)"
+    },
+    "density_value": {
+      "type": "number",
+      "minimum": 0.001,
+      "maximum": 30.0,
+      "description": "密度値 (g/cm³)"
+    },
+    "radioactivity_value": {
+      "type": "number",
+      "minimum": 0.001,
+      "maximum": 1e15,
+      "description": "放射能値 (Bq)"
+    },
+    "object_name": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_]+$",
+      "maxLength": 50,
+      "description": "オブジェクト名（英数字とアンダースコアのみ）"
+    },
+    "rotation_angle": {
+      "type": "number",
+      "minimum": -360,
+      "maximum": 360,
+      "description": "回転角度（度）"
+    },
+    "cutoff_rate": {
+      "type": "number",
+      "minimum": 0.0001,
+      "maximum": 1.0,
+      "default": 0.0001,
+      "description": "カットオフ率"
+    },
+    "buildup_index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "ビルドアップ係数インデックス"
+    },
+    "grid_division": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 1000,
+      "description": "グリッド分割数"
+    },
+    "comment_length": {
+      "type": "string",
+      "maxLength": 200,
+      "description": "コメント文字列"
+    },
+    "division_axis": {
+      "type": "object",
+      "description": "分割軸の設定",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "分割タイプ",
+          "enum": ["UNIFORM", "GAUSS_FIRST", "GAUSS_LAST", "GAUSS_BOTH", "GAUSS_CENTER"],
+          "default": "UNIFORM"
+        },
+        "number": {
+          "$ref": "#/definitions/grid_division",
+          "description": "分割数"
+        },
+        "min": {
+          "type": "number",
+          "description": "分割開始位置（0.0～1.0）",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 0.0
+        },
+        "max": {
+          "type": "number",
+          "description": "分割終了位置（0.0～1.0）",
+          "minimum": 0.0,
+          "maximum": 1.0,
+          "default": 1.0
+        }
+      },
+      "required": ["type", "number"],
+      "additionalProperties": false
+    },
+    "supported_material": {
+      "type": "string",
+      "enum": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"],
+      "description": "サポートされる材料名"
+    },
+    "supported_length_unit": {
+      "type": "string",
+      "enum": ["m", "cm", "mm"],
+      "description": "サポートされる長さ単位"
+    },
+    "supported_angle_unit": {
+      "type": "string",
+      "enum": ["radian", "degree"],
+      "description": "サポートされる角度単位"
+    },
+    "supported_density_unit": {
+      "type": "string",
+      "enum": ["g/cm3"],
+      "description": "サポートされる密度単位"
+    },
+    "supported_radioactivity_unit": {
+      "type": "string",
+      "enum": ["Bq"],
+      "description": "サポートされる放射能単位"
+    },
+    "transform_reference": {
+      "type": "string",
+      "description": "変換参照名（YAMLデータファイルのtransformセクションで既に定義されたnameからのみ選択可能、英数字とアンダースコアのみ）",
+      "pattern": "^[a-zA-Z0-9_]+$",
+      "maxLength": 50,
+      "constraint": "must_exist_in_yaml_transform_section",
+      "validation": {
+        "existence_check": "YAMLファイルのtransform配列内でのname検索",
+        "error_on_missing": "指定された変換名が存在しない場合は-32017エラー"
+      }
+    }
+  },
+  "validation_enhanced": {
+    "atmosphere_zone_constraints": {
+      "reserved_name": "ATMOSPHERE",
+      "uniqueness": "必須かつ唯一",
+      "role": "complement_zone",
+      "physical_meaning": "他のゾーンで定義されていない全領域を表現",
+      "naming_restrictions": {
+        "forbidden_as_body_name": true,
+        "reserved_keyword": true,
+        "case_sensitive": true
+      },
+      "zone_section_requirements": {
+        "mandatory_presence": true,
+        "quantity": "exactly_one",
+        "deletion": "prohibited",
+        "material_assignment": "required"
+      },
+      "material_constraints": {
+        "VOID": {
+          "density_specification": "prohibited",
+          "reason": "真空は密度を持たないため記載不要"
+        },
+        "non_void_materials": {
+          "density_specification": "mandatory",
+          "reason": "すべての物理材料は密度値が必須"
+        }
+      }
+    },
+    "material_constraints": {
+      "supported_materials": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"],
+      "density_validation": {
+        "VOID": "density パラメータ指定禁止",
+        "other_materials": "density パラメータ必須"
+      }
+    },
+    "nuclide_constraints": {
+      "format": "element_symbol_mass_number_concatenated",
+      "pattern": "^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$",
+      "examples": ["Cs137", "Co60", "U235", "Ra226", "Am241", "Tc99m"],
+      "forbidden": ["Cs-137", "Co-60", "U-235"],
+      "migration_rule": "remove_hyphens_between_element_and_mass",
+      "metastable_suffix": "single_lowercase_letter_allowed"
+    },
+    "buildup_factor_constraints": {
+      "supported_corrections": ["use_slant_correction", "use_finite_medium_correction"]
+    },
+    "detector_constraints": {
+      "supported_types": ["POINT", "GRID_1D", "GRID_2D", "GRID_3D"]
+    },
+    "unit_constraints": {
+      "mandatory_keys": ["length", "angle", "density", "radioactivity"],
+      "supported_values": {
+        "length": ["m", "cm", "mm"],
+        "angle": ["radian", "degree"],
+        "density": ["g/cm3"],
+        "radioactivity": ["Bq"]
+      },
+      "uniqueness": "single_unit_section_only",
+      "completeness": "four_keys_always_required"
+    },
+    "auto_repair_constraints": {
+      "repair_triggers": ["missing_unit_section", "incomplete_keys", "invalid_values"],
+      "default_fallback": {
+        "length": "cm",
+        "angle": "radian",
+        "density": "g/cm3",
+        "radioactivity": "Bq"
+      },
+      "repair_logging": "comprehensive"
+    },
+    "body_type_constraints": {
+      "SPH": {
+        "required_parameters": ["name", "type", "center", "radius"]
+      },
+      "RCC": {
+        "required_parameters": ["name", "type", "bottom_center", "height_vector", "radius"]
+      },
+      "RPP": {
+        "required_parameters": ["name", "type", "min", "max"]
+      },
+      "BOX": {
+        "required_parameters": ["name", "type", "vertex", "edge_1", "edge_2", "edge_3"]
+      },
+      "TOR": {
+        "required_parameters": ["name", "type", "center", "normal", "major_radius", "minor_radius_horizontal", "minor_radius_vertical"]
+      },
+      "ELL": {
+        "required_parameters": ["name", "type", "center", "radius_vector_1", "radius_vector_2", "radius_vector_3"]
+      },
+      "TRC": {
+        "required_parameters": ["name", "type", "bottom_center", "height_vector", "bottom_radius", "top_radius"]
+      },
+      "REC": {
+        "required_parameters": ["name", "type", "bottom_center", "height_vector", "radius_vector_1", "radius_vector_2"]
+      },
+      "WED": {
+        "required_parameters": ["name", "type", "vertex", "width_vector", "height_vector", "depth_vector"]
+      },
+      "CMB": {
+        "required_parameters": ["name", "type", "expression"]
+      }
+    },
+    "cmb_expression_constraints": {
+      "body_reference_validation": {
+        "requirement": "all_referenced_bodies_must_exist",
+        "check_timing": "before_cmb_creation",
+        "error_handling": "detailed_error_with_missing_body_list",
+        "circular_reference_detection": true,
+        "max_reference_depth": 10
+      },
+      "expression_parsing": {
+        "supported_operators": ["+", "-", "&"],
+        "forbidden_operators": ["*", "/", "^", "|"],
+        "bracket_validation": "balanced_parentheses_required",
+        "body_name_extraction": "regex_based_parsing",
+        "operator_precedence": "left_to_right_with_parentheses"
+      },
+      "physical_validation": {
+        "void_material_warning": "VOIDと物理材料の組み合わせ時に警告",
+        "geometric_feasibility": "重複しない立体のINTERSECTION警告",
+        "result_volume_check": "演算結果が空集合の可能性チェック"
+      }
+    },
+    "reset_operation_constraints": {
+      "atmosphere_zone_protection": {
+        "enforcement": "mandatory",
+        "behavior": {
+          "always_recreate": "ATMOSPHEREゾーンは削除されても自動再作成",
+          "material_validation": "指定された材料の妥当性チェック",
+          "density_consistency": "VOID材料では密度指定を自動削除",
+          "uniqueness_check": "ATMOSPHEREゾーンの重複防止"
+        },
+        "error_handling": {
+          "missing_atmosphere": "自動作成で解決",
+          "duplicate_atmosphere": "重複削除で解決",
+          "invalid_material": "エラーで停止"
+        }
+      },
+      "dependency_resolution": {
+        "transform_references": "transform削除前に依存する立体をクリア",
+        "zone_body_references": "body削除前に対応するzoneをクリア", 
+        "buildup_material_references": "zone削除前に対応するbuildup_factorをクリア"
+      },
+      "unit_preservation": {
+        "validation": "preserve_units=trueの場合、既存単位の妥当性確認",
+        "fallback": "既存単位が無効な場合はデフォルト単位で初期化",
+        "consistency": "4キー完全性の保証"
+      },
+      "backup_requirements": {
+        "timing": "リセット操作前に必ず実行",
+        "naming": "reset_YYYYMMDD_HHMMSS.yaml",
+        "retention": "標準バックアップポリシーに従う",
+        "verification": "バックアップ作成成功の確認"
+      }
+    }
+  },
+  "error_handling": {
+    "json_rpc_compliant": true,
+    "custom_error_codes": {
+      "-32001": "Body not found",
+      "-32002": "Zone not found", 
+      "-32003": "Duplicate name",
+      "-32004": "Invalid body type",
+      "-32005": "Dependency exists",
+      "-32006": "File access error",
+      "-32007": "Validation error",
+      "-32008": "Backup error",
+      "-32009": "Unit already exists",
+      "-32010": "Unit not found",
+      "-32011": "Unit incomplete",
+      "-32012": "Unit key missing",
+      "-32013": "Unit invalid value",
+      "-32014": "Unit delete forbidden",
+      "-32015": "Unit repair failed",
+      "-32016": "Unit validation failed",
+      "-32017": "Transform not found",
+      "-32018": "Invalid transform reference",
+      "-32019": "Invalid name format - hyphens not allowed",
+      "-32020": "Name contains forbidden characters",
+      "-32021": "Invalid nuclide format - use concatenated format (e.g., Cs137)",
+      "-32022": "Nuclide contains forbidden hyphen",
+      "-32023": "ATMOSPHERE is reserved - cannot be used as body name",
+      "-32024": "ATMOSPHERE zone is mandatory and cannot be deleted",
+      "-32025": "Multiple ATMOSPHERE zones not allowed",
+      "-32026": "ATMOSPHERE zone must exist in zone section",
+      "-32027": "ATMOSPHERE zone material assignment required",
+      "-32028": "Density cannot be specified for VOID material",
+      "-32029": "Density must be specified for non-VOID materials",
+      "-32030": "Missing required density parameter for physical material",
+      "-32031": "Referenced body not found in CMB expression",
+      "-32032": "Circular reference detected in CMB expression",
+      "-32033": "Invalid operator in CMB expression",
+      "-32034": "Unbalanced parentheses in CMB expression",
+      "-32035": "Empty CMB expression",
+      "-32036": "CMB expression too complex (max depth exceeded)",
+      "-32040": "YAML file not found",
+      "-32041": "Invalid YAML syntax", 
+      "-32042": "poker_cui command not available",
+      "-32043": "Calculation execution failed",
+      "-32044": "Calculation timeout",
+      "-32045": "Insufficient system resources",
+      "-32046": "Output directory access denied",
+      "-32047": "Invalid calculation parameters",
+      "-32048": "Calculation cancelled by user",
+      "-32049": "Results parsing failed",
+      "-32050": "Reset operation failed",
+      "-32051": "Backup creation failed during reset", 
+      "-32052": "Invalid reset level",
+      "-32053": "Atmosphere zone validation failed",
+      "-32054": "Unsupported material with suggestion",
+      "-32055": "Unit preservation failed",
+      "-32060": "Zone already exists - use updateZone method instead",
+      "-32061": "Zone does not exist - use proposeZone method instead",
+      "-32062": "Zone operation method mismatch",
+      "-32063": "Zone state validation failed",
+      "-32064": "Body already exists - use updateBody method instead",
+      "-32065": "Body does not exist - use proposeBody method instead",
+      "-32066": "Body operation method mismatch",
+      "-32067": "Body geometry validation failed",
+      "-32068": "Body name conflicts with reserved keywords",
+      "-32069": "Body dependency impact detected",
+      "-32070": "BuildupFactor already exists for this material - use updateBuildupFactor method instead",
+      "-32071": "BuildupFactor does not exist for this material - use proposeBuildupFactor method instead",
+      "-32072": "BuildupFactor operation method mismatch",
+      "-32073": "BuildupFactor material validation failed",
+      "-32074": "Transform already exists - use updateTransform method instead",
+      "-32075": "Transform does not exist - use proposeTransform method instead",
+      "-32076": "Transform operation method mismatch",
+      "-32077": "Transform geometry validation failed",
+      "-32078": "Source already exists - use updateSource method instead",
+      "-32079": "Source does not exist - use proposeSource method instead",
+      "-32080": "Source operation method mismatch",
+      "-32081": "Source parameter validation failed",
+      "-32082": "Detector already exists - use updateDetector method instead",
+      "-32083": "Detector does not exist - use proposeDetector method instead",
+      "-32084": "Detector operation method mismatch",
+      "-32085": "Detector parameter validation failed",
+      "-32086": "Unit section already exists - use updateUnit method instead",
+      "-32087": "Unit section does not exist - use proposeUnit method instead"
+    }
+  },
+  "detector_operation_guidelines": {
+    "method_selection": {
+      "for_new_detectors": {
+        "method": "poker_proposeDetector",
+        "description": "新しい検出器を初めて作成する場合",
+        "examples": [
+          "線量測定点の設定",
+          "検出器配列の定義",
+          "空間グリッドの作成"
+        ]
+      },
+      "for_existing_detectors": {
+        "method": "poker_updateDetector",
+        "description": "既存検出器のパラメータを調整する場合",
+        "examples": [
+          "検出器位置の調整",
+          "グリッド分割数の変更",
+          "測定範囲の修正"
+        ]
+      }
+    },
+    "workflow_recommendations": {
+      "detector_status_check": "事前に検出器名存在確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "measurement_impact_awareness": "検出器変更時の測定結果への影響確認"
+    }
+  },
+  "source_operation_guidelines": {
+    "method_selection": {
+      "for_new_sources": {
+        "method": "poker_proposeSource",
+        "description": "新しい線源を初めて作成する場合",
+        "examples": [
+          "放射性物質の線源設定",
+          "点線源の配置",
+          "分布線源の定義"
+        ]
+      },
+      "for_existing_sources": {
+        "method": "poker_updateSource",
+        "description": "既存線源のパラメータを調整する場合",
+        "examples": [
+          "放射能強度の変更",
+          "線源位置の調整",
+          "核種組成の修正"
+        ]
+      }
+    },
+    "workflow_recommendations": {
+      "source_status_check": "事前に線源名存在確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "calculation_impact_awareness": "線源変更時の計算結果への影響確認"
+    }
+  },
+  "transform_operation_guidelines": {
+    "method_selection": {
+      "for_new_transforms": {
+        "method": "poker_proposeTransform",
+        "description": "新しい変換を初めて作成する場合",
+        "examples": [
+          "立体回転変換の定義",
+          "位置調整変換の設定",
+          "複合変換の作成"
+        ]
+      },
+      "for_existing_transforms": {
+        "method": "poker_updateTransform",
+        "description": "既存変換の操作内容を調整する場合",
+        "examples": [
+          "回転角度の調整",
+          "移動量の変更",
+          "変換操作順序の修正"
+        ]
+      }
+    },
+    "workflow_recommendations": {
+      "transform_status_check": "事前に変換名存在確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "dependency_awareness": "変換変更時の依存立体確認"
+    }
+  },
+  "buildup_factor_operation_guidelines": {
+    "method_selection": {
+      "for_new_materials": {
+        "method": "poker_proposeBuildupFactor",
+        "description": "新しい材料のビルドアップ係数を初めて設定する場合",
+        "examples": ["新規遮蔽材料の計算設定", "追加材料の物理パラメータ定義"]
+      },
+      "for_existing_materials": {
+        "method": "poker_updateBuildupFactor",
+        "description": "既存材料のビルドアップ係数設定を調整する場合",
+        "examples": ["補正パラメータの最適化", "計算設定の変更"]
+      }
+    },
+    "workflow_recommendations": {
+      "material_status_check": "事前に材料登録状況確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "uniqueness_enforcement": "材料の重複は厳格に禁止"
+    }
+  },
+  "body_operation_guidelines": {
+    "method_selection": {
+      "for_new_bodies": {
+        "method": "poker_proposeBody",
+        "description": "新しい立体を初めて作成する場合",
+        "examples": [
+          "放射線源収納容器の作成",
+          "遮蔽壁の新規設計",
+          "検出器周辺構造物の配置"
+        ],
+        "naming_considerations": [
+          "一意な立体名の選択",
+          "ATMOSPHERE予約語の回避",
+          "将来の拡張性を考慮した命名"
+        ]
+      },
+      "for_existing_bodies": {
+        "method": "poker_updateBody",
+        "description": "既存立体の寸法や位置を調整する場合",
+        "examples": [
+          "遮蔽厚さの最適化",
+          "立体位置の微調整",
+          "幾何パラメータの精密化"
+        ],
+        "impact_considerations": [
+          "関連ゾーンへの影響",
+          "CMB式での参照関係",
+          "変換適用の整合性"
+        ]
+      }
+    },
+    "workflow_recommendations": {
+      "body_status_check": "事前に立体名存在確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "dependency_awareness": "立体変更時の依存関係確認",
+      "geometry_validation": "物理的妥当性の事前検証"
+    },
+    "best_practices": {
+      "naming_convention": {
+        "descriptive_names": "用途を明確に示す名前を使用",
+        "hierarchical_structure": "shield_wall_01, detector_housing_main等",
+        "avoid_generic": "body1, object2等の汎用名称を避ける"
+      },
+      "geometry_design": {
+        "parameter_validation": "寸法の物理的妥当性確認",
+        "coordinate_system": "一貫した座標系の使用",
+        "future_modification": "後の変更を考慮した設計"
+      }
+    }
+  },
+  "zone_operation_guidelines": {
+    "method_selection": {
+      "for_new_zones": {
+        "method": "poker_proposeZone",
+        "description": "立体に初めてゾーンを割り当てる場合",
+        "examples": ["新規立体への材料設定", "削除後の再作成"]
+      },
+      "for_existing_zones": {
+        "method": "poker_updateZone",
+        "description": "既存ゾーンの材料や密度を変更する場合",
+        "examples": ["材料変更", "密度調整", "VOID→物理材料変更"]
+      }
+    },
+    "workflow_recommendations": {
+      "zone_status_check": "事前にゾーン存在確認を推奨",
+      "error_driven_correction": "エラーメッセージに従った適切なメソッド選択",
+      "batch_operations": "複数ゾーン操作時の一貫した手法"
+    }
+  },
+  "reset_workflow_examples": {
+    "research_project_restart": {
+      "scenario": "既存の単位設定を保持して新しいモデリングを開始",
+      "parameters": {
+        "reset_level": "standard",
+        "preserve_units": true,
+        "atmosphere_material": "Air",
+        "atmosphere_density": 0.001225
+      }
+    },
+    "complete_initialization": {
+      "scenario": "全て初期状態に戻して基本設定から開始",
+      "parameters": {
+        "reset_level": "complete", 
+        "preserve_units": false,
+        "atmosphere_material": "VOID"
+      }
+    },
+    "model_reconstruction": {
+      "scenario": "立体構造のみやり直し、材料設定は保持",
+      "parameters": {
+        "reset_level": "minimal",
+        "preserve_units": true,
+        "backup_comment": "Before geometry reconstruction"
+      }
+    }
+  },
+  "reset_safety_guarantees": {
+    "data_protection": {
+      "automatic_backup": "操作前に必ずバックアップ作成",
+      "rollback_capability": "失敗時の自動復元サポート",
+      "validation_checkpoints": "各段階での整合性確認"
+    },
+    "atmosphere_zone_guarantees": {
+      "always_present": "リセット後に必ずATMOSPHEREゾーンが存在",
+      "proper_material": "指定材料の妥当性保証",
+      "density_consistency": "材料に応じた密度設定の一貫性"
+    },
+    "unit_consistency": {
+      "four_key_completeness": "常に4つの単位キーが存在",
+      "valid_values": "サポートされた単位値のみ許可",
+      "fallback_mechanism": "無効な設定の自動修復"
+    }
+  },
+  "data_files": {
+    "input": "tasks/poker.yaml",
+    "pending_changes": "tasks/pending_changes.json",
+    "backup_directory": "backups/"
+  },
+  "backup_features": {
+    "automatic_backup": true,
+    "timestamp_format": "ISO_8601",
+    "retention_policy": "最新10個のバックアップを保持",
+    "cleanup_automatic": true
+  },
+  "production_features": {
+    "real_yaml_updates": true,
+    "transaction_safety": true,
+    "graceful_shutdown": true,
+    "memory_management": "optimized",
+    "performance": "production_ready"
+  },
+  "material_alternatives": {
+    "description": "一般的な材料名からサポート材料への代替マッピング（放射線遮蔽計算用）",
+    "STEEL": { "substitute": "Iron", "note": "一般的な構造用鋼はIronで代替" },
+    "STAINLESS_STEEL": { "substitute": "Iron", "note": "ステンレス鋼もIronで代替可能" },
+    "BRASS": { "substitute": "Copper", "note": "真鍮はCopperで代替" },
+    "BRONZE": { "substitute": "Copper", "note": "青銅はCopperで代替" },
+    "GLASS": { "substitute": "PyrexGlass", "note": "一般ガラスはPyrexGlassで代替" },
+    "PLASTIC": { "substitute": "AcrylicResin", "note": "一般プラスチックはAcrylicResinで代替" },
+    "EARTH": { "substitute": "Soil", "note": "土壌はSoilで代替" },
+    "VOID_SPACE": { "substitute": "VOID", "note": "真空空間はVOIDで代替" },
+    "ATMOSPHERE": { "substitute": "Air", "note": "大気はAirで代替" }
+  },
+  "material_constraints": {
+    "description": "材料制約と物理的特性情報（放射線遮蔽研究用）",
+    "strict_validation": true,
+    "allow_alternatives": true,
+    "error_with_suggestions": true,
+    "supported_materials": {
+      "Carbon": { 
+        "typical_use": "グラファイト、炭素繊維構造材",
+        "shielding_properties": "軽量遮蔽材"
+      },
+      "Concrete": { 
+        "typical_use": "建築構造、放射線遮蔽壁",
+        "shielding_properties": "汎用遮蔽材、経済的"
+      },
+      "Iron": { 
+        "typical_use": "鉄鋼構造、STEEL代替",
+        "shielding_properties": "中重量遮蔽材、構造材兼用"
+      },
+      "Lead": { 
+        "typical_use": "高効率遮蔽材",
+        "shielding_properties": "高密度γ線遮蔽材"
+      },
+      "Aluminum": { 
+        "typical_use": "軽量構造材",
+        "shielding_properties": "軽量遮蔽材、耐食性"
+      },
+      "Copper": { 
+        "typical_use": "BRASS/BRONZE代替",
+        "shielding_properties": "中重量遮蔽材、導電性"
+      },
+      "Tungsten": { 
+        "typical_use": "超高密度遮蔽材",
+        "shielding_properties": "最高密度遮蔽材"
+      },
+      "Air": { 
+        "typical_use": "大気、ATMOSPHERE代替",
+        "shielding_properties": "透明媒体"
+      },
+      "Water": { 
+        "typical_use": "中性子減速材、冷却材",
+        "shielding_properties": "中性子遮蔽材"
+      },
+      "PyrexGlass": { 
+        "typical_use": "GLASS代替、耐熱ガラス",
+        "shielding_properties": "透明遮蔽材"
+      },
+      "AcrylicResin": { 
+        "typical_use": "PLASTIC代替、透明樹脂",
+        "shielding_properties": "軽量透明遮蔽材"
+      },
+      "Polyethylene": { 
+        "typical_use": "中性子遮蔽樹脂",
+        "shielding_properties": "中性子減速・遮蔽材"
+      },
+      "Soil": { 
+        "typical_use": "EARTH代替、土壌遮蔽",
+        "shielding_properties": "天然遮蔽材"
+      },
+      "VOID": { 
+        "density_specification": "prohibited",
+        "typical_use": "真空、VOID_SPACE代替",
+        "shielding_properties": "非遮蔽領域"
+      }
+    }
+  },
+  "error_handling_enhancement": {
+    "description": "材料制約エラーの改善されたハンドリング",
+    "unsupported_material_error": {
+      "code": -32054,
+      "message_template": "Unsupported material '{material}'. Did you mean '{suggested_substitute}'? Supported materials: {supported_list}",
+      "suggestion_logic": "fuzzy_match_with_alternatives"
+    },
+    "material_suggestion_examples": {
+      "STEEL": "Use 'Iron' instead of 'STEEL' for structural steel approximation",
+      "STAINLESS": "Use 'Iron' instead of 'STAINLESS' for stainless steel approximation", 
+      "BRASS": "Use 'Copper' instead of 'BRASS' for brass alloy approximation",
+      "GLASS": "Use 'PyrexGlass' instead of 'GLASS' for glass material approximation",
+      "PLASTIC": "Use 'AcrylicResin' instead of 'PLASTIC' for plastic material approximation",
+      "EARTH": "Use 'Soil' instead of 'EARTH' for earth material approximation"
+    }
+  }
+}

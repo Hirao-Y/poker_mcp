@@ -7,26 +7,47 @@ export function createDetectorHandlers(taskManager) {
     // 検出器提案
     async proposeDetector(args) {
       try {
-        const { name, origin, grid = [], show_path_trace, transform = null } = args;
+        const { name, origin, show_path_trace, transform = null } = args;
+        let grid = args.grid; // デフォルト値なしで取得
+        
+        // gridパラメータの文字列→配列変換
+        if (typeof grid === 'string') {
+          try {
+            grid = JSON.parse(grid);
+          } catch (e) {
+            grid = undefined;
+          }
+        }
+        
+        // show_path_traceの型変換（文字列から真偽値へ）
+        const pathTrace = typeof show_path_trace === 'string' 
+          ? show_path_trace === 'true' 
+          : show_path_trace;
         
         // show_path_trace が必須になったことを確認
-        if (show_path_trace === undefined) {
+        if (pathTrace === undefined) {
           throw new ValidationError('show_path_trace は必須パラメータです');
         }
         
         logger.info('検出器提案開始', { 
           name, 
           origin, 
-          gridCount: grid.length,
+          gridCount: grid ? grid.length : 0,
           hasTransform: !!transform,
-          pathTrace: show_path_trace
+          pathTrace: pathTrace
         });
         
         // DetectorValidator統合のため、TaskManagerの包括的検証を利用
-        const result = await taskManager.proposeDetector(name, origin, grid, show_path_trace, transform);
+        const result = await taskManager.proposeDetector(name, origin, pathTrace, { grid, transform });
         
         // 検出器の分析情報を追加取得
-        const detectorData = { name, origin, grid, show_path_trace, transform };
+        const detectorData = {
+          name,
+          origin,
+          show_path_trace: pathTrace,
+          ...(grid !== undefined && { grid }),
+          ...(transform && { transform })
+        };
         const analysisResult = taskManager.analyzeDetectorStructure(detectorData);
         
         logger.info('検出器提案完了', { 
@@ -44,7 +65,7 @@ export function createDetectorHandlers(taskManager) {
             dimension: analysisResult.dimension,
             complexity: analysisResult.complexity,
             origin,
-            gridDimensions: grid.length,
+            gridDimensions: grid ? grid.length : 0,
             hasTransform: !!transform,
             pathTrace: show_path_trace
           },
@@ -57,10 +78,25 @@ export function createDetectorHandlers(taskManager) {
         
       } catch (error) {
         logger.error('検出器提案エラー', { args, error: error.message });
+        
+        // マニフェスト仕様のpropose専用エラーコード処理
+        if (error.code === -32082) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'updateDetectorメソッドを使用してください',
+              existingObject: args.name,
+              objectType: '検出器'
+            }
+          };
+        }
+        
         throw error;
       }
     },
-    
+
     // 検出器更新
     async updateDetector(args) {
       try {
@@ -68,16 +104,11 @@ export function createDetectorHandlers(taskManager) {
         
         logger.info('検出器更新開始', { name, updates });
         
-        // 存在確認
-        const existingDetector = taskManager.findDetectorByName(name);
-        if (!existingDetector) {
-          throw new ValidationError(`検出器 ${name} が見つかりません`, 'name', name);
-        }
-        
         // TaskManagerの包括的更新処理を利用
         const result = await taskManager.updateDetector(name, updates);
         
         // 更新後の分析情報
+        const existingDetector = taskManager.findDetectorByName(name);
         const updatedDetectorData = { ...existingDetector, ...updates };
         const analysisResult = taskManager.analyzeDetectorStructure(updatedDetectorData);
         
@@ -102,6 +133,21 @@ export function createDetectorHandlers(taskManager) {
         
       } catch (error) {
         logger.error('検出器更新エラー', { args, error: error.message });
+        
+        // マニフェスト仕様のupdate専用エラーコード処理
+        if (error.code === -32083) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'proposeDetectorメソッドを使用してください',
+              missingObject: args.name,
+              objectType: '検出器'
+            }
+          };
+        }
+        
         throw error;
       }
     },

@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.0.0", 
+  "version": "1.1.0", 
   "description": "YAML-Based input file management tool for radiation shielding calculation code POKER with MCP support",
   "url": "stdio://",
   "server": {
@@ -11,7 +11,24 @@
     "tools": true,
     "logging": true
   },
-  "metadata": {
-    "author": "Yoshihiro Hirao"
-  }
-}
+  "features": {
+    "geometry_validation": {
+      "collision_detection": {
+        "enabled": true,
+        "timing": {
+          "realtime_basic": true,
+          "batch_detailed": true,
+          "pre_calculation": true
+        },
+        "resolution_methods": {
+          "auto_deletion": {
+            "priority_rules": ["creation_order", "size", "density"],
+            "user_confirmation": true
+          },
+          "boolean_operations": {
+            "auto_subtraction": true,
+            "auto_union": true,
+            "auto_intersection": false
+          },
+          "geometry_adjustment": {
+            "auto_resize

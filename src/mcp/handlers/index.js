@@ -7,6 +7,8 @@ import { createSourceHandlers } from './sourceHandlers.js';
 import { createDetectorHandlers } from './detectorHandlers.js';
 import { createUnitHandlers } from './unitHandlers.js';
 import { createCalculationHandlers } from './calculationHandlers.js';
+import { resetHandlers } from './resetHandlers.js';
+import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
 
 export function createAllHandlers(taskManager) {
   return {
@@ -33,6 +35,12 @@ export function createAllHandlers(taskManager) {
     
     // 計算操作
     ...createCalculationHandlers(taskManager),
+
+    // 子孫核種確認操作
+    confirmDaughterNuclides: createDaughterNuclideHandler(taskManager),
+
+    // リセット操作
+    resetYaml: resetHandlers.resetYaml(taskManager),
     
     // 共通操作
     async applyChanges(args) {
