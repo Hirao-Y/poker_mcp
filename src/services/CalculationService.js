@@ -57,31 +57,12 @@ export class CalculationService {
   }
 
   /**
-   * YAMLファイルパスが絶対パス形式かどうかを検証
-   * @param {string} yamlFile YAMLファイルパス
-   * @returns {boolean} 絶対パス形式かどうか
-   */
-  validateAbsolutePath(yamlFile) {
-    // 新しい絶対パス対応パターン（マニフェストと同じ）
-    const pattern = /^([a-zA-Z]:[\\\/]|\/)/;
-    return pattern.test(yamlFile);
-  }
-
-  /**
-   * YAMLファイルの完全検証（絶対パス + 存在 + 読み取り可能性）
+   * YAMLファイルの検証（存在 + 読み取り可能性）
    * @param {string} yamlFile YAMLファイルパス
    * @returns {Promise<{valid: boolean, error?: string}>} 検証結果
    */
   async validateYamlFile(yamlFile) {
-    // 1. 絶対パス形式の検証
-    if (!this.validateAbsolutePath(yamlFile)) {
-      return {
-        valid: false,
-        error: 'YAMLファイルは絶対パスで指定してください。例: C:\\path\\to\\file.yaml または /path/to/file.yaml'
-      };
-    }
-
-    // 2. ファイル拡張子の検証
+    // 1. ファイル拡張子の検証
     const extPattern = /\.(yaml|yml)$/i;
     if (!extPattern.test(yamlFile)) {
       return {
@@ -90,7 +71,7 @@ export class CalculationService {
       };
     }
 
-    // 3. ファイル存在確認
+    // 2. ファイル存在確認
     try {
       const stats = await fs.stat(yamlFile);
       if (!stats.isFile()) {
@@ -106,7 +87,7 @@ export class CalculationService {
       };
     }
 
-    // 4. ファイルアクセス権限確認
+    // 3. ファイルアクセス権限確認
     try {
       await fs.access(yamlFile, fs.constants.R_OK);
       return { valid: true };
@@ -255,15 +236,14 @@ export class CalculationService {
       );
     }
 
-    // 2. YAMLファイル完全検証（絶対パス + 存在 + アクセス権限）
+    // 2. YAMLファイル検証（存在 + アクセス権限）
     const yamlValidation = await this.validateYamlFile(yamlFile);
     if (!yamlValidation.valid) {
       throw new CalculationError(
         yamlValidation.error,
         'YAML_FILE_VALIDATION_FAILED',
         { 
-          yamlFile,
-          expectedFormat: '絶対パス形式（例: C:\\path\\to\\file.yaml または /path/to/file.yaml）'
+          yamlFile
         },
         -32040
       );

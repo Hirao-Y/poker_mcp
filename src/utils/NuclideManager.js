@@ -11,7 +11,12 @@ class NuclideManager {
     constructor(options = {}) {
         this.contributionThreshold = options.contribution_threshold || 0.05;
         this.userConfirmation = options.user_confirmation !== false;
-        this.databaseFile = options.database_file || 'src/data/ICRP-07.NDX';
+        
+        if (!options.database_file) {
+            throw new Error('database_file option is required');
+        }
+        this.databaseFile = options.database_file;
+        
         this.nuclideData = new Map();
         this.decayChains = new Map();
     }
@@ -21,8 +26,9 @@ class NuclideManager {
      */
     async loadNuclideDatabase() {
         try {
-            logger.info('ICRP-07データベースを読み込み中...', { 
-                databaseFile: this.databaseFile 
+            logger.info('核種データベース読み込み開始', { 
+                databaseFile: this.databaseFile,
+                resolved: path.resolve(this.databaseFile)
             });
             
             const dataPath = path.resolve(this.databaseFile);
@@ -47,12 +53,13 @@ class NuclideManager {
             });
             
         } catch (error) {
-            logger.error('核種データベースの読み込みエラー', { 
-                error: error.message,
+            logger.error('核種データベース読み込みエラー', {
                 databaseFile: this.databaseFile,
-                resolvedPath: path.resolve(this.databaseFile)
+                resolvedPath: path.resolve(this.databaseFile),
+                error: error.message,
+                suggestion: 'POKER_DATA_DIR および POKER_NUCLIDE_FILE 環境変数を確認してください'
             });
-            throw new Error(`核種データベース読み込み失敗: ${error.message}`);
+            throw error;
         }
     }
 
