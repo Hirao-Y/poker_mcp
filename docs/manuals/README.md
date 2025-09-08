@@ -1,16 +1,16 @@
-# 📚 Poker MCP Server - マニュアル体系 (v1.0.0完全版)
+# 📚 Poker MCP Server - マニュアル体系 (v1.1.0完全版)
 
 **🎯 対象**: 放射線遮蔽研究者・安全解析・申請実務家・設計エンジニア  
-**🔧 システム**: Poker MCP Server v1.0.0 (24メソッド完全実装)  
-**📅 最終更新**: 2025年9月2日  
+**🔧 システム**: Poker MCP Server v1.1.0 (28メソッド完全実装)  
+**📅 最終更新**: 2025年9月8日  
 **🌟 マニュアル体系**: 段階的学習設計（3層構造）
 
 ---
 
-## 🏆 v1.0.0マニュアル体系の特徴
+## 🏆 v1.1.0マニュアル体系の特徴
 
 ### ✨ **最新実装対応設計**
-- **24メソッド完全対応**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系2
+- **28メソッド完全対応**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系4
 - **10種類立体完全対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED全立体タイプ詳細解説
 - **4キー単位系完全性**: length,angle,density,radioactivity完全性保証機能対応
 - **MCP v1.0準拠**: Model Context Protocol v1.0完全対応・Claude Desktop統合
@@ -23,10 +23,10 @@
 
 ---
 
-## 📖 v1.0.0対応マニュアル構成
+## 📖 v1.1.0対応マニュアル構成
 
 ### 🌟 **エッセンシャル層** - 必須知識 (3ファイル)
-最初に読むべき基本文書（24メソッド・10立体・4単位対応）
+最初に読むべき基本文書（28メソッド・10立体・4単位対応）
 
 #### 📘 [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) - 統合ガイド
 - **🔬 物理的背景**: 放射線遮蔽計算の目的と価値
@@ -34,7 +34,7 @@
 - **🔷 10種類立体対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED完全活用
 - **🧪 基本計算例**: 3つの代表的ケーススタディ
 - **📋 日常操作**: よく使う操作パターン
-- **🎯 対象**: Poker MCP v1.0.0を初めて使う方
+- **🎯 対象**: Poker MCP v1.1.0を初めて使う方
 
 #### 📋 [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 放射線遮蔽計算リファレンス  
 - **⚛️ 遮蔽理論**: 放射線と物質の相互作用機構

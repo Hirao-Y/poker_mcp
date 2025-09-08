@@ -1,6 +1,8 @@
 # Poker MCP Server - 放射線遮蔽計算支援ツール
 
-**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール
+**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール  
+**バージョン**: 1.1.0  
+**最終更新**: 2025年9月8日
 
 ## 🔬 概要
 
@@ -144,8 +146,65 @@ poker_mcp/
 - グリッド分割設定
 - 線量率分布測定点の設定
 
+### 🚀 v1.1.0新機能
+
+#### 🧬 子孫核種自動追加機能
+- 放射性核種の崩壊チェーン自動解析
+- 子孫核種の放射能自動計算（永続平衡仮定）
+- ユーザー承認による選択的追加
+- より現実的な遮蔽評価を実現
+
+#### 🔄 YAML完全リセット機能
+- 安全な初期化（自動バックアップ付き）
+- ATMOSPHERE保護機能
+- 段階的リセットレベル選択
+- 新プロジェクト開始の効率化
+
+#### 🎯 検出器分類明確化
+- **点検出器**: 特定位置での線量率測定
+- **線検出器（1D）**: 直線上の線量分布
+- **面検出器（2D）**: 平面上の線量分布  
+- **体積検出器（3D）**: 3次元空間の線量分布
+
 ### 🔄 変換操作
 - 回転・平行移動変換
+- 複合変換の組み合わせ
+- 立体の位置・姿勢調整
+
+---
+
+## 🔧 技術仕様
+
+### **システム要件**
+- **Node.js**: ≥18.0.0 (推奨: 20.x LTS)
+- **MCP SDK**: ^1.7.0 (Model Context Protocol対応)
+- **メモリ**: 最小2GB、推奨8GB以上
+- **ディスク**: 計算データに応じて100MB～10GB
+
+### **依存関係**
+```json
+{
+  "@modelcontextprotocol/sdk": "^1.7.0",
+  "js-yaml": "^4.1.0",
+  "winston": "^3.17.0",
+  "zod": "^3.24.2"
+}
+```
+
+### **パフォーマンス特性**
+| 操作 | 平均応答時間 | 最大メモリ |
+|------|-------------|-----------|
+| 立体作成 | <50ms | +2MB |
+| 材料設定 | <30ms | +1MB |
+| 線源配置 | <100ms | +3MB |
+| 検出器配置 | <150ms | +4MB |
+| YAML保存 | <200ms | +10MB |
+
+### **スケーラビリティ制限**
+- **立体数**: 推奨1,000個、最大10,000個
+- **線源数**: 推奨100個、最大1,000個
+- **検出器数**: 推奨100個、最大1,000個
+- **YAMLファイル**: 推奨10MB、最大100MB
 - 複数変換の組み合わせ
 - 座標系の管理
 
@@ -177,22 +236,23 @@ poker_mcp/
 | **📏 Unit** | 3個 | 単位設定管理 | propose・get・update |
 | **⚙️ System** | 2個 | システム制御 | applyChanges・executeCalculation |
 
-### 📋 全24メソッド一覧
+### 📋 全28メソッド一覧
 - **Body系**: poker_proposeBody, poker_updateBody, poker_deleteBody
 - **Zone系**: poker_proposeZone, poker_updateZone, poker_deleteZone
 - **Transform系**: poker_proposeTransform, poker_updateTransform, poker_deleteTransform
 - **BuildupFactor系**: poker_proposeBuildupFactor, poker_updateBuildupFactor, poker_deleteBuildupFactor, poker_changeOrderBuildupFactor
 - **Source系**: poker_proposeSource, poker_updateSource, poker_deleteSource
 - **Detector系**: poker_proposeDetector, poker_updateDetector, poker_deleteDetector
-- **Unit系**: poker_proposeUnit, poker_getUnit, poker_updateUnit
-- **System系**: poker_applyChanges, poker_executeCalculation
+- **Unit系**: poker_proposeUnit, poker_getUnit, poker_updateUnit, poker_validateUnitIntegrity, poker_analyzeUnitConversion
+- **System系**: poker_applyChanges, poker_executeCalculation, poker_resetYaml, poker_confirmDaughterNuclides
 
 ---
 
 ## 📚 ドキュメント体系
 
 ### 🌟 エッセンシャル（必須）
-- **[ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)**: 概要・セットアップ・基本操作
+- **[SETUP_GUIDE.md](SETUP_GUIDE.md)**: NPX実行・環境変数・Claude Desktop統合
+- **[ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)**: 概要・基本操作・新機能
 - **[QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)**: 早見表・よく使う操作・Tips
 
 ### 📖 詳細マニュアル
@@ -204,6 +264,7 @@ poker_mcp/
 - **[ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)**: 管理者向けガイド
 
 ### 📖 利用シーン別ガイド
+- **初回セットアップ**: SETUP_GUIDE.md（NPX・環境変数・Claude Desktop）
 - **初回利用**: ESSENTIAL_GUIDE.md → QUICK_REFERENCE.md
 - **日常業務**: QUICK_REFERENCE.md → RESEARCH_WORKFLOWS.md
 - **API詳細**: API_COMPLETE.md

@@ -1,8 +1,8 @@
 # 🚀 QUICK_REFERENCE.md - 放射線遮蔽計算クイックリファレンス
 
 **対象読者**: 放射線遮蔽研究者・実務者  
-**更新日**: 2025年8月27日  
-**バージョン**: 1.0  
+**更新日**: 2025年9月8日  
+**バージョン**: 1.1.0  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -2515,6 +2515,235 @@ def perform_sensitivity_analysis(input_uncertainties, output_samples):
         }
     
     return sensitivity_indices
+```
+
+---
+
+## 🚀 新機能クイックガイド（v1.1.0追加）
+
+### 🧬 子孫核種自動追加
+
+#### **基本コマンド**
+```yaml
+# Claude指示例
+「Ra-226線源に子孫核種を自動追加してください」
+
+# 実行されるメソッド
+poker_confirmDaughterNuclides(
+  action: "check",              # まず確認
+  source_name: "Ra226_source"   # 対象線源
+)
+
+# 結果確認後の承認
+poker_confirmDaughterNuclides(
+  action: "confirm",            # 承認して適用
+  source_name: "Ra226_source"
+)
+```
+
+#### **応用例: 複雑核種チェーン**
+```yaml
+# 複数核種の一括確認
+「すべての線源について子孫核種をチェックしてください」
+→ poker_confirmDaughterNuclides(action: "check")
+
+# 選択的追加
+poker_confirmDaughterNuclides(
+  action: "confirm_with_modifications",
+  modifications: [
+    {source_name: "Ra226", nuclide: "Rn222", include: true, radioactivity: 1.0e12},
+    {source_name: "Ra226", nuclide: "Po218", include: false}
+  ]
+)
+```
+
+### 🔄 YAML完全リセット
+
+#### **基本リセット**
+```yaml
+# Claude指示例
+「プロジェクトを初期化してください」
+
+# 実行されるメソッド
+poker_resetYaml(
+  reset_level: "standard",           # 標準リセット
+  atmosphere_material: "VOID",       # 真空
+  preserve_units: true,              # 単位設定保持
+  backup_comment: "プロジェクト初期化"
+)
+```
+
+#### **カスタムリセット**
+```yaml
+# 空気環境での完全リセット
+poker_resetYaml(
+  reset_level: "complete",
+  atmosphere_material: "Air",
+  atmosphere_density: 0.00129,       # g/cm³
+  preserve_units: false,
+  force: false
+)
+
+# 最小限リセット（立体のみ削除）
+poker_resetYaml(
+  reset_level: "minimal",
+  atmosphere_material: "VOID"
+)
+```
+
+### 🎯 検出器タイプ明確化
+
+#### **点検出器**
+```yaml
+# Claude指示例
+「原点から1m離れた位置に点検出器を設置」
+
+poker_proposeDetector(
+  name: "point_det",
+  origin: "100 0 0",              # 位置のみ
+  show_path_trace: false          # gridなし=点検出器
+)
+```
+
+#### **線検出器（1D）**
+```yaml
+poker_proposeDetector(
+  name: "line_det",
+  origin: "0 0 0",
+  grid: [
+    { edge: "100 0 0", number: 20 }  # X軸方向20分割
+  ],
+  show_path_trace: false
+)
+```
+
+#### **面検出器（2D）**
+```yaml  
+poker_proposeDetector(
+  name: "surface_det",
+  origin: "0 0 100",
+  grid: [
+    { edge: "200 0 0", number: 20 },   # X軸20分割
+    { edge: "0 200 0", number: 20 }    # Y軸20分割
+  ],
+  show_path_trace: false
+)
+```
+
+#### **体積検出器（3D）**
+```yaml
+poker_proposeDetector(
+  name: "volume_det", 
+  origin: "0 0 0",
+  grid: [
+    { edge: "100 0 0", number: 10 },   # X軸10分割
+    { edge: "0 100 0", number: 10 },   # Y軸10分割  
+    { edge: "0 0 100", number: 10 }    # Z軸10分割
+  ],
+  show_path_trace: true
+)
+```
+
+### 📏 Unit系拡張機能（v1.1.0）
+
+#### **単位完全性検証**
+```yaml
+# Claude指示例
+「単位設定の完全性をチェックしてください」
+
+poker_validateUnitIntegrity(
+  generateReport: true,              # 詳細レポート生成
+  includeSystemAnalysis: true       # システム分析含む
+)
+
+# 結果例
+# ✅ 4キー完全性: OK
+# ✅ 物理的整合性: OK  
+# ⚠️ システム警告: 単位混在の可能性
+```
+
+#### **単位変換分析**
+```yaml
+# Claude指示例  
+「現在の単位系からSI単位系への変換係数を教えてください」
+
+poker_analyzeUnitConversion(
+  targetUnits: {
+    length: "m",                     # cm → m
+    angle: "radian",                 # degree → radian
+    density: "g/cm3",               # 変更なし
+    radioactivity: "Bq"             # 変更なし
+  },
+  includePhysicalAnalysis: true
+)
+
+# 結果例
+# 長さ変換係数: 0.01 (cm → m)
+# 角度変換係数: π/180 (degree → radian)
+# 物理的影響: 座標値は1/100スケール
+```
+
+---
+
+## 🎯 v1.1.0トラブルシューティング
+
+### **子孫核種追加エラー**
+```yaml
+# エラー: 核種データベースが見つからない
+→ 解決策: 環境変数 POKER_DATA_DIR を確認
+
+# エラー: 子孫核種の計算に失敗
+→ 解決策: 親核種名の表記確認 (例: Ra-226, Ra226)
+```
+
+### **単位系エラー**
+```yaml
+# エラー: 4キー完全性違反
+→ 解決策: poker_proposeUnit で4キー全指定
+
+# エラー: 単位変換の物理的非整合
+→ 解決策: poker_analyzeUnitConversion で事前確認
+```
+
+### **YAMLリセットエラー**
+```yaml
+# エラー: ATMOSPHERE削除試行
+→ 解決策: システム保護により自動回避（正常動作）
+
+# エラー: バックアップ失敗
+→ 解決策: ディスク容量・権限確認
+```
+  name: "line_det",
+  origin: "0 0 0",
+  grid: [
+    {edge: "500 0 0", number: 50}  # X方向5m、50分割
+  ]
+)
+```
+
+#### **面検出器（2D）**
+```yaml
+poker_proposeDetector(
+  name: "surface_det",
+  origin: "0 0 200",
+  grid: [
+    {edge: "400 0 0", number: 20},  # X方向4m、20分割
+    {edge: "0 300 0", number: 15}   # Y方向3m、15分割
+  ]
+)
+```
+
+#### **体積検出器（3D）**
+```yaml
+poker_proposeDetector(
+  name: "volume_det",
+  origin: "-100 -100 0",
+  grid: [
+    {edge: "200 0 0", number: 10},   # X方向
+    {edge: "0 200 0", number: 10},   # Y方向
+    {edge: "0 0 150", number: 8}     # Z方向
+  ]
+)
 ```
 
 ---

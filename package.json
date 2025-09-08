@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
