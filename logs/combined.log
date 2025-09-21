@@ -1,0 +1,126 @@
+{"file":"tasks/poker.yaml","level":"info","message":"初期YAMLファイルを作成しました","timestamp":"2025-09-20T17:25:15.364Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"初期保留変更ファイルを作成しました","timestamp":"2025-09-20T17:25:15.367Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:25:15.369Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:25:15.369Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:25:15.369Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:25:15.369Z"}
+{"databaseFile":"data/ICRP-07.NDX","error":"ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"error","message":"核種データベースの読み込みエラー","resolvedPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","timestamp":"2025-09-20T17:25:15.370Z"}
+{"error":"核種データベース読み込み失敗: ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"error","message":"データマネージャーの初期化に失敗しました","timestamp":"2025-09-20T17:25:15.370Z"}
+{"error":"初期化に失敗: 核種データベース読み込み失敗: ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"warn","message":"ConfigManagerの初期化をスキップしました","timestamp":"2025-09-20T17:25:15.370Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:25:15.371Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:25:15.371Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:25:15.371Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:25:15.371Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:25:15.371Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:25:15.371Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:25:21.647Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:25:21.649Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:25:21.651Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:25:21.651Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:25:21.651Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:25:21.651Z"}
+{"databaseFile":"data/ICRP-07.NDX","error":"ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"error","message":"核種データベースの読み込みエラー","resolvedPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","timestamp":"2025-09-20T17:25:21.652Z"}
+{"error":"核種データベース読み込み失敗: ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"error","message":"データマネージャーの初期化に失敗しました","timestamp":"2025-09-20T17:25:21.652Z"}
+{"error":"初期化に失敗: 核種データベース読み込み失敗: ENOENT: no such file or directory, access 'C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX'","level":"warn","message":"ConfigManagerの初期化をスキップしました","timestamp":"2025-09-20T17:25:21.652Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:25:21.653Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:25:21.653Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:25:21.653Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:25:21.653Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:25:21.653Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:25:21.653Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:41:04.909Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:41:04.910Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:41:04.913Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:41:04.914Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:41:04.914Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:41:04.914Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:41:04.915Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:41:04.927Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:41:04.927Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:41:04.927Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:41:04.927Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:41:04.928Z"}
+{"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-09-20T17:41:04.928Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:44:02.162Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:44:02.164Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:44:02.167Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:44:02.181Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:44:02.181Z","totalNuclides":1252}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:44:45.609Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:44:45.611Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:44:45.614Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:44:45.615Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:44:45.615Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:44:45.615Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:44:45.616Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:44:45.631Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:44:45.631Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:44:45.631Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:44:45.631Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:45:27.400Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:45:27.402Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:45:27.404Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:45:27.404Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:45:27.404Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:45:27.404Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:45:27.405Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:45:27.418Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:45:27.418Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:45:27.418Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:45:27.418Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:45:27.418Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:48:36.614Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:48:36.615Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:48:36.618Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:48:36.618Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:48:36.618Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:48:36.618Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:48:36.619Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:48:36.631Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:48:36.631Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:48:36.631Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:48:36.631Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:48:36.632Z"}
+{"action":"check","level":"info","message":"子孫核種確認処理開始","timestamp":"2025-09-20T17:48:36.632Z"}
+{"level":"info","message":"子孫核種自動補間チェックを開始","timestamp":"2025-09-20T17:48:36.632Z"}
+{"error":"results is not iterable","level":"error","message":"子孫核種確認処理エラー","timestamp":"2025-09-20T17:48:36.632Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:50:28.347Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:50:28.349Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:50:28.352Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:50:28.352Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:50:28.352Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:50:28.352Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:50:28.353Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:50:28.365Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:50:28.365Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:50:28.365Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:50:28.365Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:50:28.366Z"}
+{"action":"check","level":"info","message":"子孫核種確認処理開始","timestamp":"2025-09-20T17:50:28.366Z"}
+{"level":"info","message":"子孫核種自動補間チェックを開始","timestamp":"2025-09-20T17:50:28.366Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:51:04.992Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:51:04.994Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:51:04.997Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:51:04.997Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:51:04.997Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:51:04.997Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:51:04.999Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:51:05.013Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:51:05.014Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:51:05.014Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:51:05.014Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:51:05.014Z"}
+{"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-09-20T17:51:05.015Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLファイルは既に存在します","timestamp":"2025-09-20T17:54:51.796Z"}
+{"file":"tasks/pending_changes.json","level":"info","message":"保留変更ファイルは既に存在します","timestamp":"2025-09-20T17:54:51.798Z"}
+{"file":"tasks/poker.yaml","level":"info","message":"YAMLデータを読み込みました","timestamp":"2025-09-20T17:54:51.801Z"}
+{"count":0,"level":"info","message":"保留変更を読み込みました","timestamp":"2025-09-20T17:54:51.801Z"}
+{"databaseFile":"data/ICRP-07.NDX","level":"info","message":"ICRP-07データベースを読み込み中...","timestamp":"2025-09-20T17:54:51.801Z"}
+{"dataPath":"C:\\Users\\yoshi\\Desktop\\poker_mcp\\data\\ICRP-07.NDX","level":"info","message":"データベースファイル解決パス","timestamp":"2025-09-20T17:54:51.801Z"}
+{"fileSize":285684,"level":"info","lineCount":1254,"message":"ファイル読み込み完了","timestamp":"2025-09-20T17:54:51.802Z"}
+{"level":"info","message":"核種データ解析完了: 1252個の核種を読み込み","timestamp":"2025-09-20T17:54:51.815Z"}
+{"decayChains":0,"level":"info","message":"核種データベース読み込み完了","sampleNuclides":["Ac223","Ac224","Ac225","Ac226","Ac227"],"timestamp":"2025-09-20T17:54:51.815Z","totalNuclides":1252}
+{"level":"info","message":"データマネージャーを初期化しました","timestamp":"2025-09-20T17:54:51.815Z"}
+{"level":"info","message":"TaskManagerを初期化しました","timestamp":"2025-09-20T17:54:51.815Z"}
+{"level":"info","message":"PokerMcpServer初期化完了","timestamp":"2025-09-20T17:54:51.816Z"}
+{"level":"info","message":"Poker MCP Server started on stdio","timestamp":"2025-09-20T17:54:51.816Z"}

@@ -28,7 +28,7 @@ export class SafeDataManager {
     this.nuclideManager = new NuclideManager({
       contribution_threshold: 0.05,
       user_confirmation: true,
-      database_file: 'src/data/ICRP-07.NDX'
+      database_file: 'data/ICRP-07.NDX'
     });
     
     // 強化検証の初期化
@@ -52,6 +52,9 @@ export class SafeDataManager {
       // データ読み込み
       await this.loadData();
       await this.loadPendingChanges();
+      
+      // NuclideManagerのデータベース読み込み
+      await this.nuclideManager.loadNuclideDatabase();
       
       logger.info('データマネージャーを初期化しました');
     } catch (error) {
@@ -983,11 +986,13 @@ export class SafeDataManager {
 
   /**
    * 子孫核種の自動追加実行
+   * @deprecated updateSourceを使用したhandleConfirmに置き換えられました
    * @param {Array} additionResults - 追加結果配列
    * @param {boolean} userConfirmation - ユーザー確認済み
    * @returns {Object} 実行結果
    */
   async applyDaughterNuclideAdditions(additionResults, userConfirmation = false) {
+    logger.warn('applyDaughterNuclideAdditions は非推奨です。updateSourceベースの実装を使用してください');
     try {
       logger.info('子孫核種の自動追加を開始', { 
         resultCount: additionResults.length,
@@ -1048,11 +1053,19 @@ export class SafeDataManager {
 
       logger.info('子孫核種追加完了', { totalAdded });
       
-      return {
+      const result = {
         success: true,
         totalAdded,
         appliedActions
       };
+      
+      // 非推奨警告を追加
+      if (totalAdded > 0) {
+        result.warning = 'この方法で追加された子孫核種は永続化されません。poker_applyChanges の実行前にサーバーを再起動しないでください。';
+        result.recommendation = 'updateSourceベースの子孫核種追加機能の使用を検討してください。';
+      }
+      
+      return result;
 
     } catch (error) {
       logger.error('子孫核種追加中にエラー', { error: error.message });

@@ -1,0 +1,33 @@
+# Cs-137遮蔽計算用のPoker入力ファイル
+# 作成日: 2025年9月2日
+# 鉛遮蔽体による線量低減効果を評価
+
+unit:
+  length: cm
+  angle: degree  
+  density: g/cm3
+  radioactivity: Bq
+
+body:
+  # 鉛遮蔽体（厚さ5cm）
+  - name: lead_shield
+    type: RPP
+    min: 5 -20 -20
+    max: 10 20 20
+
+zone:
+  # 鉛遮蔽体の材料設定
+  - body_name: lead_shield
+    material: LEAD
+    density: 11.34
+  
+  # 空気領域（鉛遮蔽体以外の全計算空間）
+  - body_name: ATMOSPHERE
+    material: AIR
+    density: 0.00129
+
+buildup_factor:
+  # 鉛のビルドアップ係数設定
+  - material: LEAD
+    use_slant_correction: false
+    use_finite
