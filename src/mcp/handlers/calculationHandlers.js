@@ -111,10 +111,10 @@ export function createCalculationHandlers(taskManager) {
               category: 'pre_validation_error',
               recoverable: true,
               suggestions: [
-                'Resolve geometry collisions if detected',
                 'Check daughter nuclide configurations',
-                'Review enhanced validation warnings',
-                'Ensure all bodies, zones, and sources are properly defined'
+                'Review material definitions',
+                'Ensure all required parameters are properly defined',
+                'Note: Geometry collisions will not block calculation'
               ]
             }
           };

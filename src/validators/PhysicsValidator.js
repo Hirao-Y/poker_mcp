@@ -8,11 +8,19 @@ export class PhysicsValidator {
   static getMaterialProperties() {
     // fallbackデータを返す
     return {
+      'Carbon': { densityRange: { min: 2.0, max: 2.3 } },
       'Concrete': { densityRange: { min: 1.8, max: 2.5 } },
       'Iron': { densityRange: { min: 7.6, max: 7.9 } },
       'Lead': { densityRange: { min: 11.0, max: 11.4 } },
-      'Water': { densityRange: { min: 0.95, max: 1.05 } },
+      'Aluminum': { densityRange: { min: 2.6, max: 2.8 } },
+      'Copper': { densityRange: { min: 8.8, max: 9.0 } },
+      'Tungsten': { densityRange: { min: 18.5, max: 19.5 } },
       'Air': { densityRange: { min: 0.001, max: 0.002 } },
+      'Water': { densityRange: { min: 0.95, max: 1.05 } },
+      'PyrexGlass': { densityRange: { min: 2.2, max: 2.3 } },
+      'AcrylicResin': { densityRange: { min: 1.1, max: 1.2 } },
+      'Polyethylene': { densityRange: { min: 0.92, max: 0.97 } },
+      'Soil': { densityRange: { min: 1.3, max: 2.0 } },
       'VOID': { densityRange: { min: 0, max: 0 } }
     };
   }

@@ -793,17 +793,18 @@ export class SafeDataManager {
       }
 
       const bodies = this.data.body;
+      const zones = this.data.zone || []; // ゾーン情報を取得
       let result;
 
       switch (timing) {
         case 'realtime_basic':
           // リアルタイム: 基本的な重複のみ
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           break;
           
         case 'batch_detailed':
           // バッチ: 詳細な干渉解析
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           if (result.hasCollisions) {
             result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
           }
@@ -811,7 +812,7 @@ export class SafeDataManager {
           
         case 'pre_calculation':
           // 計算前: 完全な検証
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           if (result.hasCollisions) {
             result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
             result.mustResolve = true;

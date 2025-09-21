@@ -295,7 +295,14 @@ export class CalculationService {
     }
 
     // コマンドライン引数の構築
-    const absoluteYamlPath = path.resolve(yamlFile);
+    // yamlFileが絶対パスの場合はそのまま使用、相対パスの場合はtasks/ディレクトリを基準に解決
+    let absoluteYamlPath;
+    if (path.isAbsolute(yamlFile)) {
+      absoluteYamlPath = yamlFile;
+    } else {
+      // 相対パスの場合、tasks/ディレクトリからの相対パスとして解決
+      absoluteYamlPath = path.resolve('tasks', yamlFile);
+    }
     const args = [absoluteYamlPath];
     
     // サマリーオプション
@@ -543,22 +550,15 @@ export class CalculationService {
         
         const validationResult = await dataManager.performPreCalculationValidation();
         
-        if (validationResult.mustResolve) {
-          logger.error('計算実行前に解決が必要な重大エラーを検出', {
-            criticalErrorCount: validationResult.criticalErrors.length
+        // 立体衝突チェックは警告のみとし、計算を中断しない
+        if (validationResult.collisionCheck?.hasCollisions) {
+          logger.warn('立体干渉が検出されましたが、計算を続行します', {
+            collisions: validationResult.collisionCheck.collisions,
+            totalIssues: validationResult.collisionCheck.totalIssues
           });
-          
-          return {
-            success: false,
-            stage: 'pre_validation',
-            error: 'CRITICAL_VALIDATION_ERRORS',
-            message: '計算実行前に解決が必要な重大エラーがあります',
-            validationResult,
-            criticalErrors: validationResult.criticalErrors
-          };
         }
-
-        // 子孫核種検出時の処理
+        
+        // 子孫核種チェックは維持（物理的に必須）
         if (validationResult.daughterNuclideCheck?.totalAdditions > 0 && 
             !dataManager.daughterNuclideCheckDisabled) {
           logger.info('子孫核種が検出されました - 計算を中断してユーザー確認を要求');
@@ -581,6 +581,26 @@ export class CalculationService {
             next_step: 'poker_confirmDaughterNuclidesを実行後、再度poker_executeCalculationを実行してください'
           };
         }
+        
+        // 立体衝突以外の重大エラーのみチェック
+        const nonCollisionErrors = validationResult.criticalErrors?.filter(
+          error => error.type !== 'collision_detected'
+        ) || [];
+        
+        if (nonCollisionErrors.length > 0) {
+          logger.error('計算実行前に解決が必要な重大エラーを検出', {
+            criticalErrorCount: nonCollisionErrors.length
+          });
+          
+          return {
+            success: false,
+            stage: 'pre_validation',
+            error: 'CRITICAL_VALIDATION_ERRORS',
+            message: '計算実行前に解決が必要な重大エラーがあります',
+            validationResult,
+            criticalErrors: nonCollisionErrors
+          };
+        }
 
         if (!validationResult.overall) {
           logger.warn('検証で警告が検出されましたが、計算を継続します', {
@@ -600,12 +620,32 @@ export class CalculationService {
       // 通常の計算実行
       const calculationResult = await this.executeCalculation(yamlFile, summaryOptions, outputFiles, timeout);
 
+      // poker_cuiがエラーを返した場合、事後診断を実行
+      if (!calculationResult.success && dataManager) {
+        logger.info('計算エラーが発生したため、事後診断を実行します');
+        
+        const postValidation = await dataManager.performPreCalculationValidation();
+        
+        // エラー診断情報を結果に追加
+        calculationResult.diagnostics = {
+          performed: true,
+          collisionCheck: postValidation.collisionCheck,
+          suggestions: []
+        };
+        
+        if (postValidation.collisionCheck?.hasCollisions) {
+          calculationResult.diagnostics.suggestions.push(
+            '立体干渉が検出されました。組み合わせ立体（CMB）の使用を検討してください'
+          );
+        }
+      }
+
       // 結果に検証情報を追加
       if (dataManager) {
         calculationResult.preValidation = {
           performed: true,
           passed: true,
-          details: 'Pre-calculation validation completed successfully'
+          details: 'Pre-calculation validation completed with warnings only'
         };
       }
 
