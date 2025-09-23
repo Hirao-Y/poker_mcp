@@ -204,7 +204,7 @@ export class SafeDataManager {
       flowLevel: -1,  // すべてのレベルでブロックスタイルを使用
       lineWidth: 120,
       noRefs: true,
-        quotingType: '"',
+      quotingType: "'",
       forceQuotes: false
     });
       await fs.writeFile(this.yamlFile, yamlData, 'utf8');

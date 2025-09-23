@@ -1063,7 +1063,19 @@ export class TaskManager {
       if (body_name !== 'ATMOSPHERE') {
         const body = this.findBodyByName(body_name);
         if (!body) {
-          throw new ValidationError(`立体 ${body_name} が存在しません`, 'body_name', body_name);
+          // フェーズ1: 保留中の立体をチェック（同期的に呼び出し）
+          const pendingBodies = this.checkPendingBodies();
+          logger.info('保留中の立体チェック', { body_name, pendingBodies });
+          
+          if (pendingBodies.includes(body_name)) {
+            throw PokerMcpError.bodyInPendingChanges(body_name);
+          }
+          
+          throw new ValidationError(
+            `立体 ${body_name} が存在しません。先にproposeBodyで立体を定義してください`,
+            'body_name',
+            body_name
+          );
         }
       }
       
@@ -1877,6 +1889,27 @@ export class TaskManager {
     } catch (error) {
       logger.error('リセット結果の検証に失敗', { error: error.message });
       throw new ValidationError(`リセット後検証失敗: ${error.message}`, 'postResetValidation', null);
+    }
+  }
+  
+  // フェーズ1追加: 保留中の立体をチェック（同期的に変更）
+  checkPendingBodies() {
+    try {
+      // pendingChangesプロパティを使用
+      const pending = this.pendingChanges || [];
+      const pendingBodies = [];
+      
+      for (const change of pending) {
+        if (change.action === 'add_body') {
+          pendingBodies.push(change.data.body.name);
+        }
+      }
+      
+      logger.info('保留中の立体を検出', { count: pendingBodies.length, bodies: pendingBodies });
+      return pendingBodies;
+    } catch (error) {
+      logger.error('保留中の立体チェックエラー', { error: error.message });
+      return [];
     }
   }
 }

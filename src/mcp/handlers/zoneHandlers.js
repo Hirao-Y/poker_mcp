@@ -46,6 +46,25 @@ export function createZoneHandlers(taskManager) {
           };
         }
         
+        // フェーズ1: 保留中の立体エラー処理
+        if (error.code === -32090) {
+          return {
+            success: false,
+            error: error.message,
+            details: {
+              errorCode: error.code,
+              suggestion: 'applyChangesを実行して立体を永続化してください',
+              pendingBody: args.body_name,
+              workflowGuide: [
+                '1. すべての立体(body)を定義',
+                '2. poker_applyChangesで永続化',
+                '3. ゾーン(zone)を定義',
+                '4. 最後にpoker_applyChangesで確定'
+              ]
+            }
+          };
+        }
+        
         throw error;
       }
     },
