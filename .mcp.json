@@ -1,34 +1,80 @@
 {
   "name": "poker-mcp",
-  "version": "1.1.0", 
-  "description": "YAML-Based input file management tool for radiation shielding calculation code POKER with MCP support",
+  "version": "1.2.0",
+  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection and daughter nuclide auto-completion",
+  "author": "Yoshihiro Hirao",
+  "license": "ISC",
   "url": "stdio://",
   "server": {
     "command": "node",
-    "args": ["src/mcp_server_stdio_v4.js"]
+    "args": ["src/mcp_server_stdio_v4.js"],
+    "env": {
+      "NODE_ENV": "production"
+    }
   },
   "capabilities": {
     "tools": true,
-    "logging": true
+    "logging": true,
+    "real_data_update": true,
+    "automatic_backup": true,
+    "error_handling": "complete",
+    "validation": "comprehensive"
   },
   "features": {
     "geometry_validation": {
-      "collision_detection": {
-        "enabled": true,
-        "timing": {
-          "realtime_basic": true,
-          "batch_detailed": true,
-          "pre_calculation": true
-        },
-        "resolution_methods": {
-          "auto_deletion": {
-            "priority_rules": ["creation_order", "size", "density"],
-            "user_confirmation": true
-          },
-          "boolean_operations": {
-            "auto_subtraction": true,
-            "auto_union": true,
-            "auto_intersection": false
-          },
-          "geometry_adjustment": {
-            "auto_resize
+      "collision_detection": true,
+      "interference_check": true,
+      "pre_calculation_validation": true
+    },
+    "nuclide_management": {
+      "daughter_auto_completion": true,
+      "decay_chain_analysis": true,
+      "icrp_database_integration": true
+    },
+    "enhanced_validation": {
+      "physics_consistency_check": true,
+      "units_compatibility_verification": true,
+      "material_property_validation": true,
+      "cmb_expression_validation": true
+    },
+    "operation_methods": {
+      "count": 24,
+      "categories": [
+        "Body operations (propose/update/delete)",
+        "Zone operations (propose/update/delete)",
+        "BuildupFactor operations (propose/update/delete/changeOrder)",
+        "Transform operations (propose/update/delete)",
+        "Source operations (propose/update/delete)",
+        "Detector operations (propose/update/delete)",
+        "Unit operations (propose/update/get/validate/analyze)",
+        "System operations (applyChanges/resetYaml/executeCalculation/confirmDaughterNuclides)"
+      ]
+    },
+    "supported_geometries": {
+      "count": 10,
+      "types": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"]
+    },
+    "supported_materials": {
+      "count": 14,
+      "types": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"]
+    }
+  },
+  "data_configuration": {
+    "work_directory": "tasks",
+    "yaml_file": "tasks/poker.yaml",
+    "pending_file": "tasks/pending_changes.json",
+    "backup_directory": "backups",
+    "logs_directory": "logs",
+    "nuclide_database": "data/ICRP-07.NDX"
+  },
+  "documentation": {
+    "manifest": "config/mcp-manifest.json",
+    "readme": "README.md",
+    "manuals": "docs/manuals/",
+    "interactive_guides": "docs/interactive_guides/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Hirao-Y/poker_mcp"
+  }
+}

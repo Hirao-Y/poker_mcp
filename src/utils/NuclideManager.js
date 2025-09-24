@@ -11,7 +11,7 @@ class NuclideManager {
     constructor(options = {}) {
         this.contributionThreshold = options.contribution_threshold || 0.05;
         this.userConfirmation = options.user_confirmation !== false;
-        this.databaseFile = options.database_file || 'src/data/ICRP-07.NDX';
+        this.databaseFile = options.database_file || 'data/ICRP-07.NDX';
         this.nuclideData = new Map();
         this.decayChains = new Map();
     }

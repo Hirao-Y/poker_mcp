@@ -4,11 +4,38 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.0.0 (安定版リリース)
+- **バージョン**: 1.2.0 (Enhanced Release)
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
-- **データ保存**: Claude Application Directory内のサブフォルダ
+- **データ保存**: tasks/ディレクトリ（実行時自動作成）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.2.0の新機能
+
+### ⚡ 衝突検出システム
+- **リアルタイム干渉チェック**: 立体間の重なり・接触を自動検出
+- **自動修正提案**: 衝突解決のための幾何調整案を提示
+- **物理的妥当性検証**: 非物理的な配置を事前に防止
+
+### ☢️ 子孫核種自動管理
+- **ICRP-07データベース統合**: 1,254核種の崩壊データを内蔵
+- **放射平衡計算**: 親核種から子孫核種を自動計算
+- **寄与度閾値制御**: 5%以上の寄与を持つ核種を自動追加
+
+### 📏 単位系完全性保証
+- **4キー完全性検証**: length, angle, density, radioactivityの一貫性保証
+- **単位変換分析**: 異なる単位系間の変換係数を自動計算
+- **物理的整合性チェック**: 単位の組み合わせの妥当性を検証
+
+### 🔄 YAMLリセット機能
+- **3段階リセットレベル**: minimal（最小限）、standard（標準）、complete（完全）
+- **自動バックアップ**: リセット前に必ずバックアップを作成
+- **ATMOSPHERE保護**: 必須ゾーンの自動復元
+
+### 🔧 検出器分析機能
+- **互換性チェック**: 複数検出器間の比較可能性を分析
+- **性能最適化提案**: メモリ使用量と計算効率の最適化
+- **システム全体分析**: 全検出器の統合的な性能評価
 
 ## ⚡ セットアップ
 
@@ -77,20 +104,26 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **24メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **29メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
 
 ### ✅ **放射線遮蔽計算専用設計**
 - **10種類の立体形状**: SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED
-- **13種類の材料**: コンクリート、鉛、鉄など標準遮蔽材料
+- **14種類の材料**: コンクリート、鉛、鉄、VOID等標準遮蔽材料
 - **複数線源対応**: 点・体積線源の完全管理
-- **検出器配置**: 1D/2D/3D検出器の柔軟な配置
+- **検出器配置**: 0D/1D/2D/3D検出器の柔軟な配置
+
+### ✅ **物理検証システム**
+- **衝突検出**: リアルタイム立体干渉チェック
+- **子孫核種管理**: ICRP-07データベース基準の自動計算
+- **単位整合性**: 4キー完全性保証システム
+- **材料妥当性**: 密度・物性の自動検証
 
 ## 🎯 API構成
 
-### 🔧 **24メソッド完全実装**
+### 🔧 **29メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -99,21 +132,23 @@ Claude Desktopで以下のようにテストできます：
 | **🔄 Transform** | 3個 | 幾何変換管理 | propose・update・delete |
 | **⚛️ BuildupFactor** | 4個 | ビルドアップ係数制御 | propose・update・delete・changeOrder |
 | **📡 Source** | 3個 | 線源管理 | propose・update・delete |
-| **🎯 Detector** | 3个 | 検出器管理 | propose・update・delete |
-| **📏 Unit** | 3個 | 単位設定管理 | propose・get・update |
-| **⚙️ System** | 2個 | システム制御 | applyChanges・executeCalculation |
+| **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
+| **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
+| **⚙️ System** | 5個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・各種検証 |
 
-### 📋 **全24メソッド一覧**
+### 📋 **全29メソッド一覧**
 ```
-Body系 (3):     poker_proposeBody, poker_updateBody, poker_deleteBody
-Zone系 (3):     poker_proposeZone, poker_updateZone, poker_deleteZone  
-Transform系 (3): poker_proposeTransform, poker_updateTransform, poker_deleteTransform
+Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
+Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  
+Transform系 (3):     poker_proposeTransform, poker_updateTransform, poker_deleteTransform
 BuildupFactor系 (4): poker_proposeBuildupFactor, poker_updateBuildupFactor, 
                      poker_deleteBuildupFactor, poker_changeOrderBuildupFactor
-Source系 (3):   poker_proposeSource, poker_updateSource, poker_deleteSource
-Detector系 (3): poker_proposeDetector, poker_updateDetector, poker_deleteDetector
-Unit系 (3):     poker_proposeUnit, poker_getUnit, poker_updateUnit
-System系 (2):   poker_applyChanges, poker_executeCalculation
+Source系 (3):        poker_proposeSource, poker_updateSource, poker_deleteSource
+Detector系 (3):      poker_proposeDetector, poker_updateDetector, poker_deleteDetector
+Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
+                     poker_validateUnitIntegrity, poker_analyzeUnitConversion
+System系 (5):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
+                     poker_confirmDaughterNuclides, 内部検証メソッド群
 ```
 
 ## 📁 プロジェクト構造
@@ -124,25 +159,39 @@ poker_mcp/
 │   ├── mcp_server_stdio_v4.js       # メインサーバー (エントリポイント)
 │   ├── 📁 mcp/                      # MCP実装
 │   ├── 📁 services/                 # ビジネスロジック
-│   ├── 📁 validators/               # データ検証
+│   ├── 📁 validators/               # データ検証（物理・単位・衝突）
 │   ├── 📁 utils/                    # ユーティリティ
 │   └── 📁 config/                   # 設定管理
+├── 📁 data/                         # 📊 核種データベース
+│   └── ICRP-07.NDX                  # ICRP-107核種データ（1,254核種）
 ├── 📁 config/                       # ⚙️ 設定ファイル
-│   └── mcp-manifest.json            # MCPマニフェスト (1,700行)
+│   ├── mcp-manifest.json            # MCPマニフェスト (2,276行)
+│   └── mcp-example.json             # 設定例
 ├── 📁 docs/                         # 📚 完全ドキュメント
+│   ├── README.md                    # 詳細ドキュメント
 │   ├── 📁 manuals/                  # マニュアル集
 │   └── 📁 interactive_guides/       # インタラクティブ学習ガイド
-├── 📁 [Claude App Dir]/サブフォルダ/ # 📊 YAMLデータファイル
-└── 📁 backups/                      # 💾 自動バックアップ
+├── 📁 node_modules/                 # 📦 依存パッケージ
+├── .mcp.json                        # MCPクライアント接続設定
+├── package.json                     # パッケージ定義
+├── package-lock.json                # 依存関係ロック
+└── README.md                        # このファイル
+
+# 実行時に自動作成されるディレクトリ
+├── 📁 tasks/                        # 📊 作業ディレクトリ（自動作成）
+│   ├── poker.yaml                   # メインYAMLファイル
+│   └── pending_changes.json         # 保留中の変更
+├── 📁 backups/                      # 💾 自動バックアップ（自動作成）
+└── 📁 logs/                         # 📝 ログファイル（自動作成）
 ```
 
 ## 🔧 Claude経由での使用例
 
-### 立体作成
+### 立体作成と衝突検出
 ```
 「医療施設用のコンクリート遮蔽壁を作成してください。サイズは幅100cm、高さ200cm、厚さ30cmです」
 ```
-→ `poker_proposeBody`メソッドが自動実行
+→ `poker_proposeBody`メソッドが自動実行 + 衝突検出
 
 ### 材料ゾーン設定
 ```
@@ -150,17 +199,29 @@ poker_mcp/
 ```
 → `poker_proposeZone`メソッドが自動実行
 
-### 線源配置
+### 線源配置（子孫核種自動追加）
 ```
 「Cs-137線源（放射能1TBq）を原点に配置してください」
 ```
-→ `poker_proposeSource`メソッドが自動実行
+→ `poker_proposeSource`メソッド実行 + Ba-137m自動追加提案
 
-### 検出器設置
+### 検出器設置と最適化
 ```
-「遮蔽壁から120cm離れた位置に線量率検出器を設置してください」
+「遮蔽壁から120cm離れた位置に2D検出器グリッドを設置してください」
 ```
-→ `poker_proposeDetector`メソッドが自動実行
+→ `poker_proposeDetector`メソッド実行 + 性能最適化提案
+
+### 単位系検証
+```
+「現在の単位設定の物理的整合性を確認してください」
+```
+→ `poker_validateUnitIntegrity`メソッドが自動実行
+
+### YAMLリセット
+```
+「立体構造だけクリアして、単位設定は保持したままリセットしてください」
+```
+→ `poker_resetYaml`メソッド（minimal level）実行
 
 ### POKER計算実行
 ```
@@ -184,15 +245,21 @@ poker_mcp/
 
 ### **✅ 放射線遮蔽計算特化**
 - **物理的妥当性**: 全パラメータの物理検証
-- **材料データベース**: 標準遮蔽材料13種完備
-- **単位系管理**: 長さ・角度・密度・放射能の一貫管理
+- **材料データベース**: 標準遮蔽材料14種完備
+- **単位系管理**: 4キー完全性保証（長さ・角度・密度・放射能）
 - **計算品質保証**: 自動整合性チェック
 
 ### **✅ 実用性重視設計**
-- **自動バックアップ**: 全操作で自動データ保護
+- **自動バックアップ**: 全操作で自動データ保護（最大10世代）
 - **依存関係チェック**: 安全な削除・更新処理
 - **エラー回復**: ロールバック機能付き
 - **レスポンス速度**: <50ms応答時間
+
+### **✅ エラーハンドリング強化（v1.2.0）**
+- **propose/update自動判別**: エラーメッセージによる適切なメソッド案内
+- **専用エラーコード**: 各操作に固有のエラーコード体系
+- **材料名サジェスト**: 類似材料名の自動提案機能
+- **Transform参照検証**: 依存関係の事前チェック
 
 ## 📊 対応する計算コード
 
@@ -204,6 +271,7 @@ poker_mcp/
 - **Node.js**: ≥18.0.0
 - **OS**: Windows, macOS, Linux
 - **MCP Client**: Claude Desktop (推奨)、その他MCPクライアント
+- **メモリ**: 512MB以上推奨（大規模検出器使用時は1GB以上）
 
 ## 🎯 実際の使用ワークフロー
 
@@ -214,7 +282,7 @@ poker_mcp/
    ```
 
 2. **自動的なMCPメソッド実行**
-   - 立体作成 → 材料設定 → 線源配置 → 検出器設定
+   - 立体作成 → 衝突検出 → 材料設定 → 線源配置 → 子孫核種確認 → 検出器設定
 
 3. **計算実行と結果取得**
    ```
@@ -226,15 +294,38 @@ poker_mcp/
    - 遮蔽効果の定量評価
    - 法規制適合性の確認
 
+## 📝 更新履歴
+
+### v1.2.0 (2025-01-24)
+- ✨ 衝突検出システム実装
+- ✨ 子孫核種自動補完機能追加（ICRP-07統合）
+- ✨ 単位系完全性検証強化（4キー保証）
+- ✨ YAMLリセット機能実装（3段階レベル）
+- ✨ 検出器分析機能追加
+- 🐛 NuclideManagerデフォルトパス統一
+- 📝 .mcp.json完全化
+- 📝 材料数13→14（VOID追加明記）
+- 🗑️ archiveディレクトリ削除（未使用ファイル整理）
+
+### v1.1.0 (Previous)
+- 基本24メソッド実装
+- MCP 1.0.0準拠
+- 自動バックアップ機能
+
+### v1.0.0 (Initial Release)
+- 初期リリース
+- YAML管理基本機能
+
 ## 📞 サポート・詳細情報
 
 - **📖 詳細README**: [docs/README.md](docs/README.md)
 - **📚 完全マニュアル**: [docs/manuals/](docs/manuals/)
 - **🎓 インタラクティブガイド**: [docs/interactive_guides/](docs/interactive_guides/)
-- **📋 NPX使用方法**: [docs/NPX_USAGE.md](docs/NPX_USAGE.md)
+- **📋 マニフェスト**: [config/mcp-manifest.json](config/mcp-manifest.json)
+- **🐛 Issues**: [GitHub Issues](https://github.com/Hirao-Y/poker_mcp/issues)
 
 ---
 
-**🎯 Poker MCP Server v1.0.0**  
+**🎯 Poker MCP Server v1.2.0**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC
