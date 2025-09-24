@@ -22,79 +22,6 @@
   },
   "features": {
     "geometry_validation": {
-<<<<<<< HEAD
-      "collision_detection": {
-        "enabled": true,
-        "timing": {
-          "realtime_basic": true,
-          "batch_detailed": true,
-          "pre_calculation": true
-        },
-        "resolution_methods": {
-          "auto_deletion": {
-            "priority_rules": ["creation_order", "size", "density"],
-            "user_confirmation": true
-          },
-          "boolean_operations": {
-            "auto_subtraction": true,
-            "auto_union": true,
-            "auto_intersection": false
-          },
-          "geometry_adjustment": {
-            "auto_resize": true,
-            "auto_translate": true,
-            "preserve_material": true
-          }
-        }
-      }
-    },
-    "environment_configuration": {
-      "custom_work_directory": {
-        "enabled": true,
-        "supported_variables": [
-          "POKER_WORK_DIR",
-          "POKER_TASKS_DIR",
-          "POKER_YAML_FILE",
-          "POKER_PENDING_FILE",
-          "POKER_BACKUP_DIR",
-          "POKER_LOGS_DIR"
-        ]
-      }
-    },
-    "radiation_shielding": {
-      "supported_geometries": ["SPH", "RCC", "RPP", "BOX", "CMB", "TOR", "ELL", "REC", "TRC", "WED"],
-      "materials": {
-        "predefined_count": 13,
-        "custom_materials": true,
-        "density_validation": true
-      },
-      "sources": {
-        "point_sources": true,
-        "volume_sources": true,
-        "daughter_nuclides": true
-      },
-      "detectors": {
-        "point_detector": true,
-        "1d_line": true,
-        "2d_surface": true,
-        "3d_volume": true
-      }
-    },
-    "calculation_integration": {
-      "poker_cui": {
-        "enabled": true,
-        "auto_execution": true
-      },
-      "file_management": {
-        "auto_backup": true,
-        "rollback": true,
-        "pending_changes": true
-      }
-    }
-  },
-  "tools_count": 28,
-  "mcp_protocol_version": "1.0.0"
-=======
       "collision_detection": true,
       "interference_check": true,
       "pre_calculation_validation": true
@@ -150,5 +77,4 @@
     "type": "git",
     "url": "https://github.com/Hirao-Y/poker_mcp"
   }
->>>>>>> afterKOKURA
 }
