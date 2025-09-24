@@ -2,24 +2,15 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-<<<<<<< HEAD
-**🔧 対応システム**: Poker MCP Server v1.1.0  
-**📅 最終更新**: 2025年9月8日
-=======
 **🔧 対応システム**: Poker MCP Server v1.2.0  
 **🔧 バージョン**: 1.2.0 MCP Edition  
 **📅 最終更新**: 2025年1月24日
->>>>>>> afterKOKURA
 
 ---
 
 ## 📖 本書の位置づけ
 
-<<<<<<< HEAD
-この文書は**テクニカル層**の完全API仕様書です。MCP (Model Context Protocol) に完全準拠した28メソッドの詳細仕様を提供します。
-=======
 この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した28メソッドの詳細仕様を提供します。
->>>>>>> afterKOKURA
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -101,13 +92,8 @@
 |---------------|----------|----------|
 | **poker_applyChanges** | 変更適用・保存 | 自動バックアップ・整合性確認 |
 | **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報 |
-<<<<<<< HEAD
-| **poker_resetYaml** | YAML初期化 | ATMOSPHEREゾーン保護付き完全リセット |
-| **poker_confirmDaughterNuclides** | 子孫核種自動追加 | 核種インベントリ自動拡張機能 |
-=======
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完 |
->>>>>>> afterKOKURA
 
 ---
 
