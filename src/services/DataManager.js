@@ -44,11 +44,7 @@ export class SafeDataManager {
     this.nuclideManager = new NuclideManager({
       contribution_threshold: 0.05,
       user_confirmation: true,
-<<<<<<< HEAD
-      database_file: this.nuclideDatabasePath
-=======
       database_file: 'data/ICRP-07.NDX'
->>>>>>> afterKOKURA
     });
     
     // 強化検証の初期化
@@ -77,7 +73,9 @@ export class SafeDataManager {
       await this.loadData();
       await this.loadPendingChanges();
       
-<<<<<<< HEAD
+      // NuclideManagerのデータベース読み込み
+      await this.nuclideManager.loadNuclideDatabase();
+      
       logger.info('データマネージャーを初期化しました', {
         workDir: this.workDir,
         dataDir: this.dataDir,
@@ -86,12 +84,6 @@ export class SafeDataManager {
         backupDir: this.backupDir,
         nuclideDatabasePath: this.nuclideDatabasePath
       });
-=======
-      // NuclideManagerのデータベース読み込み
-      await this.nuclideManager.loadNuclideDatabase();
-      
-      logger.info('データマネージャーを初期化しました');
->>>>>>> afterKOKURA
     } catch (error) {
       logger.error('データマネージャーの初期化に失敗しました', { error: error.message });
       throw new DataError(`初期化に失敗: ${error.message}`, 'INITIALIZATION');
@@ -314,10 +306,7 @@ export class SafeDataManager {
       flowLevel: -1,  // すべてのレベルでブロックスタイルを使用
       lineWidth: 120,
       noRefs: true,
-<<<<<<< HEAD
-=======
       quotingType: "'",
->>>>>>> afterKOKURA
       forceQuotes: false
     });
       await fs.writeFile(this.yamlFile, yamlData, 'utf8');
