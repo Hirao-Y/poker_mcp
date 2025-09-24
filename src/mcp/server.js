@@ -9,7 +9,7 @@ import { safeExecute } from './middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 
 export class PokerMcpServer {
-  constructor(yamlFile, pendingFile) {
+  constructor(yamlFile = 'tasks/poker.yaml', pendingFile = 'tasks/pending_changes.json') {
     this.server = new Server(
       {
         name: 'poker-mcp',
@@ -22,7 +22,6 @@ export class PokerMcpServer {
       }
     );
     
-    // 上位で処理済みのパスをそのまま使用
     this.taskManager = new TaskManager(yamlFile, pendingFile);
     this.handlers = null;
   }

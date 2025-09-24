@@ -65,15 +65,11 @@ npx poker-mcp
      "mcpServers": {
        "poker-mcp": {
          "command": "node",
-         "args": ["（ローカルのエントリポイント、例えば）C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
-         "env": {
-          "POKER_WORK_DIR": "（作業ディレクトリのパス、例えば）C:\\Users\\Yoshi\\Desktop\\PokerWorks",
-          "POKER_DATA_DIR": "data",
-          "POKER_NUCLIDE_FILE": "ICRP-07.NDX"
-          }
-         }
-        }
-      }
+         "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
+         "env": {}
+       }
+     }
+   }
    ```
 
 3. **NPXを使用する場合**
@@ -83,11 +79,7 @@ npx poker-mcp
        "poker-mcp": {
          "command": "npx",
          "args": ["poker-mcp"],
-         "env": {
-          "POKER_WORK_DIR": "（作業ディレクトリのパス、例えば）C:\\Users\\Yoshi\\Desktop\\PokerWorks",
-          "POKER_DATA_DIR": "data",
-          "POKER_NUCLIDE_FILE": "ICRP-07.NDX"        
-         }
+         "env": {}
        }
      }
    }
@@ -112,7 +104,7 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **28メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **29メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -131,7 +123,7 @@ Claude Desktopで以下のようにテストできます：
 
 ## 🎯 API構成
 
-### 🔧 **28メソッド完全実装**
+### 🔧 **29メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -141,22 +133,22 @@ Claude Desktopで以下のようにテストできます：
 | **⚛️ BuildupFactor** | 4個 | ビルドアップ係数制御 | propose・update・delete・changeOrder |
 | **📡 Source** | 3個 | 線源管理 | propose・update・delete |
 | **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
-| **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validate・analyze |
-| **⚙️ System** | 4個 | システム制御 | apply・execute・reset・confirm |
+| **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
+| **⚙️ System** | 5個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・各種検証 |
 
-### 📋 **全28メソッド一覧**
+### 📋 **全29メソッド一覧**
 ```
 Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
 Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  
 Transform系 (3):     poker_proposeTransform, poker_updateTransform, poker_deleteTransform
 BuildupFactor系 (4): poker_proposeBuildupFactor, poker_updateBuildupFactor, 
                      poker_deleteBuildupFactor, poker_changeOrderBuildupFactor
-Source系 (3):   poker_proposeSource, poker_updateSource, poker_deleteSource
-Detector系 (3): poker_proposeDetector, poker_updateDetector, poker_deleteDetector
-Unit系 (5):     poker_proposeUnit, poker_getUnit, poker_updateUnit,
-                poker_validateUnitIntegrity, poker_analyzeUnitConversion
-System系 (4):   poker_applyChanges, poker_executeCalculation,
-                poker_resetYaml, poker_confirmDaughterNuclides
+Source系 (3):        poker_proposeSource, poker_updateSource, poker_deleteSource
+Detector系 (3):      poker_proposeDetector, poker_updateDetector, poker_deleteDetector
+Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
+                     poker_validateUnitIntegrity, poker_analyzeUnitConversion
+System系 (5):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
+                     poker_confirmDaughterNuclides, 内部検証メソッド群
 ```
 
 ## 📁 プロジェクト構造
@@ -327,7 +319,6 @@ poker_mcp/
 ## 📞 サポート・詳細情報
 
 - **📖 詳細README**: [docs/README.md](docs/README.md)
-- **🚀 セットアップガイド**: [docs/SETUP_GUIDE.md](docs/SETUP_GUIDE.md)
 - **📚 完全マニュアル**: [docs/manuals/](docs/manuals/)
 - **🎓 インタラクティブガイド**: [docs/interactive_guides/](docs/interactive_guides/)
 - **📋 マニフェスト**: [config/mcp-manifest.json](config/mcp-manifest.json)
@@ -335,6 +326,6 @@ poker_mcp/
 
 ---
 
-**🎯 Poker MCP Server v1.2.0**
+**🎯 Poker MCP Server v1.2.0**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC

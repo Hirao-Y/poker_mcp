@@ -2,10 +2,15 @@
 export const calculationTools = [
   {
     name: 'poker_executeCalculation',
-    description: '環境変数で設定されたYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します',
+    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します',
     inputSchema: {
       type: 'object',
       properties: {
+        yaml_file: {
+          type: 'string',
+          description: '計算に使用するYAMLファイル名（拡張子.yamlを含む）',
+          pattern: '^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$'
+        },
         summary_options: {
           type: 'object',
           description: 'サマリー出力オプション（注意: show_source_dataとshow_total_doseの少なくとも一方は必須です）',
@@ -46,7 +51,7 @@ export const calculationTools = [
           additionalProperties: false
         }
       },
-      required: [],
+      required: ['yaml_file'],
       additionalProperties: false
     }
   }

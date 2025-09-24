@@ -10,25 +10,9 @@ import EnhancedValidator from '../utils/EnhancedValidator.js';
 
 export class SafeDataManager {
   constructor(yamlFile, pendingFile) {
-    // 受け取ったパスをそのまま使用（パス処理は上位で完了済み）
     this.yamlFile = yamlFile;
     this.pendingFile = pendingFile;
-    
-    // 環境変数処理（統一化）
-    const workDir = process.env.POKER_WORK_DIR || './';
-    const dataDir = path.resolve(workDir, process.env.POKER_DATA_DIR || 'data');
-    const nuclideFileName = process.env.POKER_NUCLIDE_FILE || 'ICRP-07.NDX';
-    
-    // 核種データベースパス生成
-    this.nuclideDatabasePath = path.resolve(dataDir, nuclideFileName);
-    
-    // 他のディレクトリパス
-    this.backupDir = path.resolve(workDir, process.env.POKER_BACKUP_DIR || 'backups');
-    this.logsDir = path.resolve(workDir, process.env.POKER_LOGS_DIR || 'logs');
-    this.tasksDir = path.resolve(workDir, process.env.POKER_TASKS_DIR || 'tasks');
-    this.dataDir = dataDir;  // 新規追加
-    this.workDir = path.resolve(workDir);
-    
+    this.backupDir = 'backups';
     this.maxBackups = 10;
     this.data = null;
     this.pendingChanges = [];
@@ -57,14 +41,10 @@ export class SafeDataManager {
 
   async initialize() {
     try {
-      // 作業ディレクトリの検証
-      await this.validateWorkDirectory();
-      
       // 必要なフォルダをすべて作成
       await fs.mkdir(this.backupDir, { recursive: true });  // backups
-      await fs.mkdir(this.logsDir, { recursive: true });    // logs  
-      await fs.mkdir(this.tasksDir, { recursive: true });   // tasks
-      await fs.mkdir(this.dataDir, { recursive: true });    // data
+      await fs.mkdir('logs', { recursive: true });          // logs  
+      await fs.mkdir('tasks', { recursive: true });         // tasks
 
       // 初期ファイル配置（既存ファイルがない場合のみ）
       await this.ensureInitialFiles();
@@ -76,58 +56,10 @@ export class SafeDataManager {
       // NuclideManagerのデータベース読み込み
       await this.nuclideManager.loadNuclideDatabase();
       
-      logger.info('データマネージャーを初期化しました', {
-        workDir: this.workDir,
-        dataDir: this.dataDir,
-        yamlFile: this.yamlFile,
-        pendingFile: this.pendingFile,
-        backupDir: this.backupDir,
-        nuclideDatabasePath: this.nuclideDatabasePath
-      });
+      logger.info('データマネージャーを初期化しました');
     } catch (error) {
       logger.error('データマネージャーの初期化に失敗しました', { error: error.message });
       throw new DataError(`初期化に失敗: ${error.message}`, 'INITIALIZATION');
-    }
-  }
-
-  // 新規メソッド: 作業ディレクトリの検証
-  async validateWorkDirectory() {
-    try {
-      // 作業ディレクトリの存在確認と作成
-      await fs.mkdir(this.workDir, { recursive: true });
-      
-      // 書き込み権限の確認
-      await fs.access(this.workDir, fs.constants.W_OK);
-      
-      // データディレクトリの作成
-      await fs.mkdir(this.dataDir, { recursive: true });
-      
-      // YAMLファイルのディレクトリ確認
-      const yamlDir = path.dirname(this.yamlFile);
-      await fs.mkdir(yamlDir, { recursive: true });
-      
-      // 保留変更ファイルのディレクトリ確認
-      const pendingDir = path.dirname(this.pendingFile);
-      await fs.mkdir(pendingDir, { recursive: true });
-      
-      logger.info('作業ディレクトリの検証が完了しました', {
-        workDir: this.workDir,
-        dataDir: this.dataDir,
-        yamlDir,
-        pendingDir,
-        backupDir: this.backupDir,
-        nuclideDatabasePath: this.nuclideDatabasePath
-      });
-      
-    } catch (error) {
-      const errorMessage = `作業ディレクトリにアクセスできません: ${this.workDir} - ${error.message}`;
-      logger.error('作業ディレクトリ検証エラー', { 
-        workDir: this.workDir,
-        dataDir: this.dataDir,
-        error: error.message,
-        code: error.code 
-      });
-      throw new DataError(errorMessage, 'WORK_DIRECTORY_ACCESS');
     }
   }
 
@@ -140,43 +72,9 @@ export class SafeDataManager {
       // pending_changes.jsonの初期配置  
       await this.ensurePendingFile();
       
-      // 核種データベースの初期配置
-      await this.ensureNuclideDatabase();
-      
     } catch (error) {
       logger.error('初期ファイル配置エラー', { error: error.message });
       throw error;
-    }
-  }
-
-  async ensureNuclideDatabase() {
-    try {
-      // 核種データベースファイルの存在確認
-      await fs.access(this.nuclideDatabasePath);
-      logger.info('核種データベースファイルは既に存在します', { 
-        file: this.nuclideDatabasePath 
-      });
-    } catch (error) {
-      if (error.code === 'ENOENT') {
-        // ファイルが存在しない場合、内蔵ファイルからコピー
-        const sourceFile = path.join(__dirname, '../data/ICRP-07.NDX');
-        try {
-          await fs.copyFile(sourceFile, this.nuclideDatabasePath);
-          logger.info('デフォルト核種データベースを配置しました', { 
-            source: sourceFile,
-            destination: this.nuclideDatabasePath 
-          });
-        } catch (copyError) {
-          logger.warn('デフォルト核種データベースのコピーに失敗しました', {
-            source: sourceFile,
-            destination: this.nuclideDatabasePath,
-            error: copyError.message,
-            suggestion: '手動で核種データベースファイルを配置してください'
-          });
-        }
-      } else {
-        throw error;
-      }
     }
   }
 

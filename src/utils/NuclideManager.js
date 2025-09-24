@@ -21,9 +21,8 @@ class NuclideManager {
      */
     async loadNuclideDatabase() {
         try {
-            logger.info('核種データベース読み込み開始', { 
-                databaseFile: this.databaseFile,
-                resolved: path.resolve(this.databaseFile)
+            logger.info('ICRP-07データベースを読み込み中...', { 
+                databaseFile: this.databaseFile 
             });
             
             const dataPath = path.resolve(this.databaseFile);
@@ -48,13 +47,12 @@ class NuclideManager {
             });
             
         } catch (error) {
-            logger.error('核種データベース読み込みエラー', {
-                databaseFile: this.databaseFile,
-                resolvedPath: path.resolve(this.databaseFile),
+            logger.error('核種データベースの読み込みエラー', { 
                 error: error.message,
-                suggestion: 'POKER_DATA_DIR および POKER_NUCLIDE_FILE 環境変数を確認してください'
+                databaseFile: this.databaseFile,
+                resolvedPath: path.resolve(this.databaseFile)
             });
-            throw error;
+            throw new Error(`核種データベース読み込み失敗: ${error.message}`);
         }
     }
 

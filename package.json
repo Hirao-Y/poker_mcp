@@ -10,9 +10,7 @@
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
     "dev": "nodemon src/mcp_server_stdio_v4.js",
-    "prepare": "echo 'NPX ready: npx poker-mcp'",
-    "start:custom": "POKER_WORK_DIR=/path/to/project node src/mcp_server_stdio_v4.js",
-    "start:windows": "set POKER_WORK_DIR=C:\\MyProject && node src/mcp_server_stdio_v4.js"
+    "prepare": "echo 'NPX ready: npx poker-mcp'"
   },
   "keywords": [
     "mcp",

@@ -1,37 +1,11 @@
 #!/usr/bin/env node
 // mcp_server_stdio_v4.js - MCP専用版（stdout汚染防止）
-import path from 'path';
 import { PokerMcpServer } from './mcp/server.js';
 import { logger } from './utils/logger.js';
 
 async function main() {
   try {
-    // 環境変数から作業ディレクトリとファイルパスを取得
-    const workDir = process.env.POKER_WORK_DIR || './';
-    const tasksDir = path.resolve(workDir, process.env.POKER_TASKS_DIR || 'tasks');
-    
-    // ファイル名のみを環境変数から取得
-    const yamlFileName = process.env.POKER_YAML_FILE || 'poker.yaml';
-    const pendingFileName = process.env.POKER_PENDING_FILE || 'pending_changes.json';
-    
-    // tasksDir基準でパス生成
-    const yamlFile = path.resolve(tasksDir, yamlFileName);
-    const pendingFile = path.resolve(tasksDir, pendingFileName);
-    
-    logger.info('Poker MCP Server 起動', {
-      workDir: path.resolve(workDir),
-      tasksDir,
-      yamlFile,
-      pendingFile,
-      environmentVariables: {
-        POKER_WORK_DIR: process.env.POKER_WORK_DIR || '(default)',
-        POKER_TASKS_DIR: process.env.POKER_TASKS_DIR || '(default)',
-        POKER_YAML_FILE: process.env.POKER_YAML_FILE || '(default)',
-        POKER_PENDING_FILE: process.env.POKER_PENDING_FILE || '(default)'
-      }
-    });
-    
-    const server = new PokerMcpServer(yamlFile, pendingFile);
+    const server = new PokerMcpServer();
     await server.initialize();
     await server.start();
   } catch (error) {

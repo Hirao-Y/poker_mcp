@@ -10,10 +10,29 @@ export function createCalculationHandlers(taskManager) {
   return {
     async executeCalculation(args) {
       try {
-        // 環境変数で設定されたYAMLファイルを使用
-        const yamlFile = taskManager.dataManager.yamlFile;
-        
-        logger.info('Using YAML file from environment variables', { yamlFile });
+        // 引数検証
+        if (!args.yaml_file) {
+          throw new ValidationError('YAML file is required', 'yaml_file', args.yaml_file);
+        }
+
+        // 絶対パス形式の事前チェック（詳細検証はサービス層で実行）
+        const absolutePathPattern = /^([a-zA-Z]:[\\\/]|\/)/;
+        if (!absolutePathPattern.test(args.yaml_file)) {
+          throw new ValidationError(
+            'YAML file must be specified with absolute path. Examples: C:\\path\\to\\file.yaml or /path/to/file.yaml',
+            'yaml_file',
+            args.yaml_file
+          );
+        }
+
+        // YAML拡張子チェック
+        if (!args.yaml_file.match(/\.(yaml|yml)$/i)) {
+          throw new ValidationError(
+            'YAML file must have .yaml or .yml extension',
+            'yaml_file',
+            args.yaml_file
+          );
+        }
 
         // サマリーオプション検証
         const summaryOptions = args.summary_options || {};
@@ -27,8 +46,8 @@ export function createCalculationHandlers(taskManager) {
         const resolvedOutputFiles = {};
         
         if (Object.keys(outputFiles).length > 0) {
-          // 環境変数YAMLファイルのディレクトリを取得
-          const inputDir = path.dirname(yamlFile);
+          // 入力YAMLファイルのディレクトリを取得
+          const inputDir = path.dirname(args.yaml_file);
           
           // 各出力ファイルの絶対パス化
           for (const [key, fileName] of Object.entries(outputFiles)) {
@@ -58,7 +77,7 @@ export function createCalculationHandlers(taskManager) {
         // 出力ファイル検証（従来の検証は不要、上記で実施済み）
 
         logger.info('Starting radiation shielding calculation', {
-          yamlFile,
+          yamlFile: args.yaml_file,
           summaryOptions,
           outputFiles: outputFiles,
           resolvedOutputFiles
@@ -66,7 +85,7 @@ export function createCalculationHandlers(taskManager) {
 
         // 計算実行（統合検証付き、絶対パス化済みの出力ファイルパスを使用）
         const result = await calculationService.executeWithValidation(
-          yamlFile,
+          args.yaml_file,
           summaryOptions,
           resolvedOutputFiles,  // 絶対パス化済み
           undefined,           // timeout（デフォルト値を使用）
@@ -76,7 +95,7 @@ export function createCalculationHandlers(taskManager) {
         // 事前検証で重大エラーが検出された場合の処理
         if (result.success === false && result.stage === 'pre_validation') {
           logger.error('Pre-calculation validation failed', {
-            yamlFile,
+            yamlFile: args.yaml_file,
             criticalErrors: result.criticalErrors
           });
           
@@ -109,7 +128,7 @@ export function createCalculationHandlers(taskManager) {
           success: true,
           message: 'Radiation shielding calculation completed successfully',
           calculation: {
-            input_file: yamlFile,
+            input_file: args.yaml_file,
             execution_time_ms: result.executionTime,
             timestamp: result.summary.timestamp,
             options: result.summary.options
@@ -142,7 +161,7 @@ export function createCalculationHandlers(taskManager) {
         }
 
         logger.info('Calculation completed successfully', {
-          yamlFile,
+          yamlFile: args.yaml_file,
           executionTime: result.executionTime,
           outputFiles: Object.keys(fileVerification).filter(k => k !== 'allFilesGenerated')
         });
@@ -151,7 +170,7 @@ export function createCalculationHandlers(taskManager) {
 
       } catch (error) {
         logger.error('executeCalculation handler error', { 
-          yamlFile: taskManager.dataManager.yamlFile,
+          args, 
           error: error.message,
           errorType: error.constructor.name
         });
