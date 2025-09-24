@@ -62,6 +62,9 @@ export class PokerMcpError extends McpError {
   static DETECTOR_NOT_FOUND_FOR_UPDATE = -32083;
   static UNIT_ALREADY_EXISTS_FOR_PROPOSE = -32086;
   static UNIT_NOT_FOUND_FOR_UPDATE = -32087;
+  
+  // 保留中の立体エラーコード（フェーズ1追加）
+  static BODY_IN_PENDING_CHANGES = -32090;
 
   constructor(code, message, field = null, value = null) {
     super(code, message);
@@ -256,6 +259,16 @@ export class PokerMcpError extends McpError {
   static unitNotFoundForUpdate() {
     return new PokerMcpError(this.UNIT_NOT_FOUND_FOR_UPDATE, `単位設定が存在しません。新規作成する場合はproposeUnitメソッドを使用してください`);
   }
+  
+  // 保留中の立体エラー（フェーズ1追加）
+  static bodyInPendingChanges(bodyName) {
+    return new PokerMcpError(
+      this.BODY_IN_PENDING_CHANGES, 
+      `立体 '${bodyName}' は保留中です。先にapplyChangesを実行して立体を永続化してください。\n推奨手順:\n1. すべての立体を定義\n2. applyChangesで永続化\n3. ゾーンを定義`,
+      'body_name',
+      bodyName
+    );
+  }
 }
 
 // エラーコードマッピング（逆引き用）
@@ -308,5 +321,6 @@ export const ERROR_CODE_MAP = {
   [-32082]: 'Detector already exists for propose',
   [-32083]: 'Detector not found for update',
   [-32086]: 'Unit already exists for propose',
-  [-32087]: 'Unit not found for update'
+  [-32087]: 'Unit not found for update',
+  [-32090]: 'Body is in pending changes - apply changes first'
 };

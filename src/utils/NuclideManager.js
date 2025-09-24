@@ -11,12 +11,16 @@ class NuclideManager {
     constructor(options = {}) {
         this.contributionThreshold = options.contribution_threshold || 0.05;
         this.userConfirmation = options.user_confirmation !== false;
+<<<<<<< HEAD
         
         if (!options.database_file) {
             throw new Error('database_file option is required');
         }
         this.databaseFile = options.database_file;
         
+=======
+        this.databaseFile = options.database_file || 'data/ICRP-07.NDX';
+>>>>>>> afterKOKURA
         this.nuclideData = new Map();
         this.decayChains = new Map();
     }

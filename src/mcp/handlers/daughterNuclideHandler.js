@@ -15,10 +15,10 @@ export function createDaughterNuclideHandler(taskManager) {
           return await handleCheck(dataManager, source_name);
           
         case 'confirm':
-          return await handleConfirm(dataManager, source_name);
+          return await handleConfirm(dataManager, taskManager, source_name);
           
         case 'confirm_with_modifications':
-          return await handleConfirmWithModifications(dataManager, modifications);
+          return await handleConfirmWithModifications(dataManager, taskManager, modifications);
           
         case 'reject':
           return await handleReject(dataManager);
@@ -42,6 +42,14 @@ async function handleCheck(dataManager, sourceName = null) {
     
   const checkResult = await dataManager.performDaughterNuclideCheck(sources);
   
+  if (!checkResult.success) {
+    return {
+      success: false,
+      status: 'check_failed',
+      message: checkResult.message || '子孫核種チェックに失敗しました'
+    };
+  }
+  
   if (checkResult.totalAdditions === 0) {
     return {
       success: true,
@@ -51,7 +59,7 @@ async function handleCheck(dataManager, sourceName = null) {
     };
   }
   
-  const suggestions = formatSuggestions(checkResult.results);
+  const suggestions = formatSuggestions(checkResult.results || []);
   
   return {
     success: true,
@@ -67,12 +75,20 @@ async function handleCheck(dataManager, sourceName = null) {
   };
 }
 
-async function handleConfirm(dataManager, sourceName = null) {
-  const sources = sourceName ? 
-    dataManager.data.source.filter(s => s.name === sourceName) :
+async function handleConfirm(dataManager, taskManager, targetSourceName = null) {
+  const sources = targetSourceName ? 
+    dataManager.data.source.filter(s => s.name === targetSourceName) :
     dataManager.data.source;
     
   const checkResult = await dataManager.performDaughterNuclideCheck(sources);
+  
+  if (!checkResult.success) {
+    return {
+      success: false,
+      status: 'check_failed',
+      message: checkResult.message || '子孫核種チェックに失敗しました'
+    };
+  }
   
   if (checkResult.totalAdditions === 0) {
     return {
@@ -82,45 +98,199 @@ async function handleConfirm(dataManager, sourceName = null) {
     };
   }
   
-  // 自動適用実行
-  const applyResult = await dataManager.applyDaughterNuclideAdditions(
-    checkResult.results, 
-    true // userConfirmation = true
-  );
+  // updateSourceを使用した永続化対応の実装
+  const appliedActions = [];
+  let totalAdded = 0;
   
-  if (applyResult.success) {
-    return {
-      success: true,
-      status: 'applied',
-      message: `${applyResult.totalAdded}個の子孫核種を自動適用しました`,
-      applied_count: applyResult.totalAdded,
-      applied_actions: applyResult.appliedActions,
-      next_action: 'poker_executeCalculation で計算を実行してください'
-    };
-  } else {
+  try {
+    for (const sourceResult of (checkResult.results || [])) {
+      const currentSourceName = sourceResult.sourceName;
+      const currentSource = dataManager.data.source.find(s => s.name === currentSourceName);
+      
+      if (!currentSource) {
+        logger.warn('線源が見つかりません', { sourceName: currentSourceName });
+        continue;
+      }
+      
+      // 現在のinventoryをコピー
+      const updatedInventory = [...currentSource.inventory];
+      const addedInThisSource = [];
+      
+      // 子孫核種を追加
+      for (const addition of sourceResult.result.additions) {
+        const duplicate = updatedInventory.find(inv => 
+          inv.nuclide === addition.nuclide
+        );
+        
+        if (!duplicate) {
+          updatedInventory.push({
+            nuclide: addition.nuclide,
+            radioactivity: addition.radioactivity
+          });
+          
+          addedInThisSource.push(addition);
+          totalAdded++;
+        }
+      }
+      
+      // updateSourceを使用してpending changesに記録
+      if (addedInThisSource.length > 0) {
+        await taskManager.updateSource(currentSourceName, {
+          inventory: updatedInventory
+        });
+        
+        // 適用アクションを記録
+        for (const addition of addedInThisSource) {
+          appliedActions.push({
+            type: 'daughter_added_via_update',
+            sourceName: currentSourceName,
+            nuclide: addition.nuclide,
+            radioactivity: addition.radioactivity,
+            parent: addition.parent,
+            branchingRatio: addition.branchingRatio
+          });
+        }
+        
+        logger.info('子孫核種をupdateSourceで追加', {
+          source: currentSourceName,
+          addedCount: addedInThisSource.length,
+          nuclides: addedInThisSource.map(a => a.nuclide)
+        });
+      }
+    }
+    
+    if (totalAdded > 0) {
+      return {
+        success: true,
+        status: 'applied_to_pending',
+        message: `${totalAdded}個の子孫核種をpending changesに追加しました`,
+        applied_count: totalAdded,
+        applied_actions: appliedActions,
+        next_actions: [
+          'poker_applyChanges で変更を永続化してください',
+          'poker_executeCalculation で計算を実行してください'
+        ]
+      };
+    } else {
+      return {
+        success: true,
+        status: 'no_changes_needed',
+        message: '追加すべき子孫核種がありませんでした'
+      };
+    }
+    
+  } catch (error) {
+    logger.error('子孫核種のupdateSource処理でエラー', { 
+      error: error.message,
+      stack: error.stack 
+    });
+    
     return {
       success: false,
-      status: 'apply_failed',
-      message: applyResult.message || '子孫核種の適用に失敗しました'
+      status: 'update_failed',
+      message: `子孫核種の追加に失敗しました: ${error.message}`,
+      error: error.message
     };
   }
 }
 
-async function handleConfirmWithModifications(dataManager, modifications) {
+async function handleConfirmWithModifications(dataManager, taskManager, modifications) {
   if (!modifications || modifications.length === 0) {
     throw new Error('modifications パラメータが必要です');
   }
   
-  // 修正データを適用
-  const applyResult = await dataManager.applyModifiedDaughterNuclides(modifications);
+  // updateSourceを使用した修正版実装
+  const appliedActions = [];
+  let totalAdded = 0;
   
-  return {
-    success: true,
-    status: 'applied_with_modifications',
-    message: `${modifications.filter(m => m.include).length}個の子孫核種を修正して適用しました`,
-    applied_modifications: modifications.filter(m => m.include),
-    next_action: 'poker_executeCalculation で計算を実行してください'
-  };
+  try {
+    // 線源ごとにグループ化
+    const sourceGroups = {};
+    for (const mod of modifications) {
+      if (mod.include) {
+        if (!sourceGroups[mod.source_name]) {
+          sourceGroups[mod.source_name] = [];
+        }
+        sourceGroups[mod.source_name].push(mod);
+      }
+    }
+    
+    // 各線源について updateSource を実行
+    for (const [sourceName, mods] of Object.entries(sourceGroups)) {
+      const currentSource = dataManager.data.source.find(s => s.name === sourceName);
+      
+      if (!currentSource) {
+        logger.warn('線源が見つかりません', { sourceName });
+        continue;
+      }
+      
+      // 現在のinventoryをコピー
+      const updatedInventory = [...currentSource.inventory];
+      
+      // 修正された子孫核種を追加
+      for (const mod of mods) {
+        const duplicate = updatedInventory.find(inv => 
+          inv.nuclide === mod.nuclide
+        );
+        
+        if (!duplicate) {
+          updatedInventory.push({
+            nuclide: mod.nuclide,
+            radioactivity: mod.radioactivity || 0
+          });
+          
+          appliedActions.push({
+            type: 'daughter_modified_and_added',
+            sourceName: sourceName,
+            nuclide: mod.nuclide,
+            radioactivity: mod.radioactivity || 0,
+            modification: mod
+          });
+          
+          totalAdded++;
+        }
+      }
+      
+      // updateSourceを使用してpending changesに記録
+      if (mods.length > 0) {
+        await taskManager.updateSource(sourceName, {
+          inventory: updatedInventory
+        });
+        
+        logger.info('修正された子孫核種をupdateSourceで追加', {
+          source: sourceName,
+          addedCount: mods.length,
+          nuclides: mods.map(m => m.nuclide)
+        });
+      }
+    }
+    
+    return {
+      success: true,
+      status: 'applied_with_modifications_to_pending',
+      message: `${totalAdded}個の子孫核種を修正してpending changesに追加しました`,
+      applied_count: totalAdded,
+      applied_modifications: modifications.filter(m => m.include),
+      applied_actions: appliedActions,
+      next_actions: [
+        'poker_applyChanges で変更を永続化してください',
+        'poker_executeCalculation で計算を実行してください'
+      ]
+    };
+    
+  } catch (error) {
+    logger.error('修正版子孫核種のupdateSource処理でエラー', { 
+      error: error.message,
+      stack: error.stack 
+    });
+    
+    return {
+      success: false,
+      status: 'update_failed',
+      message: `修正された子孫核種の追加に失敗しました: ${error.message}`,
+      error: error.message
+    };
+  }
 }
 
 async function handleReject(dataManager) {

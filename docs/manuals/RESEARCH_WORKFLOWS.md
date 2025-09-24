@@ -1,9 +1,15 @@
 # 🧬 研究ワークフロー - Poker MCP
 
 **対象読者**: 放射線遮蔽研究者・設計エンジニア・安全評価者  
+<<<<<<< HEAD
 **バージョン**: 1.1.0 MCP Edition  
 **最終更新**: 2025年9月8日  
 **使用方法**: Claude Desktop + MCP通信
+=======
+**バージョン**: 1.2.0 MCP Edition  
+**最終更新**: 2025年1月24日  
+**使用方法**: Claude Desktop + MCP通信（28メソッド対応）
+>>>>>>> afterKOKURA
 
 ---
 
@@ -13,7 +19,7 @@
 - **医療施設**: 診断・治療施設の遮蔽設計ワークフロー
 - **原子力施設**: 原子炉・燃料サイクル施設の安全評価
 - **研究施設**: 実験室・加速器施設の遮蔽計画
-- **実用性重視**: 実際の業務での即座活用
+- **28メソッド活用**: 全機能を活用した実践例
 
 ### 📊 **完全ワークフロー提供**
 各分野で**問題設定→モデル作成→計算実行→結果評価→報告書作成**まで、Claude Desktop上で一貫して実行可能な手順を提供。
@@ -24,277 +30,404 @@
 
 ### 1.1 診療放射線科の遮蔽設計ワークフロー
 
-#### **Step 1: 要件定義と規制確認**
+#### **Step 1: 初期設定と単位系定義（Unit操作5メソッド活用）**
 ```
 Claude Desktop 指示:
-「医療施設の遮蔽設計を開始します。
-以下の情報を整理してください：
+「医療施設CT室の遮蔽設計を開始します。
 
-施設情報:
-- 施設種別: 総合病院の診療放射線科
-- 対象室: CT検査室（一般撮影用）
-- 管電圧: 最大120kV、管電流: 最大500mA
-- 年間検査件数: 約3,000件
-- 稼働時間: 平日8時間、土曜4時間
+初期化と単位系設定:
+1. poker_resetYaml でクリーンな状態から開始（standardレベル）
+2. poker_proposeUnit で単位系を設定:
+   - length: cm（建築図面との整合性）
+   - angle: degree（施工図との整合性）
+   - density: (g/cm³)（標準）
+   - radioactivity: (Bq)（標準）
+3. poker_validateUnitIntegrity で単位系の完全性を確認
 
-規制要件:
-- 管理区域境界: 週1.3mSv以下
-- 監督区域境界: 週0.3mSv以下  
-- 一般公衆区域: 年1mSv以下
-
-この情報に基づいて、遮蔽設計の基本方針を策定してください。」
+設定完了後、状態を確認してください。」
 ```
 
-#### **Step 2: 基本遮蔽モデルの作成**
+#### **Step 2: 基本遮蔽モデルの作成（28メソッド活用）**
 ```
 Claude Desktop 指示:
-「CT室の基本遮蔽モデルを作成してください。
+「CT室の完全な遮蔽モデルを作成してください。
 
-室内構造:
-- 内寸: 5m × 4m × 3m（幅×奥行×高さ）
-- 壁厚: 30cm（コンクリート、密度2.3g/cm³）
-- 天井・床: 20cm（コンクリート）
-- 扉部: 鉛当量2mmのX線防護扉相当
+立体構造の定義（Body操作）:
+1. poker_proposeBody で以下を作成:
+   - room: RPPタイプ、内寸 500×400×300 cm
+   - north_wall: RPPタイプ、厚さ30cm
+   - south_wall: RPPタイプ、厚さ30cm
+   - east_wall: RPPタイプ、厚さ30cm
+   - west_wall: RPPタイプ、厚さ30cm
+   - ceiling: RPPタイプ、厚さ20cm
+   - floor: RPPタイプ、厚さ20cm
+   - door_opening: RPPタイプ（扉部開口）
+   - shield_door: BOXタイプ（鉛当量2mm相当）
 
-CT装置モデリング:
-- X線管: 等価的にCo-60線源で近似
-- 線源強度: 使用条件から10GBq相当で設定
-- 照射野: 患者体内散乱を考慮した等方線源
+材料設定(Zone操作):
+2. poker_proposeZoneで各立体に材料を設定:
+   - 壁・天井・床: CONCRETE、密度2.3(g/cm³)
+   - 扉部: Lead相当、密度11.34(g/cm³)（薄層補正）
 
-検出器配置:
-- 管理区域境界: 壁面外側30cm
-- 監督区域境界: 壁面外側1m  
-- 一般区域: 壁面外側2m
-- 各境界で格子状に配置（10×10点）
+ビルドアップ係数設定(BuildupFactor操作4メソッド):
+3. poker_proposeBuildupFactor:
+   - Concrete: 標準設定（両補正false）
+   - Lead: 薄層のため有限媒体補正true
 
-作成後、モデルを保存してください。」
+線源モデリング(Source操作):
+4. poker_proposeSource:
+   - 名前: ct_xray_source
+   - タイプ: POINT（簡略化）
+   - 位置: "250 200 150"（室中心）
+   - 核種: Co60（X線の等価モデル）
+   - 放射能: 1e10(Bq)
+   - カットオフ: 0.0001
+
+検出器配置(Detector操作):
+5. poker_proposeDetector で評価点を設定:
+   - control_room: 北壁外30cm（点検出器）
+   - corridor_grid: 廊下部（10×10格子）
+   - above_room: 上階床面（面検出器）
+   - adjacent_room: 隣室（体積検出器）
+
+変更の適用:
+6. poker_applyChanges でモデルを保存
+
+完全なYAMLファイルを生成してください。」
 ```
 
-#### **Step 3: 計算実行と結果評価**
-```
-Claude Desktop 指示:
-「作成したCT室モデルでPOKER計算を実行してください。
-
-計算条件:
-- 精度: 標準精度（カットオフ率0.001）
-- 出力: 線量分布とサマリー
-- ビルドアップ係数: コンクリートで標準設定
-
-結果評価項目:
-1. 各境界での最大線量率の確認
-2. 規制値との比較評価
-3. 安全裕度の定量化
-4. ホットスポットの有無確認
-
-評価結果を表形式でまとめてください。」
-```
-
-#### **Step 4: 最適化と代替案検討**
-```
-Claude Desktop 指示:
-「計算結果に基づく最適化検討をお願いします。
-
-最適化観点:
-1. 安全性: 規制値に対する十分な裕度確保
-2. 経済性: 過剰遮蔽の回避、コスト最小化
-3. 施工性: 現実的な施工可能性
-4. 将来性: 装置更新時の対応余裕
-
-代替案検討:
-- 壁厚変更: 25cm, 35cm での比較
-- 材料変更: 高密度コンクリート(密度2.5)
-- 複合遮蔽: 内側鉛板+外側コンクリート
-
-各案でのコスト・性能比較表を作成してください。」
-```
-
-### 1.2 PET・核医学施設の特殊要件
-
-#### **F-18 PET検査室の設計**
+#### **Step 3: 計算実行と結果解析**
 ```
 Claude Desktop 指示:
-「PET検査室の遮蔽設計をお願いします。
+「作成したCT室モデルで計算を実行し、結果を解析してください。
 
-PET特殊要件:
-- F-18核種: 511keV消滅放射線（2本同時放出）
-- 最大投与量: 750MBq/患者
-- 待機時間: 投与後60-90分
-- 検査時間: 20-30分/患者
-- 日間検査数: 最大8件
+計算実行（Calculation操作）:
+1. poker_executeCalculation:
+   yaml_file: "poker.yaml"
+   summary_options:
+     show_parameters: true
+     show_source_data: true
+     show_total_dose: true
+   output_files:
+     summary_file: "ct_room_summary.yaml"
+     dose_file: "ct_room_dose.yaml"
 
-施設設計:
-- 検査室: 6m × 5m × 3m
-- 待機室: 個室3室（各3m × 2m × 3m）
-- 準備室・廃棄物保管室を含む総合設計
+サマリーファイル解析:
+2. ct_room_summary.yamlの4セクションを解析:
+   
+   a) 入力パラメータセクション:
+      - 全設定の確認
+      - 物理的妥当性チェック
+   
+   b) intermediateセクション:
+      - 透過経路の確認
+      - 遮蔽材通過距離の評価
+      - 減衰係数の妥当性
+   
+   c) resultセクション:
+      - 各線源から各検出器への個別線量
+      - ビルドアップ係数の確認
+      - 主要透過経路の特定
+   
+   d) result_totalセクション:
+      - 各検出器での総線量率
+      - 規制値との比較（週1.3mSv以下）
+      - 安全裕度の評価
 
-線源モデリング:
-- 患者体内分布: 全身等価球体（半径30cm）
-- 廃棄物: 点線源集合（減衰考慮）
-- 汚染区域: 表面汚染の面線源近似
-
-この条件でPET施設の包括的遮蔽モデルを作成してください。」
+結果を表形式でまとめてください。」
 ```
 
-#### **核医学病棟の長期管理**
-```
-Claude Desktop 指示:
-「I-131治療病棟の遮蔽設計をお願いします。
-
-I-131治療特殊要件:
-- 高線量治療: 最大7.4GBq投与
-- 入院期間: 2-5日間
-- 排泄物管理: 汚染廃棄物の一時保管
-- 面会制限: 遮蔽越しの面会エリア
-
-設計要件:
-- 病室: 個室（遮蔽強化）
-- 廃棄物保管室: 減衰保管設備
-- 汚染検査室: 退院前検査設備
-- スタッフエリア: 長時間滞在対応
-
-長期線源減衰を考慮した時間依存評価も実施してください。」
-```
-
-### 1.3 法的要求事項との対応
-
-#### **規制適合性確認**
+#### **Step 4: 最適化と子孫核種考慮**
 ```
 Claude Desktop 指示:
-「医療施設遮蔽の規制適合性を確認してください。
+「計算結果に基づく最適化と、実際の核種での再評価を行ってください。
 
-確認項目:
-1. 医療法施行規則による要求
-   - エックス線装置の防護基準
-   - 放射性同位元素等の防護基準
+子孫核種の確認（DaughterNuclide操作）:
+1. poker_confirmDaughterNuclides:
+   action: "check"
+   source_name: "ct_xray_source"
+   → Co60の場合、子孫核種なし確認
 
-2. 放射線障害防止法による要求  
-   - 管理区域・監督区域の線量限度
-   - 施設検査基準への適合性
+最適化検討:
+2. 線量が規制値を超える場合:
+   - poker_updateBody で壁厚増加
+   - poker_updateZone で高密度材料に変更
+   - poker_changeOrderBuildupFactor で計算精度向上
 
-3. 建築基準法による制約
-   - 構造計算での荷重考慮
-   - 防火・避難経路の確保
+3. 過剰遮蔽の場合:
+   - poker_updateBody で壁厚削減
+   - コスト最適化の実施
 
-4. 地方自治体条例による追加要求
-   - 環境アセスメント対応
-   - 住民説明会資料準備
+再計算と確認:
+4. poker_executeCalculation で再計算
+5. 最終的な安全性確認
 
-各項目での適合状況を確認し、不適合箇所の改善提案をしてください。」
+最適設計案を提示してください。」
+```
+
+### 1.2 核医学施設（PET-CT）の遮蔽設計
+
+#### **完全なYAML例: PET-CT施設**
+```yaml
+# PET-CT施設遮蔽設計（28メソッド活用例）
+unit:
+  length: cm
+  angle: degree
+  density: g/cm³
+  radioactivity: Bq
+
+bodies:
+  # PET-CT室本体
+  - name: pet_room
+    type: RPP
+    min: "0 0 0"
+    max: "700 600 350"
+  
+  # 遮蔽壁（6面）
+  - name: north_wall
+    type: RPP
+    min: "-40 0 0"
+    max: "0 600 350"
+  
+  - name: south_wall
+    type: RPP
+    min: "700 0 0"
+    max: "740 600 350"
+  
+  # 操作室との境界（鉛ガラス窓付き）
+  - name: control_wall
+    type: CMB
+    expression: "wall_base - window_opening"
+  
+  # 迷路構造（中性子遮蔽）
+  - name: maze_wall_1
+    type: BOX
+    vertex: "600 400 0"
+    edge_1: "100 0 0"
+    edge_2: "0 20 0"
+    edge_3: "0 0 300"
+
+zones:
+  - body_name: north_wall
+    material: Concrete
+    density: 2.3
+  
+  - body_name: control_wall
+    material: Lead
+    density: 11.34
+  
+  - body_name: maze_wall_1
+    material: Polyethylene  # 中性子遮蔽
+    density: 0.95
+
+buildup_factor:
+  - material: Concrete
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  
+  - material: Lead
+    use_slant_correction: true  # 斜め入射考慮
+    use_finite_medium_correction: false
+  
+  - material: Polyethylene
+    use_slant_correction: false
+    use_finite_medium_correction: true  # 薄層補正
+
+sources:
+  # F-18線源（PET薬剤）
+  - name: f18_patient
+    type: SPH
+    geometry:
+      center: "350 300 100"
+      radius: 30
+    division:
+      r:
+        type: UNIFORM
+        number: 5
+        min: 0.0
+        max: 1.0
+      theta:
+        type: UNIFORM
+        number: 10
+      phi:
+        type: UNIFORM
+        number: 10
+    inventory:
+      - nuclide: F18
+        radioactivity: 3.7e8  # 370 MBq
+    cutoff_rate: 0.0001
+  
+  # CT部（X線等価）
+  - name: ct_xray
+    type: POINT
+    position: "350 300 150"
+    inventory:
+      - nuclide: Co60
+        radioactivity: 1e9
+    cutoff_rate: 0.0001
+
+detectors:
+  # 操作室（点検出器）
+  - name: control_point
+    origin: "-60 300 150"
+    show_path_trace: true
+  
+  # 廊下（線検出器）
+  - name: corridor_line
+    origin: "750 0 150"
+    grid:
+      - edge: "0 600 0"
+        number: 20
+    show_path_trace: false
+  
+  # 上階（面検出器）
+  - name: upper_floor
+    origin: "0 0 360"
+    grid:
+      - edge: "700 0 0"
+        number: 10
+      - edge: "0 600 0"
+        number: 10
+    show_path_trace: false
 ```
 
 ---
 
 ## ⚛️ 第2章: 原子力施設遮蔽評価
 
-### 2.1 原子炉遮蔽の段階的評価手法
+### 2.1 使用済燃料貯蔵施設
 
-#### **PWR原子炉の生体遮蔽評価**
+#### **大規模計算のワークフロー**
 ```
 Claude Desktop 指示:
-「PWR原子炉の生体遮蔽評価を実行してください。
+「使用済燃料貯蔵施設の大規模遮蔽計算を実行してください。
 
-原子炉仕様:
-- 熱出力: 3,000MWth
-- 圧力容器: 内径4.5m、壁厚25cm（炭素鋼）
-- 生体遮蔽: 厚さ2.5m、普通コンクリート
-- 冷却材: 軽水（温度300℃、圧力15.5MPa）
+計算規模の課題:
+- 燃料集合体: 100体
+- 各集合体: 複数核種
+- 評価点: 1000点以上
 
-段階的評価:
-段階1: 単純球体近似でのスクリーニング
-- 炉心: 等価球体（半径2m）
-- 均質遮蔽: コンクリート（密度2.3g/cm³）
+メモリ管理とカットオフ設定:
+1. 段階的計算アプローチ:
+   a) 粗い計算（cutoff_rate: 0.01）で全体傾向把握
+   b) 重要領域特定（ホットスポット）
+   c) 詳細計算（cutoff_rate: 0.0001）を重要領域に限定
 
-段階2: 多層円筒モデルでの詳細評価
-- 炉心: 燃料+水の均質モデル
-- 圧力容器: 炭素鋼（密度7.8g/cm³）
-- 生体遮蔽: 鉄筋コンクリート
+2. 分割計算の実装:
+   - 燃料集合体を10グループに分割
+   - 各グループで poker_proposeSource
+   - poker_executeCalculation を10回実行
+   - 結果の重ね合わせ処理
 
-段階3: 3次元詳細モデル
-- 制御棒駆動装置貫通部
-- 一次冷却配管貫通部
-- 局所的な遮蔽弱部の評価
+3. メモリ最適化:
+   - poker_resetYaml で定期的にクリーンアップ
+   - 不要な中間データの削除
+   - poker_applyChanges の適切なタイミング
 
-各段階の結果を比較し、設計余裕度を評価してください。」
+実装してください。」
 ```
 
-#### **使用済燃料プール遮蔽**
+#### **完全なYAML例: 燃料貯蔵プール**
+```yaml
+# 使用済燃料貯蔵プール遮蔽評価
+unit:
+  length: cm
+  angle: radian
+  density: g/cm³
+  radioactivity: Bq
+
+bodies:
+  # プール構造
+  - name: pool_water
+    type: RPP
+    min: "0 0 0"
+    max: "1200 800 1000"
+  
+  - name: pool_wall_concrete
+    type: RPP
+    min: "-200 -200 -100"
+    max: "1400 1000 1100"
+  
+  # 燃料ラック（簡略化）
+  - name: fuel_rack_1
+    type: RPP
+    min: "100 100 100"
+    max: "500 700 500"
+
+zones:
+  - body_name: pool_water
+    material: Water
+    density: 1.0
+  
+  - body_name: pool_wall_concrete
+    material: Concrete
+    density: 2.3
+  
+  - body_name: fuel_rack_1
+    material: Iron
+    density: 7.86
+
+sources:
+  # 使用済燃料（主要核種）
+  - name: spent_fuel_1
+    type: RCC
+    geometry:
+      bottom_center: "150 150 150"
+      height_vector: "0 0 400"
+      radius: 10
+    division:
+      r:
+        type: UNIFORM
+        number: 3
+      phi:
+        type: UNIFORM
+        number: 8
+      z:
+        type: UNIFORM
+        number: 10
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 1e15
+      - nuclide: Sr90
+        radioactivity: 8e14
+      - nuclide: Co60
+        radioactivity: 2e14
+    cutoff_rate: 0.001
+
+detectors:
+  # プールサイド作業エリア
+  - name: poolside_grid
+    origin: "1400 0 800"
+    grid:
+      - edge: "0 1000 0"
+        number: 20
+      - edge: "0 0 300"
+        number: 10
+    show_path_trace: false
+```
+
+### 2.2 子孫核種考慮の実例
+
+#### **Mo-99/Tc-99m平衡系**
 ```
 Claude Desktop 指示:
-「使用済燃料プールの遮蔽評価をお願いします。
+「Mo-99/Tc-99m発生器の遮蔽設計で子孫核種を考慮してください。
 
-プール仕様:
-- 寸法: 12m × 8m × 12m（深さ）
-- 燃料貯蔵: 最大1,500体
-- 水深: プール上端から燃料上端まで7m
-- 構造: 鉄筋コンクリート（厚さ2m）
+核種データ:
+- Mo-99: 半減期66時間、β崩壊
+- Tc-99m: 半減期6時間、IT（140 keV γ線）
 
-燃料モデリング:
-- 冷却期間: 最短5年、最長50年
-- 線源分布: 燃料棒束の詳細配置
-- 減衰考慮: Cs-137, Co-60等の主要核種
-- 発熱考慮: 崩壊熱による水温上昇
+子孫核種処理:
+1. poker_proposeSource で Mo-99 線源を定義
+2. poker_confirmDaughterNuclides:
+   action: "check"
+   → Tc-99mが87.5%の寄与率で検出
+3. poker_confirmDaughterNuclides:
+   action: "confirm"
+   → Tc-99m自動追加
+4. poker_executeCalculation で両核種考慮の計算
 
-評価項目:
-1. プール上方の線量率分布
-2. プール側壁外側の線量率
-3. 燃料取扱時の作業者被ばく
-4. 冷却期間による線量率変化
-
-水遮蔽とコンクリート遮蔽の複合効果を詳細に評価してください。」
-```
-
-### 2.2 燃料サイクル施設の遮蔽設計
-
-#### **再処理施設のホットセル**
-```
-Claude Desktop 指示:
-「再処理施設ホットセルの遮蔽設計をお願いします。
-
-ホットセル仕様:
-- 内寸: 10m × 6m × 4m
-- 遮蔽壁: 厚さ1.5m、重コンクリート（密度3.5g/cm³）
-- 観察窓: 鉛ガラス（鉛当量1m）
-- マニピュレータ貫通部: 階段ラビリンス構造
-
-取扱物質:
-- 使用済燃料（燃焼度45,000MWd/t）
-- 分離Pu溶液（最大50kg Pu/バッチ）
-- 高放射性廃液（Cs-137主体）
-- α廃棄物（Pu汚染）
-
-複合線源モデル:
-- γ線: Cs-137, Co-60, Eu-154等
-- 中性子: Pu-240, Am-241からの自発核分裂
-- α線: 内部被ばく評価用
-
-各放射線に対する遮蔽効果を個別に評価し、
-総合的な安全性を確認してください。」
-```
-
-### 2.3 安全解析との連携
-
-#### **事故時遮蔽性能評価**
-```
-Claude Desktop 指示:
-「原子力施設の事故時遮蔽性能を評価してください。
-
-事故シナリオ:
-1. 設計基準事故（DBA）
-   - 冷却材喪失事故（LOCA）時の格納容器内線源
-   - 燃料取扱事故時の燃料プール線源増大
-
-2. シビアアクシデント（SA）
-   - 炉心溶融時の格納容器内FP分布
-   - 水素爆発による構造健全性への影響
-
-評価手法:
-- 通常時設計との比較評価
-- 線源強度の時間変化考慮
-- 構造材の損傷影響評価
-- 避難時間確保の定量評価
-
-事故時でも所定の安全機能が維持されることを確認し、
-必要に応じて追加遮蔽の提案をしてください。」
+過渡平衡を考慮した正確な遮蔽設計を実施してください。」
 ```
 
 ---
@@ -303,364 +436,516 @@ Claude Desktop 指示:
 
 ### 3.1 加速器施設の遮蔽設計
 
-#### **電子線形加速器の遮蔽**
+#### **電子線形加速器の遮蔽（複合放射線場）**
 ```
 Claude Desktop 指示:
-「電子線形加速器の遮蔽設計をお願いします。
+「10MeV電子線形加速器の複合放射線場遮蔽を設計してください。
 
-加速器仕様:
-- エネルギー: 10MeV
-- ビーム電流: 最大100μA
-- ビーム照射方向: 水平（固定）
-- 運転時間: 年間2,000時間
+28メソッド活用による段階的設計:
 
-遮蔽設計要件:
-- 加速器室: 10m × 8m × 4m
-- 一次遮蔽: ビーム方向（前方2m）
-- 二次遮蔽: 散乱線・漏洩中性子
-- 迷路構造: 直接線の遮断
+Phase 1: 基本構造（10種類立体活用）
+1. poker_proposeBody:
+   - accelerator_room: RPP（10×8×4m）
+   - beam_dump: TRC（円錐台型、ビームストッパー）
+   - collimator: TRC（逆円錐、ビーム整形）
+   - maze_section1: WED（楔形、迷路入口）
+   - maze_section2: BOX（屈曲部）
 
-複合放射線場の評価:
-1. 一次電子線: エネルギー10MeV
-2. 制動放射線: 最大エネルギー10MeV
-3. 光中性子: (γ,n)反応による生成
-4. 誘導放射化: 構造材の放射化
+Phase 2: 複合材料配置（Zone操作）
+2. poker_proposeZone:
+   - 一次遮蔽壁: Concrete（厚さ2m）
+   - 中性子遮蔽: Polyethylene層
+   - γ線追加遮蔽: Lead層
 
-各成分の遮蔽計算を実行し、総合的な安全性を評価してください。」
-```
+Phase 3: 複合線源（Source操作）
+3. poker_proposeSource（複数線源）:
+   - 制動放射線源（前方ピーク）
+   - 光中性子源（(γ,n)反応）
+   - 放射化生成物
 
-#### **イオン加速器の中性子遮蔽**
-```
-Claude Desktop 指示:
-「イオン加速器の中性子遮蔽設計をお願いします。
+Phase 4: 3次元評価（Detector操作）
+4. poker_proposeDetector:
+   - 運転時: リアルタイム監視点
+   - 停止後: 放射化評価点
+   - 迷路: ストリーミング評価
 
-加速器仕様:
-- イオン種: 重陽子（D+）
-- エネルギー: 3MeV
-- ビーム電流: 50μA
-- ターゲット: Be、厚さ5mm
+計算と最適化:
+5. poker_executeCalculation
+6. 結果に基づく poker_updateBody/Zone での最適化
 
-中性子生成評価:
-- D-Be反応による中性子生成
-- エネルギースペクトル: 0.1-10MeV
-- 角度分布: 前方ピーク型
-
-遮蔽材検討:
-1. 高密度遮蔽: 鉛+ホウ酸入りコンクリート
-2. 軽量遮蔽: パラフィン+ホウ酸
-3. 複合遮蔽: 減速材+吸収材の組み合わせ
-
-各遮蔽材での遮蔽効果、重量、コストを比較し、
-最適な遮蔽設計を提案してください。」
+完全な遮蔽設計を実施してください。」
 ```
 
 ### 3.2 RI実験室の安全設計
 
-#### **密封線源実験室**
-```
-Claude Desktop 指示:
-「密封線源実験室の遮蔽設計をお願いします。
+#### **完全なYAML例: 非密封RI実験室**
+```yaml
+# 非密封RI実験室（P-32使用）
+unit:
+  length: cm
+  angle: degree
+  density: g/cm³
+  radioactivity: Bq
 
-使用予定線源:
-- Co-60: 最大37GBq（校正用）
-- Cs-137: 最大18.5GBq（測定器校正）
-- Am-241: 最大3.7GBq（α線源）
-- Cf-252: 最大370MBq（中性子源）
+bodies:
+  # 実験室構造
+  - name: lab_room
+    type: RPP
+    min: "0 0 0"
+    max: "600 500 300"
+  
+  # フード位置
+  - name: fume_hood
+    type: RPP
+    min: "450 200 0"
+    max: "550 400 200"
+  
+  # アクリル遮蔽板
+  - name: acrylic_shield
+    type: BOX
+    vertex: "440 190 80"
+    edge_1: "120 0 0"
+    edge_2: "0 5 0"
+    edge_3: "0 0 100"
 
-実験室構成:
-- 実験室A: γ線遮蔽実験（8m × 6m × 3m）
-- 実験室B: 中性子実験（6m × 6m × 3m）
-- 線源保管室: 鉛容器保管（3m × 3m × 3m）
-- 廊下・事務室: 非管理区域
+zones:
+  - body_name: lab_room
+    material: Air
+    density: 0.00129
+  
+  - body_name: acrylic_shield
+    material: AcrylicResin
+    density: 1.18
 
-設計要件:
-- 実験室間の相互干渉防止
-- 線源保管時の遮蔽
-- 実験セットアップ時の作業者防護
-- 非常時の線源回収アクセス
+buildup_factor:
+  - material: AcrylicResin
+    use_slant_correction: false
+    use_finite_medium_correction: true  # 薄い遮蔽
 
-多核種・多目的使用を考慮した柔軟な遮蔽設計を提案してください。」
-```
+sources:
+  # P-32線源（最大エネルギー1.71 MeV β線）
+  - name: p32_vial
+    type: POINT
+    position: "500 300 100"
+    inventory:
+      - nuclide: P32
+        radioactivity: 3.7e8  # 370 MBq
+    cutoff_rate: 0.0001
+  
+  # 汚染想定（作業台面）
+  - name: contamination_area
+    type: RPP
+    geometry:
+      min: "450 250 80"
+      max: "550 350 81"
+    division:
+      edge_1:
+        type: UNIFORM
+        number: 10
+      edge_2:
+        type: UNIFORM
+        number: 10
+      edge_3:
+        type: UNIFORM
+        number: 1
+    inventory:
+      - nuclide: P32
+        radioactivity: 3.7e6  # 3.7 MBq (1% 汚染)
+    cutoff_rate: 0.001
 
-#### **非密封RI実験室**
-```
-Claude Desktop 指示:
-「非密封RI実験室の総合安全設計をお願いします。
-
-使用核種・数量:
-- H-3: 最大18.5GBq（トレーサ実験）
-- C-14: 最大3.7GBq（代謝実験）
-- P-32: 最大370MBq（DNA標識）
-- S-35: 最大370MBq（タンパク質標識）
-
-実験室機能:
-- 化学実験室: フード、グローブボックス
-- 生物実験室: 培養設備、遠心機
-- 測定室: 液シン、GM計数装置
-- 廃棄物処理室: 固化、減容処理
-
-安全設計要件:
-1. 外部被ばく防護: 遮蔽設計
-2. 内部被ばく防護: 封じ込め設計
-3. 汚染拡大防止: ゾーニング設計
-4. 廃棄物管理: 保管・処理設備
-
-放射線遮蔽と放射能汚染防止を統合した
-総合的な安全設計を実施してください。」
-```
-
-### 3.3 実験条件変更への対応
-
-#### **パラメータスタディの自動化**
-```
-Claude Desktop 指示:
-「実験条件変更に対応するパラメータスタディを実行してください。
-
-変更パラメータ:
-1. 線源強度: 現在値の0.5倍、2倍、5倍
-2. 遮蔽厚さ: 現在値から±20%、±50%
-3. 遮蔽材料: コンクリート、鉄、鉛、複合材
-
-評価マトリックス:
-- 16×4×4 = 256ケースの自動計算
-- 各ケースでの線量率分布
-- 材料使用量・コスト評価
-- 施工性・保守性評価
-
-結果整理:
-- 安全性マップ（線量率 vs コスト）
-- 推奨範囲の特定
-- 感度解析結果
-- 設計指針の策定
-
-大量のパラメータ組み合わせを効率的に評価し、
-実験計画の柔軟性を確保してください。」
-```
-
----
-
-## 📊 第4章: 研究データ管理
-
-### 4.1 プロジェクト構造の標準化
-
-#### **統一ディレクトリ構造**
-```
-Claude Desktop 指示:
-「研究プロジェクトの標準的なデータ管理構造を構築してください。
-
-プロジェクト階層:
-Project_Name/
-├── 01_Requirements/        # 設計要件・規制
-│   ├── regulations.md      # 適用規制まとめ
-│   ├── design_basis.yaml   # 設計基準データ
-│   └── stakeholder_req.md  # ステークホルダ要求
-├── 02_Models/              # 計算モデル
-│   ├── geometry/          # 立体定義
-│   ├── materials/         # 材料データ
-│   ├── sources/          # 線源定義
-│   └── detectors/        # 検出器配置
-├── 03_Calculations/        # 計算実行・結果
-│   ├── baseline/         # ベースライン計算
-│   ├── parametric/       # パラメータスタディ
-│   └── sensitivity/      # 感度解析
-├── 04_Results/            # 結果データ
-│   ├── raw_data/         # 生データ
-│   ├── processed/        # 加工済みデータ
-│   └── visualizations/   # グラフ・図表
-└── 05_Reports/           # 報告書・文書
-    ├── technical/        # 技術報告書
-    ├── regulatory/       # 規制対応文書
-    └── presentations/    # 発表資料
-
-この構造でプロジェクト管理の標準化を実施してください。」
-```
-
-### 4.2 バージョン管理とバックアップ戦略
-
-#### **Git統合によるバージョン管理**
-```
-Claude Desktop 指示:
-「研究データのバージョン管理システムを構築してください。
-
-Git統合戦略:
-1. 計算モデル(.yaml)のバージョン管理
-2. 設定変更履歴の詳細記録
-3. ブランチ戦略: feature/experiment/release
-4. タグ管理: 重要マイルストーンの記録
-
-自動バックアップ連携:
-- Poker MCPの自動バックアップ
-- Gitコミットとの時刻同期
-- 外部ストレージへの定期同期
-- 災害時復旧計画
-
-コラボレーション機能:
-- チームメンバー間の変更共有
-- コンフリクト解決手順
-- レビュー・承認プロセス
-- 品質保証チェックリスト
-
-研究の再現性を保証するデータ管理体制を構築してください。」
-```
-
-### 4.3 計算結果の体系的管理
-
-#### **結果データベース構築**
-```
-Claude Desktop 指示:
-「計算結果の体系的管理システムを構築してください。
-
-結果メタデータ:
-- 計算ID: 一意識別子
-- 実行日時: タイムスタンプ
-- 計算条件: ハッシュ値による識別
-- 結果品質: 収束性・妥当性評価
-- 承認状態: レビュー・承認履歴
-
-検索・分析機能:
-1. 条件による高速検索
-   - 立体形状、材料、線源による絞り込み
-   - 日付範囲、実行者による絞り込み
-
-2. 比較分析機能
-   - 類似条件での結果比較
-   - 時系列変化の追跡
-   - 統計的傾向分析
-
-3. 品質管理機能
-   - 異常値の自動検出
-   - 再現性の確認
-   - 不確かさ伝播分析
-
-大量の計算結果を効率的に管理・活用できるシステムを構築してください。」
+detectors:
+  # 作業者位置（複数高さ）
+  - name: worker_position
+    origin: "400 300 0"
+    grid:
+      - edge: "0 0 180"
+        number: 10
+    show_path_trace: true
+  
+  # 室内モニタリング
+  - name: room_monitor
+    origin: "100 100 150"
+    show_path_trace: false
 ```
 
 ---
 
-## 🎯 第5章: 業界別ベストプラクティス
+## 📊 第4章: 計算結果の解析と活用
 
-### 5.1 医療業界での標準化
+### 4.1 サマリーファイル完全解析
 
-#### **医療施設認証への対応**
+#### **解析用Pythonスクリプト**
+```python
+#!/usr/bin/env python3
+"""
+POKERサマリーファイル解析スクリプト
+28メソッド対応版
+"""
+
+import yaml
+import pandas as pd
+import matplotlib.pyplot as plt
+from pathlib import Path
+
+class SummaryAnalyzer:
+    """サマリーファイル解析クラス"""
+    
+    def __init__(self, summary_path):
+        with open(summary_path, 'r', encoding='utf-8') as f:
+            self.data = yaml.safe_load(f)
+    
+    def analyze_input_parameters(self):
+        """入力パラメータセクション解析"""
+        params = self.data.get('入力パラメータ', {})
+        
+        print("=== 入力パラメータ解析 ===")
+        print(f"立体数: {len(params.get('bodies', []))}")
+        print(f"ゾーン数: {len(params.get('zones', []))}")
+        print(f"線源数: {len(params.get('sources', []))}")
+        print(f"検出器数: {len(params.get('detectors', []))}")
+        
+        # 単位系確認
+        units = params.get('unit', {})
+        print(f"\n単位系:")
+        for key, value in units.items():
+            print(f"  {key}: {value}")
+        
+        return params
+    
+    def analyze_intermediate(self):
+        """intermediateセクション解析"""
+        intermediate = self.data.get('intermediate', {})
+        
+        print("\n=== 中間計算データ解析 ===")
+        for source, detectors in intermediate.items():
+            print(f"\n線源: {source}")
+            for detector, data in detectors.items():
+                print(f"  検出器: {detector}")
+                print(f"    経路長: {data.get('path_length', 'N/A')} cm")
+                print(f"    通過材料: {data.get('materials', [])}")
+                print(f"    減衰係数: {data.get('attenuation', 'N/A')}")
+    
+    def analyze_results(self):
+        """resultセクション解析"""
+        results = self.data.get('result', {})
+        
+        print("\n=== 個別線源結果解析 ===")
+        dose_matrix = []
+        
+        for source, detectors in results.items():
+            for detector, data in detectors.items():
+                dose = data.get('dose', 0)
+                dose_matrix.append({
+                    'source': source,
+                    'detector': detector,
+                    'dose': dose,
+                    'buildup': data.get('buildup', 1.0)
+                })
+        
+        df = pd.DataFrame(dose_matrix)
+        
+        # ピボットテーブル作成
+        pivot = df.pivot_table(
+            values='dose',
+            index='detector',
+            columns='source',
+            fill_value=0
+        )
+        
+        print("\n線量マトリックス (μSv/h):")
+        print(pivot)
+        
+        return df
+    
+    def analyze_total(self):
+        """result_totalセクション解析"""
+        total = self.data.get('result_total', {})
+        
+        print("\n=== 総線量解析 ===")
+        total_doses = []
+        
+        for detector, data in total.items():
+            dose = data.get('total_dose', 0)
+            total_doses.append({
+                'detector': detector,
+                'total_dose': dose
+            })
+            
+            print(f"{detector}: {dose:.3e} μSv/h")
+            
+            # 規制値との比較（例: 週1.3mSv = 7.7 μSv/h）
+            limit = 7.7  # μSv/h
+            if dose > limit:
+                print(f"  ⚠️ 規制値超過 ({dose/limit:.1f}倍)")
+            else:
+                print(f"  ✓ 規制値以下 (余裕 {(1-dose/limit)*100:.1f}%)")
+        
+        return pd.DataFrame(total_doses)
+    
+    def generate_report(self, output_path):
+        """統合レポート生成"""
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write("# POKER計算結果レポート\n\n")
+            
+            # 入力パラメータ
+            params = self.analyze_input_parameters()
+            f.write("## 入力条件\n")
+            f.write(f"- 立体数: {len(params.get('bodies', []))}\n")
+            f.write(f"- 線源数: {len(params.get('sources', []))}\n")
+            f.write(f"- 検出器数: {len(params.get('detectors', []))}\n\n")
+            
+            # 結果サマリー
+            total_df = self.analyze_total()
+            f.write("## 総線量結果\n")
+            f.write(total_df.to_markdown())
+            
+            # 安全性評価
+            f.write("\n## 安全性評価\n")
+            max_dose = total_df['total_dose'].max()
+            if max_dose > 7.7:
+                f.write("⚠️ **追加遮蔽が必要です**\n")
+            else:
+                f.write("✓ **現設計で規制値を満足**\n")
+    
+    def plot_dose_distribution(self):
+        """線量分布可視化"""
+        total_df = self.analyze_total()
+        
+        plt.figure(figsize=(10, 6))
+        plt.bar(total_df['detector'], total_df['total_dose'])
+        plt.axhline(y=7.7, color='r', linestyle='--', label='規制値')
+        plt.xlabel('検出器位置')
+        plt.ylabel('線量率 (μSv/h)')
+        plt.title('線量分布')
+        plt.yscale('log')
+        plt.legend()
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        plt.savefig('dose_distribution.png')
+        plt.show()
+
+# 使用例
+if __name__ == "__main__":
+    analyzer = SummaryAnalyzer("poker.yaml.summary")
+    
+    # 各セクション解析
+    analyzer.analyze_input_parameters()
+    analyzer.analyze_intermediate()
+    analyzer.analyze_results()
+    analyzer.analyze_total()
+    
+    # レポート生成
+    analyzer.generate_report("calculation_report.md")
+    
+    # 可視化
+    analyzer.plot_dose_distribution()
 ```
-Claude Desktop 指示:
-「医療施設認証に対応した遮蔽設計プロセスを確立してください。
 
-認証要件:
-1. JCI（国際病院認証）
-   - 患者安全基準への適合
-   - 品質管理システムの確立
-   - 継続的改善プロセス
+### 4.2 計算オプションの詳細
 
-2. ISO 15189（臨床検査室）
-   - 技術的要求事項への適合
-   - 品質マネジメントシステム
+#### **poker_executeCalculation オプション設定例**
+```python
+# 詳細解析用設定
+detailed_options = {
+    "yaml_file": "poker.yaml",
+    "summary_options": {
+        "show_parameters": True,  # 入力パラメータ表示
+        "show_source_data": True, # 線源別データ表示
+        "show_total_dose": True   # 総線量表示
+    },
+    "output_files": {
+        "summary_file": "detailed_summary.yaml",
+        "dose_file": "detailed_dose.yaml"
+    }
+}
 
-3. 放射線安全管理認証
-   - 法規制遵守の確実性
-   - 安全文化の醸成
+# 高速スクリーニング用設定
+screening_options = {
+    "yaml_file": "poker.yaml",
+    "summary_options": {
+        "show_parameters": False,
+        "show_source_data": False,
+        "show_total_dose": True  # 総線量のみ
+    },
+    "output_files": {
+        "summary_file": "quick_summary.yaml"
+    }
+}
 
-対応プロセス:
-- 設計文書の標準化
-- 品質記録の体系化
-- 監査対応の準備
-- 継続的改善の仕組み
-
-国際基準に対応した品質保証体制を構築してください。」
-```
-
-### 5.2 原子力業界での規制対応
-
-#### **規制機関審査への準備**
-```
-Claude Desktop 指示:
-「原子力規制機関の審査に対応した評価体制を構築してください。
-
-審査対応項目:
-1. 設計基準の妥当性
-   - 保守的な設計手法
-   - 安全裕度の定量化
-   - 不確かさの適切な考慮
-
-2. 解析手法の妥当性
-   - ベンチマーク計算による検証
-   - 感度解析による頑健性確認
-   - 他コードとの比較
-
-3. 品質保証の確実性
-   - 計算品質保証計画
-   - 独立検証・検証計画
-   - 文書・記録管理
-
-審査資料準備:
-- 技術的根拠の体系的整理
-- 質問想定と回答準備
-- 追加解析の実行準備
-
-規制審査に耐える技術的妥当性と品質保証体制を確立してください。」
-```
-
-### 5.3 研究業界での成果発信
-
-#### **論文・学会発表への活用**
-```
-Claude Desktop 指示:
-「研究成果の効果的な発信体制を構築してください。
-
-論文執筆支援:
-1. 計算結果の統計的処理
-   - 不確かさ評価の定量化
-   - 統計的有意性の確認
-   - グラフ・表の最適化
-
-2. 再現性確保
-   - 計算条件の完全記録
-   - 使用データの保管
-   - 再現手順の文書化
-
-3. 国際基準対応
-   - 単位系の国際統一
-   - 専門用語の英訳整備
-   - 図表の国際標準準拠
-
-学会発表支援:
-- プレゼンテーション資料の自動生成
-- 質疑応答の想定・準備
-- 技術的妥当性の事前確認
-
-研究成果の最大化と国際的な影響力向上を支援してください。」
+# デバッグ用設定
+debug_options = {
+    "yaml_file": "poker.yaml",
+    "summary_options": {
+        "show_parameters": True,
+        "show_source_data": True,
+        "show_total_dose": True
+    },
+    "output_files": {
+        "summary_file": "debug_summary.yaml",
+        "dose_file": "debug_dose.yaml"
+    }
+}
 ```
 
 ---
 
-## 🎓 まとめ: 効率的な研究業務の実現
+## 🔄 第5章: 大規模計算と並列処理
 
-### ✨ **分野横断的な価値**
+### 5.1 メモリ管理戦略
 
-#### **共通効果**
-- **作業効率化**: Claude Desktop による直感的操作で作業時間70%短縮
-- **品質向上**: 標準化されたワークフローによる計算品質の向上
-- **コスト削減**: 最適化による材料費・建設費の削減
-- **安全性確保**: 適切な遮蔽設計による安全性の確実な確保
+```
+Claude Desktop 指示:
+「大規模施設（原子力発電所全体）の遮蔽計算を効率的に実行してください。
 
-#### **分野別特化効果**
-- **医療**: 患者・医療従事者の安全確保、認証取得支援
-- **原子力**: 規制適合性の確保、安全裕度の定量化
-- **研究**: 実験効率の向上、成果発信の支援
+メモリ管理戦略:
 
-### 🚀 **継続的な改善**
+1. 階層的計算アプローチ:
+   Level 1: 建屋単位（粗メッシュ）
+   - cutoff_rate: 0.01
+   - 検出器: 各建屋境界の代表点
+   
+   Level 2: フロア単位（中メッシュ）
+   - cutoff_rate: 0.001
+   - 検出器: 主要エリアの格子点
+   
+   Level 3: 詳細評価（細メッシュ）
+   - cutoff_rate: 0.0001
+   - 検出器: 作業エリアの詳細格子
 
-各分野での使用経験を蓄積し、ワークフローの継続的改善を実施します。新しい規制要求、技術基準の更新、業界動向の変化に対応した更新を定期的に実施してください。
+2. 分割統治法:
+   for building in buildings:
+       poker_resetYaml(level="minimal")
+       poker_proposeBody(building)
+       poker_proposeSource(building_sources)
+       poker_executeCalculation()
+       結果を累積
 
-### 🎯 **今すぐ始める**
+3. 並列処理シミュレーション:
+   - 独立計算可能な部分を特定
+   - 各部分を個別に実行
+   - 結果の統合処理
 
-Claude Desktop で「[分野名]の遮蔽設計を始めたい」と入力して、該当する分野のワークフローを開始してください。
+効率的な大規模計算を実現してください。」
+```
+
+### 5.2 エラー時の対処
+
+```
+Claude Desktop 指示:
+「計算エラー発生時の系統的対処を実行してください。
+
+エラー種別と対処:
+
+1. メモリ不足エラー:
+   - カットオフレート増加（0.001→0.01）
+   - 検出器数削減
+   - 分割計算実施
+
+2. YAMLフォーマットエラー:
+   - poker_applyChanges 実行前に検証
+   - インデント確認
+   - 予約語（ATMOSPHERE）チェック
+
+3. 計算収束エラー:
+   - ビルドアップ係数設定確認
+   - 極端な形状パラメータ確認
+   - 単位系整合性確認
+
+4. 物理的異常値:
+   - 負の線量 → 形状定義エラー
+   - 極端な値 → 単位系エラー
+   - 距離依存異常 → 配置エラー
+
+各エラーに対する診断と修正を実行してください。」
+```
+
+---
+
+## 📚 第6章: 研究成果の文書化
+
+### 6.1 学術論文用データ準備
+
+```python
+# 論文用図表生成スクリプト
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib import rcParams
+
+# 論文用設定
+rcParams['font.size'] = 12
+rcParams['font.family'] = 'serif'
+rcParams['figure.dpi'] = 300
+
+def create_publication_figures(summary_data):
+    """論文投稿用図表作成"""
+    
+    # Figure 1: 線量分布
+    fig, ax = plt.subplots(figsize=(8, 6))
+    
+    # データプロット
+    positions = summary_data['positions']
+    doses = summary_data['doses']
+    errors = summary_data['errors']
+    
+    ax.errorbar(positions, doses, yerr=errors, 
+                fmt='o-', capsize=5, capthick=2)
+    
+    ax.set_xlabel('Distance from source (cm)')
+    ax.set_ylabel('Dose rate (μSv/h)')
+    ax.set_yscale('log')
+    ax.grid(True, which='both', alpha=0.3)
+    
+    # 理論曲線追加
+    theory_x = np.linspace(min(positions), max(positions), 100)
+    theory_y = doses[0] * (positions[0] / theory_x) ** 2
+    ax.plot(theory_x, theory_y, 'r--', label='1/r² law')
+    
+    ax.legend()
+    plt.tight_layout()
+    plt.savefig('figure1_dose_distribution.eps', format='eps')
+    
+    return fig
+```
+
+### 6.2 規制提出用報告書
+
+```
+Claude Desktop 指示:
+「規制当局提出用の遮蔽計算報告書を作成してください。
+
+報告書構成:
+1. 要約
+   - 施設概要
+   - 評価目的
+   - 結論
+
+2. 計算条件
+   - 線源条件（全28メソッド設定）
+   - 遮蔽構造
+   - 評価点配置
+
+3. 計算方法
+   - POKER計算コード概要
+   - ビルドアップ係数
+   - 精度検証
+
+4. 計算結果
+   - 線量分布図
+   - 規制値との比較表
+   - 安全裕度評価
+
+5. 結論
+   - 規制適合性
+   - 推奨事項
+
+完全な報告書を生成してください。」
+```
 
 ---
 
 **📚 関連マニュアル**
 - [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md): 基本操作・15分スタート
-- [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表  
-- [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md): システム統合・自動化
-- [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md): 物理的背景・品質保証
-- [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決・復旧手順
+- [QUICK_REFERENCE.md](QUICK_REFERENCE.md): 日常操作早見表
+- [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md): 物理的背景
+- [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md): システム統合
+- [TROUBLESHOOTING.md](TROUBLESHOOTING.md): 問題解決

@@ -1,16 +1,35 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
 **対象読者**: システム管理者・IT部門・インフラ担当者  
+<<<<<<< HEAD
 **対応バージョン**: Poker MCP Server v1.1.0 (28メソッド完全実装)  
 **最終更新**: 2025年9月8日  
+=======
+**📚 マニュアル階層**: テクニカル層  
+**対応バージョン**: Poker MCP Server v1.2.0 (28メソッド完全実装)  
+**最終更新**: 2025年1月24日  
+>>>>>>> afterKOKURA
 **品質レベル**: エンタープライズ本番環境対応
+
+---
+
+## 📖 本書の位置づけ
+
+この文書は**テクニカル層**のシステム管理者ガイドです。
+
+### 📋 読み方ガイド
+- **基礎学習**: [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) で基本概念を習得
+- **日常操作**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) で操作方法を確認
+- **システム統合**: [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) で連携方法を学習
+- **問題対応**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) で障害対応を確認
+- **API詳細**: [API_COMPLETE.md](API_COMPLETE.md) で技術仕様を参照
 
 ---
 
 ## 🎯 管理者ガイドの概要
 
 ### **本ガイドの対象範囲**
-このガイドは、Poker MCP Server v1.0.0システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
+このガイドは、Poker MCP Server v1.2.0システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
 
 #### **対応システム仕様**
 - **28メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系4
@@ -19,7 +38,11 @@
 - **MCP v1.0準拠**: Model Context Protocol v1.0完全準拠
 
 #### **カバーする領域**
+<<<<<<< HEAD
 - 🏗️ **システムセットアップ**: v1.0.0対応インストール・設定
+=======
+- 🏗️ **システムセットアップ**: v1.2.0対応インストール・設定
+>>>>>>> afterKOKURA
 - 📊 **運用監視**: 28メソッド・パフォーマンス・ヘルス監視
 - 🔒 **セキュリティ設定**: MCP準拠多層防御・アクセス制御
 - 📈 **パフォーマンス最適化**: 10立体・4単位対応スケーリング・チューニング
@@ -27,12 +50,12 @@
 
 ---
 
-## 🏗️ システムセットアップ（v1.0.0対応）
+## 🏗️ システムセットアップ（v1.2.0対応）
 
 ### 📋 **最新システム要件**
 
-#### **ハードウェア要件 (v1.0.0対応推奨)**
-| **環境** | **CPU** | **RAM** | **ディスク** | **ネットワーク** | **24メソッド対応** |
+#### **ハードウェア要件 (v1.2.0対応推奨)**
+| **環境** | **CPU** | **RAM** | **ディスク** | **ネットワーク** | **28メソッド対応** |
 |---------|---------|---------|--------------|-----------------|------------------|
 | **開発** | 4コア+ | 8GB+ | 100GB+ | 100Mbps | 小規模テスト・検証 |
 | **研究室** | 8コア+ | 16GB+ | 500GB+ | 1Gbps | 10立体・中規模計算 |
@@ -62,14 +85,18 @@ logrotate >= 3.20 (ログ管理)
 certbot >= 2.8.0 (SSL証明書)
 ```
 
+<<<<<<< HEAD
 ### ⚡ **v1.1.0高速セットアップ手順**
+=======
+### ⚡ **v1.2.0高速セットアップ手順**
+>>>>>>> afterKOKURA
 
 #### **1. システム準備** (5分)
 ```bash
-# 専用ユーザー作成（v1.0.0対応）
-sudo useradd -r -m -s /bin/bash poker_mcp_v1
-sudo mkdir -p /opt/poker_mcp_v1/{app,data,logs,backups,config}
-sudo chown -R poker_mcp_v1:poker_mcp_v1 /opt/poker_mcp_v1
+# 専用ユーザー作成（v1.2.0対応）
+sudo useradd -r -m -s /bin/bash poker_mcp_v12
+sudo mkdir -p /opt/poker_mcp_v12/{app,data,logs,backups,config}
+sudo chown -R poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12
 
 # 必要パッケージインストール（最新版）
 sudo apt update && sudo apt install -y \
@@ -80,27 +107,27 @@ sudo apt update && sudo apt install -y \
 sudo npm install -g pm2@latest
 ```
 
-#### **2. Poker MCP v1.0.0配置** (5分)
+#### **2. Poker MCP v1.2.0配置** (5分)
 ```bash
 # アプリケーション配置
-cd /opt/poker_mcp_v1
-sudo -u poker_mcp_v1 git clone [repository] app
+cd /opt/poker_mcp_v12
+sudo -u poker_mcp_v12 git clone [repository] app
 cd app
 
-# v1.0.0依存関係インストール
-sudo -u poker_mcp_v1 npm install --production
+# v1.2.0依存関係インストール
+sudo -u poker_mcp_v12 npm install --production
 
-# v1.0.0設定ファイル準備
-sudo -u poker_mcp_v1 cp config/.env.v1.example .env
+# v1.2.0設定ファイル準備
+sudo -u poker_mcp_v12 cp config/.env.v12.example .env
 ```
 
-#### **3. 24メソッド対応本番設定** (10分)
+#### **3. 28メソッド対応本番設定** (10分)
 ```bash
-# v1.0.0本番環境設定ファイル
-sudo -u poker_mcp_v1 tee .env > /dev/null << 'EOF'
-# Poker MCP v1.0.0 Production Configuration
+# v1.2.0本番環境設定ファイル
+sudo -u poker_mcp_v12 tee .env > /dev/null << 'EOF'
+# Poker MCP v1.2.0 Production Configuration
 NODE_ENV=production
-POKER_VERSION=1.0.0
+POKER_VERSION=1.2.0
 MCP_VERSION=1.0.0
 
 # サーバー設定
@@ -116,10 +143,10 @@ AUTO_BACKUP_ENABLED=true
 UNIT_INTEGRITY_CHECK=true
 
 # パス設定（Claude App Directory対応）
-DATA_PATH=/opt/poker_mcp_v1/data
-BACKUP_PATH=/opt/poker_mcp_v1/backups
-LOG_PATH=/opt/poker_mcp_v1/logs
-CONFIG_PATH=/opt/poker_mcp_v1/config
+DATA_PATH=/opt/poker_mcp_v12/data
+BACKUP_PATH=/opt/poker_mcp_v12/backups
+LOG_PATH=/opt/poker_mcp_v12/logs
+CONFIG_PATH=/opt/poker_mcp_v12/config
 
 # セキュリティ設定
 MCP_SECURE_MODE=true
@@ -147,22 +174,22 @@ EOF
 
 #### **4. PM2プロセス管理設定** (5分)
 ```bash
-# v1.0.0対応PM2設定
-sudo -u poker_mcp_v1 tee ecosystem.config.js > /dev/null << 'EOF'
+# v1.2.0対応PM2設定
+sudo -u poker_mcp_v12 tee ecosystem.config.js > /dev/null << 'EOF'
 module.exports = {
   apps: [{
-    name: 'poker-mcp-v1',
+    name: 'poker-mcp-v12',
     script: 'src/mcp_server_stdio_v4.js',
     instances: 'max',
     exec_mode: 'cluster',
     env: {
       NODE_ENV: 'production',
-      POKER_VERSION: '1.0.0',
+      POKER_VERSION: '1.2.0',
       MCP_VERSION: '1.0.0'
     },
-    error_file: '/opt/poker_mcp_v1/logs/error.log',
-    out_file: '/opt/poker_mcp_v1/logs/out.log',
-    log_file: '/opt/poker_mcp_v1/logs/combined.log',
+    error_file: '/opt/poker_mcp_v12/logs/error.log',
+    out_file: '/opt/poker_mcp_v12/logs/out.log',
+    log_file: '/opt/poker_mcp_v12/logs/combined.log',
     time: true,
     max_memory_restart: '2G',
     node_args: '--max-old-space-size=4096'
@@ -171,28 +198,28 @@ module.exports = {
 EOF
 
 # PM2起動・自動起動設定
-sudo -u poker_mcp_v1 pm2 start ecosystem.config.js
-sudo -u poker_mcp_v1 pm2 save
+sudo -u poker_mcp_v12 pm2 start ecosystem.config.js
+sudo -u poker_mcp_v12 pm2 save
 sudo pm2 startup
 ```
 
 ---
 
-## 📊 運用監視（24メソッド対応）
+## 📊 運用監視（28メソッド対応）
 
 ### 🔍 **システム監視項目**
 
-#### **24メソッド動作監視**
+#### **28メソッド動作監視**
 ```bash
-# 24メソッド動作状況監視スクリプト
-sudo -u poker_mcp_v1 tee /opt/poker_mcp_v1/scripts/monitor_24methods.sh > /dev/null << 'EOF'
+# 28メソッド動作状況監視スクリプト
+sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/monitor_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 24メソッド動作監視スクリプト (v1.0.0対応)
+# 28メソッド動作監視スクリプト (v1.2.0対応)
 
-LOGFILE="/opt/poker_mcp_v1/logs/method_monitor.log"
+LOGFILE="/opt/poker_mcp_v12/logs/method_monitor.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
-echo "[$DATE] 24メソッド動作監視開始" >> $LOGFILE
+echo "[$DATE] 28メソッド動作監視開始" >> $LOGFILE
 
 function check_method_group() {
     local group_name=$1
@@ -234,13 +261,13 @@ check_method_group "Detector" "poker_proposeDetector poker_updateDetector poker_
 # Unit系メソッド監視 (5メソッド) - 4キー完全性保証
 check_method_group "Unit" "poker_proposeUnit poker_getUnit poker_updateUnit poker_validateUnitIntegrity poker_analyzeUnitConversion"
 
-# System系メソッド監視 (2メソッド)
-check_method_group "System" "poker_applyChanges poker_executeCalculation"
+# System系メソッド監視 (4メソッド)
+check_method_group "System" "poker_applyChanges poker_executeCalculation poker_resetYaml poker_confirmDaughterNuclides"
 
-echo "[$DATE] 24メソッド動作監視完了" >> $LOGFILE
+echo "[$DATE] 28メソッド動作監視完了" >> $LOGFILE
 EOF
 
-chmod +x /opt/poker_mcp_v1/scripts/monitor_24methods.sh
+chmod +x /opt/poker_mcp_v12/scripts/monitor_28methods.sh
 ```
 
 ---
@@ -252,7 +279,7 @@ chmod +x /opt/poker_mcp_v1/scripts/monitor_24methods.sh
 #### **MCP認証・認可設定**
 ```bash
 # MCP v1.0準拠セキュリティ設定
-sudo -u poker_mcp_v1 tee /opt/poker_mcp_v1/config/security.json > /dev/null << 'EOF'
+sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/security.json > /dev/null << 'EOF'
 {
   "mcp_security": {
     "version": "1.0.0",
@@ -295,15 +322,15 @@ EOF
 
 ---
 
-## 📈 パフォーマンス最適化（v1.0.0対応）
+## 📈 パフォーマンス最適化（v1.2.0対応）
 
 ### ⚡ **システム最適化設定**
 
-#### **Node.js最適化（24メソッド対応）**
+#### **Node.js最適化（28メソッド対応）**
 ```bash
-# Node.js v1.0.0対応最適化設定
-sudo -u poker_mcp_v1 tee /opt/poker_mcp_v1/config/node_optimization.js > /dev/null << 'EOF'
-// Node.js最適化設定 (Poker MCP v1.0.0対応)
+# Node.js v1.2.0対応最適化設定
+sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/node_optimization.js > /dev/null << 'EOF'
+// Node.js最適化設定 (Poker MCP v1.2.0対応)
 module.exports = {
   // メモリ最適化
   memory: {
@@ -319,7 +346,7 @@ module.exports = {
     incremental_marking: true
   },
   
-  // 24メソッド並列処理最適化
+  // 28メソッド並列処理最適化
   concurrency: {
     max_concurrent_methods: 10,
     method_queue_size: 100,
@@ -345,24 +372,24 @@ EOF
 
 ---
 
-## 🛡️ 障害対応（v1.0.0対応）
+## 🛡️ 障害対応（v1.2.0対応）
 
 ### 🚨 **障害対応手順**
 
-#### **24メソッド障害診断**
+#### **28メソッド障害診断**
 ```bash
-# 24メソッド包括診断スクリプト
-sudo -u poker_mcp_v1 tee /opt/poker_mcp_v1/scripts/diagnose_24methods.sh > /dev/null << 'EOF'
+# 28メソッド包括診断スクリプト
+sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/diagnose_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 24メソッド包括診断 (v1.0.0対応)
+# 28メソッド包括診断 (v1.2.0対応)
 
-LOGFILE="/opt/poker_mcp_v1/logs/diagnosis.log"
+LOGFILE="/opt/poker_mcp_v12/logs/diagnosis.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 
-echo "[$DATE] 24メソッド包括診断開始" >> $LOGFILE
+echo "[$DATE] 28メソッド包括診断開始" >> $LOGFILE
 
 # 各メソッド系の診断
-METHOD_GROUPS=("Body:3" "Zone:3" "Transform:3" "BuildupFactor:4" "Source:3" "Detector:3" "Unit:5" "System:2")
+METHOD_GROUPS=("Body:3" "Zone:3" "Transform:3" "BuildupFactor:4" "Source:3" "Detector:3" "Unit:5" "System:4")
 
 total_issues=0
 
@@ -389,7 +416,7 @@ function check_body_methods() {
     local missing_types=""
     
     for type in $supported_types; do
-        if ! grep -q "type.*$type" /opt/poker_mcp_v1/src/mcp/tools/bodyTools.js 2>/dev/null; then
+        if ! grep -q "type.*$type" /opt/poker_mcp_v12/src/mcp/tools/bodyTools.js 2>/dev/null; then
             missing_types="$missing_types $type"
         fi
     done
@@ -408,7 +435,7 @@ function check_unit_methods() {
     local missing_keys=""
     
     for key in $required_keys; do
-        if ! grep -q "\"$key\"" /opt/poker_mcp_v1/src/mcp/tools/unitTools.js 2>/dev/null; then
+        if ! grep -q "\"$key\"" /opt/poker_mcp_v12/src/mcp/tools/unitTools.js 2>/dev/null; then
             missing_keys="$missing_keys $key"
         fi
     done
@@ -423,15 +450,15 @@ function check_unit_methods() {
 
 # 診断結果サマリー
 if [ $total_issues -eq 0 ]; then
-    echo "[$DATE] ✅ 24メソッド診断: 全て正常" >> $LOGFILE
+    echo "[$DATE] ✅ 28メソッド診断: 全て正常" >> $LOGFILE
 else
-    echo "[$DATE] ⚠️ 24メソッド診断: $total_issues 件の課題検出" >> $LOGFILE
+    echo "[$DATE] ⚠️ 28メソッド診断: $total_issues 件の課題検出" >> $LOGFILE
 fi
 
-echo "[$DATE] 24メソッド包括診断完了" >> $LOGFILE
+echo "[$DATE] 28メソッド包括診断完了" >> $LOGFILE
 EOF
 
-chmod +x /opt/poker_mcp_v1/scripts/diagnose_24methods.sh
+chmod +x /opt/poker_mcp_v12/scripts/diagnose_28methods.sh
 ```
 
 ---
@@ -440,21 +467,21 @@ chmod +x /opt/poker_mcp_v1/scripts/diagnose_24methods.sh
 
 ### ✅ **日次運用チェック**
 
-#### **24メソッド完全性確認**
+#### **28メソッド完全性確認**
 ```bash
 # 日次運用チェックリスト
-sudo -u poker_mcp_v1 tee /opt/poker_mcp_v1/scripts/daily_check.sh > /dev/null << 'EOF'
+sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/daily_check.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 日次運用チェック (Poker MCP v1.0.0対応)
+# 日次運用チェック (Poker MCP v1.2.0対応)
 
-LOGFILE="/opt/poker_mcp_v1/logs/daily_check.log"
+LOGFILE="/opt/poker_mcp_v12/logs/daily_check.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 ISSUES=0
 
-echo "[$DATE] === Poker MCP v1.0.0 日次チェック開始 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.2.0 日次チェック開始 ===" >> $LOGFILE
 
-# 1. 24メソッド応答確認
-echo "[$DATE] 1. 24メソッド応答確認" >> $LOGFILE
+# 1. 28メソッド応答確認
+echo "[$DATE] 1. 28メソッド応答確認" >> $LOGFILE
 METHODS=(
     "poker_proposeBody" "poker_updateBody" "poker_deleteBody"
     "poker_proposeZone" "poker_updateZone" "poker_deleteZone"
@@ -465,7 +492,8 @@ METHODS=(
     "poker_proposeDetector" "poker_updateDetector" "poker_deleteDetector"
     "poker_proposeUnit" "poker_getUnit" "poker_updateUnit" 
     "poker_validateUnitIntegrity" "poker_analyzeUnitConversion"
-    "poker_applyChanges" "poker_executeCalculation"
+    "poker_applyChanges" "poker_executeCalculation" 
+    "poker_resetYaml" "poker_confirmDaughterNuclides"
 )
 
 for method in "${METHODS[@]}"; do
@@ -485,20 +513,20 @@ else
     echo "[$DATE] ⚠️ 日次チェック完了: $ISSUES 件の課題検出" >> $LOGFILE
 fi
 
-echo "[$DATE] === Poker MCP v1.0.0 日次チェック完了 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.2.0 日次チェック完了 ===" >> $LOGFILE
 EOF
 
-chmod +x /opt/poker_mcp_v1/scripts/daily_check.sh
+chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 ```
 
 ---
 
-## 📋 まとめ: v1.0.0管理体制
+## 📋 まとめ: v1.2.0管理体制
 
-### ✨ **v1.0.0管理体制の価値**
+### ✨ **v1.2.0管理体制の価値**
 
 #### **完全対応管理**
-- ✅ **24メソッド完全監視**: 全メソッドの個別監視・性能管理
+- ✅ **28メソッド完全監視**: 全メソッドの個別監視・性能管理
 - ✅ **10立体タイプサポート**: 複雑形状対応の完全管理
 - ✅ **4キー単位系完全性**: 物理的整合性の自動保証
 - ✅ **MCP v1.0準拠**: 最新プロトコル完全対応
@@ -511,12 +539,12 @@ chmod +x /opt/poker_mcp_v1/scripts/daily_check.sh
 
 #### **品質保証**
 - ✅ **完全性検証**: 4キー単位系の自動整合性確保
-- ✅ **性能監視**: 24メソッド個別性能管理
+- ✅ **性能監視**: 28メソッド個別性能管理
 - ✅ **セキュリティ**: MCP準拠多層防御
 - ✅ **トレーサビリティ**: 全操作の完全記録
 
 ### 🚀 **継続的改善**
 
-この管理ガイドは、Poker MCP Server v1.0.0の24メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
+この管理ガイドは、Poker MCP Server v1.2.0の28メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
 
 **エンタープライズレベルの運用品質により、世界最高水準の放射線遮蔽研究基盤を実現してください。**

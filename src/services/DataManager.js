@@ -44,7 +44,11 @@ export class SafeDataManager {
     this.nuclideManager = new NuclideManager({
       contribution_threshold: 0.05,
       user_confirmation: true,
+<<<<<<< HEAD
       database_file: this.nuclideDatabasePath
+=======
+      database_file: 'data/ICRP-07.NDX'
+>>>>>>> afterKOKURA
     });
     
     // 強化検証の初期化
@@ -73,6 +77,7 @@ export class SafeDataManager {
       await this.loadData();
       await this.loadPendingChanges();
       
+<<<<<<< HEAD
       logger.info('データマネージャーを初期化しました', {
         workDir: this.workDir,
         dataDir: this.dataDir,
@@ -81,6 +86,12 @@ export class SafeDataManager {
         backupDir: this.backupDir,
         nuclideDatabasePath: this.nuclideDatabasePath
       });
+=======
+      // NuclideManagerのデータベース読み込み
+      await this.nuclideManager.loadNuclideDatabase();
+      
+      logger.info('データマネージャーを初期化しました');
+>>>>>>> afterKOKURA
     } catch (error) {
       logger.error('データマネージャーの初期化に失敗しました', { error: error.message });
       throw new DataError(`初期化に失敗: ${error.message}`, 'INITIALIZATION');
@@ -303,6 +314,10 @@ export class SafeDataManager {
       flowLevel: -1,  // すべてのレベルでブロックスタイルを使用
       lineWidth: 120,
       noRefs: true,
+<<<<<<< HEAD
+=======
+      quotingType: "'",
+>>>>>>> afterKOKURA
       forceQuotes: false
     });
       await fs.writeFile(this.yamlFile, yamlData, 'utf8');
@@ -891,17 +906,18 @@ export class SafeDataManager {
       }
 
       const bodies = this.data.body;
+      const zones = this.data.zone || []; // ゾーン情報を取得
       let result;
 
       switch (timing) {
         case 'realtime_basic':
           // リアルタイム: 基本的な重複のみ
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           break;
           
         case 'batch_detailed':
           // バッチ: 詳細な干渉解析
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           if (result.hasCollisions) {
             result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
           }
@@ -909,7 +925,7 @@ export class SafeDataManager {
           
         case 'pre_calculation':
           // 計算前: 完全な検証
-          result = this.collisionDetector.detectCollisions(bodies);
+          result = this.collisionDetector.detectCollisions(bodies, zones);
           if (result.hasCollisions) {
             result.resolutions = this.collisionDetector.generateResolutions(result.collisions, bodies);
             result.mustResolve = true;
@@ -1084,11 +1100,13 @@ export class SafeDataManager {
 
   /**
    * 子孫核種の自動追加実行
+   * @deprecated updateSourceを使用したhandleConfirmに置き換えられました
    * @param {Array} additionResults - 追加結果配列
    * @param {boolean} userConfirmation - ユーザー確認済み
    * @returns {Object} 実行結果
    */
   async applyDaughterNuclideAdditions(additionResults, userConfirmation = false) {
+    logger.warn('applyDaughterNuclideAdditions は非推奨です。updateSourceベースの実装を使用してください');
     try {
       logger.info('子孫核種の自動追加を開始', { 
         resultCount: additionResults.length,
@@ -1149,11 +1167,19 @@ export class SafeDataManager {
 
       logger.info('子孫核種追加完了', { totalAdded });
       
-      return {
+      const result = {
         success: true,
         totalAdded,
         appliedActions
       };
+      
+      // 非推奨警告を追加
+      if (totalAdded > 0) {
+        result.warning = 'この方法で追加された子孫核種は永続化されません。poker_applyChanges の実行前にサーバーを再起動しないでください。';
+        result.recommendation = 'updateSourceベースの子孫核種追加機能の使用を検討してください。';
+      }
+      
+      return result;
 
     } catch (error) {
       logger.error('子孫核種追加中にエラー', { error: error.message });

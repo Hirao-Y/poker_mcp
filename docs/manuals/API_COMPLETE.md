@@ -2,14 +2,24 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
+<<<<<<< HEAD
 **🔧 対応システム**: Poker MCP Server v1.1.0  
 **📅 最終更新**: 2025年9月8日
+=======
+**🔧 対応システム**: Poker MCP Server v1.2.0  
+**🔧 バージョン**: 1.2.0 MCP Edition  
+**📅 最終更新**: 2025年1月24日
+>>>>>>> afterKOKURA
 
 ---
 
 ## 📖 本書の位置づけ
 
+<<<<<<< HEAD
 この文書は**テクニカル層**の完全API仕様書です。MCP (Model Context Protocol) に完全準拠した28メソッドの詳細仕様を提供します。
+=======
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した28メソッドの詳細仕様を提供します。
+>>>>>>> afterKOKURA
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -26,23 +36,23 @@
 
 ## 📚 28メソッド完全実装一覧
 
-### 🔷 **Body操作系 (3メソッド) - 10種類立体タイプ完全対応**
+### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
 | **メソッド名** | **機能** | **立体タイプ** |
 |---------------|----------|---------------|
-| **poker_proposeBody** | 3D立体作成（自動バックアップ付き） | SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED |
+| **poker_proposeBody** | 3D立体作成(自動バックアップ付き) | SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED |
 | **poker_updateBody** | 立体パラメータ更新 | 全10タイプ対応 |
-| **poker_deleteBody** | 立体削除（依存関係チェック付き） | 全10タイプ対応 |
+| **poker_deleteBody** | 立体削除(依存関係チェック付き) | 全10タイプ対応 |
 
-### 🎨 **Zone操作系 (3メソッド) - 材料物理検証付き**
+### 🎨 **Zone操作系(3メソッド) - 材料物理検証付き**
 
 | **メソッド名** | **機能** | **対応材料** |
 |---------------|----------|--------------|
-| **poker_proposeZone** | 材料ゾーン作成（物理検証付き） | 13種類材料完全対応 |
-| **poker_updateZone** | ゾーン材料・密度更新 | 密度範囲: 0.001-30.0 g/cm³ |
-| **poker_deleteZone** | ゾーン削除（ATMOSPHERE保護） | システム保護機能付き |
+| **poker_proposeZone** | 材料ゾーン作成(物理検証付き) | 13種類材料完全対応 |
+| **poker_updateZone** | ゾーン材料・密度更新 | 密度範囲: 0.001-30.0(g/cm³) |
+| **poker_deleteZone** | ゾーン削除(ATMOSPHERE保護) | システム保護機能付き |
 
-### 🔄 **Transform操作系 (3メソッド) - 幾何変換**
+### 🔄 **Transform操作系(3メソッド) - 幾何変換**
 
 | **メソッド名** | **機能** | **操作タイプ** |
 |---------------|----------|---------------|
@@ -91,8 +101,13 @@
 |---------------|----------|----------|
 | **poker_applyChanges** | 変更適用・保存 | 自動バックアップ・整合性確認 |
 | **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報 |
+<<<<<<< HEAD
 | **poker_resetYaml** | YAML初期化 | ATMOSPHEREゾーン保護付き完全リセット |
 | **poker_confirmDaughterNuclides** | 子孫核種自動追加 | 核種インベントリ自動拡張機能 |
+=======
+| **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
+| **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完 |
+>>>>>>> afterKOKURA
 
 ---
 
@@ -105,7 +120,7 @@
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.0.0
+⚙️ Poker MCP Server v1.2.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
@@ -170,7 +185,7 @@
 
 ---
 
-## 📊 24メソッド完全仕様
+## 📊 28メソッド完全仕様
 
 ### 📐 **Body系メソッド（立体管理）**
 
