@@ -53,10 +53,10 @@ npx poker-mcp
 **POKER_INSTALL_PATH環境変数**（オプション）:
 ```bash
 # Windowsの場合（コマンドプロンプト）
-set POKER_INSTALL_PATH=C:\Program Files\POKER
+set POKER_INSTALL_PATH=C:/Poker
 
 # Windowsの場合（PowerShell）
-$env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+$env:POKER_INSTALL_PATH="C:/Poker"
 
 # Linux/macOSの場合
 export POKER_INSTALL_PATH="/usr/local/share/poker"
@@ -86,7 +86,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
          "command": "node",
          "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
          "env": {
-           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+           "POKER_INSTALL_PATH": "C:/Poker"
          }
        }
      }
@@ -101,7 +101,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
          "command": "npx",
          "args": ["poker-mcp"],
          "env": {
-           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+           "POKER_INSTALL_PATH": "C:/Poker"
          }
        }
      }

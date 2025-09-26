@@ -38,10 +38,10 @@ npm install
 # POKER_INSTALL_PATH環境変数の設定（オプション）
 
 # Windowsの場合（コマンドプロンプト）
-set POKER_INSTALL_PATH=C:\Program Files\POKER
+set POKER_INSTALL_PATH=C:/Poker
 
 # Windowsの場合（PowerShell）
-$env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+$env:POKER_INSTALL_PATH="C:/Poker"
 
 # Linux/macOSの場合
 export POKER_INSTALL_PATH="/usr/local/share/poker"
@@ -182,7 +182,7 @@ grep -r "poker_" src/ | wc -l  # 28個のメソッドが表示されるはず
       "args": ["poker-mcp"],
       "cwd": "C:\\Users\\yoshi\\Desktop\\poker_mcp",
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
@@ -197,7 +197,7 @@ grep -r "poker_" src/ | wc -l  # 28個のメソッドが表示されるはず
       "command": "node", 
       "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
@@ -212,7 +212,7 @@ grep -r "poker_" src/ | wc -l  # 28個のメソッドが表示されるはず
       "command": "poker-mcp",
       "args": [],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
@@ -298,7 +298,7 @@ npx poker-mcp --test  # 将来実装予定
 ```bash
 # POKER_INSTALL_PATH環境変数（オプション）
 # Windows
-set POKER_INSTALL_PATH=C:\Program Files\POKER
+set POKER_INSTALL_PATH=C:/Poker
 set NODE_ENV=production
 npx poker-mcp
 

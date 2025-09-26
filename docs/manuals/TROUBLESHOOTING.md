@@ -320,8 +320,8 @@ poker_updateBody で既存立体のパラメータを更新してください。
    Linux/macOS: echo $POKER_INSTALL_PATH
    
 2. 環境変数未設定の場合:
-   Windows CMD: set POKER_INSTALL_PATH=C:\Program Files\POKER
-   Windows PS: $env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+   Windows CMD: set POKER_INSTALL_PATH=C:/Poker
+   Windows PS: $env:POKER_INSTALL_PATH="C:/Poker"
    Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
    
 3. ソースファイル存在確認:
@@ -406,7 +406,7 @@ poker_updateBody で既存立体のパラメータを更新してください。
 
 1. Windows永続化:
    システム環境変数設定:
-   setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+   setx POKER_INSTALL_PATH "C:/Poker"
    
    またはGUI設定:
    システムプロパティ → 環境変数 → システム環境変数
@@ -442,8 +442,8 @@ poker_updateBody で既存立体のパラメータを更新してください。
    Linux/macOS: echo $POKER_INSTALL_PATH
    
 2. 環境変数未設定の場合:
-   Windows CMD: set POKER_INSTALL_PATH=C:\Program Files\POKER
-   Windows PS: $env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+   Windows CMD: set POKER_INSTALL_PATH=C:/Poker
+   Windows PS: $env:POKER_INSTALL_PATH="C:/Poker"
    Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
    
 3. ソースファイル存在確認:
@@ -528,7 +528,7 @@ poker_updateBody で既存立体のパラメータを更新してください。
 
 1. Windows永続化:
    システム環境変数設定:
-   setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+   setx POKER_INSTALL_PATH "C:/Poker"
    
    またはGUI設定:
    システムプロパティ → 環境変数 → システム環境変数

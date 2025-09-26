@@ -128,7 +128,7 @@
 **POKER_INSTALL_PATH設定例**:
 ```bash
 # Windows
-setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+setx POKER_INSTALL_PATH "C:/Poker"
 
 # Linux/macOS
 export POKER_INSTALL_PATH="/usr/local/share/poker"
@@ -142,7 +142,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
       "command": "node",
       "args": ["path/to/mcp_server_stdio_v4.js"],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }

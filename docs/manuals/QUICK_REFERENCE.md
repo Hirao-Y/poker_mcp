@@ -186,8 +186,8 @@ height_vector: "0 0 80"
 
 | OS | 設定コマンド | 永続化 |
 |----|-----------|----- --|
-| **Windows CMD** | `set POKER_INSTALL_PATH=C:\Program Files\POKER` | `setx POKER_INSTALL_PATH "C:\Program Files\POKER"` |
-| **Windows PowerShell** | `$env:POKER_INSTALL_PATH="C:\Program Files\POKER"` | システム環境変数設定 |
+| **Windows CMD** | `set POKER_INSTALL_PATH=C:/Poker` | `setx POKER_INSTALL_PATH "C:/Poker"` |
+| **Windows PowerShell** | `$env:POKER_INSTALL_PATH="C:/Poker"` | システム環境変数設定 |
 | **Linux/macOS** | `export POKER_INSTALL_PATH="/usr/local/share/poker"` | `echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc` |
 
 ### データディレクトリ構造

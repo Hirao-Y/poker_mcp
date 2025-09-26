@@ -116,7 +116,7 @@ Claude Desktop(簡単):
          "command": "node",
          "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
          "env": {
-           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+           "POKER_INSTALL_PATH": "C:/Poker"
          }
        }
      }

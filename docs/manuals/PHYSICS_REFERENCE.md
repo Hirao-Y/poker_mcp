@@ -49,7 +49,7 @@
 **設定方法（物理計算品質確保のため）**:
 ```bash
 # Windows環境での設定
-setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+setx POKER_INSTALL_PATH "C:/Poker"
 
 # Linux環境での設定  
 export POKER_INSTALL_PATH="/usr/local/share/poker"

@@ -43,10 +43,10 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 **設定例**:
 ```bash
 # Windows (コマンドプロンプト)
-set POKER_INSTALL_PATH=C:\Program Files\POKER
+set POKER_INSTALL_PATH=C:/Poker
 
 # Windows (PowerShell)
-$env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+$env:POKER_INSTALL_PATH="C:/Poker"
 
 # Linux/macOS
 export POKER_INSTALL_PATH="/usr/local/share/poker"
@@ -67,7 +67,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
       "command": "node",
       "args": ["C:/Users/yoshi/Desktop/poker_mcp/src/mcp_server_stdio_v4.js"],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
@@ -82,7 +82,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
       "command": "npx",
       "args": ["poker-mcp"],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }

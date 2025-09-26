@@ -35,7 +35,7 @@ Claude Desktop 指示:
 3. MCPサーバー接続状態の確認
 
 設定が不完全な場合:
-- Windows: setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+- Windows: setx POKER_INSTALL_PATH "C:/Poker"
 - Claude Desktop設定ファイルのenvセクション更新
 - Claude Desktop再起動後に確認
 

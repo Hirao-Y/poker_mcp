@@ -114,7 +114,7 @@
 # 機能: 初回起動時にlib/ICRP-07.NDXファイルをdata/にコピー
 
 # Windows設定例
-set POKER_INSTALL_PATH=C:\Program Files\POKER
+set POKER_INSTALL_PATH=C:/Poker
 
 # Linux/macOS設定例  
 export POKER_INSTALL_PATH="/usr/local/share/poker"
