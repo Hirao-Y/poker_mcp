@@ -126,7 +126,7 @@
       },
       "decay_chain_analysis": true,
       "icrp_database_integration": {
-        "database_file": "src/data/ICRP-07.NDX",
+        "database_file": "data/ICRP-07.NDX",
         "format": "ICRP-107"
       },
       "supported_equilibrium_types": [
@@ -149,7 +149,7 @@
     }
   },
   "data_sources": {
-    "nuclide_database": "src/data/ICRP-07.NDX",
+    "nuclide_database": "data/ICRP-07.NDX",
     "decay_data_format": "ICRP-107",
     "material_properties": "built-in",
     "validation_rules": "physics-based"

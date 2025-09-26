@@ -2,7 +2,7 @@
 
 **対象読者**: 放射線遮蔽研究者・実務者  
 **更新日**: 2025年1月24日  
-**バージョン**: 1.2.0 MCP Edition  
+**バージョン**: 1.2.5 MCP Edition  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -177,6 +177,54 @@ width_vector: "100 0 0"
 depth_vector: "0 50 0"
 height_vector: "0 0 80"
 ```
+
+---
+
+## 🌍 第2.5章: 環境変数設定クイックコマンド
+
+### POKER_INSTALL_PATH環境変数
+
+| OS | 設定コマンド | 永続化 |
+|----|-----------|----- --|
+| **Windows CMD** | `set POKER_INSTALL_PATH=C:\Program Files\POKER` | `setx POKER_INSTALL_PATH "C:\Program Files\POKER"` |
+| **Windows PowerShell** | `$env:POKER_INSTALL_PATH="C:\Program Files\POKER"` | システム環境変数設定 |
+| **Linux/macOS** | `export POKER_INSTALL_PATH="/usr/local/share/poker"` | `echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc` |
+
+### データディレクトリ構造
+
+```
+poker_mcp/
+├── data/               # 核種データベース（自動作成）
+│   └── ICRP-07.NDX    # ${POKER_INSTALL_PATH}/lib/からコピー
+├── tasks/             # 作業ファイル（自動作成）
+├── backups/           # バックアップ（自動作成）
+└── logs/              # ログファイル（自動作成）
+```
+
+### Claude Desktop設定例
+
+```json
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "node",
+      "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
+      "env": {
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+      }
+    }
+  }
+}
+```
+
+### 初回セットアップチェックリスト
+
+- [ ] Node.js 18.0.0以上インストール確認
+- [ ] POKER_INSTALL_PATH環境変数設定（オプション）
+- [ ] lib/ICRP-07.NDXファイル存在確認
+- [ ] claude_desktop_config.json編集
+- [ ] Claude Desktop再起動
+- [ ] `poker_getUnit`で動作確認
 
 ---
 

@@ -45,6 +45,10 @@ export class SafeDataManager {
       await fs.mkdir(this.backupDir, { recursive: true });  // backups
       await fs.mkdir('logs', { recursive: true });          // logs  
       await fs.mkdir('tasks', { recursive: true });         // tasks
+      await fs.mkdir('data', { recursive: true });          // data
+
+      // 必要なデータファイルをコピー
+      await this.ensureDataFiles();
 
       // 初期ファイル配置（既存ファイルがない場合のみ）
       await this.ensureInitialFiles();
@@ -60,6 +64,85 @@ export class SafeDataManager {
     } catch (error) {
       logger.error('データマネージャーの初期化に失敗しました', { error: error.message });
       throw new DataError(`初期化に失敗: ${error.message}`, 'INITIALIZATION');
+    }
+  }
+
+  // 新規メソッド: 必要なデータファイルの確保
+  async ensureDataFiles() {
+    try {
+      const targetFile = 'data/ICRP-07.NDX';
+      
+      // ターゲットファイルの存在チェック
+      try {
+        await fs.access(targetFile);
+        logger.info('ICRP-07データベースファイルは既に存在します。コピーをスキップします。', { 
+          file: targetFile 
+        });
+        return; // 既に存在する場合は何もしない
+      } catch (targetError) {
+        if (targetError.code !== 'ENOENT') {
+          // アクセス権限などの別のエラー
+          throw targetError;
+        }
+        // ファイルが存在しない場合は以下の処理を続行
+      }
+      
+      // 環境変数からインストールパスを取得（デフォルト値設定）
+      const installPath = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+      logger.info('POKERインストールパスを確認', { installPath });
+      
+      const sourceFile = path.join(installPath, 'lib', 'ICRP-07.NDX');
+      
+      // ソースファイルの存在チェック
+      try {
+        await fs.access(sourceFile);
+        logger.info('ソースファイルが見つかりました', { sourceFile });
+      } catch (sourceError) {
+        if (sourceError.code === 'ENOENT') {
+          logger.error('ソースファイルが見つかりません', {
+            expectedPath: sourceFile,
+            installPath: installPath,
+            environmentVariable: 'POKER_INSTALL_PATH',
+            suggestion: installPath === 'C:/Poker' 
+              ? 'POKER_INSTALL_PATH環境変数を正しいインストールディレクトリに設定してください'
+              : 'インストールディレクトリに lib/ICRP-07.NDX ファイルが存在することを確認してください'
+          });
+          throw new DataError(
+            `必要なデータファイルが見つかりません: ${sourceFile}`, 
+            'MISSING_SOURCE_FILE'
+          );
+        } else {
+          throw sourceError;
+        }
+      }
+      
+      // ファイルをコピー
+      try {
+        await fs.copyFile(sourceFile, targetFile);
+        logger.info('ICRP-07データベースファイルをコピーしました', { 
+          from: sourceFile, 
+          to: targetFile 
+        });
+      } catch (copyError) {
+        logger.error('ファイルのコピーに失敗しました', {
+          error: copyError.message,
+          sourceFile,
+          targetFile
+        });
+        throw copyError;
+      }
+      
+      // コピー完了後のファイルサイズ確認
+      const finalStats = await fs.stat(targetFile);
+      logger.info('ICRP-07データベースファイルのコピーが完了しました', {
+        file: targetFile,
+        size: finalStats.size,
+        readable: true
+      });
+      
+    } catch (error) {
+      logger.error('データファイル確保エラー', { error: error.message });
+      throw error;
     }
   }
 

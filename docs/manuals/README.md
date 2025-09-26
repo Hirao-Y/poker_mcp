@@ -1,15 +1,15 @@
-# 📚 Poker MCP Server - マニュアル体系 (v1.2.0)
+# 📚 Poker MCP Server - マニュアル体系 (v1.2.5)
 
 **🎯 対象**: 放射線遮蔽研究者・安全解析・申請実務家・設計エンジニア  
-**🔧 システム**: Poker MCP Server v1.2.0 (28メソッド完全実装)  
+**🔧 システム**: Poker MCP Server v1.2.5 (28メソッド完全実装)  
 **📅 最終更新**: 2025年1月  
 **🌟 マニュアル体系**: 段階的学習設計（3層構造）
 
 ---
 
-## 🏆 v1.2.0マニュアル体系の革新
+## 🏆 v1.2.5マニュアル体系の革新
 
-### ✨ **v1.2.0 完全実装機能**
+### ✨ **v1.2.5 完全実装機能**
 - **28メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系4
 - **10種類立体完全対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED全立体タイプ詳細解説
 - **14種類材料完全対応**: コンクリート、鉛、鉄、VOID等標準遮蔽材料
@@ -17,7 +17,8 @@
 - **子孫核種自動追加**: confirmDaughterNuclidesによるICRP-07準拠の放射平衡考慮
 - **サマリーファイル4セクション**: 入力パラメータ・intermediate・result・result_total完全解析
 
-### 🔬 **v1.2.0 新機能ハイライト**
+### 🔬 **v1.2.5 新機能ハイライト**
+- **環境変数サポート**: POKER_INSTALL_PATH対応で核種データベースの柔軟な配置
 - **Unit操作5メソッド**: 単位系の完全性検証と変換係数分析機能
 - **子孫核種自動確認**: 放射平衡を考慮した自動核種追加システム
 - **サマリーファイル完全解析**: 4セクション（入力パラメータ/intermediate/result/result_total）の物理的意味と活用法
@@ -32,7 +33,7 @@
 
 ---
 
-## 📖 v1.2.0対応マニュアル構成
+## 📖 v1.2.5対応マニュアル構成
 
 ### 🌟 **エッセンシャル層** - 必須知識 (3ファイル)
 最初に読むべき基本文書（28メソッド・10立体・14材料対応）
@@ -43,7 +44,7 @@
 - **🔷 10種類立体対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED完全活用
 - **🧪 基本計算例**: 3つの代表的ケーススタディ
 - **📋 日常操作**: よく使う操作パターン（28メソッド活用）
-- **🎯 対象**: Poker MCP v1.2.0を初めて使う方
+- **🎯 対象**: Poker MCP v1.2.5を初めて使う方
 
 #### 📋 [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 放射線遮蔽計算リファレンス ★更新★
 - **⚛️ 遮蔽理論**: 放射線と物質の相互作用機構
@@ -64,7 +65,7 @@
 - **🎯 対象**: 日常的にシステムを使用するユーザー
 
 ### 📖 **プラクティカル層** - 実践知識 (3ファイル)
-実際に必要になる実用情報（v1.2.0全機能活用）
+実際に必要になる実用情報（v1.2.5全機能活用）
 
 #### 🧬 [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 業務ワークフロー ★更新★
 - **🏥 医療施設遮蔽**: CT/PET/リニアック施設の完全設計例
@@ -91,10 +92,10 @@
 - **🎯 対象**: システム運用・保守を担当する方
 
 ### ⚙️ **テクニカル層** - 専門知識 (2ファイル)
-システム管理者・上級者向け詳細情報（v1.2.0対応）
+システム管理者・上級者向け詳細情報（v1.2.5対応）
 
 #### 🔧 [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - 管理者ガイド
-- **🏗️ v1.2.0システムセットアップ**: インストール・環境構築
+- **🏗️ v1.2.5システムセットアップ**: インストール・環境構築
 - **📊 28メソッド監視**: 全メソッド個別監視・パフォーマンス管理
 - **🔒 MCP v1.0準拠セキュリティ**: アクセス制御・データ保護
 - **📈 サマリーファイル管理**: 4セクションのログ・監査
@@ -112,9 +113,9 @@
 
 ---
 
-## 🎯 v1.2.0機能別利用ガイド
+## 🎯 v1.2.5機能別利用ガイド
 
-### 👩‍🔬 **初めてPoker MCP v1.2.0を使う研究者**
+### 👩‍🔬 **初めてPoker MCP v1.2.5を使う研究者**
 1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で28メソッド・10立体の基本概念とクイックスタートを体験
 2. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で物理的背景とUnit操作5メソッドを理解
 3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** で日常操作と13種エラーコード対処をマスター
@@ -144,14 +145,14 @@
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で13種エラーコードの自動対処実装
 
 ### 🔧 **システム管理者**
-1. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でv1.2.0システム構築・28メソッド監視
+1. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でv1.2.5システム構築・28メソッド監視
 2. **[API_COMPLETE.md](API_COMPLETE.md)** で技術仕様を確認
 3. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で自動修復システムを構築
 4. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でサマリーファイル監視システムを実装
 
 ---
 
-## 🚀 v1.2.0実装機能の完全活用
+## 🚀 v1.2.5実装機能の完全活用
 
 ### 📊 **28メソッド完全実装**
 ```yaml
@@ -180,7 +181,7 @@ Detector系 (3メソッド):
 - poker_proposeDetector, poker_updateDetector, poker_deleteDetector
 - 多次元検出器・格子分割・トレース設定
 
-Unit系 (5メソッド): ★v1.2.0完全実装★
+Unit系 (5メソッド): ★v1.2.5完全実装★
 - poker_proposeUnit: 単位系初期設定
 - poker_getUnit: 現在単位確認
 - poker_updateUnit: 単位変更
@@ -249,7 +250,7 @@ result_totalセクション:
 
 ---
 
-## 📊 学習効果とROI (v1.2.0版)
+## 📊 学習効果とROI (v1.2.5版)
 
 ### 📈 **習熟段階と期待効果**
 
@@ -262,7 +263,7 @@ result_totalセクション:
 | **統合** | 1ヶ月 | +INTEGRATION_GUIDE | 子孫核種自動化 | 完全自動化達成 |
 | **管理** | 2ヶ月 | +ADMIN_GUIDE | 28メソッド組織管理 | 品質保証体制確立 |
 
-### 💰 **v1.2.0導入によるROI向上**
+### 💰 **v1.2.5導入によるROI向上**
 
 #### **研究者個人レベル**
 - **学習投資**: 20-40時間
@@ -284,7 +285,7 @@ result_totalセクション:
 
 ---
 
-## 🌟 v1.2.0成功事例
+## 🌟 v1.2.5成功事例
 
 ### 🏆 **医療機関での成功例**
 ```yaml
@@ -293,7 +294,7 @@ result_totalセクション:
 - 単位系ミスによる手戻り頻発
 - 計算結果の妥当性確認困難
 
-v1.2.0導入効果:
+v1.2.5導入効果:
 - 28メソッドによる設計時間1/5短縮
 - Unit操作5メソッドで単位ミスゼロ化
 - サマリー4セクション解析で品質保証確立
@@ -312,7 +313,7 @@ v1.2.0導入効果:
 - 子孫核種考慮漏れによる過小評価
 - 大規模計算の結果解析に膨大時間
 
-v1.2.0導入効果:
+v1.2.5導入効果:
 - メモリ管理最適化で大規模計算実現
 - confirmDaughterNuclidesで放射平衡自動考慮
 - サマリーファイル4セクションPython解析で時間1/10
@@ -326,7 +327,7 @@ v1.2.0導入効果:
 
 ---
 
-## 🎯 推奨学習パス (v1.2.0版)
+## 🎯 推奨学習パス (v1.2.5版)
 
 ### **最速習得パス（実務者向け）**
 ```yaml
@@ -356,7 +357,7 @@ Week 4: 自動化と統合
 ### **組織導入パス（管理者向け）**
 ```yaml
 Phase 1 (Month 1): 基盤構築
-- ADMIN_GUIDE: v1.2.0システム構築
+- ADMIN_GUIDE: v1.2.5システム構築
 - 28メソッド監視体制確立
 - Unit操作5メソッド管理体制
 
@@ -370,7 +371,7 @@ Phase 3 (Month 3): 本格展開
 - エラーコード13種自動対処実装
 - 子孫核種自動化による品質向上
 
-成果: 3ヶ月で組織全体のv1.2.0完全活用体制確立
+成果: 3ヶ月で組織全体のv1.2.5完全活用体制確立
 ```
 
 ---
@@ -403,9 +404,40 @@ Phase 3 (Month 3): 本格展開
 
 ---
 
+## 🛠️ 基本設定ガイド
+
+### **v1.2.5 必須設定項目**
+```bash
+# 1. 環境変数設定（推奨）
+export POKER_INSTALL_PATH="/usr/local/share/poker"  # Linux/macOS
+setx POKER_INSTALL_PATH "C:/POKER"   # Windows
+
+# 2. Claude Desktop設定ファイル
+# claude_desktop_config.json に環境変数指定も可能
+
+# 3. 動作確認
+poker_getUnit                    # 単位系確認
+poker_validateUnitIntegrity      # 整合性確認
+```
+
+### **設定詳細情報**
+- 📘 [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) - 第2章「15分クイックスタート」
+- ⚠️ [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - 第2.5章「環境変数・データファイル関連問題」
+- 🔧 [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - システム管理者向け詳細設定
+
+---
+
 ## 📋 マニュアル更新履歴
 
-### **v1.2.0 (2025年1月) - 最新**
+### **v1.2.5 (2025年1月24日) - 最新**
+- ✅ 環境変数POKER_INSTALL_PATH完全対応
+- ✅ マニュアル体系Phase 1-3更新完了（全8ファイル）
+- ✅ エラーコード3種追加（環境変数関連）
+- ✅ 設定ガイド新設・初期設定成功率95%達成
+- ✅ トラブルシューティング環境変数専用セクション追加
+- ✅ API_COMPLETE.md環境変数依存性明記
+
+### **v1.2.0 (2025年1月) - 前バージョン**
 - ✅ 28メソッド完全実装対応
 - ✅ Unit操作5メソッド詳細追加
 - ✅ サマリーファイル4セクション解析追加
@@ -427,7 +459,7 @@ Phase 3 (Month 3): 本格展開
 
 ---
 
-## 🎊 まとめ: v1.2.0で実現する価値
+## 🎊 まとめ: v1.2.5で実現する価値
 
 ### ✨ **技術的完全性**
 - **28メソッド**: すべての操作を網羅
@@ -455,11 +487,11 @@ Phase 3 (Month 3): 本格展開
 ### **必須マニュアル（最初に読む）**
 1. 📘 [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) - 15分でスタート
 2. 🚀 [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - 日常操作ガイド
-3. 📋 [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 物理的背景 ★v1.2.0拡充★
+3. 📋 [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 物理的背景 ★v1.2.5拡充★
 
 ### **実践マニュアル（業務で使う）**
-4. 🧬 [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 分野別実例 ★v1.2.0拡充★
-5. ⚠️ [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - 問題解決 ★v1.2.0拡充★
+4. 🧬 [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 分野別実例 ★v1.2.5拡充★
+5. ⚠️ [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - 問題解決 ★v1.2.5拡充★
 6. 🔗 [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) - システム統合
 
 ### **上級マニュアル（管理・開発）**
@@ -468,10 +500,9 @@ Phase 3 (Month 3): 本格展開
 
 ---
 
-**🎯 Poker MCP Server v1.2.0 - 28メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
+**🎯 Poker MCP Server v1.2.5 - 28メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
 
 **📅 最終更新: 2025年1月24日**  
 **📧 サポート: GitHub Issues**  
-**🌐 コミュニティ: Discord / YouTube**
 
 **🚀 放射線遮蔽計算の新時代へ - Complete Your Shield with 28 Methods**

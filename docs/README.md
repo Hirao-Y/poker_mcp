@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.2.0
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.2.5
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（28メソッド完全実装）
 
@@ -15,7 +15,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
 
-### 🆕 v1.2.0 新機能
+### 🆕 v1.2.5 新機能
 - **28メソッド完全実装**: Unit操作5メソッドを含む全機能
 - **子孫核種自動追加**: ICRP-07準拠の放射平衡考慮
 - **サマリーファイル完全解析**: 4セクション対応
@@ -29,6 +29,28 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 ### 📋 前提条件
 - Node.js 18.0.0以上
 - Claude Desktop アプリケーション
+
+### 🌍 環境変数設定（オプション）
+
+#### POKER_INSTALL_PATH環境変数
+この環境変数は、POKERライブラリのインストールディレクトリを指定します。
+
+- **目的**: `lib/ICRP-07.NDX`核種データベースファイルの取得元ディレクトリ指定
+- **デフォルト値**: `C:/Poker`
+- **動作**: 初回起動時に`{POKER_INSTALL_PATH}/lib/ICRP-07.NDX`を`data/`ディレクトリにコピー
+- **注意**: `data/ICRP-07.NDX`が既に存在する場合はコピーをスキップ
+
+**設定例**:
+```bash
+# Windows (コマンドプロンプト)
+set POKER_INSTALL_PATH=C:\Program Files\POKER
+
+# Windows (PowerShell)
+$env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+
+# Linux/macOS
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
 
 ### ⚙️ 設定手順
 
@@ -44,7 +66,9 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
     "poker-mcp": {
       "command": "node",
       "args": ["C:/Users/yoshi/Desktop/poker_mcp/src/mcp_server_stdio_v4.js"],
-      "env": {}
+      "env": {
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+      }
     }
   }
 }
@@ -57,7 +81,9 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
     "poker-mcp": {
       "command": "npx",
       "args": ["poker-mcp"],
-      "env": {}
+      "env": {
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+      }
     }
   }
 }
@@ -68,6 +94,11 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 #### 5. 動作確認
 Claudeに「poker_getUnitで単位系を確認して」と入力し、MCPツールが利用可能か確認してください。
+
+**注意**:
+- `env`セクションの`POKER_INSTALL_PATH`はオプションです（省略時は`C:/Poker`を使用）
+- 環境変数で指定したパスの`lib/ICRP-07.NDX`ファイルが初回起動時に自動的に`data/`ディレクトリにコピーされます
+- 既に`data/ICRP-07.NDX`が存在する場合は、コピー処理はスキップされます
 
 ---
 
@@ -105,7 +136,7 @@ poker_confirmDaughterNuclidesで子孫核種を確認してください。」
 
 ---
 
-## 📊 システム仕様（v1.2.0）
+## 📊 システム仕様（v1.2.5）
 
 ### 💻 動作要件
 - **Node.js**: 18.0.0以上（推奨: 20.0.0以上）
@@ -128,7 +159,7 @@ poker_confirmDaughterNuclidesで子孫核種を確認してください。」
 
 ---
 
-## 🔗 外部連携（v1.2.0強化）
+## 🔗 外部連携（v1.2.5強化）
 
 ### 📊 POKER計算コード連携
 - YAML入力ファイル生成（28メソッド対応）
@@ -150,7 +181,7 @@ results = summary['result']
 total_doses = summary['result_total']
 ```
 
-### 📈 結果処理（v1.2.0拡張）
+### 📈 結果処理（v1.2.5拡張）
 - サマリーファイル4セクションの自動解析
 - 線量率分布の可視化
 - 規制値との自動比較
@@ -158,7 +189,7 @@ total_doses = summary['result_total']
 
 ---
 
-## ⚠️ 注意事項（v1.2.0）
+## ⚠️ 注意事項（v1.2.5）
 
 ### 🔧 システム制限
 - YAMLファイルサイズ: 推奨10MB以下
@@ -180,23 +211,23 @@ total_doses = summary['result_total']
 
 ---
 
-## 📞 サポート（v1.2.0対応）
+## 📞 サポート（v1.2.5対応）
 
 ### 🆘 問題発生時
 1. **エラーコード確認**: 13種類のエラーコードから対処法特定
-2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認（v1.2.0更新）
+2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認（v1.2.5更新）
 3. **自動修復機能**の活用（YAMLファイル破損時）
 4. **Unit操作**で単位系の整合性確認
 
 ### 📧 技術サポート
 - **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
 - **28メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
-- **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.2.0更新）
-- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.2.0更新）
+- **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.2.5更新）
+- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.2.5更新）
 
 ---
 
-## 🌟 プロジェクトの価値（v1.2.0）
+## 🌟 プロジェクトの価値（v1.2.5）
 
 ### ✨ 研究者への価値
 - **効率化**: 28メソッドによる入力ファイル作成時間80%短縮
@@ -224,7 +255,7 @@ total_doses = summary['result_total']
 
 ---
 
-## 🔄 v1.2.0 更新履歴
+## 🔄 v1.2.5 更新履歴
 
 - ✅ **28メソッド完全実装**: Unit操作5メソッド・System系4メソッド追加
 - ✅ **子孫核種自動追加**: confirmDaughterNuclidesメソッド実装
@@ -235,6 +266,6 @@ total_doses = summary['result_total']
 ---
 
 **🚀 今すぐ始める**: Claude Desktopで「poker_getUnitで単位系を確認して」と入力
-**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照（v1.2.0更新）
+**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照（v1.2.5更新）
 **⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で28メソッド確認
 **💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認

@@ -2,8 +2,8 @@
 
 **⚛️ 対象**: 放射線遮蔽計算の物理的背景を理解したい研究者  
 **📚 マニュアル階層**: エッセンシャル層  
-**🔧 対応システム**: Poker MCP Server v1.2.0 MCP Edition  
-**🔧 バージョン**: 1.2.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.2.5 MCP Edition  
+**🔧 バージョン**: 1.2.5 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
@@ -22,6 +22,38 @@
 - **基本操作習得**: [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)と併用
 - **日常参照**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md)で操作確認
 - **実践応用**: [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)で具体例
+
+---
+
+## 🛠️ 計算環境設定の物理的考慮事項
+
+### POKER_INSTALL_PATH環境変数の物理的重要性
+
+**核種データベースの役割**:
+環境変数POKER_INSTALL_PATHは、物理計算に必要な核種データベース（ICRP-07.NDX）への参照を提供します。
+
+```
+核種データベース（ICRP-07.NDX）の物理的内容:
+- 放射性崩壊定数 λ [s⁻¹]
+- γ線放出確率 Y [/decay]  
+- γ線エネルギースペクトル E_γ [keV]
+- 子孫核種への分岐比
+- 平衡時の放射能比
+```
+
+**物理的正確性への影響**:
+- データベース未設定 → 核種物性の欠如 → 線源強度計算エラー
+- 子孫核種の無視 → 実際より過小評価
+- エネルギースペクトル欠如 → 遮蔽効果の誤評価
+
+**設定方法（物理計算品質確保のため）**:
+```bash
+# Windows環境での設定
+setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+
+# Linux環境での設定  
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
 
 ---
 

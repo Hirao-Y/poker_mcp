@@ -9,7 +9,8 @@
     "command": "node",
     "args": ["src/mcp_server_stdio_v4.js"],
     "env": {
-      "NODE_ENV": "production"
+      "NODE_ENV": "production",
+      "POKER_INSTALL_PATH": "C:/Poker"
     }
   },
   "capabilities": {
@@ -65,7 +66,25 @@
     "pending_file": "tasks/pending_changes.json",
     "backup_directory": "backups",
     "logs_directory": "logs",
-    "nuclide_database": "data/ICRP-07.NDX"
+    "data_directory": "data",
+    "nuclide_database": {
+      "target_file": "data/ICRP-07.NDX",
+      "source_env_var": "POKER_INSTALL_PATH",
+      "source_relative_path": "lib/ICRP-07.NDX",
+      "default_install_path": "C:/Poker",
+      "skip_if_exists": true,
+      "fallback_behavior": "error_if_missing"
+    }
+  },
+  "environment_variables": {
+    "POKER_INSTALL_PATH": {
+      "description": "POKERインストールディレクトリのパス",
+      "required": false,
+      "default": "C:/Poker",
+      "purpose": "lib/ICRP-07.NDXファイルの取得元ディレクトリ指定",
+      "example_windows": "C:/Program Files/POKER",
+      "example_linux": "/usr/local/share/poker"
+    }
   },
   "documentation": {
     "manifest": "config/mcp-manifest.json",

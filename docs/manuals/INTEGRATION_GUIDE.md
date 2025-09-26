@@ -1,7 +1,7 @@
 # 🔗 システム統合ガイド - Poker MCP
 
 **対象読者**: システム統合エンジニア・上級ユーザー・研究者  
-**バージョン**: 1.2.0 MCP Edition  
+**バージョン**: 1.2.5 MCP Edition  
 **最終更新**: 2025年1月24日  
 **統合方式**: Claude Desktop + MCP + 外部システム
 
@@ -17,7 +17,7 @@
 - **データ可視化**: 結果の効果的な可視化・解析
 
 ### 📊 **実装ベース実用性**
-現在のPoker MCP Server v1.2.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
+現在のPoker MCP Server v1.2.5の実装機能をフル活用した、即座に利用可能な統合手法を提供。
 
 ---
 
@@ -63,7 +63,8 @@
       "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
       "env": {
         "NODE_ENV": "production",
-        "LOG_LEVEL": "info"
+        "LOG_LEVEL": "info",
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
       }
     }
   }
@@ -81,7 +82,8 @@
         "NODE_ENV": "development",
         "LOG_LEVEL": "debug",
         "VALIDATE_ALL": "true",
-        "BACKUP_EVERY_CHANGE": "true"
+        "BACKUP_EVERY_CHANGE": "true",
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
       }
     }
   }
@@ -101,8 +103,54 @@
 - **作業ファイル**: `tasks/poker.yaml`
 - **保留変更**: `tasks/pending_changes.json`
 - **バックアップ**: `tasks/backups/`
+- **核種データベース**: `data/ICRP-07.NDX` (自動配置)
 
-### 1.3 ログファイル配置
+### 1.3 環境変数設定
+
+#### **POKER_INSTALL_PATH環境変数**
+```bash
+# 目的: POKERライブラリのインストールディレクトリ指定
+# デフォルト値: C:/Poker
+# 機能: 初回起動時にlib/ICRP-07.NDXファイルをdata/にコピー
+
+# Windows設定例
+set POKER_INSTALL_PATH=C:\Program Files\POKER
+
+# Linux/macOS設定例  
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
+
+#### **統合環境での環境変数管理**
+```python
+# Python統合時の環境変数設定
+import os
+import subprocess
+
+# 環境変数設定
+env = os.environ.copy()
+env['POKER_INSTALL_PATH'] = '/opt/poker'
+env['NODE_ENV'] = 'production'
+
+# MCP サーバー起動
+subprocess.Popen([
+    'node', 
+    '/path/to/mcp_server_stdio_v4.js'
+], env=env)
+```
+
+#### **Docker環境での設定**
+```dockerfile
+# Dockerfile例
+FROM node:18-alpine
+ENV POKER_INSTALL_PATH=/opt/poker
+COPY lib/ICRP-07.NDX /opt/poker/lib/ICRP-07.NDX
+RUN mkdir -p /app/data
+WORKDIR /app
+COPY . .
+CMD ["node", "src/mcp_server_stdio_v4.js"]
+```
+
+### 1.4 ログファイル配置
 
 ```
 # Claude Desktopログ
@@ -186,7 +234,7 @@ poker_executeCalculation を使用して計算し、
 #!/usr/bin/env python3
 """
 Poker MCP 28メソッド完全活用自動化システム
-バージョン: 1.2.0 (2025年1月対応)
+バージョン: 1.2.5 (2025年1月対応)
 """
 
 import json
@@ -770,7 +818,7 @@ class OptimizationEngine:
 3. 簡単なモデルから開始
 4. 段階的に複雑な統合へ
 
-**この統合ガイドにより、Poker MCP Server v1.2.0の28メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
+**この統合ガイドにより、Poker MCP Server v1.2.5の28メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
 
 ---
 

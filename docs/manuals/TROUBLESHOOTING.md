@@ -1,7 +1,7 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.2.0 MCP Edition  
+**バージョン**: 1.2.5 MCP Edition  
 **最終更新**: 2025年1月24日  
 **使用方法**: Claude Desktop + MCP通信 (28メソッド対応)
 
@@ -42,6 +42,15 @@
 | -32031 | CMB参照立体が未定義 | 参照する立体を先に定義 |
 | -32600 | 不正なリクエスト | パラメータ形式確認 |
 | -32601 | メソッドが見つからない | メソッド名確認（28メソッドリスト参照） |
+
+### 🗂️ データファイル関連エラー
+
+| エラーメッセージ | 原因 | 対処法 |
+|------------------|------|--------|
+| MISSING_SOURCE_FILE | POKER_INSTALL_PATHが不正またはファイル不存在 | 環境変数設定・ファイル存在確認 |
+| ENOENT: no such file | data/ICRP-07.NDXが見つからない | 環境変数確認・手動ファイル配置 |
+| EACCES: permission denied | ファイル書き込み権限不足 | dataディレクトリ権限確認 |
+| Database loading failed | 核種データベース読み込み失敗 | ファイル完全性・形式確認 |
 
 ### エラー対処の基本パターン
 
@@ -294,6 +303,250 @@ poker_updateBody で既存立体のパラメータを更新してください。
 
 ---
 
+## 🗂️ 第2.5章: 環境変数・データファイル関連問題
+
+### 🔴 **問題E1: POKER_INSTALL_PATH環境変数未設定**
+```
+症状:
+- 「MISSING_SOURCE_FILE」エラー
+- 「data/ICRP-07.NDX not found」メッセージ
+- 核種データベース読み込み失敗
+
+診断・対処:
+「環境変数設定の緊急確認を実行してください：
+
+1. 環境変数確認:
+   Windows: echo %POKER_INSTALL_PATH%
+   Linux/macOS: echo $POKER_INSTALL_PATH
+   
+2. 環境変数未設定の場合:
+   Windows CMD: set POKER_INSTALL_PATH=C:\Program Files\POKER
+   Windows PS: $env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+   Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
+   
+3. ソースファイル存在確認:
+   パス確認: %POKER_INSTALL_PATH%\lib\ICRP-07.NDX
+   ファイル確認: dir "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX"
+   
+4. Claude Desktop設定更新:
+   claude_desktop_config.jsonのenvセクションに追加:
+   "env": {
+     "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+   }
+   
+5. Claude Desktop再起動・確認」
+```
+
+### 🔴 **問題E2: データファイル権限問題**
+```
+症状:
+- 「EACCES: permission denied」エラー
+- dataディレクトリ作成失敗
+- ファイルコピー失敗
+
+即座対処:
+「データファイル権限修復を実行してください：
+
+1. ディレクトリ権限確認:
+   Windows: dir C:\Users\yoshi\Desktop\poker_mcp\data /Q
+   Linux: ls -la /path/to/poker_mcp/data/
+   
+2. 権限修復:
+   Windows: 
+   icacls "C:\Users\yoshi\Desktop\poker_mcp\data" /grant %USERNAME%:F
+   
+   Linux/macOS:
+   chmod 755 /path/to/poker_mcp/data/
+   chown $USER:$USER /path/to/poker_mcp/data/
+   
+3. 親ディレクトリ権限確認:
+   mkdir権限の確保
+   
+4. MCPサーバー再起動」
+```
+
+### 🟠 **問題E3: 核種データベースファイル破損**
+```
+症状:
+- 「Database loading failed」エラー
+- ICRP-07.NDX読み込み失敗
+- 子孫核種機能無効
+
+診断・修復:
+「データベースファイル完全性チェックを実行してください：
+
+1. ファイル存在・サイズ確認:
+   Windows: dir "C:\Users\yoshi\Desktop\poker_mcp\data\ICRP-07.NDX"
+   予想サイズ: 約285KB (285,684 bytes)
+   
+2. ファイル完全性確認:
+   Windows: certutil -hashfile "data\ICRP-07.NDX" MD5
+   Linux: md5sum data/ICRP-07.NDX
+   
+3. 破損ファイルの再配置:
+   既存ファイル削除: del data\ICRP-07.NDX
+   MCPサーバー再起動で自動再配置
+   
+4. 手動ファイル配置:
+   copy "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX" data\
+   
+5. 動作確認:
+   poker_confirmDaughterNuclidesで子孫核種機能テスト」
+```
+
+### 🟠 **問題E4: 環境変数設定の永続化**
+```
+症状:
+- 再起動後に環境変数が失われる
+- セッション終了で設定リセット
+- Claude Desktop起動時に環境変数未設定
+
+永続化設定:
+「環境変数永続化設定を実行してください：
+
+1. Windows永続化:
+   システム環境変数設定:
+   setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+   
+   またはGUI設定:
+   システムプロパティ → 環境変数 → システム環境変数
+
+2. Linux/macOS永続化:
+   ~/.bashrc または ~/.profile に追加:
+   echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc
+   source ~/.bashrc
+   
+3. Claude Desktop設定永続化:
+   claude_desktop_config.jsonでの確実な設定
+   
+4. 設定確認:
+   新規ターミナル・セッションで環境変数確認」
+```
+
+---
+
+## 🗂️ 第2.5章: 環境変数・データファイル関連問題
+
+### 🔴 **問題E1: POKER_INSTALL_PATH環境変数未設定**
+```
+症状:
+- 「MISSING_SOURCE_FILE」エラー
+- 「data/ICRP-07.NDX not found」メッセージ
+- 核種データベース読み込み失敗
+
+診断・対処:
+「環境変数設定の緊急確認を実行してください：
+
+1. 環境変数確認:
+   Windows: echo %POKER_INSTALL_PATH%
+   Linux/macOS: echo $POKER_INSTALL_PATH
+   
+2. 環境変数未設定の場合:
+   Windows CMD: set POKER_INSTALL_PATH=C:\Program Files\POKER
+   Windows PS: $env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+   Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
+   
+3. ソースファイル存在確認:
+   パス確認: %POKER_INSTALL_PATH%\lib\ICRP-07.NDX
+   ファイル確認: dir "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX"
+   
+4. Claude Desktop設定更新:
+   claude_desktop_config.jsonのenvセクションに追加:
+   "env": {
+     "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+   }
+   
+5. Claude Desktop再起動・確認」
+```
+
+### 🔴 **問題E2: データファイル権限問題**
+```
+症状:
+- 「EACCES: permission denied」エラー
+- dataディレクトリ作成失敗
+- ファイルコピー失敗
+
+即座対処:
+「データファイル権限修復を実行してください：
+
+1. ディレクトリ権限確認:
+   Windows: dir C:\Users\yoshi\Desktop\poker_mcp\data /Q
+   Linux: ls -la /path/to/poker_mcp/data/
+   
+2. 権限修復:
+   Windows: 
+   icacls "C:\Users\yoshi\Desktop\poker_mcp\data" /grant %USERNAME%:F
+   
+   Linux/macOS:
+   chmod 755 /path/to/poker_mcp/data/
+   chown $USER:$USER /path/to/poker_mcp/data/
+   
+3. 親ディレクトリ権限確認:
+   mkdir権限の確保
+   
+4. MCPサーバー再起動」
+```
+
+### 🟠 **問題E3: 核種データベースファイル破損**
+```
+症状:
+- 「Database loading failed」エラー
+- ICRP-07.NDX読み込み失敗
+- 子孫核種機能無効
+
+診断・修復:
+「データベースファイル完全性チェックを実行してください：
+
+1. ファイル存在・サイズ確認:
+   Windows: dir "C:\Users\yoshi\Desktop\poker_mcp\data\ICRP-07.NDX"
+   予想サイズ: 約285KB (285,684 bytes)
+   
+2. ファイル完全性確認:
+   Windows: certutil -hashfile "data\ICRP-07.NDX" MD5
+   Linux: md5sum data/ICRP-07.NDX
+   
+3. 破損ファイルの再配置:
+   既存ファイル削除: del data\ICRP-07.NDX
+   MCPサーバー再起動で自動再配置
+   
+4. 手動ファイル配置:
+   copy "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX" data\
+   
+5. 動作確認:
+   poker_confirmDaughterNuclidesで子孫核種機能テスト」
+```
+
+### 🟠 **問題E4: 環境変数設定の永続化**
+```
+症状:
+- 再起動後に環境変数が失われる
+- セッション終了で設定リセット
+- Claude Desktop起動時に環境変数未設定
+
+永続化設定:
+「環境変数永続化設定を実行してください：
+
+1. Windows永続化:
+   システム環境変数設定:
+   setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+   
+   またはGUI設定:
+   システムプロパティ → 環境変数 → システム環境変数
+
+2. Linux/macOS永続化:
+   ~/.bashrc または ~/.profile に追加:
+   echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc
+   source ~/.bashrc
+   
+3. Claude Desktop設定永続化:
+   claude_desktop_config.jsonでの確実な設定
+   
+4. 設定確認:
+   新規ターミナル・セッションで環境変数確認」
+```
+
+---
+
 ## 🔧 第3章: ログファイル活用
 
 ### ログファイルの場所と確認方法
@@ -513,5 +766,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2025年1月  
-**バージョン**: 1.2.0 MCP Edition  
+**バージョン**: 1.2.5 MCP Edition  
 **サポート**: GitHub Issues / poker-mcp-support@example.com

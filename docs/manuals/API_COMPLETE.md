@@ -2,8 +2,8 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.2.0  
-**🔧 バージョン**: 1.2.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.2.5  
+**🔧 バージョン**: 1.2.5 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
@@ -91,9 +91,9 @@
 | **メソッド名** | **機能** | **特徴** |
 |---------------|----------|----------|
 | **poker_applyChanges** | 変更適用・保存 | 自動バックアップ・整合性確認 |
-| **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報 |
+| **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報・環境変数依存 |
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
-| **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完 |
+| **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完・環境変数必須 |
 
 ---
 
@@ -106,13 +106,47 @@
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.2.0
+⚙️ Poker MCP Server v1.2.5
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
 📄 YAML Data Files (Claude App Directory)
     ↕
 💾 Automatic Backup System
+    ↕
+🗂️ Nuclear Database (ICRP-07.NDX)
+```
+
+#### **環境変数システム**
+
+| **環境変数** | **目的** | **デフォルト値** | **必須性** |
+|------------|----------|----------------|-----------|
+| **POKER_INSTALL_PATH** | 核種データベース参照 | なし | 推奨 |
+| **NODE_ENV** | 動作モード | "production" | オプション |
+| **LOG_LEVEL** | ログレベル | "info" | オプション |
+
+**POKER_INSTALL_PATH設定例**:
+```bash
+# Windows
+setx POKER_INSTALL_PATH "C:\Program Files\POKER"
+
+# Linux/macOS
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
+
+**Claude Desktop設定での環境変数指定**:
+```json
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "node",
+      "args": ["path/to/mcp_server_stdio_v4.js"],
+      "env": {
+        "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+      }
+    }
+  }
+}
 ```
 
 #### **コアコンポーネント**
@@ -357,6 +391,18 @@
 }
 ```
 
+**🔴 環境変数依存性**:
+- **必須**: poker_cui実行可能ファイルへのパスアクセス
+- **推奨**: POKER_INSTALL_PATH環境変数（核種データベース用）
+- **設定例**: 
+  ```bash
+  # poker_cuiがPATHに含まれる場合
+  export PATH=$PATH:/path/to/poker_cui
+  
+  # または、POKER_INSTALL_PATHでデータディレクトリ指定
+  export POKER_INSTALL_PATH="/usr/local/share/poker"
+  ```
+
 **計算オプション**:
 - `show_source_data`: 各線源の詳細データ表示
 - `show_total_dose`: 全線源の総合線量表示  
@@ -399,6 +445,9 @@
 | -32070 | Unit | 不完全な単位設定 | 4キー完全設定確認 |
 | -32080 | System | ファイルアクセスエラー | 権限・ディスク容量確認 |
 | -32081 | System | 計算実行エラー | 入力データ整合性確認 |
+| -32082 | System | 環境変数未設定 | POKER_INSTALL_PATH設定確認 |
+| -32083 | System | 核種データベース不在 | ICRP-07.NDXファイル確認 |
+| -32084 | System | poker_cui実行失敗 | 実行ファイルパス・権限確認 |
 
 ---
 
@@ -432,16 +481,24 @@
 ### ✨ **効果的なAPI活用**
 
 #### **開発者向け推奨事項**
-1. **エラーハンドリング**: 全APIコールで適切なエラー処理実装
-2. **非同期処理**: 大量データ処理時の非同期パターン使用
-3. **バッチ処理**: 複数操作の効率的なバッチ実行
-4. **キャッシュ戦略**: 頻繁アクセスデータのキャッシュ活用
+1. **環境設定**: POKER_INSTALL_PATH環境変数の適切な設定
+2. **エラーハンドリング**: 全APIコールで適切なエラー処理実装
+3. **非同期処理**: 大量データ処理時の非同期パターン使用
+4. **バッチ処理**: 複数操作の効率的なバッチ実行
+5. **キャッシュ戦略**: 頻繁アクセスデータのキャッシュ活用
 
 #### **システム統合での考慮事項**
-1. **トランザクション管理**: 複数操作の原子性確保
-2. **データ同期**: 外部システムとのデータ同期戦略
-3. **性能監視**: API使用パターンの継続監視
-4. **障害対応**: 障害時の自動復旧・フェイルオーバー
+1. **環境変数管理**: 本番・開発環境での環境変数統一管理
+2. **トランザクション管理**: 複数操作の原子性確保
+3. **データ同期**: 外部システムとのデータ同期戦略
+4. **性能監視**: API使用パターンの継続監視
+5. **障害対応**: 障害時の自動復旧・フェイルオーバー
+
+#### **核種データベース管理**
+1. **データ整合性**: ICRP-07.NDXファイルの定期的な整合性確認
+2. **バージョン管理**: 核種データベースのバージョン管理体制
+3. **バックアップ戦略**: データベースファイルの定期バックアップ
+4. **アクセス制御**: データファイルへの適切なアクセス権限設定
 
 ### 🚀 **継続的改善**
 

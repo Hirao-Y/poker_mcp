@@ -2,7 +2,7 @@
 
 **対象読者**: システム管理者・IT部門・インフラ担当者  
 **📚 マニュアル階層**: テクニカル層  
-**対応バージョン**: Poker MCP Server v1.2.0 (28メソッド完全実装)  
+**対応バージョン**: Poker MCP Server v1.2.5 (28メソッド完全実装)  
 **最終更新**: 2025年1月24日  
 **品質レベル**: エンタープライズ本番環境対応
 
@@ -24,7 +24,7 @@
 ## 🎯 管理者ガイドの概要
 
 ### **本ガイドの対象範囲**
-このガイドは、Poker MCP Server v1.2.0システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
+このガイドは、Poker MCP Server v1.2.5システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
 
 #### **対応システム仕様**
 - **28メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系4
@@ -33,7 +33,7 @@
 - **MCP v1.0準拠**: Model Context Protocol v1.0完全準拠
 
 #### **カバーする領域**
-- 🏗️ **システムセットアップ**: v1.2.0対応インストール・設定
+- 🏗️ **システムセットアップ**: v1.2.5対応インストール・設定
 - 📊 **運用監視**: 28メソッド・パフォーマンス・ヘルス監視
 - 🔒 **セキュリティ設定**: MCP準拠多層防御・アクセス制御
 - 📈 **パフォーマンス最適化**: 10立体・4単位対応スケーリング・チューニング
@@ -41,11 +41,11 @@
 
 ---
 
-## 🏗️ システムセットアップ（v1.2.0対応）
+## 🏗️ システムセットアップ（v1.2.5対応）
 
 ### 📋 **最新システム要件**
 
-#### **ハードウェア要件 (v1.2.0対応推奨)**
+#### **ハードウェア要件 (v1.2.5対応推奨)**
 | **環境** | **CPU** | **RAM** | **ディスク** | **ネットワーク** | **28メソッド対応** |
 |---------|---------|---------|--------------|-----------------|------------------|
 | **開発** | 4コア+ | 8GB+ | 100GB+ | 100Mbps | 小規模テスト・検証 |
@@ -71,11 +71,11 @@ logrotate >= 3.20 (ログ管理)
 certbot >= 2.8.0 (SSL証明書)
 ```
 
-### ⚡ **v1.2.0高速セットアップ手順**
+### ⚡ **v1.2.5高速セットアップ手順**
 
 #### **1. システム準備** (5分)
 ```bash
-# 専用ユーザー作成（v1.2.0対応）
+# 専用ユーザー作成（v1.2.5対応）
 sudo useradd -r -m -s /bin/bash poker_mcp_v12
 sudo mkdir -p /opt/poker_mcp_v12/{app,data,logs,backups,config}
 sudo chown -R poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12
@@ -89,27 +89,27 @@ sudo apt update && sudo apt install -y \
 sudo npm install -g pm2@latest
 ```
 
-#### **2. Poker MCP v1.2.0配置** (5分)
+#### **2. Poker MCP v1.2.5配置** (5分)
 ```bash
 # アプリケーション配置
 cd /opt/poker_mcp_v12
 sudo -u poker_mcp_v12 git clone [repository] app
 cd app
 
-# v1.2.0依存関係インストール
+# v1.2.5依存関係インストール
 sudo -u poker_mcp_v12 npm install --production
 
-# v1.2.0設定ファイル準備
+# v1.2.5設定ファイル準備
 sudo -u poker_mcp_v12 cp config/.env.v12.example .env
 ```
 
 #### **3. 28メソッド対応本番設定** (10分)
 ```bash
-# v1.2.0本番環境設定ファイル
+# v1.2.5本番環境設定ファイル
 sudo -u poker_mcp_v12 tee .env > /dev/null << 'EOF'
-# Poker MCP v1.2.0 Production Configuration
+# Poker MCP v1.2.5 Production Configuration
 NODE_ENV=production
-POKER_VERSION=1.2.0
+POKER_VERSION=1.2.5
 MCP_VERSION=1.0.0
 
 # サーバー設定
@@ -156,7 +156,7 @@ EOF
 
 #### **4. PM2プロセス管理設定** (5分)
 ```bash
-# v1.2.0対応PM2設定
+# v1.2.5対応PM2設定
 sudo -u poker_mcp_v12 tee ecosystem.config.js > /dev/null << 'EOF'
 module.exports = {
   apps: [{
@@ -166,7 +166,7 @@ module.exports = {
     exec_mode: 'cluster',
     env: {
       NODE_ENV: 'production',
-      POKER_VERSION: '1.2.0',
+      POKER_VERSION: '1.2.5',
       MCP_VERSION: '1.0.0'
     },
     error_file: '/opt/poker_mcp_v12/logs/error.log',
@@ -187,6 +187,160 @@ sudo pm2 startup
 
 ---
 
+## 🌍 環境変数管理とデータファイル管理
+
+### 🔧 **POKER_INSTALL_PATH環境変数管理**
+
+#### **環境変数の目的と設定**
+```bash
+# POKER_INSTALL_PATH環境変数
+# 目的: POKERライブラリのインストールディレクトリ指定
+# 用途: lib/ICRP-07.NDX核種データベースファイルの取得元
+
+# システム全体での設定 (推奨)
+echo 'export POKER_INSTALL_PATH="/opt/poker/lib"' >> /etc/environment
+
+# ユーザー別設定
+echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc
+
+# セッション単位設定
+export POKER_INSTALL_PATH="/opt/poker/lib"
+```
+
+#### **Claude Desktop環境での設定**
+```json
+// Claude Desktop設定ファイル
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "node",
+      "args": ["/opt/poker_mcp_v12/app/src/mcp_server_stdio_v4.js"],
+      "env": {
+        "NODE_ENV": "production",
+        "POKER_INSTALL_PATH": "/opt/poker/lib"
+      }
+    }
+  }
+}
+```
+
+### 📁 **データディレクトリ自動管理**
+
+#### **自動作成されるディレクトリ構造**
+```bash
+# 初回起動時に自動作成される構造
+/opt/poker_mcp_v12/
+├── data/          # 核種データベースファイル
+│   └── ICRP-07.NDX
+├── tasks/         # 作業用YAMLファイル
+│   ├── poker.yaml
+│   └── pending_changes.json
+├── backups/       # 自動バックアップファイル
+└── logs/          # システムログファイル
+```
+
+#### **データファイル管理ポリシー**
+```bash
+# データファイル配置ルール
+# 1. 初回起動時にdata/ディレクトリを自動作成
+# 2. data/ICRP-07.NDXが存在しない場合のみ、
+#    ${POKER_INSTALL_PATH}/lib/ICRP-07.NDXからコピー
+# 3. 既存ファイルがある場合はスキップ（データ保護）
+
+# 手動でのファイル配置確認
+ls -la /opt/poker_mcp_v12/data/ICRP-07.NDX
+
+# ファイル完全性チェック
+md5sum /opt/poker_mcp_v12/data/ICRP-07.NDX
+```
+
+### 🔍 **環境変数設定の検証**
+
+#### **設定状況確認スクリプト**
+```bash
+#!/bin/bash
+# /opt/poker_mcp_v12/scripts/check_env_vars.sh
+
+echo "=== POKER MCP v1.2.5 環境変数設定チェック ==="
+
+# POKER_INSTALL_PATH確認
+if [ -n "$POKER_INSTALL_PATH" ]; then
+    echo "✅ POKER_INSTALL_PATH: $POKER_INSTALL_PATH"
+    
+    # ソースファイル存在確認
+    if [ -f "$POKER_INSTALL_PATH/lib/ICRP-07.NDX" ]; then
+        echo "✅ ソースファイル: $POKER_INSTALL_PATH/lib/ICRP-07.NDX 存在"
+        echo "   ファイルサイズ: $(stat -c%s $POKER_INSTALL_PATH/lib/ICRP-07.NDX) bytes"
+    else
+        echo "❌ ソースファイル: $POKER_INSTALL_PATH/lib/ICRP-07.NDX 不存在"
+    fi
+else
+    echo "⚠️ POKER_INSTALL_PATH: 未設定 (デフォルト: C:/Poker 使用予定)"
+fi
+
+# ターゲットファイル確認
+if [ -f "/opt/poker_mcp_v12/data/ICRP-07.NDX" ]; then
+    echo "✅ ターゲットファイル: /opt/poker_mcp_v12/data/ICRP-07.NDX 存在"
+    echo "   ファイルサイズ: $(stat -c%s /opt/poker_mcp_v12/data/ICRP-07.NDX) bytes"
+    echo "   最終更新: $(stat -c%y /opt/poker_mcp_v12/data/ICRP-07.NDX)"
+else
+    echo "⚠️ ターゲットファイル: /opt/poker_mcp_v12/data/ICRP-07.NDX 不存在"
+    echo "   初回起動時に自動配置されます"
+fi
+
+echo "=== チェック完了 ==="
+```
+
+#### **バックアップ対象の拡張**
+```bash
+# データファイルを含むバックアップスクリプト更新
+#!/bin/bash
+# /opt/poker_mcp_v12/scripts/backup_with_data.sh
+
+BACKUP_DIR="/opt/poker_mcp_v12/backups"
+TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+
+# データディレクトリのバックアップを追加
+tar -czf "$BACKUP_DIR/poker_mcp_data_$TIMESTAMP.tar.gz" \
+    /opt/poker_mcp_v12/data/ \
+    /opt/poker_mcp_v12/tasks/ \
+    /opt/poker_mcp_v12/config/ \
+    /opt/poker_mcp_v12/logs/
+
+echo "✅ データファイル含むバックアップ完了: poker_mcp_data_$TIMESTAMP.tar.gz"
+```
+
+### 🔐 **セキュリティ考慮事項**
+
+#### **パス設定のセキュリティ**
+```bash
+# 環境変数のセキュリティチェック
+# 1. パスインジェクション攻撃防止
+validate_poker_path() {
+    local path="$1"
+    
+    # 危険な文字の排除
+    if [[ "$path" =~ [;|&\$\`] ]]; then
+        echo "❌ 危険な文字が含まれています: $path"
+        return 1
+    fi
+    
+    # 絶対パスの確認
+    if [[ ! "$path" =~ ^/ ]]; then
+        echo "❌ 絶対パスではありません: $path"
+        return 1
+    fi
+    
+    return 0
+}
+
+# 2. ファイル権限の適切な設定
+chmod 644 /opt/poker_mcp_v12/data/ICRP-07.NDX
+chown poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12/data/ICRP-07.NDX
+```
+
+---
+
 ## 📊 運用監視（28メソッド対応）
 
 ### 🔍 **システム監視項目**
@@ -196,7 +350,7 @@ sudo pm2 startup
 # 28メソッド動作状況監視スクリプト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/monitor_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 28メソッド動作監視スクリプト (v1.2.0対応)
+# 28メソッド動作監視スクリプト (v1.2.5対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/method_monitor.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -304,15 +458,15 @@ EOF
 
 ---
 
-## 📈 パフォーマンス最適化（v1.2.0対応）
+## 📈 パフォーマンス最適化（v1.2.5対応）
 
 ### ⚡ **システム最適化設定**
 
 #### **Node.js最適化（28メソッド対応）**
 ```bash
-# Node.js v1.2.0対応最適化設定
+# Node.js v1.2.5対応最適化設定
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/node_optimization.js > /dev/null << 'EOF'
-// Node.js最適化設定 (Poker MCP v1.2.0対応)
+// Node.js最適化設定 (Poker MCP v1.2.5対応)
 module.exports = {
   // メモリ最適化
   memory: {
@@ -354,7 +508,7 @@ EOF
 
 ---
 
-## 🛡️ 障害対応（v1.2.0対応）
+## 🛡️ 障害対応（v1.2.5対応）
 
 ### 🚨 **障害対応手順**
 
@@ -363,7 +517,7 @@ EOF
 # 28メソッド包括診断スクリプト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/diagnose_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 28メソッド包括診断 (v1.2.0対応)
+# 28メソッド包括診断 (v1.2.5対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/diagnosis.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -454,13 +608,13 @@ chmod +x /opt/poker_mcp_v12/scripts/diagnose_28methods.sh
 # 日次運用チェックリスト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/daily_check.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 日次運用チェック (Poker MCP v1.2.0対応)
+# 日次運用チェック (Poker MCP v1.2.5対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/daily_check.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 ISSUES=0
 
-echo "[$DATE] === Poker MCP v1.2.0 日次チェック開始 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.2.5 日次チェック開始 ===" >> $LOGFILE
 
 # 1. 28メソッド応答確認
 echo "[$DATE] 1. 28メソッド応答確認" >> $LOGFILE
@@ -495,7 +649,7 @@ else
     echo "[$DATE] ⚠️ 日次チェック完了: $ISSUES 件の課題検出" >> $LOGFILE
 fi
 
-echo "[$DATE] === Poker MCP v1.2.0 日次チェック完了 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.2.5 日次チェック完了 ===" >> $LOGFILE
 EOF
 
 chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
@@ -503,9 +657,9 @@ chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 
 ---
 
-## 📋 まとめ: v1.2.0管理体制
+## 📋 まとめ: v1.2.5管理体制
 
-### ✨ **v1.2.0管理体制の価値**
+### ✨ **v1.2.5管理体制の価値**
 
 #### **完全対応管理**
 - ✅ **28メソッド完全監視**: 全メソッドの個別監視・性能管理
@@ -527,6 +681,6 @@ chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 
 ### 🚀 **継続的改善**
 
-この管理ガイドは、Poker MCP Server v1.2.0の28メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
+この管理ガイドは、Poker MCP Server v1.2.5の28メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
 
 **エンタープライズレベルの運用品質により、世界最高水準の放射線遮蔽研究基盤を実現してください。**

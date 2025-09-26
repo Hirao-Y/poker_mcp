@@ -1,7 +1,7 @@
 # 📘 Poker MCP エッセンシャルガイド
 
 **対象読者**: 放射線遮蔽研究者・技術者  
-**バージョン**: 1.2.0 MCP Edition  
+**バージョン**: 1.2.5 MCP Edition  
 **最終更新**: 2025年1月24日  
 **推奨学習時間**: 1-2時間(Claude Desktop使用)
 
@@ -100,6 +100,7 @@ Claude Desktop(簡単):
 - Claude Desktopアプリケーション
 - Node.js 18.0.0以上
 - Poker MCPサーバー
+- **POKER_INSTALL_PATH環境変数** (推奨): 核種データベース用
 
 #### **設定手順**
 1. **Claude Desktop設定ファイルを開く**
@@ -112,19 +113,32 @@ Claude Desktop(簡単):
    {
      "mcpServers": {
        "poker-mcp": {
-         "command": "npx",
-         "args": ["poker-mcp"],
-         "env": {}
+         "command": "node",
+         "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
+         "env": {
+           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+         }
        }
      }
    }
    ```
+   
+   **重要**: 
+   - `args`のパスは実際のインストール場所に合わせて変更
+   - `env`セクションで環境変数を設定（推奨）
 
 3. **Claude Desktopを再起動**
 
 4. **動作確認**
    ```
-   「放射線遮蔽計算システムの状態を確認してください」
+   Claude Desktopで以下を順次実行:
+   1. 「放射線遮蔽計算システムの状態を確認してください」
+   2. 「poker_getUnitで単位系を確認してください」
+   3. 「POKER_INSTALL_PATH環境変数が設定されているか確認してください」
+   
+   エラーが発生した場合:
+   - TROUBLESHOOTINGガイド参照
+   - 環境変数設定の再確認
    ```
 
 ### 2.2 最初の遮蔽モデル作成
@@ -550,6 +564,11 @@ Claude指示例:
 - 検出器総合線量表示」
 ```
 
+**重要な前提条件**:
+- POKER_INSTALL_PATH環境変数の設定完了
+- 核種データベース（ICRP-07.NDX）の利用可能性
+- poker_cui実行可能ファイルのアクセス可能性
+
 #### **実行パラメータの最適化**
 ```
 「計算精度を向上させるため、以下を調整してください：
@@ -650,6 +669,8 @@ Claude指示例:
 対策指示例:
 「立体の設定を確認してください。現在の座標とベクトルを表示し、
 期待値と比較して問題点を特定してください。」
+
+詳細なトラブル対処は [TROUBLESHOOTING.md](TROUBLESHOOTING.md) を参照
 ```
 
 #### **材料設定時のトラブル**
@@ -665,6 +686,8 @@ Claude指示例:
 対策指示例:
 「材料設定エラーの詳細を確認し、正しい密度値で
 再設定をお願いします。」
+
+エラーコード対応は [TROUBLESHOOTING.md](TROUBLESHOOTING.md) を参照
 ```
 
 #### **計算実行時のトラブル**
@@ -676,10 +699,13 @@ Claude指示例:
 2. 検出器は立体外部にあるか  
 3. カットオフ率は適切か
 4. 計算負荷は過大でないか
+5. 環境変数POKER_INSTALL_PATHは設定されているか
 
 対策指示例:
 「計算収束性を改善するため、線源分割数を調整し、
 カットオフ率を見直してください。」
+
+環境変数・poker_cui問題は [TROUBLESHOOTING.md](TROUBLESHOOTING.md) を参照
 ```
 
 ### 6.3 データ保護と復旧
@@ -823,7 +849,8 @@ Claude指示例:
 ---
 
 **📚 関連マニュアル**
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表
-- **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細
-- **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決ガイド
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・28メソッド完全対応
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決・環境変数設定・エラー対処
+- **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細・計算品質保証
+- **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー・実践例
+- **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)**: システム統合・自動化手順

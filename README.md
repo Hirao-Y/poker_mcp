@@ -4,13 +4,13 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.2.0 (Enhanced Release)
+- **バージョン**: 1.2.5 (Enhanced Release)
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: tasks/ディレクトリ（実行時自動作成）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
 
-## 🆕 バージョン1.2.0の新機能
+## 🆕 バージョン1.2.5の新機能
 
 ### ⚡ 衝突検出システム
 - **リアルタイム干渉チェック**: 立体間の重なり・接触を自動検出
@@ -48,7 +48,26 @@ npm install
 npx poker-mcp
 ```
 
-### 2. Claude Desktop設定
+### 2. 環境変数設定（オプション）
+
+**POKER_INSTALL_PATH環境変数**（オプション）:
+```bash
+# Windowsの場合（コマンドプロンプト）
+set POKER_INSTALL_PATH=C:\Program Files\POKER
+
+# Windowsの場合（PowerShell）
+$env:POKER_INSTALL_PATH="C:\Program Files\POKER"
+
+# Linux/macOSの場合
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
+
+- **デフォルト値**: `C:/Poker`
+- **目的**: `lib/ICRP-07.NDX`核種データベースファイルの取得元ディレクトリ指定
+- **動作**: 初回起動時に`{POKER_INSTALL_PATH}/lib/ICRP-07.NDX`を`data/`ディレクトリにコピー
+- **注意**: `data/ICRP-07.NDX`が既に存在する場合はコピーをスキップ
+
+### 3. Claude Desktop設定
 
 **Claude Desktop アプリでの設定方法：**
 
@@ -66,7 +85,9 @@ npx poker-mcp
        "poker-mcp": {
          "command": "node",
          "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
-         "env": {}
+         "env": {
+           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+         }
        }
      }
    }
@@ -79,7 +100,9 @@ npx poker-mcp
        "poker-mcp": {
          "command": "npx",
          "args": ["poker-mcp"],
-         "env": {}
+         "env": {
+           "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+         }
        }
      }
    }
@@ -87,7 +110,11 @@ npx poker-mcp
 
 4. **Claude Desktopを再起動** してMCPサーバーを有効化
 
-### 3. 動作確認
+**注意**: 
+- `env`セクションの`POKER_INSTALL_PATH`はオプションです（省略時は`C:/Poker`を使用）
+- 環境変数で指定したパスの`lib/ICRP-07.NDX`ファイルが初回起動時に`data/`にコピーされます
+
+### 4. 動作確認
 Claude Desktopで以下のようにテストできます：
 ```
 放射線遮蔽計算用のコンクリート壁（100cm x 50cm x 30cm）を作成してください
@@ -255,7 +282,7 @@ poker_mcp/
 - **エラー回復**: ロールバック機能付き
 - **レスポンス速度**: <50ms応答時間
 
-### **✅ エラーハンドリング強化（v1.2.0）**
+### **✅ エラーハンドリング強化（v1.2.5）**
 - **propose/update自動判別**: エラーメッセージによる適切なメソッド案内
 - **専用エラーコード**: 各操作に固有のエラーコード体系
 - **材料名サジェスト**: 類似材料名の自動提案機能
@@ -296,7 +323,7 @@ poker_mcp/
 
 ## 📝 更新履歴
 
-### v1.2.0 (2025-01-24)
+### v1.2.5 (2025-01-24)
 - ✨ 衝突検出システム実装
 - ✨ 子孫核種自動補完機能追加（ICRP-07統合）
 - ✨ 単位系完全性検証強化（4キー保証）
@@ -326,6 +353,6 @@ poker_mcp/
 
 ---
 
-**🎯 Poker MCP Server v1.2.0**  
+**🎯 Poker MCP Server v1.2.5**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC

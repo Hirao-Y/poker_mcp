@@ -1,7 +1,7 @@
 {
   "name": "poker-mcp",
-  "version": "1.2.0",
-  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection and daughter nuclide auto-completion",
+  "version": "1.2.5",
+  "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
   "bin": {
@@ -34,7 +34,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Hirao-Y/poker_mcp"
+    "url": "git+https://github.com/Hirao-Y/poker_mcp.git"
   },
   "homepage": "https://github.com/Hirao-Y/poker_mcp#readme",
   "engines": {
@@ -48,7 +48,6 @@
   },
   "files": [
     "src/",
-    "data/",
     "README.md",
     ".mcp.json"
   ]
