@@ -278,18 +278,18 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 | **材料名** | **標準密度 (g/cm³)** | **用途** |
 |-----------|-------------------|---------|
 | CONCRETE | 2.3 | 一般遮蔽・建築構造 |
-| IRON | 7.86 | 磁性遮蔽・構造材 |
+| IRON | 7.86 | 磁性遮蔽・構造材, STAINLESS代替 |
 | LEAD | 11.34 | 高密度γ線遮蔽 |
 | ALUMINUM | 2.70 | 軽量構造・散乱体 |
 | COPPER | 8.96 | 電気伝導・遮蔽 |
-| STAINLESS | 8.0 | 耐食構造・高温環境 |
+| AIR | 1.205E-3 | 空気 |
 | WATER | 1.0 | 中性子減速・冷却 |
 | POLYETHYLENE | 0.92 | 中性子遮蔽・軽量化 |
 | GRAPHITE | 2.25 | 中性子減速・高温 |
 | BERYLLIUM | 1.85 | 中性子反射・軽量 |
 | TUNGSTEN | 19.3 | 超高密度遮蔽 |
 | BORON | 2.34 | 中性子吸収 |
-| VOID | - | 空気・真空領域 |
+| VOID | - | 真空領域、散乱減衰無し |
 
 **Claude Desktop使用例**:
 ```
