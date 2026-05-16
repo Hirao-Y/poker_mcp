@@ -7,9 +7,10 @@ import { allTools } from './tools/index.js';
 import { createAllHandlers } from './handlers/index.js';
 import { safeExecute } from './middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
+import { YAML_FILE, PENDING_FILE } from '../utils/paths.js';
 
 export class PokerMcpServer {
-  constructor(yamlFile = 'tasks/poker.yaml', pendingFile = 'tasks/pending_changes.json') {
+  constructor(yamlFile = YAML_FILE, pendingFile = PENDING_FILE) {
     this.server = new Server(
       {
         name: 'poker-mcp',

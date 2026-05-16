@@ -7,13 +7,16 @@ import { DataError } from '../utils/errors.js';
 import CollisionDetector from '../utils/CollisionDetector.js';
 import NuclideManager from '../utils/NuclideManager.js';
 import EnhancedValidator from '../utils/EnhancedValidator.js';
+import { BACKUPS_DIR, LOGS_DIR, TASKS_DIR, DATA_DIR, NDX_FILE,
+         YAML_FILE, PENDING_FILE } from '../utils/paths.js';
 
 export class SafeDataManager {
   constructor(yamlFile, pendingFile) {
-    this.yamlFile = yamlFile;
-    this.pendingFile = pendingFile;
-    this.backupDir = 'backups';
-    this.maxBackups = 10;
+    // 引数が省略された場合は paths.js の絶対パスをデフォルトとして使用
+    this.yamlFile    = yamlFile    ?? YAML_FILE;
+    this.pendingFile = pendingFile ?? PENDING_FILE;
+    this.backupDir   = BACKUPS_DIR;
+    this.maxBackups  = 10;
     this.data = null;
     this.pendingChanges = [];
     
@@ -24,11 +27,11 @@ export class SafeDataManager {
       max_auto_corrections: 10
     });
     
-    // 核種管理の初期化
+    // 核種管理の初期化（絶対パスを使用）
     this.nuclideManager = new NuclideManager({
       contribution_threshold: 0.05,
       user_confirmation: true,
-      database_file: 'data/ICRP-07.NDX'
+      database_file: NDX_FILE
     });
     
     // 強化検証の初期化
@@ -41,11 +44,11 @@ export class SafeDataManager {
 
   async initialize() {
     try {
-      // 必要なフォルダをすべて作成
-      await fs.mkdir(this.backupDir, { recursive: true });  // backups
-      await fs.mkdir('logs', { recursive: true });          // logs  
-      await fs.mkdir('tasks', { recursive: true });         // tasks
-      await fs.mkdir('data', { recursive: true });          // data
+      // 必要なフォルダをすべて作成（絶対パスで権限エラーを回避）
+      await fs.mkdir(BACKUPS_DIR, { recursive: true });  // backups
+      await fs.mkdir(LOGS_DIR,    { recursive: true });  // logs
+      await fs.mkdir(TASKS_DIR,   { recursive: true });  // tasks
+      await fs.mkdir(DATA_DIR,    { recursive: true });  // data
 
       // 必要なデータファイルをコピー
       await this.ensureDataFiles();
@@ -70,7 +73,7 @@ export class SafeDataManager {
   // 新規メソッド: 必要なデータファイルの確保
   async ensureDataFiles() {
     try {
-      const targetFile = 'data/ICRP-07.NDX';
+      const targetFile = NDX_FILE;  // 絶対パスを使用
       
       // ターゲットファイルの存在チェック
       try {

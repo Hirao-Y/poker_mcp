@@ -10,7 +10,8 @@ async function main() {
     await server.start();
   } catch (error) {
     logger.error('サーバー起動失敗', { error: error.message });
-    // console.errorは削除（stdout汚染防止）
+    // stdoutは汚染禁止だが、stderrへの出力は許容（Claude Desktopがログに記録する）
+    process.stderr.write(`[poker-mcp] Fatal: ${error.message}\n`);
     process.exit(1);
   }
 }
@@ -18,13 +19,13 @@ async function main() {
 // 未処理の例外とプロミス拒否のハンドリング
 process.on('uncaughtException', (error) => {
   logger.error('Uncaught Exception', { error: error.message, stack: error.stack });
-  // console.errorは削除（stdout汚染防止）
+  process.stderr.write(`[poker-mcp] Uncaught Exception: ${error.message}\n`);
   process.exit(1);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled Rejection', { reason: reason?.message || reason, promise });
-  // console.errorは削除（stdout汚染防止）
+  process.stderr.write(`[poker-mcp] Unhandled Rejection: ${reason?.message || reason}\n`);
   process.exit(1);
 });
 
@@ -41,5 +42,6 @@ process.on('SIGTERM', () => {
 
 main().catch((error) => {
   logger.error('メイン関数エラー', { error: error.message });
+  process.stderr.write(`[poker-mcp] Main error: ${error.message}\n`);
   process.exit(1);
 });

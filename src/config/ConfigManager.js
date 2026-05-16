@@ -1,14 +1,21 @@
 // src/config/ConfigManager.js
 import fs from 'fs/promises';
 import path from 'path';
+import { fileURLToPath } from 'url';
 import { logger } from '../utils/logger.js';
 import { DataError } from '../utils/errors.js';
+import { USER_CONFIG } from '../utils/paths.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname  = path.dirname(__filename);
 
 export class ConfigManager {
   constructor() {
     this.config = null;
-    this.configPath = 'src/config/default.json';
-    this.userConfigPath = 'config.json';
+    // default.json はパッケージ同梱なので __dirname 基準の絶対パスで解決
+    this.configPath     = path.join(__dirname, 'default.json');
+    // ユーザー設定は POKER_MCP_HOME 配下に置く
+    this.userConfigPath = USER_CONFIG;
   }
 
   async load() {
