@@ -1,5 +1,38 @@
 # 📋 CHANGELOG - Poker MCP Server
 
+## [1.2.7] - 2026-05-16
+
+### 🐛 **バグ修正**
+
+#### **`poker_executeCalculation` の yaml_file パス解決を修正**
+
+**問題:** `yaml_file` パラメータにファイル名のみ（例: `poker.yaml`）を渡すと、
+スキーマのパターンは通過するが、ハンドラーが絶対パスを要求するためエラーになっていた。
+スキーマとハンドラーの仕様が矛盾していた。
+
+**修正内容:**
+
+| ファイル | 修正内容 |
+|--------|---------|
+| `src/mcp/handlers/calculationHandlers.js` | ファイル名のみの場合は `TASKS_DIR` と結合して絶対パスに自動解決。絶対パスはそのまま使用（後方互換）。`paths.js` を import 追加。 |
+| `src/mcp/tools/calculationTools.js` | `yaml_file` のスキーマ説明とパターンを更新。ファイル名・絶対パスの両形式を受け付けるよう明記。 |
+
+**パス解決の動作:**
+
+| 入力 | 解決後 |
+|------|--------|
+| `"poker.yaml"` | `POKER_MCP_HOME/tasks/poker.yaml` |
+| `"my_calc.yaml"` | `POKER_MCP_HOME/tasks/my_calc.yaml` |
+| `"C:\path\to\file.yaml"` | そのまま使用（後方互換） |
+
+### 📝 **ドキュメント更新**
+
+- `docs/manuals/API_COMPLETE.md`: `yaml_file` パス解決ルールセクションを追加
+- `docs/manuals/INTEGRATION_GUIDE.md`: Python自動化クラスを `POKER_MCP_HOME` ベースに全面書き直し
+- `docs/manuals/RESEARCH_WORKFLOWS.md`: 計算実行例にパス解決の注記を追加
+
+---
+
 ## [1.2.6] - 2026-05-16
 
 ### 🐛 **バグ修正**

@@ -4,11 +4,20 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.2.6
+- **バージョン**: 1.2.7
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.2.7の修正（バグフィックス）
+
+### 🐛 `poker_executeCalculation` の yaml_file パス解決を修正
+ファイル名のみ（例: `poker.yaml`）を渡すと絶対パス要求でエラーになっていた
+スキーマ・ハンドラー間の矛盾を修正しました。
+
+- **ファイル名のみ指定** → `POKER_MCP_HOME/tasks/` に自動解決
+- **絶対パス指定** → そのまま使用（後方互換）
 
 ## 🆕 バージョン1.2.6の修正（バグフィックス）
 
@@ -336,6 +345,11 @@ POKER_MCP_HOME/
 
 ## 📝 更新履歴
 
+### v1.2.7 (2026-05-16)
+- 🐛 `poker_executeCalculation` の `yaml_file` パス解決バグを修正（スキーマ・ハンドラー間の矛盾）
+- ✨ ファイル名のみの指定で `POKER_MCP_HOME/tasks/` 配下を自動参照
+- 📝 `API_COMPLETE.md`・`INTEGRATION_GUIDE.md`・`RESEARCH_WORKFLOWS.md` 更新
+
 ### v1.2.6 (2026-05-16)
 - 🐛 `npx` 実行時のSERVER DISCONNECTED問題を修正（EPERM: C:\Windows\System32\logs）
 - ✨ `src/utils/paths.js` 新設（`POKER_MCP_HOME`環境変数によるパス一元管理）
@@ -371,6 +385,6 @@ POKER_MCP_HOME/
 
 ---
 
-**🎯 Poker MCP Server v1.2.6**  
+**🎯 Poker MCP Server v1.2.7**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC
