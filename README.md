@@ -86,7 +86,12 @@ npx poker-mcp
 **未設定時は `~/.poker-mcp/` が自動的に使用されます。**
 
 #### `POKER_INSTALL_PATH`（オプション）
-ICRP-07.NDX 核種データベースのコピー元を指定します。
+POKERのインストールディレクトリを指定します。以下の2つの用途で参照されます。
+
+- **ICRP-07.NDX のコピー元**: `{POKER_INSTALL_PATH}/lib/ICRP-07.NDX` → `POKER_MCP_HOME/data/` に自動コピー（初回のみ）
+- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）
+
+**デフォルト値**: `C:/Poker`（未設定時は `C:/Poker` を使用）
 
 ```bash
 # Windows（コマンドプロンプト）
