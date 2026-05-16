@@ -2,8 +2,8 @@
 
 **対象読者**: システム管理者・IT部門・インフラ担当者  
 **📚 マニュアル階層**: テクニカル層  
-**対応バージョン**: Poker MCP Server v1.2.5 (28メソッド完全実装)  
-**最終更新**: 2025年1月24日  
+**対応バージョン**: Poker MCP Server v1.2.8 (30メソッド完全実装)  
+**最終更新**: 2026年5月16日  
 **品質レベル**: エンタープライズ本番環境対応
 
 ---
@@ -397,13 +397,13 @@ check_method_group "Detector" "poker_proposeDetector poker_updateDetector poker_
 # Unit系メソッド監視 (5メソッド) - 4キー完全性保証
 check_method_group "Unit" "poker_proposeUnit poker_getUnit poker_updateUnit poker_validateUnitIntegrity poker_analyzeUnitConversion"
 
-# System系メソッド監視 (4メソッド)
-check_method_group "System" "poker_applyChanges poker_executeCalculation poker_resetYaml poker_confirmDaughterNuclides"
+# System系メソッド監視 (5メソッド)
+check_method_group "System" "poker_applyChanges poker_executeCalculation poker_resetYaml poker_confirmDaughterNuclides poker_openGui"
 
-echo "[$DATE] 28メソッド動作監視完了" >> $LOGFILE
+echo "[$DATE] 30メソッド動作監視完了" >> $LOGFILE
 EOF
 
-chmod +x /opt/poker_mcp_v12/scripts/monitor_28methods.sh
+chmod +x /opt/poker_mcp_v12/scripts/monitor_30methods.sh
 ```
 
 ---
@@ -614,10 +614,10 @@ LOGFILE="/opt/poker_mcp_v12/logs/daily_check.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
 ISSUES=0
 
-echo "[$DATE] === Poker MCP v1.2.5 日次チェック開始 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.2.8 日次チェック開始 ===" >> $LOGFILE
 
-# 1. 28メソッド応答確認
-echo "[$DATE] 1. 28メソッド応答確認" >> $LOGFILE
+# 1. 30メソッド応答確認
+echo "[$DATE] 1. 30メソッド応答確認" >> $LOGFILE
 METHODS=(
     "poker_proposeBody" "poker_updateBody" "poker_deleteBody"
     "poker_proposeZone" "poker_updateZone" "poker_deleteZone"
@@ -630,6 +630,7 @@ METHODS=(
     "poker_validateUnitIntegrity" "poker_analyzeUnitConversion"
     "poker_applyChanges" "poker_executeCalculation" 
     "poker_resetYaml" "poker_confirmDaughterNuclides"
+    "poker_openGui"
 )
 
 for method in "${METHODS[@]}"; do

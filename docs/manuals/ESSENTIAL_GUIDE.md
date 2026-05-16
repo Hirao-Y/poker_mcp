@@ -849,7 +849,7 @@ Claude指示例:
 ---
 
 **📚 関連マニュアル**
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・28メソッド完全対応
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・30メソッド完全対応
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決・環境変数設定・エラー対処
 - **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細・計算品質保証
 - **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー・実践例

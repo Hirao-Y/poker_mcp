@@ -163,7 +163,7 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **29メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **30メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -182,7 +182,7 @@ Claude Desktopで以下のようにテストできます：
 
 ## 🎯 API構成
 
-### 🔧 **29メソッド完全実装**
+### 🔧 **30メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -193,9 +193,9 @@ Claude Desktopで以下のようにテストできます：
 | **📡 Source** | 3個 | 線源管理 | propose・update・delete |
 | **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
 | **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
-| **⚙️ System** | 5個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・各種検証 |
+| **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・各種検証 |
 
-### 📋 **全29メソッド一覧**
+### 📋 **全30メソッド一覧**
 ```
 Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
 Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  
@@ -206,8 +206,8 @@ Source系 (3):        poker_proposeSource, poker_updateSource, poker_deleteSourc
 Detector系 (3):      poker_proposeDetector, poker_updateDetector, poker_deleteDetector
 Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
                      poker_validateUnitIntegrity, poker_analyzeUnitConversion
-System系 (5):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
-                     poker_confirmDaughterNuclides, 内部検証メソッド群
+System系 (6):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
+                     poker_confirmDaughterNuclides, poker_openGui, 内部検証メソッド群
 ```
 
 ## 📁 プロジェクト構造

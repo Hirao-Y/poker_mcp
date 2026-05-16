@@ -25,7 +25,7 @@
 
 ---
 
-## 📚 28メソッド完全実装一覧
+## 📚 30メソッド完全実装一覧
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -86,7 +86,7 @@
 | **poker_validateUnitIntegrity** | 単位完全性検証 | 4キー構造・物理整合性・システム分析 |
 | **poker_analyzeUnitConversion** | 単位変換分析 | 変換係数計算・物理整合性評価 |
 
-### 🔧 **System操作系 (4メソッド) - システム制御**
+### 🔧 **System操作系 (5メソッド) - システム制御**
 
 | **メソッド名** | **機能** | **特徴** |
 |---------------|----------|----------|
@@ -94,6 +94,7 @@
 | **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報・環境変数依存 |
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完・環境変数必須 |
+| **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存 |
 
 ---
 
@@ -410,6 +411,39 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 ```
 「POKERによる遮蔽計算を実行してください。
 結果は線量分布データと統計サマリーで出力してください。」
+```
+
+---
+
+#### **poker_openGui** - POKER GUI 起動（v1.2.8新設）
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "poker_openGui",
+  "params": {
+    "yaml_file": "poker.yaml"
+  },
+  "id": 15
+}
+```
+
+**📂 動作フロー**:
+1. 保留中の変更を `applyChanges` で自動保存
+2. `POKER_INSTALL_PATH/POKER.exe`（デフォルト: `C:/Poker/POKER.exe`）を起動
+3. `yaml_file` を引数として渡し、GUI上で入力内容を確認
+
+**パラメータ**:
+- `yaml_file`（省略可）: デフォルト `poker.yaml`。ファイル名のみ指定で `POKER_MCP_HOME/tasks/` を自動参照。
+
+**🔴 制限・依存性**:
+- **Windows 専用**（POKER.exe は Windows アプリケーション）
+- **POKER_INSTALL_PATH**: POKER インストールディレクトリ（デフォルト: `C:/Poker`）
+- `POKER.exe` が存在しない場合はエラーを返し、起動しない
+
+**Claude Desktop使用例**:
+```
+「現在の入力設定をGUIで確認してください」
+「作成したモデルをPOKERで開いて確認してください」
 ```
 
 ---
