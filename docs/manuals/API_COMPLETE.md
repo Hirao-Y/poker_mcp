@@ -391,17 +391,15 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 }
 ```
 
+**📂 `yaml_file` パス解決ルール（v1.2.6）**:
+- **ファイル名のみ指定**（例: `"poker.yaml"`）→ `POKER_MCP_HOME/tasks/poker.yaml` に自動解決
+- **絶対パス指定**（例: `"C:\\path\\to\\model.yaml"`）→ そのまま使用（後方互換）
+- `output_files` のファイル名も同様に `POKER_MCP_HOME/tasks/` 配下に自動配置
+
 **🔴 環境変数依存性**:
-- **必須**: poker_cui実行可能ファイルへのパスアクセス
-- **推奨**: POKER_INSTALL_PATH環境変数（核種データベース用）
-- **設定例**: 
-  ```bash
-  # poker_cuiがPATHに含まれる場合
-  export PATH=$PATH:/path/to/poker_cui
-  
-  # または、POKER_INSTALL_PATHでデータディレクトリ指定
-  export POKER_INSTALL_PATH="/usr/local/share/poker"
-  ```
+- **POKER_MCP_HOME**: 作業ディレクトリ（未設定時は `~/.poker-mcp/`）
+- **POKER_INSTALL_PATH**: 核種データベースのコピー元（未設定時は `C:/Poker`）
+- **poker_cui**: PATH上に実行可能ファイルが必要
 
 **計算オプション**:
 - `show_source_data`: 各線源の詳細データ表示

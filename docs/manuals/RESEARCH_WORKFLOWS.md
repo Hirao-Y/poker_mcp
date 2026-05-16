@@ -116,6 +116,7 @@ Claude Desktop 指示:
 計算実行（Calculation操作）:
 1. poker_executeCalculation:
    yaml_file: "poker.yaml"
+   ※ ファイル名のみ指定。POKER_MCP_HOME/tasks/poker.yaml が自動参照されます。
    summary_options:
      show_parameters: true
      show_source_data: true
@@ -123,6 +124,7 @@ Claude Desktop 指示:
    output_files:
      summary_file: "ct_room_summary.yaml"
      dose_file: "ct_room_dose.yaml"
+   ※ output_files も POKER_MCP_HOME/tasks/ 配下に自動作成されます。
 
 サマリーファイル解析:
 2. ct_room_summary.yamlの4セクションを解析:
@@ -758,6 +760,7 @@ if __name__ == "__main__":
 #### **poker_executeCalculation オプション設定例**
 ```python
 # 詳細解析用設定
+# yaml_file はファイル名のみ指定。POKER_MCP_HOME/tasks/ 配下が自動参照されます。
 detailed_options = {
     "yaml_file": "poker.yaml",
     "summary_options": {

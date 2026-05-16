@@ -233,11 +233,12 @@ poker_executeCalculation を使用して計算し、
 ```python
 #!/usr/bin/env python3
 """
-Poker MCP 28メソッド完全活用自動化システム
-バージョン: 1.2.5 (2025年1月対応)
+Poker MCP 自動化システム
+バージョン: 1.2.6 (2026年5月対応)
 """
 
 import json
+import os
 import asyncio
 import subprocess
 from pathlib import Path
@@ -245,38 +246,44 @@ from typing import Dict, List, Any
 import yaml
 
 class PokerMCPAutomation:
-    """Poker MCP 28メソッド完全活用自動化クラス"""
+    """Poker MCP 自動化クラス
     
-    def __init__(self, mcp_path: str = r"C:\Users\yoshi\Desktop\poker_mcp"):
-        self.mcp_path = Path(mcp_path)
-        self.yaml_file = self.mcp_path / "tasks" / "poker.yaml"
-        self.methods_count = 28
+    POKER_MCP_HOME 環境変数（未設定時は ~/.poker-mcp/）を作業ディレクトリとして使用します。
+    """
+    
+    def __init__(self):
+        # POKER_MCP_HOME 環境変数を参照（未設定時は ~/.poker-mcp/）
+        poker_mcp_home = os.environ.get(
+            'POKER_MCP_HOME',
+            str(Path.home() / '.poker-mcp')
+        )
+        self.home_dir  = Path(poker_mcp_home)
+        self.tasks_dir = self.home_dir / 'tasks'
+        self.yaml_file = self.tasks_dir / 'poker.yaml'
         self.body_types = ["SPH", "RCC", "RPP", "BOX", "CMB", 
                           "TOR", "ELL", "REC", "TRC", "WED"]
         self.unit_keys = ["length", "angle", "density", "radioactivity"]
         
     def execute_mcp_command(self, method: str, params: Dict) -> Dict:
-        """MCPメソッドを直接実行（実装例）"""
-        cmd = [
-            "node",
-            str(self.mcp_path / "src" / "mcp_server_stdio_v4.js"),
-            "--method", method,
-            "--params", json.dumps(params)
-        ]
+        """npx poker-mcp 経由でMCPメソッドを実行（実装例）"""
+        cmd = ["npx", "poker-mcp", "--method", method, "--params", json.dumps(params)]
+        
+        env = os.environ.copy()
+        env['POKER_MCP_HOME'] = str(self.home_dir)
         
         try:
             result = subprocess.run(
-                cmd, 
-                capture_output=True, 
+                cmd,
+                capture_output=True,
                 text=True,
-                cwd=str(self.mcp_path)
+                env=env
             )
             return json.loads(result.stdout)
         except Exception as e:
             return {"error": str(e)}
     
     def create_shielding_model(self, config: Dict) -> bool:
-        """遮蔽モデル構築（28メソッド活用）"""
+        """遮蔽モデル構築"""
         
         # 1. Unit設定（5メソッド活用）
         self.execute_mcp_command("poker_proposeUnit", {
@@ -310,11 +317,10 @@ class PokerMCPAutomation:
         # 5. Source配置
         for source in config["sources"]:
             # 子孫核種チェック
-            daughter_check = self.execute_mcp_command(
+            self.execute_mcp_command(
                 "poker_confirmDaughterNuclides",
                 {"action": "check", "source_name": source["name"]}
             )
-            
             self.execute_mcp_command("poker_proposeSource", source)
         
         # 6. Detector配置
@@ -329,7 +335,11 @@ class PokerMCPAutomation:
         return True
     
     def execute_calculation(self, options: Dict = None) -> Dict:
-        """poker_cui計算実行"""
+        """poker_cui 計算実行
+        
+        yaml_file はファイル名のみ指定します。
+        POKER_MCP_HOME/tasks/ 配下のファイルが自動的に参照されます。
+        """
         
         options = options or {
             "show_parameters": True,
@@ -338,12 +348,12 @@ class PokerMCPAutomation:
         }
         
         result = self.execute_mcp_command("poker_executeCalculation", {
-            "yaml_file": "poker.yaml",
+            "yaml_file": "poker.yaml",   # POKER_MCP_HOME/tasks/poker.yaml に自動解決
             "summary_options": options
         })
         
-        # 結果ファイル読み込み
-        summary_file = self.yaml_file.with_suffix('.yaml.summary')
+        # 結果ファイル読み込み（tasks/ 配下に出力される）
+        summary_file = self.tasks_dir / 'poker.yaml.summary'
         if summary_file.exists():
             with open(summary_file, 'r', encoding='utf-8') as f:
                 return yaml.safe_load(f)
