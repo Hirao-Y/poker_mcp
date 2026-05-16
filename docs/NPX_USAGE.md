@@ -1,440 +1,246 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.2.5)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.2.6)
 
-## 📦 NPXでの起動方法（28メソッド完全対応）
+## 📦 起動方法
 
-### **方法1: パッケージ名で起動（推奨）**
+### **方法1: npx で直接起動（推奨）**
 ```bash
 npx poker-mcp
 ```
+インストール不要。初回実行時に自動ダウンロードして起動します。
 
-### **方法2: ローカルディレクトリから起動**
+### **方法2: ローカルソースから起動（開発者向け）**
 ```bash
-# poker_mcpディレクトリ内で実行
-cd C:\Users\yoshi\Desktop\poker_mcp
-npx .
-```
-
-### **方法3: 直接ファイル実行**
-```bash
-# メインサーバーファイルを直接実行
-node C:\Users\yoshi\Desktop\poker_mcp\src\mcp_server_stdio_v4.js
-```
-
----
-
-## 🔧 **NPX起動の準備**
-
-### **Step 1: 依存関係のインストール**
-```bash
-# poker_mcpディレクトリに移動
-cd C:\Users\yoshi\Desktop\poker_mcp
-
-# 依存関係インストール
+# リポジトリをクローンして依存関係をインストール
+git clone https://github.com/Hirao-Y/poker_mcp.git
+cd poker_mcp
 npm install
-```
-
-### **Step 2: 環境変数設定（オプション）**
-```bash
-# POKER_INSTALL_PATH環境変数の設定（オプション）
-
-# Windowsの場合（コマンドプロンプト）
-set POKER_INSTALL_PATH=C:/Poker
-
-# Windowsの場合（PowerShell）
-$env:POKER_INSTALL_PATH="C:/Poker"
-
-# Linux/macOSの場合
-export POKER_INSTALL_PATH="/usr/local/share/poker"
-```
-
-**環境変数詳細:**
-- **変数名**: `POKER_INSTALL_PATH`
-- **デフォルト値**: `C:/Poker`
-- **目的**: `lib/ICRP-07.NDX`核種データベースファイルの取得元ディレクトリ指定
-- **動作**: 初回起動時に`{POKER_INSTALL_PATH}/lib/ICRP-07.NDX`を`data/`ディレクトリにコピー
-- **注意**: `data/ICRP-07.NDX`が既に存在する場合はコピーをスキップ
-
-### **Step 3: グローバルインストール（オプション）**
-```bash
-# グローバルインストールで、どこからでも起動可能
-npm install -g .
-
-# 起動
-poker-mcp
-```
-
-### **Step 4: NPXで直接起動（推奨）**
-```bash
-# インストール不要で直接起動
-npx poker-mcp
-```
-
----
-
-## ✅ **起動確認方法（v1.2.5）**
-
-### **正常起動の確認**
-NPXでサーバーを起動すると、以下のような状態になります：
-
-```bash
-# NPXでサーバー起動
-npx poker-mcp
-
-# 正常起動時の特徴:
-✅ プロセスが起動して待機状態になる
-✅ MCP Protocol (STDIO) での通信待機
-✅ 28メソッドすべてが利用可能
-✅ Unit操作5メソッド・子孫核種機能が有効
-✅ サマリーファイル4セクション解析対応
-✅ エラーコード13種の自動処理
-```
-
-### **起動状態の確認方法**
-```bash
-# 別のターミナルでプロセス確認
-# Windows
-tasklist | findstr node
-
-# macOS/Linux  
-ps aux | grep node
-```
-
-### **Claude Desktopでの動作確認**
-```
-Claude Desktopで以下のコマンドを試してください：
-1. poker_getUnit - 単位系の確認（Unit操作5メソッドの1つ）
-2. poker_validateUnitIntegrity - 単位系整合性検証（v1.2.5新機能）
-3. poker_analyzeUnitConversion - 単位変換係数分析（v1.2.5新機能）
-```
-
----
-
-## 🔍 **トラブルシューティング（v1.2.5対応）**
-
-### **よくある問題と解決法**
-
-#### **1. "poker-mcp not found" エラー**
-```bash
-# 解決法1: 依存関係確認
-cd C:\Users\yoshi\Desktop\poker_mcp
-npm install
-
-# 解決法2: ローカル実行
-npx .
-
-# 解決法3: 直接実行
 node src/mcp_server_stdio_v4.js
 ```
 
-#### **2. "Module not found" エラー**
+### **方法3: グローバルインストール後に起動**
 ```bash
-# 解決法: 依存関係インストール
-cd C:\Users\yoshi\Desktop\poker_mcp
-npm install
-
-# 特定パッケージが見つからない場合
-npm install @modelcontextprotocol/sdk js-yaml winston zod
-```
-
-#### **3. v1.2.5新メソッドが使えない**
-```bash
-# 解決法: 最新版に更新
-cd C:\Users\yoshi\Desktop\poker_mcp
-git pull
-npm install
-
-# キャッシュクリア
-npx --clear-cache
-npm cache clean --force
-```
-
-#### **4. エラーコード対応（13種）**
-```
-Claude Desktopでエラーコードが表示された場合：
--32064: poker_updateBodyを使用
--32065: poker_proposeBodyを使用
-（他11種類のエラーコードも同様に自動対処）
-```
-
-### **デバッグ情報取得**
-```bash
-# Node.js環境確認
-node --version  # v18.0.0以上が必要
-npm --version
-
-# 依存関係確認（v1.2.5）
-npm list
-
-# 28メソッド実装確認
-grep -r "poker_" src/ | wc -l  # 28個のメソッドが表示されるはず
+npm install -g poker-mcp
+poker-mcp
 ```
 
 ---
 
-## 🎯 **Claude Desktop での使用（v1.2.5推奨設定）**
+## 🔧 **環境変数の設定**
 
-### **推奨設定（NPX使用・28メソッド対応）**
+### `POKER_MCP_HOME`（推奨・v1.2.6新設）
+作業ファイル（YAML・バックアップ・ログ・核種DB）の格納先を指定します。  
+**未設定時は `~/.poker-mcp/`（Windows: `C:\Users\<username>\.poker-mcp\`）が自動使用されます。**
+
+```bash
+# Windows（コマンドプロンプト）
+set POKER_MCP_HOME=C:\Users\<username>\poker_mcp_workspace
+
+# Windows（PowerShell）
+$env:POKER_MCP_HOME="C:\Users\<username>\poker_mcp_workspace"
+
+# Linux/macOS
+export POKER_MCP_HOME="$HOME/.poker-mcp"
+```
+
+### `POKER_INSTALL_PATH`（オプション）
+ICRP-07.NDX 核種データベースのコピー元を指定します。  
+**未設定時は `C:/Poker` をデフォルト値として使用します。**
+
+```bash
+# Windows
+set POKER_INSTALL_PATH=C:/Poker
+
+# Linux/macOS
+export POKER_INSTALL_PATH="/usr/local/share/poker"
+```
+
+### データ格納先の構造
+```
+POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
+  ├── tasks/                # poker.yaml, pending_changes.json
+  ├── backups/              # 自動バックアップ（最大10世代）
+  ├── data/                 # ICRP-07.NDX 核種データベース
+  ├── logs/                 # error.log, combined.log
+  └── config.json           # ユーザー設定（任意）
+```
+
+---
+
+## 🎯 **Claude Desktop での設定（v1.2.6推奨）**
+
+### **推奨設定**
 ```json
 {
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
       "args": ["poker-mcp"],
-      "cwd": "C:\\Users\\yoshi\\Desktop\\poker_mcp",
       "env": {
+        "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
 }
 ```
+`<username>` はご自身のWindowsユーザー名に置き換えてください。  
+`POKER_INSTALL_PATH` は省略可能（省略時は `C:/Poker` を使用）。
 
-### **代替設定（直接実行）**
+> **⚠️ `cwd` の指定は不要・非推奨**  
+> v1.2.5 以前のドキュメントでは `"cwd": "C:\\..."` の指定を案内していましたが、
+> これが **SERVER DISCONNECTED の原因** でした。v1.2.6 では `POKER_MCP_HOME`
+> 環境変数でデータ格納先を管理するため、`cwd` の指定は不要です。
+
+### **macOS / Linux の設定例**
 ```json
 {
   "mcpServers": {
     "poker-mcp": {
-      "command": "node", 
-      "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
+      "command": "npx",
+      "args": ["poker-mcp"],
       "env": {
-        "POKER_INSTALL_PATH": "C:/Poker"
+        "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
+        "POKER_INSTALL_PATH": "/usr/local/share/poker"
       }
     }
   }
 }
 ```
 
-### **グローバルインストール後の設定**
-```json
-{
-  "mcpServers": {
-    "poker-mcp": {
-      "command": "poker-mcp",
-      "args": [],
-      "env": {
-        "POKER_INSTALL_PATH": "C:/Poker"
-      }
-    }
-  }
-}
-```
-
-**注意**: 
-- `env`セクションの`POKER_INSTALL_PATH`はオプションです（省略時は`C:/Poker`を使用）
-- 環境変数で指定したパスの`lib/ICRP-07.NDX`ファイルが初回起動時に`data/`にコピーされます
-
 ---
 
-## 📚 **v1.2.5機能の利点**
+## ✅ **正常起動の確認**
 
-### **28メソッド完全実装の利点**
-- ✅ **Unit操作5メソッド**: 単位系の完全管理と整合性保証
-- ✅ **子孫核種自動追加**: ICRP-07準拠の放射平衡考慮
-- ✅ **サマリーファイル4セクション**: 計算結果の完全解析
-- ✅ **エラーコード13種対応**: 自動問題解決
+### 起動状態の特徴
+`npx poker-mcp` を実行すると：
+- プロセスが起動して **待機状態** になる（出力なし = 正常）
+- MCP STDIO通信で Claude Desktop からの接続を待つ
+- 問題があれば `stderr` にエラーメッセージが表示される（v1.2.6以降）
 
-### **NPX使用の利点**
-- ✅ **簡単起動**: `npx poker-mcp` の一行で28メソッド利用可能
-- ✅ **依存関係自動解決**: package.json基準で自動インストール
-- ✅ **バージョン管理**: v1.2.5の機能を確実に利用
-- ✅ **配布容易**: 他の環境でも同じコマンドで起動
-
-### **MCP STDIO通信の利点**
-- 🚀 **軽量通信**: HTTPオーバーヘッドなしの高速通信
-- 🚀 **標準準拠**: MCPプロトコル標準のSTDIO通信
-- 🚀 **セキュリティ**: ネットワークポート開放不要
-- 🚀 **シンプル**: 複雑な設定・認証不要
-
----
-
-## 🎓 **使用例とワークフロー（v1.2.5）**
-
-### **開発環境での使用**
+### ログファイルで確認
 ```bash
-# 開発サーバー起動
-cd C:\Users\yoshi\Desktop\poker_mcp
-npx poker-mcp
-
-# または短縮形
-npx .
-```
-
-### **Claude Desktopとの統合（28メソッド活用）**
-```bash
-# 1. Claude Desktop設定更新
-# 2. Claude Desktop再起動
-# 3. 動作確認
-# Claude: "poker_getUnitで単位系を確認してください"
-# Claude: "poker_validateUnitIntegrityで整合性を検証してください"
-# Claude: "poker_confirmDaughterNuclidesで子孫核種を確認してください"
-```
-
-### **サマリーファイル4セクション解析例**
-```bash
-# 計算実行後のサマリーファイル解析
-# Claude: "poker_executeCalculationで計算を実行し、
-#         サマリーファイルの4セクションを解析してください"
-```
-
-### **複数環境での使用**
-```bash
-# 開発環境
-cd /path/to/poker_mcp
-npx poker-mcp
-
-# 本番環境（v1.2.5）
-npm install -g poker-mcp
-poker-mcp
-
-# テスト環境（28メソッドテスト）
-npx poker-mcp --test  # 将来実装予定
-```
-
----
-
-## 🌟 **高度な使用方法（v1.2.5）**
-
-### **環境変数設定**
-```bash
-# POKER_INSTALL_PATH環境変数（オプション）
 # Windows
-set POKER_INSTALL_PATH=C:/Poker
-set NODE_ENV=production
-npx poker-mcp
+type %USERPROFILE%\.poker-mcp\logs\combined.log
 
-# macOS/Linux
-export POKER_INSTALL_PATH="/usr/local/share/poker"
-NODE_ENV=production npx poker-mcp
+# Linux/macOS
+cat ~/.poker-mcp/logs/combined.log
 ```
 
-**環境変数の効果:**
-- `POKER_INSTALL_PATH`: 核種データベースファイルの取得元ディレクトリ
-- `NODE_ENV=production`: 本番環境モード
-
-### **設定ファイル指定（将来実装予定）**
-```bash
-# カスタム設定での起動
-npx poker-mcp --config custom-config.json
-
-# デバッグモード（28メソッドトレース）
-npx poker-mcp --debug --trace-methods
-
-# ログレベル指定
-npx poker-mcp --log-level info
+正常起動時のログ末尾:
+```
+{"message":"データマネージャーを初期化しました",...}
+{"message":"TaskManagerを初期化しました",...}
+{"message":"PokerMcpServer初期化完了",...}
+{"message":"Poker MCP Server started on stdio",...}
 ```
 
-### **バッチ処理での使用**
-```bash
-# バックグラウンド起動（Windows）
-start /b npx poker-mcp
-
-# バックグラウンド起動（Linux/macOS）
-npx poker-mcp &
+### Claude Desktopでの動作確認
+```
+Claude Desktopで以下のコマンドを試してください：
+- 「現在の単位設定を確認してください」→ poker_getUnit を使用
+- 「単位系の整合性を検証してください」→ poker_validateUnitIntegrity を使用
 ```
 
 ---
 
-## 🔄 **アップデートとメンテナンス（v1.2.5）**
+## 🔍 **トラブルシューティング**
 
-### **v1.2.5への更新**
-```bash
-# 最新版に更新
-cd C:\Users\yoshi\Desktop\poker_mcp
-git pull origin v1.2.5
-npm install
-
-# 28メソッド確認
-npm run test-methods  # 将来実装予定
+### **問題1: SERVER DISCONNECTED**
+```
+症状: Claude Desktop に "SERVER DISCONNECTED" と表示される
 ```
 
-### **パッケージ更新**
-```bash
-# 依存関係更新
-cd C:\Users\yoshi\Desktop\poker_mcp
-npm update
+**原因と対処:**
 
-# 特定パッケージ更新
-npm update @modelcontextprotocol/sdk
+1. `claude_desktop_config.json` に `cwd` が設定されている場合は削除し、
+   `env.POKER_MCP_HOME` に切り替える（上記推奨設定を参照）
+
+2. ログファイルでエラーを確認する:
+   ```bash
+   # Windows
+   type %USERPROFILE%\.poker-mcp\logs\error.log
+   
+   # または POKER_MCP_HOME を設定している場合
+   type C:\Users\<username>\poker_mcp_workspace\logs\error.log
+   ```
+
+3. コマンドプロンプトで直接起動してエラーを確認する:
+   ```bash
+   npx poker-mcp
+   ```
+   v1.2.6 以降は `stderr` にエラーが表示されます。
+
+### **問題2: "MISSING_SOURCE_FILE" エラー**
+```
+症状: 核種データベース（ICRP-07.NDX）が見つからない
 ```
 
-### **キャッシュクリア**
-```bash
-# NPXキャッシュクリア
-npx --clear-cache
+`POKER_INSTALL_PATH` に POKERのインストールディレクトリを設定してください:
+```json
+"env": {
+  "POKER_INSTALL_PATH": "C:/Program Files/POKER"
+}
+```
+設定したパスの `lib/ICRP-07.NDX` が自動的に `POKER_MCP_HOME/data/` にコピーされます。
 
-# npmキャッシュクリア
+### **問題3: npm / npx が見つからない**
+```bash
+# Node.js バージョン確認（18以上が必要）
+node --version
+
+# npm バージョン確認
+npm --version
+```
+Node.js 18未満の場合は https://nodejs.org/ から最新版をインストールしてください。
+
+### **問題4: MCP メソッドが使用できない**
+1. Claude Desktop を完全終了して再起動する
+2. `claude_desktop_config.json` の JSON 構文を確認する（カンマ・括弧の過不足）
+3. ログファイルで起動エラーを確認する
+
+---
+
+## 📊 **パフォーマンス情報**
+
+| 項目 | 値 |
+|------|---|
+| メモリ使用 | 40〜200MB |
+| 起動時間 | 1〜3秒（核種DB読み込み含む） |
+| 応答時間 | <50ms（全29メソッド） |
+| バックアップ世代 | 最大10世代（自動管理） |
+
+---
+
+## 🔄 **アップデート**
+
+```bash
+# npx は毎回最新版を確認します（キャッシュが残る場合）
+npx --yes poker-mcp
+
+# キャッシュを強制クリアして最新版を取得
 npm cache clean --force
-```
-
-### **完全再インストール**
-```bash
-# node_modules削除と再インストール
-cd C:\Users\yoshi\Desktop\poker_mcp
-rmdir /s node_modules
-npm install
+npx poker-mcp
 ```
 
 ---
 
-## 📊 **パフォーマンスとモニタリング（v1.2.5）**
+## 📋 **まとめ**
 
-### **リソース使用量**
-- **メモリ使用**: 40-200MB（28メソッド対応でも軽量）
-- **CPU使用**: 通常時<1%、処理時5-15%
-- **起動時間**: 1-3秒（全メソッド初期化含む）
-- **応答時間**: <50ms（28メソッドすべて）
-
-### **メソッド別パフォーマンス**
-```bash
-# 高速メソッド（<10ms）
-- poker_getUnit
-- poker_proposeBody/Zone/Source
-
-# 中速メソッド（10-50ms）
-- poker_validateUnitIntegrity
-- poker_analyzeUnitConversion
-
-# 処理時間がかかるメソッド（>50ms）
-- poker_executeCalculation
-- poker_confirmDaughterNuclides
-```
-
-### **ログとモニタリング**
-```bash
-# プロセス監視
-tasklist | findstr node
-
-# メモリ使用量確認（Windows）
-wmic process where name="node.exe" get name,processid,workingsetsize
-
-# 28メソッド呼び出し統計（将来実装予定）
-npx poker-mcp --show-stats
-```
+| 項目 | 内容 |
+|------|------|
+| 推奨起動コマンド | `npx poker-mcp` |
+| 設定方法 | `claude_desktop_config.json` に `env.POKER_MCP_HOME` を追加 |
+| データ保存先 | `POKER_MCP_HOME`（未設定時: `~/.poker-mcp/`） |
+| ログ場所 | `POKER_MCP_HOME/logs/combined.log` |
+| Node.js 要件 | v18.0.0 以上 |
+| 通信方式 | STDIO（ポート開放不要） |
+| 自動バックアップ | 有効（最大10世代） |
 
 ---
 
-## 📋 **まとめ（v1.2.5）**
+**📚 関連ドキュメント**
+- [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md): 問題解決ガイド
+- [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
+- [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-### **推奨起動方法**
-1. **開発・テスト**: `npx poker-mcp`（28メソッド即座利用）
-2. **本番運用**: グローバルインストール後 `poker-mcp`
-3. **Claude Desktop**: NPX設定でv1.2.5全機能活用
-
-### **v1.2.5重要ポイント**
-- ✅ **28メソッド完全実装**
-- ✅ **Unit操作5メソッド**で単位系完全管理
-- ✅ **子孫核種自動追加**で物理的完全性
-- ✅ **サマリーファイル4セクション**解析
-- ✅ **エラーコード13種**自動対処
-- ✅ **Node.js 18以上**が必須
-- ✅ **STDIO通信**でポート開放不要
-- ✅ **自動バックアップ**で安全運用
-
-### **次のステップ**
-1. NPX起動確認
-2. Claude Desktop設定
-3. poker_getUnitで動作テスト
-4. 28メソッド活用開始
-5. [マニュアル](./manuals/)でv1.2.5機能詳細学習
-
-これで**Poker MCP Server v1.2.5**のNPX起動が完了です！
+**Poker MCP Server v1.2.6** | 作者: Yoshihiro Hirao | ライセンス: ISC

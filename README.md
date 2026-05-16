@@ -4,11 +4,23 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.2.5 (Enhanced Release)
+- **バージョン**: 1.2.6
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
-- **データ保存**: tasks/ディレクトリ（実行時自動作成）
+- **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.2.6の修正（バグフィックス）
+
+### 🐛 SERVER DISCONNECTED 問題を修正
+`npx poker-mcp` 実行時にClaude Desktopがカレントディレクトリを
+`C:\Windows\System32` に設定するため、相対パスでのフォルダ作成が
+権限エラー（EPERM）で失敗していた問題を修正しました。
+
+- **`src/utils/paths.js` 新設**: 作業ディレクトリを一元管理
+- **全ファイルパスを絶対パス化**: `logs/`・`backups/`・`tasks/`・`data/`
+- **`POKER_MCP_HOME` 環境変数サポート**: 作業場所を自由に指定可能
+- **エラー出力を `stderr` に追加**: 問題発生時の原因特定が容易に
 
 ## 🆕 バージョン1.2.5の新機能
 
@@ -41,31 +53,45 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ### 1. インストール
 ```bash
-# 依存関係インストール
+# 依存関係インストール（ローカル開発時のみ）
 npm install
 
-# または NPX で直接使用
+# または NPX で直接使用（インストール不要）
 npx poker-mcp
 ```
 
-### 2. 環境変数設定（オプション）
+### 2. 環境変数設定
 
-**POKER_INSTALL_PATH環境変数**（オプション）:
+#### `POKER_MCP_HOME`（推奨・新設）
+作業ファイル（YAML・バックアップ・ログ・核種DB）の格納先を指定します。
+**未設定時は `~/.poker-mcp/` が自動的に使用されます。**
+
+#### `POKER_INSTALL_PATH`（オプション）
+ICRP-07.NDX 核種データベースのコピー元を指定します。
+
 ```bash
-# Windowsの場合（コマンドプロンプト）
+# Windows（コマンドプロンプト）
+set POKER_MCP_HOME=C:\Users\yoshi\poker_mcp_workspace
 set POKER_INSTALL_PATH=C:/Poker
 
-# Windowsの場合（PowerShell）
+# Windows（PowerShell）
+$env:POKER_MCP_HOME="C:\Users\yoshi\poker_mcp_workspace"
 $env:POKER_INSTALL_PATH="C:/Poker"
 
-# Linux/macOSの場合
+# Linux/macOS
+export POKER_MCP_HOME="$HOME/.poker-mcp"
 export POKER_INSTALL_PATH="/usr/local/share/poker"
 ```
 
-- **デフォルト値**: `C:/Poker`
-- **目的**: `lib/ICRP-07.NDX`核種データベースファイルの取得元ディレクトリ指定
-- **動作**: 初回起動時に`{POKER_INSTALL_PATH}/lib/ICRP-07.NDX`を`data/`ディレクトリにコピー
-- **注意**: `data/ICRP-07.NDX`が既に存在する場合はコピーをスキップ
+**データ格納先の構造:**
+```
+POKER_MCP_HOME/          # デフォルト: ~/.poker-mcp/
+  ├── tasks/             # poker.yaml, pending_changes.json
+  ├── backups/           # 自動バックアップ（最大10世代）
+  ├── data/              # ICRP-07.NDX 核種データベース
+  ├── logs/              # error.log, combined.log
+  └── config.json        # ユーザー設定（任意）
+```
 
 ### 3. Claude Desktop設定
 
@@ -78,22 +104,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
    Linux: ~/.config/claude/claude_desktop_config.json
    ```
 
-2. **MCP設定を追加**
-   ```json
-   {
-     "mcpServers": {
-       "poker-mcp": {
-         "command": "node",
-         "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
-         "env": {
-           "POKER_INSTALL_PATH": "C:/Poker"
-         }
-       }
-     }
-   }
-   ```
-
-3. **NPXを使用する場合**
+2. **推奨設定（v1.2.6）**
    ```json
    {
      "mcpServers": {
@@ -101,18 +112,20 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
          "command": "npx",
          "args": ["poker-mcp"],
          "env": {
+           "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
            "POKER_INSTALL_PATH": "C:/Poker"
          }
        }
      }
    }
    ```
+   `<username>` はご自身のWindowsユーザー名に置き換えてください。  
+   `POKER_INSTALL_PATH` は省略可能です（デフォルト: `C:/Poker`）。
 
-4. **Claude Desktopを再起動** してMCPサーバーを有効化
+   > **⚠️ 注意:** `cwd`（作業ディレクトリ）の指定は不要です。`POKER_MCP_HOME`
+   > 環境変数で管理するため、`cwd` を設定すると v1.2.5 以前の問題が再発します。
 
-**注意**: 
-- `env`セクションの`POKER_INSTALL_PATH`はオプションです（省略時は`C:/Poker`を使用）
-- 環境変数で指定したパスの`lib/ICRP-07.NDX`ファイルが初回起動時に`data/`にコピーされます
+3. **Claude Desktopを再起動** してMCPサーバーを有効化
 
 ### 4. 動作確認
 Claude Desktopで以下のようにテストできます：
@@ -188,28 +201,28 @@ poker_mcp/
 │   ├── 📁 services/                 # ビジネスロジック
 │   ├── 📁 validators/               # データ検証（物理・単位・衝突）
 │   ├── 📁 utils/                    # ユーティリティ
+│   │   ├── paths.js                 # ★ パス管理（POKER_MCP_HOME起点）
+│   │   ├── logger.js                # ログ出力（絶対パス）
+│   │   └── ...
 │   └── 📁 config/                   # 設定管理
-├── 📁 data/                         # 📊 核種データベース
-│   └── ICRP-07.NDX                  # ICRP-107核種データ（1,254核種）
-├── 📁 config/                       # ⚙️ 設定ファイル
-│   ├── mcp-manifest.json            # MCPマニフェスト (2,276行)
-│   └── mcp-example.json             # 設定例
 ├── 📁 docs/                         # 📚 完全ドキュメント
-│   ├── README.md                    # 詳細ドキュメント
-│   ├── 📁 manuals/                  # マニュアル集
-│   └── 📁 interactive_guides/       # インタラクティブ学習ガイド
-├── 📁 node_modules/                 # 📦 依存パッケージ
 ├── .mcp.json                        # MCPクライアント接続設定
-├── package.json                     # パッケージ定義
-├── package-lock.json                # 依存関係ロック
+├── package.json                     # パッケージ定義（v1.2.6）
 └── README.md                        # このファイル
 
-# 実行時に自動作成されるディレクトリ
-├── 📁 tasks/                        # 📊 作業ディレクトリ（自動作成）
+# 実行時に自動作成されるディレクトリ（POKER_MCP_HOME配下）
+# デフォルト: C:\Users\<username>\.poker-mcp\  または  ~/.poker-mcp/
+POKER_MCP_HOME/
+├── 📁 tasks/                        # 📊 作業ディレクトリ
 │   ├── poker.yaml                   # メインYAMLファイル
 │   └── pending_changes.json         # 保留中の変更
-├── 📁 backups/                      # 💾 自動バックアップ（自動作成）
-└── 📁 logs/                         # 📝 ログファイル（自動作成）
+├── 📁 backups/                      # 💾 自動バックアップ（最大10世代）
+├── 📁 data/                         # 🧪 核種データベース
+│   └── ICRP-07.NDX                  # ICRP-07核種データ（1,254核種）
+├── 📁 logs/                         # 📝 ログファイル
+│   ├── error.log
+│   └── combined.log
+└── config.json                      # ユーザー設定（任意）
 ```
 
 ## 🔧 Claude経由での使用例
@@ -323,6 +336,13 @@ poker_mcp/
 
 ## 📝 更新履歴
 
+### v1.2.6 (2026-05-16)
+- 🐛 `npx` 実行時のSERVER DISCONNECTED問題を修正（EPERM: C:\Windows\System32\logs）
+- ✨ `src/utils/paths.js` 新設（`POKER_MCP_HOME`環境変数によるパス一元管理）
+- ✨ `POKER_MCP_HOME`環境変数サポート（未設定時は`~/.poker-mcp/`をデフォルト使用）
+- 🐛 全ファイルパスを絶対パスに変更（logger, DataManager, ConfigManager, server）
+- ✨ 致命的エラーを`stderr`にも出力（Claude Desktopログから原因確認可能に）
+
 ### v1.2.5 (2025-01-24)
 - ✨ 衝突検出システム実装
 - ✨ 子孫核種自動補完機能追加（ICRP-07統合）
@@ -330,9 +350,7 @@ poker_mcp/
 - ✨ YAMLリセット機能実装（3段階レベル）
 - ✨ 検出器分析機能追加
 - 🐛 NuclideManagerデフォルトパス統一
-- 📝 .mcp.json完全化
 - 📝 材料数13→14（VOID追加明記）
-- 🗑️ archiveディレクトリ削除（未使用ファイル整理）
 
 ### v1.1.0 (Previous)
 - 基本24メソッド実装
@@ -348,11 +366,11 @@ poker_mcp/
 - **📖 詳細README**: [docs/README.md](docs/README.md)
 - **📚 完全マニュアル**: [docs/manuals/](docs/manuals/)
 - **🎓 インタラクティブガイド**: [docs/interactive_guides/](docs/interactive_guides/)
-- **📋 マニフェスト**: [config/mcp-manifest.json](config/mcp-manifest.json)
+- **📋 変更履歴**: [CHANGELOG.md](CHANGELOG.md)
 - **🐛 Issues**: [GitHub Issues](https://github.com/Hirao-Y/poker_mcp/issues)
 
 ---
 
-**🎯 Poker MCP Server v1.2.5**  
+**🎯 Poker MCP Server v1.2.6**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC

@@ -1,9 +1,9 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.2.5 MCP Edition  
-**最終更新**: 2025年1月24日  
-**使用方法**: Claude Desktop + MCP通信 (28メソッド対応)
+**バージョン**: 1.2.6 MCP Edition  
+**最終更新**: 2026年5月16日  
+**使用方法**: Claude Desktop + MCP通信 (29メソッド対応)
 
 ---
 
@@ -71,6 +71,92 @@ poker_updateBody で既存立体のパラメータを更新してください。
 
 ---
 
+## 🚨 第1.5章: SERVER DISCONNECTED（起動失敗）
+
+> **v1.2.6で修正済みの既知バグです。** このセクションは v1.2.5 以前からアップデートしていない
+> ユーザー向け、または新規インストール時の参考として残しています。
+
+### 症状
+- Claude Desktop に **"SERVER DISCONNECTED"** と表示される
+- MCP ツール（`poker_*`）が一切使用できない
+- コマンドプロンプトで `npx poker-mcp` を実行すると以下のエラーが出る:
+  ```
+  Error: EPERM: operation not permitted, mkdir 'C:\Windows\System32\logs'
+  ```
+  または:
+  ```
+  Error: EPERM: operation not permitted, mkdir 'C:\Windows\System32\backups'
+  ```
+
+### 原因
+`npx` でサーバーを起動する際、カレントディレクトリが `C:\Windows\System32` に
+設定されます。v1.2.5 以前のコードは相対パス（`logs/`・`backups/` など）でフォルダを
+作成しようとするため、システムフォルダへの書き込み権限エラーが発生し、
+サーバーが無音のまま終了していました。
+
+### 解決手順
+
+**Step 1: バージョンを確認する**
+```bash
+npm view poker-mcp version
+# 1.2.6 と表示されれば最新版
+```
+1.2.5 以前の場合は Step 2 へ。
+
+**Step 2: npmキャッシュをクリアして最新版を取得する**
+```bash
+npm cache clean --force
+npx poker-mcp
+```
+
+**Step 3: `claude_desktop_config.json` を確認・修正する**
+
+設定ファイルを開く:
+```
+Windows: %APPDATA%\Claude\claude_desktop_config.json
+```
+
+`cwd` の記述があれば削除し、`env.POKER_MCP_HOME` に切り替える:
+
+```json
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "npx",
+      "args": ["poker-mcp"],
+      "env": {
+        "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
+        "POKER_INSTALL_PATH": "C:/Poker"
+      }
+    }
+  }
+}
+```
+
+**Step 4: `POKER_MCP_HOME` に指定したフォルダを作成する**
+```bash
+mkdir C:\Users\<username>\poker_mcp_workspace
+```
+
+**Step 5: Claude Desktop を再起動する**
+
+### 確認方法
+ログファイルの末尾に以下が記録されていれば正常起動:
+```
+{"message":"Poker MCP Server started on stdio",...}
+```
+
+ログの場所:
+```bash
+# Windows（デフォルト）
+type %USERPROFILE%\.poker-mcp\logs\combined.log
+
+# POKER_MCP_HOME を設定した場合
+type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
+```
+
+---
+
 ## 🔴 第2章: 緊急度別問題分類
 
 ### 🔴 **緊急度: 高（即座対応必要）**
@@ -86,25 +172,32 @@ poker_updateBody で既存立体のパラメータを更新してください。
 「MCPサーバー接続の緊急診断を実行してください：
 
 1. 設定ファイル確認:
-   パス: C:\Users\yoshi\AppData\Roaming\Claude\claude_desktop_config.json
+   パス: %APPDATA%\Claude\claude_desktop_config.json
    
-2. 設定内容確認:
+2. 設定内容確認（v1.2.6推奨設定）:
    {
      "mcpServers": {
        "poker-mcp": {
-         "command": "node",
-         "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
-         "env": {}
+         "command": "npx",
+         "args": ["poker-mcp"],
+         "env": {
+           "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
+           "POKER_INSTALL_PATH": "C:/Poker"
+         }
        }
      }
    }
+   ※ cwd の指定は不要です（あれば削除してください）
 
-3. サーバー直接起動テスト:
-   コマンドプロンプトで:
-   cd C:\Users\yoshi\Desktop\poker_mcp
-   node src\mcp_server_stdio_v4.js
+3. ログファイルでエラーを確認:
+   type %USERPROFILE%\.poker-mcp\logs\error.log
    
-4. Claude Desktop再起動:
+4. サーバー直接起動テスト:
+   コマンドプロンプトで:
+   npx poker-mcp
+   （エラーがあれば画面に表示されます）
+   
+5. Claude Desktop再起動:
    - アプリケーション完全終了
    - 再起動後にpoker_getUnitでテスト
 
@@ -555,22 +648,26 @@ poker_updateBody で既存立体のパラメータを更新してください。
 Claude Desktop 指示:
 「ログファイル診断を実行してください:
 
-1. Claude Desktopログ:
-   場所: C:\Users\yoshi\AppData\Roaming\Claude\logs\
-   最新ログファイル確認
+1. poker-mcp ログ（主要）:
+   Windows（デフォルト）:
+     type %USERPROFILE%\.poker-mcp\logs\combined.log
+     type %USERPROFILE%\.poker-mcp\logs\error.log
    
-2. アプリケーションログ:
-   場所: C:\Users\yoshi\AppData\Local\AnthropicClaude\app-[version]\
+   POKER_MCP_HOME を設定している場合:
+     type <POKER_MCP_HOME>\logs\combined.log
    
-3. ログ内容の確認ポイント:
+   Linux/macOS:
+     cat ~/.poker-mcp/logs/combined.log
+   
+2. ログ内容の確認ポイント:
    - 'error'を含む行
-   - 'poker'を含む行
-   - タイムスタンプ確認
+   - 'EPERM'・'ENOENT'・'EACCES' などのシステムエラー
+   - タイムスタンプで最新のエラーを確認
    
-4. エラーメッセージ解釈:
-   - 'ENOENT': ファイル未検出
-   - 'EACCES': アクセス権限エラー
-   - 'EINVAL': 無効なパラメータ
+3. エラーメッセージ解釈:
+   - 'EPERM':   権限エラー（パス設定を見直す）
+   - 'ENOENT':  ファイル未検出（パス・ファイルの存在確認）
+   - 'EACCES':  アクセス権限エラー（ディレクトリ権限確認）
    - 'ETIMEDOUT': タイムアウト
 
 最新50行を確認して問題を特定してください。」
@@ -765,6 +862,6 @@ if __name__ == "__main__":
 
 ---
 
-**最終更新**: 2025年1月  
-**バージョン**: 1.2.5 MCP Edition  
-**サポート**: GitHub Issues / poker-mcp-support@example.com
+**最終更新**: 2026年5月  
+**バージョン**: 1.2.6 MCP Edition  
+**サポート**: GitHub Issues

@@ -1,5 +1,71 @@
 # 📋 CHANGELOG - Poker MCP Server
 
+## [1.2.6] - 2026-05-16
+
+### 🐛 **バグ修正**
+
+#### **🔴 npx実行時の起動失敗（SERVER DISCONNECTED）を修正**
+
+**問題:** `npx poker-mcp` をClaude Desktopから起動すると、カレントディレクトリが
+`C:\Windows\System32` に設定されるため、相対パスで作成しようとした `logs/`・`backups/`・
+`tasks/`・`data/` フォルダの書き込みが権限エラー（EPERM）で失敗し、
+サーバーが無音のまま終了していた。
+
+**修正内容:**
+
+| ファイル | 修正内容 |
+|--------|---------|
+| `src/utils/paths.js`（新設）| `POKER_MCP_HOME` 環境変数を起点とするパスを一元管理 |
+| `src/utils/logger.js` | ログ先を絶対パス（`POKER_MCP_HOME/logs/`）に変更 |
+| `src/services/DataManager.js` | ディレクトリ作成・ファイル参照をすべて絶対パスに変更 |
+| `src/config/ConfigManager.js` | `default.json` を `import.meta.url` で解決、ユーザー設定を `POKER_MCP_HOME` 配下へ |
+| `src/mcp/server.js` | コンストラクタのデフォルトパス引数を絶対パスに変更 |
+| `src/mcp_server_stdio_v4.js` | 致命的エラーを `process.stderr` に出力（デバッグ容易化） |
+
+### ✨ **新機能**
+
+#### **`POKER_MCP_HOME` 環境変数のサポート**
+- 作業ファイル（YAML・バックアップ・ログ・核種DB）の格納先を環境変数で指定可能
+- 未設定時は `~/.poker-mcp/`（Windows: `C:\Users\<username>\.poker-mcp\`）をデフォルトとして使用
+- `claude_desktop_config.json` の `env` セクションで設定:
+  ```json
+  "env": { "POKER_MCP_HOME": "C:\\Users\\yoshi\\poker_mcp_workspace" }
+  ```
+
+#### **起動エラーの可視化**
+- これまでエラーが `logger`（ファイル）にのみ記録されており、SERVER DISCONNECTEDの原因が
+  Claude Desktop上から確認できなかった
+- 致命的エラーを `process.stderr` にも出力するよう変更
+- Claude DesktopのMCPログから原因が直接確認可能になった
+
+### 🔧 **設定変更（推奨）**
+
+`claude_desktop_config.json` の推奨設定が変わりました。
+`cwd`（作業ディレクトリ指定）から `env.POKER_MCP_HOME`（環境変数）方式へ移行してください。
+
+**旧設定（v1.2.5以前・非推奨）:**
+```json
+{
+  "command": "npx",
+  "args": ["poker-mcp"],
+  "cwd": "C:\\path\\to\\poker_mcp"
+}
+```
+
+**新設定（v1.2.6推奨）:**
+```json
+{
+  "command": "npx",
+  "args": ["poker-mcp"],
+  "env": {
+    "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
+    "POKER_INSTALL_PATH": "C:/Poker"
+  }
+}
+```
+
+---
+
 ## [1.2.5] - 2025-01-24
 
 ### ✨ **新機能・機能強化**
