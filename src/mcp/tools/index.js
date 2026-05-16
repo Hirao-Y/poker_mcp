@@ -10,6 +10,7 @@ import { unitTools } from './unitTools.js';
 import { calculationTools } from './calculationTools.js';
 import { resetTools } from './resetTools.js';
 import { daughterNuclideTools } from './daughterNuclideTools.js';
+import { guiTools } from './guiTools.js';
 
 export const allTools = [
   ...bodyTools,
@@ -22,7 +23,8 @@ export const allTools = [
   ...unitTools,
   ...calculationTools,
   ...resetTools,
-  ...daughterNuclideTools
+  ...daughterNuclideTools,
+  ...guiTools
 ];
 
 export {
@@ -36,5 +38,6 @@ export {
   unitTools,
   calculationTools,
   resetTools,
-  daughterNuclideTools
+  daughterNuclideTools,
+  guiTools
 };

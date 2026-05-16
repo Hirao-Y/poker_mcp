@@ -9,6 +9,7 @@ import { createUnitHandlers } from './unitHandlers.js';
 import { createCalculationHandlers } from './calculationHandlers.js';
 import { resetHandlers } from './resetHandlers.js';
 import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
+import { createGuiHandlers } from './guiHandlers.js';
 
 export function createAllHandlers(taskManager) {
   return {
@@ -41,6 +42,9 @@ export function createAllHandlers(taskManager) {
 
     // リセット操作
     resetYaml: resetHandlers.resetYaml(taskManager),
+
+    // GUI表示操作
+    ...createGuiHandlers(taskManager),
     
     // 共通操作
     async applyChanges(args) {
