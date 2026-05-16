@@ -8,8 +8,8 @@ export const calculationTools = [
       properties: {
         yaml_file: {
           type: 'string',
-          description: '計算に使用するYAMLファイル名（拡張子.yamlを含む）',
-          pattern: '^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$'
+          description: '計算に使用するYAMLファイル名（拡張子.yamlを含む）。ファイル名のみ指定（例: poker.yaml）で、POKER_MCP_HOME/tasks/ 配下のファイルが自動的に参照されます。絶対パスも指定可能です。',
+          pattern: '^([a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)|([a-zA-Z]:[\\\\\/]|\\/)[^\\\\]+\\.(yaml|yml))$'
         },
         summary_options: {
           type: 'object',

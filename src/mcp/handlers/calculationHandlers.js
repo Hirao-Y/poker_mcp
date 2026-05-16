@@ -3,6 +3,7 @@ import { CalculationService } from '../../services/CalculationService.js';
 import { ValidationError, CalculationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 import path from 'path';
+import { TASKS_DIR } from '../../utils/paths.js';
 
 export function createCalculationHandlers(taskManager) {
   const calculationService = new CalculationService();
@@ -15,18 +16,22 @@ export function createCalculationHandlers(taskManager) {
           throw new ValidationError('YAML file is required', 'yaml_file', args.yaml_file);
         }
 
-        // 絶対パス形式の事前チェック（詳細検証はサービス層で実行）
+        // パス解決:
+        //   絶対パスが渡された場合 → そのまま使用（後方互換）
+        //   ファイル名のみの場合  → TASKS_DIR と結合して絶対パスに解決
         const absolutePathPattern = /^([a-zA-Z]:[\\\/]|\/)/;
-        if (!absolutePathPattern.test(args.yaml_file)) {
-          throw new ValidationError(
-            'YAML file must be specified with absolute path. Examples: C:\\path\\to\\file.yaml or /path/to/file.yaml',
-            'yaml_file',
-            args.yaml_file
-          );
-        }
+        const resolvedYamlFile = absolutePathPattern.test(args.yaml_file)
+          ? args.yaml_file
+          : path.join(TASKS_DIR, args.yaml_file);
+
+        logger.info('yaml_file path resolved', {
+          input: args.yaml_file,
+          resolved: resolvedYamlFile,
+          tasksDir: TASKS_DIR
+        });
 
         // YAML拡張子チェック
-        if (!args.yaml_file.match(/\.(yaml|yml)$/i)) {
+        if (!resolvedYamlFile.match(/\.(yaml|yml)$/i)) {
           throw new ValidationError(
             'YAML file must have .yaml or .yml extension',
             'yaml_file',
@@ -46,13 +51,12 @@ export function createCalculationHandlers(taskManager) {
         const resolvedOutputFiles = {};
         
         if (Object.keys(outputFiles).length > 0) {
-          // 入力YAMLファイルのディレクトリを取得
-          const inputDir = path.dirname(args.yaml_file);
+          // 解決済みの入力YAMLファイルのディレクトリを取得
+          const inputDir = path.dirname(resolvedYamlFile);
           
           // 各出力ファイルの絶対パス化
           for (const [key, fileName] of Object.entries(outputFiles)) {
             if (fileName) {
-              // ファイル名の拡張子チェック
               if (!fileName.match(/\.(yaml|yml)$/i)) {
                 throw new ValidationError(
                   `Output file ${key} must have .yaml or .yml extension`,
@@ -60,42 +64,35 @@ export function createCalculationHandlers(taskManager) {
                   fileName
                 );
               }
-              
-              // 絶対パスに解決
               resolvedOutputFiles[key] = path.join(inputDir, fileName);
-              
               logger.debug('Output file path resolved', {
-                key,
-                fileName,
-                inputDir,
+                key, fileName, inputDir,
                 resolvedPath: resolvedOutputFiles[key]
               });
             }
           }
         }
 
-        // 出力ファイル検証（従来の検証は不要、上記で実施済み）
-
         logger.info('Starting radiation shielding calculation', {
-          yamlFile: args.yaml_file,
+          yamlFile: resolvedYamlFile,
           summaryOptions,
-          outputFiles: outputFiles,
+          outputFiles,
           resolvedOutputFiles
         });
 
-        // 計算実行（統合検証付き、絶対パス化済みの出力ファイルパスを使用）
+        // 計算実行（統合検証付き）
         const result = await calculationService.executeWithValidation(
-          args.yaml_file,
+          resolvedYamlFile,
           summaryOptions,
-          resolvedOutputFiles,  // 絶対パス化済み
-          undefined,           // timeout（デフォルト値を使用）
-          taskManager.dataManager  // 事前検証用DataManager
+          resolvedOutputFiles,
+          undefined,
+          taskManager.dataManager
         );
 
         // 事前検証で重大エラーが検出された場合の処理
         if (result.success === false && result.stage === 'pre_validation') {
           logger.error('Pre-calculation validation failed', {
-            yamlFile: args.yaml_file,
+            yamlFile: resolvedYamlFile,
             criticalErrors: result.criticalErrors
           });
           
@@ -128,7 +125,7 @@ export function createCalculationHandlers(taskManager) {
           success: true,
           message: 'Radiation shielding calculation completed successfully',
           calculation: {
-            input_file: args.yaml_file,
+            input_file: resolvedYamlFile,
             execution_time_ms: result.executionTime,
             timestamp: result.summary.timestamp,
             options: result.summary.options
@@ -161,7 +158,7 @@ export function createCalculationHandlers(taskManager) {
         }
 
         logger.info('Calculation completed successfully', {
-          yamlFile: args.yaml_file,
+          yamlFile: resolvedYamlFile,
           executionTime: result.executionTime,
           outputFiles: Object.keys(fileVerification).filter(k => k !== 'allFilesGenerated')
         });
