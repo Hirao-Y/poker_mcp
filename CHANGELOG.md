@@ -1,5 +1,43 @@
 # 📋 CHANGELOG - Poker MCP Server
 
+## [1.2.8] - 2026-05-16
+
+### ✨ **新機能**
+
+#### **`poker_openGui` — POKER GUI 起動メソッドを追加**
+
+作成した入力ファイルを POKER.exe でビジュアル確認するための新メソッドです。
+
+**動作フロー:**
+1. 保留中の変更を自動保存（`applyChanges` を内部実行）
+2. `POKER_INSTALL_PATH/POKER.exe`（デフォルト: `C:/Poker/POKER.exe`）を起動
+3. 入力ファイルを引数として渡し、GUI上で内容を確認可能
+
+**パラメータ:**
+
+| パラメータ | 必須 | デフォルト | 説明 |
+|-----------|------|-----------|------|
+| `yaml_file` | 任意 | `poker.yaml` | 表示するファイル名または絶対パス |
+
+**ファイル名の解決:** `executeCalculation` と同様、ファイル名のみ指定で `POKER_MCP_HOME/tasks/` 配下を自動参照。
+
+**環境変数:**
+- `POKER_INSTALL_PATH`: POKER インストールディレクトリ（デフォルト: `C:/Poker`）
+- `POKER_MCP_HOME`: 作業ディレクトリ（デフォルト: `~/.poker-mcp/`）
+
+**制限:** Windows 専用。
+
+**追加ファイル:**
+
+| ファイル | 内容 |
+|---------|------|
+| `src/mcp/handlers/guiHandlers.js`（新設）| `openGui` ハンドラー実装 |
+| `src/mcp/tools/guiTools.js`（新設）| `poker_openGui` スキーマ定義 |
+| `src/mcp/handlers/index.js` | `guiHandlers` 登録 |
+| `src/mcp/tools/index.js` | `guiTools` 登録 |
+
+---
+
 ## [1.2.7] - 2026-05-16
 
 ### 🐛 **バグ修正**

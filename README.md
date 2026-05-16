@@ -4,11 +4,21 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.2.7
+- **バージョン**: 1.2.8
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.2.8の新機能
+
+### ✨ `poker_openGui` — POKER GUI 起動メソッドを追加
+作成した入力ファイルを POKER.exe でビジュアル確認できます。
+
+- 保留中の変更を **自動保存してから** POKER.exe を起動
+- `yaml_file` は省略可（デフォルト: `poker.yaml`）
+- `POKER_INSTALL_PATH/POKER.exe`（デフォルト: `C:/Poker/POKER.exe`）を使用
+- Windows 専用
 
 ## 🆕 バージョン1.2.7の修正（バグフィックス）
 
@@ -345,6 +355,11 @@ POKER_MCP_HOME/
 
 ## 📝 更新履歴
 
+### v1.2.8 (2026-05-16)
+- ✨ `poker_openGui` メソッドを新設（POKER.exe でGUI確認）
+- ✨ 起動前に `applyChanges` を自動実行
+- ✨ `yaml_file` 省略可（デフォルト: `poker.yaml`）、`POKER_INSTALL_PATH` 環境変数使用
+
 ### v1.2.7 (2026-05-16)
 - 🐛 `poker_executeCalculation` の `yaml_file` パス解決バグを修正（スキーマ・ハンドラー間の矛盾）
 - ✨ ファイル名のみの指定で `POKER_MCP_HOME/tasks/` 配下を自動参照
@@ -385,6 +400,6 @@ POKER_MCP_HOME/
 
 ---
 
-**🎯 Poker MCP Server v1.2.7**  
+**🎯 Poker MCP Server v1.2.8**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC
