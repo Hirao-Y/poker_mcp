@@ -20,6 +20,14 @@ YAML-based input file management tool for radiation-shielding calculation code P
 - `POKER_INSTALL_PATH/POKER.exe`（デフォルト: `C:/Poker/POKER.exe`）を使用
 - Windows 専用
 
+### 最新のPOKER_CUI.exeの機能でPOKER-MCPがカバーしていない部分について
+POKER本体は随時バージョンアップされており、下記の機能についてPOKER-MCPのツールは未対応です。
+それらについてAIアプリが入力を編集しようとするとツールの制約によって拒否されることがあります。必要に応じて手動で入力を修正してください。
+
+- 二重層・三重層ビルドアップ係数の指定（現状では単層のみ）
+- 線源にエネルギースペクトルを指定（現状では核種指定のみ）
+- 材料ゾーンまたはビルドアップ係数にカスタム材料を指定（現状ではオリジナルの13種の材料のみ）
+
 ## 🆕 バージョン1.2.7の修正（バグフィックス）
 
 ### 🐛 `poker_executeCalculation` の yaml_file パス解決を修正
