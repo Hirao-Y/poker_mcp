@@ -4,11 +4,27 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.2.8
+- **バージョン**: 1.3.0
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.3.0の新機能
+
+### ✨ `poker_getDoseMap` — グリッド検出器の線量マップ取得
+グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を `.dose` ファイルから取得します。サマリーはグリッド点を間引く（`一部省略`）ため、完全なマップは本ツールで取得します。戻り値は `points[]`（i/j/k・座標・線量）＋入れ子 `grid`（1D→[i], 2D→[j][i], 3D→[k][j][i]）＋ `min/max/max_at`。
+
+### ✨ `executeCalculation` の構造化結果
+応答に `.summary`(YAML) から抽出した構造化 `result_total`（検出器ごとの座標＋E(AP)/DskinM(AP)/H*(10) の内訳）、`dose_columns`、`calculation_warnings`、`calculation_notes` を追加。
+
+### 🐛 `updateSource` の division/geometry/cutoff_rate 対応
+ツールスキーマ・検証が弾いていたフィールドを解放し、線源の in-place 更新（分割の収束スタディ等）が可能に。
+
+### 🔧 マニフェスト↔実行時ドリフト検出
+`npm run check:manifest` でツール定義とマニフェストの乖離を検出。
+
+詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 ## 🆕 バージョン1.2.8の新機能
 
@@ -26,7 +42,7 @@ POKER本体は随時バージョンアップされており、下記の機能に
 
 - 二重層・三重層ビルドアップ係数の指定（現状では単層のみ）
 - 線源にエネルギースペクトルを指定（現状では核種指定のみ）
-- 材料ゾーンまたはビルドアップ係数にカスタム材料を指定（現状ではオリジナルの13種の材料のみ）
+- 材料ゾーン・ビルドアップに**任意組成のカスタム材料**を指定（lib_material.dat の標準13＋ユーザ材料には対応済み。詳細は docs/manuals/MATERIAL_SYSTEM.md）
 
 ## 🆕 バージョン1.2.7の修正（バグフィックス）
 
