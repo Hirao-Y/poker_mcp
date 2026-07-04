@@ -94,7 +94,7 @@ export class MaterialAlternatives {
       throw PokerMcpError.unsupportedMaterialWithSuggestion(
         material,
         alternative.substitute,
-        this.SUPPORTED_MATERIALS
+        MaterialCatalog.allMaterials()
       );
     }
 
@@ -104,13 +104,13 @@ export class MaterialAlternatives {
       throw PokerMcpError.unsupportedMaterialWithSuggestion(
         material,
         similar,
-        this.SUPPORTED_MATERIALS
+        MaterialCatalog.allMaterials()
       );
     }
 
     // 一般的なエラー（提案なし）
     throw PokerMcpError.validationError(
-      `Unsupported material: ${material}. Supported materials: ${this.SUPPORTED_MATERIALS.join(', ')}`,
+      `Unsupported material: ${material}. Supported materials: ${MaterialCatalog.allMaterials().join(', ')}`,
       fieldName,
       material
     );
