@@ -84,6 +84,7 @@ freecad-mcp の `execute_code` で Part API により構築（`Part.makeCylinder
 `poker_proposeDetector`（点検出器: name, origin `x y z`, show_path_trace=false）:
 - 側面プロファイル（z=230）: r=130(接触2cm), 140, 160, 200, 228(1m), 328(2m)
 - 蓋軸上プロファイル（x=y=0, 蓋上面 z=465 基準）: z=467(2cm), 475(10cm), 495(30cm), 565(1m), 665(2m)
+- 蓋面マップ（2Dグリッド検出器）: name `D_lid_map`, origin `-120 -120 467`, `grid=[{edge:"240 0 0",number:5},{edge:"0 240 0",number:5}]`（grid は 1要素=線/2要素=面/3要素=体積 = 1D/2D/3D）
 → `poker_applyChanges`
 
 ## 4. 計算実行と結果取得
@@ -94,6 +95,16 @@ freecad-mcp の `execute_code` で Part API により構築（`Part.makeCylinder
 - **線量は基本的にサマリーファイルから取得**。
   - 「入力パラメータ」= 入力の確認、「intermediate」= 計算に使ったデータ（減衰係数・ビルドアップ等）、「result」= 各線源→各検出器、「**result_total**」= 各検出器の全線源総和線量。
 - 評価量: E(AP)実効線量[µSv/h]、DskinM(AP)[µGy/h]、H\*(10)[µSv/h]。規制の線量当量率比較には H\*(10) を用いる。
+- `executeCalculation` の応答には、`.summary`(YAML) から抽出した**構造化 `result_total`**（検出器ごとの座標＋E(AP)/DskinM(AP)/H\*(10) の線量内訳）、`dose_columns`、警告フッタ `calculation_warnings`、注記 `calculation_notes`（80mfp 保守側クランプ等）が含まれ、距離プロファイルや限度比較をプログラム的に扱える。
+
+### 4.1 グリッド検出器の線量マップ（poker_getDoseMap）
+
+面・体積の線量分布は**グリッド検出器**で評価する。ただし**サマリーはグリッド点を間引く（`一部省略`）**ため、完全なマップは `.dose` から `poker_getDoseMap` で取得する。
+
+- `poker_getDoseMap`（`detector_name` 必須、`yaml_file` 既定 poker.yaml、`dose_type`∈{E(AP),DskinM(AP),H\*(10)} 既定 E(AP)、`ray`∈{g1,n,g12,TOTAL} 既定 TOTAL）。
+- 戻り値: `points[]`（各点に i/j/k・座標・線量）＋入れ子 `grid`（1D→[i], 2D→[j][i], 3D→[k][j][i]）＋ `min/max/max_at`, `dims`, `unit`。
+- `.dose` は poker_cui 完了直後に揃うが、完了検知〜ディスク反映に数秒のばらつきがあるため、`getDoseMap` には準備待ちリトライ（最大約10秒、未準備時のみ）がある。実運用（`executeCalculation` とは別コール）では通常は即取得できる。
+- 本デモの蓋上面 5×5 マップ（H\*(10)）: 中心（線源直上）最大 ~1.26 µSv/h、線源空洞（r<75cm）内で高く、キャスク外縁で急落する分布が得られる。
 
 ## 5. 結果評価
 
