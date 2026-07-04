@@ -1054,6 +1054,8 @@ export class TaskManager {
   // ゾーン関連メソッド
   async proposeZone(body_name, material, density) {
     try {
+      // 材料名を正式名へ正規化（大文字小文字無視・米綴りエイリアス対応、lib_material.dat 準拠）
+      material = MaterialCatalog.normalizeName(material);
       // 既存のバリデーション
       PhysicsValidator.validateMaterialDensity(material, density);
       

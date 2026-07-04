@@ -10,7 +10,7 @@ export const STANDARD_MATERIALS = [
 ];
 
 // 旧綴り(米)を入力として受理し Aluminium に正規化
-const NAME_ALIASES = { 'Aluminum': 'Aluminium' };
+const NAME_ALIASES = { 'aluminum': 'Aluminium' }; // キーは小文字（大文字小文字無視で照合）
 
 // 実効Z計算用の原子量 (g/mol)
 const ATOMIC_WEIGHT = {
@@ -25,6 +25,7 @@ const ZEFF_EXPONENT = 2.94; // Mayneord 型 光子実効Z
 export class MaterialCatalog {
   static _catalog = null;   // { name: {density, composition:{Z:wtFrac}, isStandard} }
   static _stdZeff = null;   // { name: Zeff }
+  static _canon = null;     // { lowercaseName: CanonicalName }
 
   static _libPath() {
     const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
@@ -68,6 +69,7 @@ export class MaterialCatalog {
       this._catalog = {};
       for (const m of STANDARD_MATERIALS) this._catalog[m] = { density: null, composition: null, isStandard: true };
     }
+    this._canon = null;
     this._computeStdZeff();
     return this._catalog;
   }
@@ -101,7 +103,24 @@ export class MaterialCatalog {
     for (const [m, z] of Object.entries(fallback)) if (this._stdZeff[m] == null) this._stdZeff[m] = z;
   }
 
-  static normalizeName(name) { return NAME_ALIASES[name] || name; }
+  static _canonicalIndex() {
+    if (this._canon) return this._canon;
+    const idx = {};
+    const add = (n) => { if (n) idx[n.toLowerCase()] = n; };
+    for (const m of STANDARD_MATERIALS) add(m);
+    add('VOID');
+    for (const n of Object.keys(this.load())) add(n);
+    this._canon = idx;
+    return idx;
+  }
+
+  // 材料名を正式名(lib_material.dat 表記)へ解決。大文字小文字無視＋米綴りエイリアス対応。
+  static normalizeName(name) {
+    if (!name || typeof name !== 'string') return name;
+    const aliased = NAME_ALIASES[name.toLowerCase()] || name;
+    const idx = this._canonicalIndex();
+    return idx[aliased.toLowerCase()] || aliased;
+  }
 
   static isStandard(name) { return STANDARD_MATERIALS.includes(this.normalizeName(name)); }
 
