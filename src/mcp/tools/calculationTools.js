@@ -1,6 +1,21 @@
 // mcp/tools/calculationTools.js
 export const calculationTools = [
   {
+    name: 'poker_getDoseMap',
+    description: 'グリッド（面/線）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します。サマリーはグリッドを間引く（一部省略）ため、完全なマップはこのツールで取得します。',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        detector_name: { type: 'string', description: 'グリッド検出器名' },
+        yaml_file: { type: 'string', description: '入力YAMLファイル名（.dose はこの名前に .dose を付したもの）。省略時は poker.yaml。' },
+        dose_type: { type: 'string', enum: ['E(AP)', 'DskinM(AP)', 'H*(10)'], description: '線量種別（既定 E(AP)）' },
+        ray: { type: 'string', enum: ['g1', 'n', 'g12', 'TOTAL'], description: '線種（既定 TOTAL）' }
+      },
+      required: ['detector_name'],
+      additionalProperties: false
+    }
+  },
+  {
     name: 'poker_executeCalculation',
     description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
     inputSchema: {

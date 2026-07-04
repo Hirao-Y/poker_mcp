@@ -2393,6 +2393,46 @@
         },
         "additionalProperties": false
       }
+    },
+    {
+      "name": "poker_getDoseMap",
+      "description": "グリッド（面/線）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "detector_name": {
+            "type": "string",
+            "description": "グリッド検出器名"
+          },
+          "yaml_file": {
+            "type": "string",
+            "description": "入力YAMLファイル名（省略時 poker.yaml）"
+          },
+          "dose_type": {
+            "type": "string",
+            "enum": [
+              "E(AP)",
+              "DskinM(AP)",
+              "H*(10)"
+            ],
+            "description": "線量種別（既定 E(AP)）"
+          },
+          "ray": {
+            "type": "string",
+            "enum": [
+              "g1",
+              "n",
+              "g12",
+              "TOTAL"
+            ],
+            "description": "線種（既定 TOTAL）"
+          }
+        },
+        "required": [
+          "detector_name"
+        ],
+        "additionalProperties": false
+      }
     }
   ],
   "definitions": {
