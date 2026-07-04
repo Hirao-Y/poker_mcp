@@ -2,6 +2,7 @@
 import { validateZoneRequest } from '../middleware/requestValidator.js';
 import { ValidationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
+import { MaterialCatalog } from '../../utils/MaterialCatalog.js';
 
 export function createZoneHandlers(taskManager) {
   return {
@@ -9,8 +10,11 @@ export function createZoneHandlers(taskManager) {
       try {
         validateZoneRequest(args);
         
+        // 材料名を正規化（大文字小文字無視・lib_material.dat 準拠）
+        const mat = MaterialCatalog.normalizeName(args.material);
+
         // VOID材料での密度指定チェック
-        if (args.material === 'VOID' && args.density !== undefined) {
+        if (mat === 'VOID' && args.density !== undefined) {
           throw new ValidationError(
             'Density cannot be specified for VOID material', 
             'density', 
@@ -18,10 +22,10 @@ export function createZoneHandlers(taskManager) {
           );
         }
 
-        // 非VOID材料での密度必須チェック
-        if (args.material !== 'VOID' && args.density === undefined) {
+        // 非VOID材料の密度チェック（省略時は lib_material.dat のカタログ密度をデフォルト採用）
+        if (mat !== 'VOID' && args.density === undefined && MaterialCatalog.getDensity(mat) == null) {
           throw new ValidationError(
-            'Density must be specified for non-VOID materials', 
+            'Density must be specified for materials not listed in lib_material.dat', 
             'density', 
             args.density
           );

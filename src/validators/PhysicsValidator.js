@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 import { logger } from '../utils/logger.js';
 import { CMBValidator } from './CMBValidator.js';
+import { MaterialCatalog } from '../utils/MaterialCatalog.js';
 
 export class PhysicsValidator {
   static getMaterialProperties() {
@@ -86,6 +87,24 @@ export class PhysicsValidator {
     const properties = materialProperties[material];
     
     if (!properties) {
+      // 標準材料マップに無くても lib_material.dat カタログにあれば許可
+      if (MaterialCatalog.has(material)) {
+        if (density === undefined || density === null) {
+          throw new ValidationError(
+            `材料 ${material} には密度の指定が必要です`,
+            'density',
+            density
+          );
+        }
+        const nd = Number(density);
+        if (!(nd > 0) || nd > 30) {
+          throw new PhysicsError(
+            `材料 ${material} の密度 ${nd} は物理的範囲 (0, 30] g/cm³ を外れています`,
+            'DENSITY_OUT_OF_RANGE'
+          );
+        }
+        return true;
+      }
       throw new ValidationError(
         `未知の材料です: ${material}`,
         'material',

@@ -1056,6 +1056,14 @@ export class TaskManager {
     try {
       // 材料名を正式名へ正規化（大文字小文字無視・米綴りエイリアス対応、lib_material.dat 準拠）
       material = MaterialCatalog.normalizeName(material);
+      // 密度未指定時は lib_material.dat のカタログ密度をデフォルト採用
+      if ((density === undefined || density === null || density === '') && material !== 'VOID') {
+        const catDensity = MaterialCatalog.getDensity(material);
+        if (catDensity != null) {
+          density = catDensity;
+          logger.info('lib_material.dat のカタログ密度をデフォルト適用しました', { material, density });
+        }
+      }
       // 既存のバリデーション
       PhysicsValidator.validateMaterialDensity(material, density);
       
