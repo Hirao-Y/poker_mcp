@@ -480,7 +480,7 @@ result_total:
 | Concrete | 2.0-2.5 | 2.3 | 11 | 建築遮蔽・生体遮蔽 |
 | Iron | 7.0-7.9 | 7.86 | 26 | 重遮蔽・構造材 |
 | Lead | 10.0-11.4 | 11.34 | 82 | γ線遮蔽・防護板 |
-| Aluminum | 2.5-2.8 | 2.70 | 13 | 軽量遮蔽・筐体 |
+| Aluminium | 2.5-2.8 | 2.70 | 13 | 軽量遮蔽・筐体 |
 | Copper | 8.5-9.0 | 8.96 | 29 | 配管遮蔽・熱交換器 |
 | Tungsten | 18.0-19.3 | 19.3 | 74 | 高密度遮蔽・コリメータ |
 | Air | 0.001-0.002 | 0.00129 | 7.3 | 空間・大気 |
@@ -490,6 +490,8 @@ result_total:
 | Polyethylene | 0.92-0.97 | 0.95 | 5.4 | 中性子遮蔽・減速材 |
 | Soil | 1.5-2.0 | 1.8 | 11 | 地中遮蔽・埋設 |
 | VOID | - | 0 | 0 | 真空・空隙・計算境界 |
+
+> 上表は固有ビルドアップデータを持つ13標準材料の代表値です。実行時の**密度既定・正式名は `%POKER_INSTALL_PATH%/LIB/lib_material.dat` が正**（`proposeZone` は密度省略でカタログ既定を採用）。ユーザ材料（`Source_Dry`, `Concrete_Si/Ca`, `Heavy_concrete_*`, `SUS_A/B`, `Cast_Iron`）と光子実効Zによるビルドアップ等価材料の割当は [MATERIAL_SYSTEM.md](./MATERIAL_SYSTEM.md) を参照。材料名は大文字小文字不問（`Aluminum`→`Aluminium`）。
 
 ### **減衰係数データ源**
 - **光子**: NIST XCOM データベース

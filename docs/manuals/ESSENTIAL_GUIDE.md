@@ -484,16 +484,18 @@ Claude指示例:
 
 ##### **主要材料の物性値**
 ```
-「以下の材料を適切な密度で設定してください：
+「以下の材料を設定してください（密度は省略可＝lib_material.dat のカタログ既定を採用）：
 
-1. CONCRETE（コンクリート）: 2.3g/cm³
-2. IRON（鉄）: 7.86g/cm³  
-3. LEAD（鉛）: 11.34g/cm³
-4. ALUMINUM（アルミニウム）: 2.70g/cm³
-5. WATER（水）: 1.0g/cm³
-6. POLYETHYLENE（ポリエチレン）: 0.92g/cm³
-7. STAINLESS（ステンレス鋼）: 8.0g/cm³
+1. Concrete（コンクリート）
+2. Iron（鉄）  
+3. Lead（鉛）
+4. Aluminium（アルミニウム）
+5. Water（水）
+6. Polyethylene（ポリエチレン）
+7. SUS_A（ステンレス鋼, 7.8 g/cm³）
 ```
+
+> 材料名は大文字小文字不問で `lib_material.dat` の正式名に正規化されます（`ALUMINUM`→`Aluminium`）。密度は省略可（カタログ既定）。無効名（例: 旧記載の STAINLESS）はエラーになります。全材料・ユーザ材料・ビルドアップ等価は [MATERIAL_SYSTEM.md](./MATERIAL_SYSTEM.md) を参照。
 
 ##### **材料選択の指針**
 ```
