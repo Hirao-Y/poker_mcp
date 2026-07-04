@@ -1,5 +1,17 @@
 # 📋 CHANGELOG - Poker MCP Server
 
+## 材料システム改修 (2026-07-04)
+
+- lib_material.dat を材料カタログの単一情報源として読み込み（`src/utils/MaterialCatalog.js` 新規）
+- 材料名を大文字小文字無視で lib_material.dat の正式名へ正規化（`Aluminum`→`Aluminium`）
+- 非標準材料（`Source_Dry`, `SUS_A` 等）をゾーン・ビルドアップで受理
+- `proposeZone`: `density` 省略時にカタログ密度を自動採用
+- `proposeBuildupFactor`: `equivalent` 追加。非標準材料は光子実効Z(Mayneord 2.94)最近傍で自動割当（例 `Source_Dry`→`Lead`）
+- `deleteBody`: `cascade` フラグ追加（依存ゾーンを先に削除してから立体を削除、opt-in）
+- 綴りを `Aluminium` に統一。未対応材料の拒否メッセージにカタログ全材料を列挙
+- `config/mcp-manifest.json` を v1.2.8 の実ツール定義から再生成
+- 詳細: docs/manuals/MATERIAL_SYSTEM.md
+
 ## [1.2.8] - 2026-05-16
 
 ### ✨ **新機能**

@@ -33,13 +33,13 @@
 |---------------|----------|---------------|
 | **poker_proposeBody** | 3D立体作成(自動バックアップ付き) | SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED |
 | **poker_updateBody** | 立体パラメータ更新 | 全10タイプ対応 |
-| **poker_deleteBody** | 立体削除(依存関係チェック付き) | 全10タイプ対応 |
+| **poker_deleteBody** | 立体削除(依存関係チェック付き・cascade対応) | 全10タイプ対応 |
 
 ### 🎨 **Zone操作系(3メソッド) - 材料物理検証付き**
 
 | **メソッド名** | **機能** | **対応材料** |
 |---------------|----------|--------------|
-| **poker_proposeZone** | 材料ゾーン作成(物理検証付き) | 13種類材料完全対応 |
+| **poker_proposeZone** | 材料ゾーン作成(物理検証付き) | lib_material.dat 全材料・密度省略可 |
 | **poker_updateZone** | ゾーン材料・密度更新 | 密度範囲: 0.001-30.0(g/cm³) |
 | **poker_deleteZone** | ゾーン削除(ATMOSPHERE保護) | システム保護機能付き |
 
@@ -55,7 +55,7 @@
 
 | **メソッド名** | **機能** | **補正オプション** |
 |---------------|----------|------------------|
-| **poker_proposeBuildupFactor** | ビルドアップ係数設定 | スラント補正、有限媒体補正 |
+| **poker_proposeBuildupFactor** | ビルドアップ係数設定(非標準材料はequivalent自動割当) | スラント補正、有限媒体補正 |
 | **poker_updateBuildupFactor** | 係数設定更新 | 補正パラメータ変更 |
 | **poker_deleteBuildupFactor** | 係数削除 | 計算精度影響評価付き |
 | **poker_changeOrderBuildupFactor** | 係数順序変更 | 計算効率最適化 |
@@ -276,21 +276,28 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 ```
 
 **対応材料13種**:
-| **材料名** | **標準密度 (g/cm³)** | **用途** |
-|-----------|-------------------|---------|
-| CONCRETE | 2.3 | 一般遮蔽・建築構造 |
-| IRON | 7.86 | 磁性遮蔽・構造材, STAINLESS代替 |
-| LEAD | 11.34 | 高密度γ線遮蔽 |
-| ALUMINUM | 2.70 | 軽量構造・散乱体 |
-| COPPER | 8.96 | 電気伝導・遮蔽 |
-| AIR | 1.205E-3 | 空気 |
-| WATER | 1.0 | 中性子減速・冷却 |
-| POLYETHYLENE | 0.92 | 中性子遮蔽・軽量化 |
-| GRAPHITE | 2.25 | 中性子減速・高温 |
-| BERYLLIUM | 1.85 | 中性子反射・軽量 |
-| TUNGSTEN | 19.3 | 超高密度遮蔽 |
-| BORON | 2.34 | 中性子吸収 |
-| VOID | - | 真空領域、散乱減衰無し |
+> **材料の正は `%POKER_INSTALL_PATH%/LIB/lib_material.dat`。** 材料名は大文字小文字を無視して指定でき（内部で正式名へ正規化。`Aluminum`→`Aluminium`）、`proposeZone` の密度は省略時にカタログ密度が採用されます。全材料・ビルドアップ等価材料の詳細は [MATERIAL_SYSTEM.md](./MATERIAL_SYSTEM.md) を参照。
+
+**標準材料（固有ビルドアップデータを持つ 13 種）**
+
+| 材料名 | 密度 (g/cm³) |
+|--------|-------------|
+| Carbon | 2.2 |
+| Aluminium | 2.7 |
+| Iron | 7.8 |
+| Copper | 8.9 |
+| Tungsten | 19.0 |
+| Lead | 11.0 |
+| Air | 0.001205 |
+| Water | 1.0 |
+| Concrete | 2.1 |
+| PyrexGlass | 2.23 |
+| AcrylicResin | 1.19 |
+| Polyethylene | 0.92 |
+| Soil | 1.5 |
+| VOID | -（非遮蔽領域） |
+
+**ユーザ材料**（`Source_Dry`, `Concrete_Si/Ca`, `Heavy_concrete_T/FP/IL`, `SUS_A/B`, `Cast_Iron`）もカタログにあれば使用可。ビルドアップは光子実効Zで最近傍の標準材料を自動割当（例 `Source_Dry`→`Lead`）。
 
 **Claude Desktop使用例**:
 ```
