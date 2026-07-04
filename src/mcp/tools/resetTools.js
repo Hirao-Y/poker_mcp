@@ -32,7 +32,7 @@ export const resetTools = [
           type: 'string',
           description: 'ATMOSPHEREゾーンに設定する材料',
           enum: [
-            'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum', 'Copper', 'Tungsten',
+            'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium', 'Copper', 'Tungsten',
             'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
           ],
           default: 'VOID'

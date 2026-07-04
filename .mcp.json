@@ -57,7 +57,7 @@
     },
     "supported_materials": {
       "count": 14,
-      "types": ["Carbon", "Concrete", "Iron", "Lead", "Aluminum", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"]
+      "types": ["Carbon", "Concrete", "Iron", "Lead", "Aluminium", "Copper", "Tungsten", "Air", "Water", "PyrexGlass", "AcrylicResin", "Polyethylene", "Soil", "VOID"]
     }
   },
   "data_configuration": {

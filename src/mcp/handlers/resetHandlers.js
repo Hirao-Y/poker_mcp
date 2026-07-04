@@ -50,7 +50,7 @@ export function createResetYamlHandler(taskManager) {
       }
 
       const validMaterials = [
-        'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum', 'Copper', 'Tungsten',
+        'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium', 'Copper', 'Tungsten',
         'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
       ];
       if (!validMaterials.includes(atmosphere_material)) {

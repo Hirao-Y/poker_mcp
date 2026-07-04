@@ -478,6 +478,7 @@ export class SafeDataManager {
         } else {
           this.data.buildup_factor.push({
             material: data.material,
+            ...(data.equivalent ? { equivalent: data.equivalent } : {}),
             use_slant_correction: data.use_slant_correction,
             use_finite_medium_correction: data.use_finite_medium_correction
           });

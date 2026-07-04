@@ -10,6 +10,10 @@ export const buildupFactorTools = [
           type: 'string',
           description: '材料名'
         },
+        equivalent: {
+          type: 'string',
+          description: '非標準材料のビルドアップ等価材料（省略時は組成の光子実効Zで最近傍の標準材料を自動選択）'
+        },
         use_slant_correction: {
           type: 'boolean',
           description: 'スラント補正: false=標準計算（推奨）、true=複雑角度幾何学のみ',

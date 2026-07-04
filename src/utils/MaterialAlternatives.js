@@ -1,5 +1,6 @@
 // utils/MaterialAlternatives.js - 材料代替マッピング機能
 import { PokerMcpError } from './mcpErrors.js';
+import { MaterialCatalog } from './MaterialCatalog.js';
 
 /**
  * 材料代替マッピング管理クラス
@@ -21,7 +22,7 @@ export class MaterialAlternatives {
 
   // サポートされる材料一覧（マニフェストと同期）
   static SUPPORTED_MATERIALS = [
-    'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum',
+    'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium',
     'Copper', 'Tungsten', 'Air', 'Water', 'PyrexGlass',
     'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
   ];
@@ -80,8 +81,10 @@ export class MaterialAlternatives {
       throw PokerMcpError.validationError('Material name is required', fieldName, material);
     }
 
-    // サポートされている材料かチェック
-    if (this.SUPPORTED_MATERIALS.includes(material)) {
+    // 綴り正規化（Aluminum→Aluminium 等）
+    const canonical = MaterialCatalog.normalizeName(material);
+    // 標準材料 または lib_material.dat カタログに存在すれば許可
+    if (this.SUPPORTED_MATERIALS.includes(canonical) || MaterialCatalog.has(canonical)) {
       return true; // 正常
     }
 
@@ -141,7 +144,7 @@ export class MaterialAlternatives {
         typical_use: '高効率遮蔽材',
         shielding_properties: '高密度γ線遮蔽材'
       },
-      'Aluminum': { 
+      'Aluminium': { 
         typical_use: '軽量構造材',
         shielding_properties: '軽量遮蔽材、耐食性'
       },

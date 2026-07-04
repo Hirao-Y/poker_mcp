@@ -9,6 +9,7 @@ import { DetectorValidator } from '../validators/DetectorValidator.js';
 import { UnitValidator } from '../validators/UnitValidator.js';
 import { PokerMcpError } from '../utils/mcpErrors.js';
 import { MaterialAlternatives } from '../utils/MaterialAlternatives.js';
+import { MaterialCatalog } from '../utils/MaterialCatalog.js';
 import { logger } from '../utils/logger.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
@@ -1222,9 +1223,11 @@ export class TaskManager {
   }
 
   // Buildup Factor操作
-  async proposeBuildupFactor(material, useSlantCorrection, useFiniteMediumCorrection) {
+  async proposeBuildupFactor(material, useSlantCorrection, useFiniteMediumCorrection, equivalent) {
     try {
       if (!material) throw new ValidationError('materialは必須です', 'material', material);
+      // 綴り正規化（Aluminum→Aluminium 等）
+      material = MaterialCatalog.normalizeName(material);
       
       // 新規作成専用チェック - マニフェスト仕様準拠
       this.validateProposalPrerequisites('buildup_factor', material, (m) => this.findBuildupFactorByMaterial(m));
@@ -1237,16 +1240,30 @@ export class TaskManager {
         throw new ValidationError(error.message, 'material', material);
       }
       
+      // 非標準材料は buildup 等価材料を自動割当（組成の光子実効Zで最近傍の標準材料）
+      if (!MaterialCatalog.isStandard(material)) {
+        equivalent = equivalent
+          ? MaterialCatalog.normalizeName(equivalent)
+          : MaterialCatalog.nearestBuildupEquivalent(material);
+      } else {
+        equivalent = undefined; // 標準材料は自前の buildup データを持つ
+      }
+      
+      const bfData = {
+        material,
+        use_slant_correction: useSlantCorrection,
+        use_finite_medium_correction: useFiniteMediumCorrection
+      };
+      if (equivalent) bfData.equivalent = equivalent;
+      
       await this.dataManager.addPendingChange({
         action: 'proposeBuildupFactor',
-        data: { 
-          material, 
-          use_slant_correction: useSlantCorrection, 
-          use_finite_medium_correction: useFiniteMediumCorrection 
-        }
+        data: bfData
       });
-      logger.info('ビルドアップ係数提案を追加しました', { material });
-      return `ビルドアップ係数 ${material} を追加しました`;
+      logger.info('ビルドアップ係数提案を追加しました', { material, equivalent });
+      return equivalent
+        ? `ビルドアップ係数 ${material} を追加しました (equivalent: ${equivalent})`
+        : `ビルドアップ係数 ${material} を追加しました`;
       
     } catch (error) {
       logger.error('ビルドアップ係数提案エラー', { material, error: error.message });

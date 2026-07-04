@@ -33,7 +33,8 @@ export function createBuildupFactorHandlers(taskManager) {
         const result = await taskManager.proposeBuildupFactor(
           args.material, 
           useSlantCorrection, 
-          useFiniteMediumCorrection
+          useFiniteMediumCorrection,
+          args.equivalent
         );
         return { success: true, message: result };
       } catch (error) {

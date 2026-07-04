@@ -154,7 +154,7 @@ class EnhancedValidator {
             'LEAD': { min: 10.0, max: 12.0, typical: 11.34 },
             'CONCRETE': { min: 1.8, max: 2.8, typical: 2.3 },
             'Iron': { min: 7.0, max: 8.5, typical: 7.87 },
-            'Aluminum': { min: 2.5, max: 2.8, typical: 2.70 },
+            'Aluminium': { min: 2.5, max: 2.8, typical: 2.70 },
             'Copper': { min: 8.5, max: 9.2, typical: 8.96 },
             'Air': { min: 0.001, max: 0.002, typical: 0.00129 }
         };
