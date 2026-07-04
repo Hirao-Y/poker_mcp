@@ -84,10 +84,21 @@ export function parseDoseMap(dosePath, detectorName, opts = {}) {
     if (value > max) { max = value; maxAt = { i, j, k, x, y, z }; }
     points.push({ i, j, ...(nk > 1 ? { k } : {}), x, y, z, value });
   }
-  let grid = null;
-  if (nk === 1) {
+  // 入れ子配列 grid: 1D → [i], 2D → [j][i], 3D → [k][j][i]
+  const at = (i, j, k) => points[i + j * ni + k * ni * nj].value;
+  let grid;
+  if (meta.edges.length === 1) {
+    grid = []; for (let i = 0; i < ni; i++) grid.push(at(i, 0, 0));
+  } else if (meta.edges.length === 2) {
     grid = [];
-    for (let j = 0; j < nj; j++) { const row = []; for (let i = 0; i < ni; i++) row.push(points[i + j*ni].value); grid.push(row); }
+    for (let j = 0; j < nj; j++) { const row = []; for (let i = 0; i < ni; i++) row.push(at(i, j, 0)); grid.push(row); }
+  } else {
+    grid = [];
+    for (let k = 0; k < nk; k++) {
+      const plane = [];
+      for (let j = 0; j < nj; j++) { const row = []; for (let i = 0; i < ni; i++) row.push(at(i, j, k)); plane.push(row); }
+      grid.push(plane);
+    }
   }
   return {
     detector: detectorName, dimensionality: meta.edges.length,

@@ -2,7 +2,7 @@
 export const calculationTools = [
   {
     name: 'poker_getDoseMap',
-    description: 'グリッド（面/線）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します。サマリーはグリッドを間引く（一部省略）ため、完全なマップはこのツールで取得します。',
+    description: 'グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します（grid: 1D→[i], 2D→[j][i], 3D→[k][j][i]、points に i/j/k と座標）。サマリーはグリッドを間引く（一部省略）ため、完全なマップはこのツールで取得します。',
     inputSchema: {
       type: 'object',
       properties: {

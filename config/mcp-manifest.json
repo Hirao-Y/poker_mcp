@@ -2396,7 +2396,7 @@
     },
     {
       "name": "poker_getDoseMap",
-      "description": "グリッド（面/線）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します。",
+      "description": "グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を .dose ファイルから取得し、線量マップ（grid 入れ子＋points）として返します。",
       "inputSchema": {
         "type": "object",
         "properties": {
