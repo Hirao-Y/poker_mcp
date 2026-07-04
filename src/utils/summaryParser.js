@@ -36,8 +36,14 @@ export function parseDoseSummary(summaryPath) {
     logger.warn('summary YAML パース失敗', { summaryPath, error: e.message });
     return null;
   }
+  // 既知の良性警告（ビルドアップ最大厚さ超過）への保守側クランプ注記
+  const notes = [];
+  if (warnings.some(w => /最大厚さ|ビルドアップ係数の最大厚|too\s*thick/i.test(w))) {
+    notes.push('ビルドアップ係数の最大厚さ(全材料 80 mfp)を超える透過線は 80 mfp の値にクランプされ、保守側の評価になります。該当線が高エネルギー主成分でなければ線量への寄与は小さいことが多いです。');
+  }
+
   const rt = doc && doc.result_total;
-  if (!rt) return { result_total: [], warnings, columns: [], elapsed_time: null };
+  if (!rt) return { result_total: [], warnings, notes, columns: [], elapsed_time: null };
 
   const detectors = (rt.detector || []).map(d => ({
     name: d.name,
@@ -52,6 +58,7 @@ export function parseDoseSummary(summaryPath) {
   return {
     result_total: detectors,
     warnings,
+    notes,
     columns: rt.columns || [],   // 各線量の表示名・単位
     elapsed_time: rt.elapsed_time || null
   };

@@ -10,7 +10,8 @@
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
     "dev": "nodemon src/mcp_server_stdio_v4.js",
-    "prepare": "echo 'NPX ready: npx poker-mcp'"
+    "prepare": "echo 'NPX ready: npx poker-mcp'",
+    "check:manifest": "node scripts/check-manifest-sync.mjs"
   },
   "keywords": [
     "mcp",

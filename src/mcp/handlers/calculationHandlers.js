@@ -167,6 +167,7 @@ export function createCalculationHandlers(taskManager) {
           if (parsed) {
             response.result_total = parsed.result_total;
             response.dose_columns = parsed.columns;
+            if (parsed.notes && parsed.notes.length) response.calculation_notes = parsed.notes;
             if (parsed.elapsed_time) response.calculation.elapsed_time = parsed.elapsed_time;
             if (parsed.warnings && parsed.warnings.length) {
               response.calculation_warnings = parsed.warnings;

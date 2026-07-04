@@ -316,7 +316,7 @@ export class SafeDataManager {
     this.pendingChanges.push({
       ...change,
       timestamp: new Date().toISOString(),
-      id: Date.now()
+      id: `${Date.now()}-${(this._pendingSeq = (this._pendingSeq || 0) + 1)}`
     });
     await this.savePendingChanges();
     logger.info('保留変更を追加しました', { action: change.action });

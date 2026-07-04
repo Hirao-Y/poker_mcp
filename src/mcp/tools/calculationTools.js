@@ -2,7 +2,7 @@
 export const calculationTools = [
   {
     name: 'poker_executeCalculation',
-    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します',
+    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
     inputSchema: {
       type: 'object',
       properties: {
