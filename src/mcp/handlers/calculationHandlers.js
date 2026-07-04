@@ -4,6 +4,7 @@ import { ValidationError, CalculationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
 import path from 'path';
 import { TASKS_DIR } from '../../utils/paths.js';
+import { parseDoseSummary } from '../../utils/summaryParser.js';
 
 export function createCalculationHandlers(taskManager) {
   const calculationService = new CalculationService();
@@ -155,6 +156,24 @@ export function createCalculationHandlers(taskManager) {
         // 出力ファイル生成の警告
         if (!fileVerification.allFilesGenerated) {
           response.warnings = ['Some output files were not generated. Check calculation logs for details.'];
+        }
+
+        // .summary(YAML) をパースして構造化 result_total を付加
+        try {
+          const summaryPath = (resolvedOutputFiles && resolvedOutputFiles.summary_file)
+            ? resolvedOutputFiles.summary_file
+            : resolvedYamlFile + '.summary';
+          const parsed = parseDoseSummary(summaryPath);
+          if (parsed) {
+            response.result_total = parsed.result_total;
+            response.dose_columns = parsed.columns;
+            if (parsed.elapsed_time) response.calculation.elapsed_time = parsed.elapsed_time;
+            if (parsed.warnings && parsed.warnings.length) {
+              response.calculation_warnings = parsed.warnings;
+            }
+          }
+        } catch (e) {
+          logger.warn('summary 構造化パースをスキップ', { error: e.message });
         }
 
         logger.info('Calculation completed successfully', {
