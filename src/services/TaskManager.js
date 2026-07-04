@@ -1021,20 +1021,32 @@ export class TaskManager {
 
     return body;
   }
-  async deleteBody(name) {
+  async deleteBody(name, cascade = false) {
     try {
       const body = this.findBodyByName(name);
       if (!body) {
         throw new ValidationError(`立体 ${name} が見つかりません`, 'name', name);
       }
 
-      // 依存関係チェック
+      // 依存関係チェック（適用済みゾーン）
       const dependentZones = this.data.zone?.filter(z => z.body_name === name) || [];
       if (dependentZones.length > 0) {
-        throw new PhysicsError(
-          `立体 ${name} には依存するゾーンが存在します: ${dependentZones.map(z => z.body_name).join(', ')}`,
-          'DEPENDENT_ZONES_EXIST'
-        );
+        if (!cascade) {
+          // 孤立ゾーン防止: 明示的な cascade なしでは削除不可
+          throw new PhysicsError(
+            `立体 ${name} には依存するゾーンが存在します: ${dependentZones.map(z => z.body_name).join(', ')}。` +
+            `孤立ゾーンを避けるため、先に poker_deleteZone でゾーンを削除するか、cascade=true を指定して立体と一緒に削除してください`,
+            'DEPENDENT_ZONES_EXIST'
+          );
+        }
+        // cascade=true: 依存ゾーンを「先に」削除してから立体を削除（順序保証・孤立ゾーンなし）
+        for (const z of dependentZones) {
+          await this.dataManager.addPendingChange({
+            action: 'delete_zone',
+            data: { body_name: z.body_name }
+          });
+          logger.info('依存ゾーンをカスケード削除に追加しました', { body_name: z.body_name, body: name });
+        }
       }
 
       await this.dataManager.addPendingChange({
@@ -1042,8 +1054,11 @@ export class TaskManager {
         data: { name: name }
       });
 
-      logger.info('立体削除を提案しました', { name });
-      return `提案: 立体 ${name} を削除`;
+      logger.info('立体削除を提案しました', { name, cascade });
+      const zoneNote = (cascade && dependentZones.length > 0)
+        ? `（依存ゾーン ${dependentZones.map(z => z.body_name).join(', ')} も削除）`
+        : '';
+      return `提案: 立体 ${name} を削除${zoneNote}`;
       
     } catch (error) {
       logger.error('立体削除エラー', { name, error: error.message });

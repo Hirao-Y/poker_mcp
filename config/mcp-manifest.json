@@ -287,13 +287,18 @@
     },
     {
       "name": "poker_deleteBody",
-      "description": "立体を削除します（依存関係チェック付き）",
+      "description": "立体を削除します（依存関係チェック付き）。依存ゾーンがある立体は孤立ゾーン防止のため既定では削除不可。cascade=true 明示時のみ、依存ゾーンを先に削除してから立体を削除。",
       "inputSchema": {
         "type": "object",
         "properties": {
           "name": {
             "type": "string",
             "description": "削除する立体名"
+          },
+          "cascade": {
+            "type": "boolean",
+            "default": false,
+            "description": "true の場合、この立体に割り当てられたゾーンを先に削除してから立体を削除（省略時 false。依存ゾーンがあるとエラー）"
           }
         },
         "required": [

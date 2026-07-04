@@ -81,7 +81,7 @@ export function createBodyHandlers(taskManager) {
     async deleteBody(args) {
       try {
         if (!args.name) throw new ValidationError('立体名は必須です', 'name', args.name);
-        const result = await taskManager.deleteBody(args.name);
+        const result = await taskManager.deleteBody(args.name, args.cascade === true);
         return { success: true, message: result };
       } catch (error) {
         logger.error('deleteBodyハンドラーエラー', { args, error: error.message });

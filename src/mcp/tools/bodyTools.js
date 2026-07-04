@@ -170,13 +170,18 @@ export const bodyTools = [
   },
   {
     name: 'poker_deleteBody',
-    description: '立体を削除します（依存関係チェック付き）',
+    description: '立体を削除します（依存関係チェック付き）。依存ゾーンがある立体は、孤立ゾーンを防ぐため既定では削除できません。cascade=true を明示した場合のみ、依存ゾーンを先に削除してから立体を削除します。',
     inputSchema: {
       type: 'object',
       properties: {
         name: {
           type: 'string',
           description: '削除する立体名'
+        },
+        cascade: {
+          type: 'boolean',
+          description: 'true の場合、この立体に割り当てられたゾーンを先に削除してから立体を削除します（省略時 false。依存ゾーンがある場合はエラー）',
+          default: false
         }
       },
       required: ['name']
