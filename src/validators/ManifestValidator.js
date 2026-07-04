@@ -128,8 +128,8 @@ export class ManifestValidator {
       throw PokerMcpError.validationError(`${fieldName} must be a positive number`, fieldName, radioactivity);
     }
     
-    if (radioactivity < 0.001 || radioactivity > 1e15) {
-      throw PokerMcpError.validationError(`${fieldName} must be between 0.001 and 1e15 Bq`, fieldName, radioactivity);
+    if (radioactivity < 0.001 || radioactivity > 1e18) {
+      throw PokerMcpError.validationError(`${fieldName} must be between 0.001 and 1e18 Bq`, fieldName, radioactivity);
     }
     
     return true;

@@ -100,9 +100,9 @@ export class NuclideValidator {
         );
       }
       
-      if (item.radioactivity < 0.001 || item.radioactivity > 1e15) {
+      if (item.radioactivity < 0.001 || item.radioactivity > 1e18) {
         throw PokerMcpError.validationError(
-          `inventory[${i}].radioactivity must be between 0.001 and 1e15 Bq`,
+          `inventory[${i}].radioactivity must be between 0.001 and 1e18 Bq`,
           `inventory[${i}].radioactivity`,
           item.radioactivity
         );

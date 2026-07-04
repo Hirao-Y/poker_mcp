@@ -205,7 +205,7 @@ class EnhancedValidator {
             
             for (const nuclide of source.inventory) {
                 // 極端な放射能値のチェック
-                if (nuclide.radioactivity > 1e15) { // 1 PBq超
+                if (nuclide.radioactivity > 1e17) { // 100 PBq超
                     result.warnings.push({
                         type: 'extremely_high_activity',
                         source: source.name,

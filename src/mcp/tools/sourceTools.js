@@ -38,7 +38,7 @@ export const sourceTools = [
                 type: 'number',
                 description: '放射能（単位Bq）',
                 minimum: 0.001,
-                maximum: 1e15
+                maximum: 1e18
               }
             },
             required: ['nuclide', 'radioactivity'],
@@ -462,7 +462,7 @@ export const sourceTools = [
                 type: 'number',
                 description: '放射能 (Bq)',
                 minimum: 0.001,
-                maximum: 1e15
+                maximum: 1e18
               }
             },
             required: ['nuclide', 'radioactivity']
