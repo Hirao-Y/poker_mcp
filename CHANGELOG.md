@@ -1,5 +1,35 @@
 # 📋 CHANGELOG - Poker MCP Server
 
+## [1.3.0] - 2026-07-04
+
+### ✨ 新機能
+
+#### `poker_getDoseMap` — グリッド検出器の線量マップ取得
+- グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を `.dose` ファイルから取得。サマリーはグリッド点を間引く（`一部省略`）ため、完全なマップは本ツールで取得する。
+- `.dose` の TOTAL 線源ブロック（dose 3種 × ray 4種の行列）を解析し、行規約 `i + j*number_i + k*number_i*number_j` に従って各点を復元。
+- 戻り値: `points[]`（i/j/k・座標・線量）＋入れ子 `grid`（1D→[i], 2D→[j][i], 3D→[k][j][i]）＋ `min/max/max_at`, `dims`, `unit`。
+- 引数: `detector_name`（必須）, `yaml_file`（既定 poker.yaml）, `dose_type`∈{E(AP),DskinM(AP),H*(10)}, `ray`∈{g1,n,g12,TOTAL}。
+- `.dose` の準備待ちリトライ（最大約10秒、未準備時のみ）を実装。
+- 追加/更新: `src/utils/doseMapParser.js`（新設）ほか。ツール数 29→30。
+
+#### `executeCalculation` の構造化結果
+- 応答に `.summary`(YAML) から抽出した構造化 `result_total`（検出器ごとの座標＋E(AP)/DskinM(AP)/H*(10) の内訳）、`dose_columns`、`calculation_warnings`、`calculation_notes` を追加。
+- 「最大厚さ(80mfp)超過」警告に保守側クランプの注記を自動付与。
+- 追加: `src/utils/summaryParser.js`（新設）。
+
+### 🐛 修正
+
+#### `updateSource` の division/geometry/cutoff_rate 対応
+- バックエンドは対応済みなのにツールスキーマと `validateUpdateSourceRequest` が弾いていた（3層不整合）。スキーマに `division`/`cutoff_rate`、allowedFields に `geometry`/`division` を追加。線源の in-place 更新（分割の収束スタディ等）が可能に。
+
+### 🔧 改善（堅牢性）
+- pending id を一意化（`Date.now()`＋連番）。
+- マニフェスト↔実行時ドリフト検出（`scripts/check-manifest-sync.mjs` / `npm run check:manifest`）。
+
+### 📚 ドキュメント
+- `PHYSICS_REFERENCE.md`・`ESSENTIAL_GUIDE.md` の材料記述を `MATERIAL_SYSTEM.md` に追随。
+- `CASK_DEMO_WORKFLOW.md`: グリッド検出器＋`getDoseMap`＋構造化結果の節を追加、FreeCAD 実表示図を埋め込み。
+
 ## 材料システム改修 (2026-07-04)
 
 - lib_material.dat を材料カタログの単一情報源として読み込み（`src/utils/MaterialCatalog.js` 新規）
