@@ -105,7 +105,7 @@ export function validateUpdateSourceRequest(args) {
   }
   
   // 更新可能なフィールドのみチェック
-  const allowedFields = ['name', 'position', 'inventory', 'cutoff_rate'];
+  const allowedFields = ['name', 'position', 'inventory', 'geometry', 'division', 'cutoff_rate'];
   const providedFields = Object.keys(args);
   const invalidFields = providedFields.filter(field => !allowedFields.includes(field));
   
