@@ -558,28 +558,25 @@ export class CalculationService {
           });
         }
         
-        // 子孫核種チェックは維持（物理的に必須）
-        if (validationResult.daughterNuclideCheck?.totalAdditions > 0 && 
-            !dataManager.daughterNuclideCheckDisabled) {
-          logger.info('子孫核種が検出されました - 計算を中断してユーザー確認を要求');
-          
-          return {
-            success: false,
-            stage: 'requires_confirmation',
-            status: 'requires_confirmation',
-            calculation_blocked: true,
-            error: 'DAUGHTER_NUCLIDE_CONFIRMATION_REQUIRED',
-            message: '子孫核種が検出されました。poker_confirmDaughterNuclidesで確認してください',
-            daughter_nuclide_suggestions: this.formatDaughterNuclideSuggestions(validationResult.daughterNuclideCheck),
-            total_additions: validationResult.daughterNuclideCheck.totalAdditions,
-            available_actions: [
-              'poker_confirmDaughterNuclides action="check" - 詳細確認',
-              'poker_confirmDaughterNuclides action="confirm" - 承認して適用',
-              'poker_confirmDaughterNuclides action="confirm_with_modifications" - 修正して適用',
-              'poker_confirmDaughterNuclides action="reject" - 拒否'
-            ],
-            next_step: 'poker_confirmDaughterNuclidesを実行後、再度poker_executeCalculationを実行してください'
+        // 子孫核種チェック
+        //
+        // v1.4.0 変更: 計算をブロックしない。
+        // 娘核種は propose/updateSource 時に自動生成されるようになったため、
+        // ここで検出が残るのは「YAML を外部で手編集した」場合に限られる。
+        // 計算を止めると、モデル構築を終えた最後の段階で理由の分からない
+        // 失敗が起きる（実際にそれが起きた）ため、警告として通知するに留める。
+        if (validationResult.daughterNuclideCheck?.totalAdditions > 0) {
+          logger.warn('未反映の子孫核種を検出しました（計算は続行します）', {
+            totalAdditions: validationResult.daughterNuclideCheck.totalAdditions
+          });
+          this.pendingDaughterNotice = {
+            message: '未反映の子孫核種が検出されました。' +
+                     'poker_confirmDaughterNuclides action="check" で確認できます',
+            suggestions: this.formatDaughterNuclideSuggestions(validationResult.daughterNuclideCheck),
+            total_additions: validationResult.daughterNuclideCheck.totalAdditions
           };
+        } else {
+          this.pendingDaughterNotice = null;
         }
         
         // 立体衝突以外の重大エラーのみチェック

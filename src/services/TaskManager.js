@@ -10,6 +10,11 @@ import { UnitValidator } from '../validators/UnitValidator.js';
 import { PokerMcpError } from '../utils/mcpErrors.js';
 import { MaterialAlternatives } from '../utils/MaterialAlternatives.js';
 import { MaterialCatalog } from '../utils/MaterialCatalog.js';
+import {
+  reconcileInventory,
+  getExcludedDaughters,
+  isDerived
+} from '../utils/DaughterReconciler.js';
 import { logger } from '../utils/logger.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
@@ -1350,6 +1355,49 @@ export class TaskManager {
     }
   }
 
+  /**
+   * 線源の子孫核種を再計算する共通ヘルパー
+   *
+   * propose/update のたびに呼ばれ、派生エントリを全破棄して親から作り直す。
+   * これにより親の放射能変更・親の削除が娘に自動伝播する。
+   *
+   * @param {Object} sourceData - 正規化済みの線源データ（inventory を含む）
+   * @returns {Promise<Object>} { source, added, skipped, warnings }
+   */
+  async reconcileSourceDaughters(sourceData) {
+    if (!sourceData || !sourceData.inventory) {
+      return { source: sourceData, added: [], skipped: [], warnings: [] };
+    }
+
+    try {
+      const result = await reconcileInventory(sourceData.inventory, {
+        nuclideManager: this.dataManager.nuclideManager,
+        excluded: getExcludedDaughters(sourceData),
+        sourceName: sourceData.name
+      });
+
+      sourceData.inventory = result.inventory;
+      return {
+        source: sourceData,
+        added: result.added,
+        skipped: result.skipped,
+        warnings: result.warnings
+      };
+    } catch (error) {
+      // 再計算の失敗で線源操作そのものを壊さない
+      logger.warn('子孫核種の再計算に失敗しました（元のインベントリを維持）', {
+        source: sourceData.name,
+        error: error.message
+      });
+      return {
+        source: sourceData,
+        added: [],
+        skipped: [],
+        warnings: [`子孫核種の再計算に失敗しました: ${error.message}`]
+      };
+    }
+  }
+
   // Source操作
   async proposeSource(params) {
     try {
@@ -1409,6 +1457,9 @@ export class TaskManager {
       
       // データ正規化
       const normalizedParams = this.normalizeSourceData(params);
+
+      // 子孫核種の再計算（派生エントリを親から生成）
+      const daughterResult = await this.reconcileSourceDaughters(normalizedParams);
       
       logger.info('正規化後のパラメーター', {
         name: normalizedParams.name,
@@ -1435,8 +1486,19 @@ export class TaskManager {
       
       const complexityInfo = validationResult.divisionComplexity > 1 ? 
         ` (分割複雑度: ${validationResult.divisionComplexity})` : '';
-      
-      return `提案: 線源 ${name} (${type}${complexityInfo}) を追加`;
+
+      let msg = `提案: 線源 ${name} (${type}${complexityInfo}) を追加`;
+      if (daughterResult.added.length > 0) {
+        const list = daughterResult.added
+          .map(d => `${d.nuclide}=${d.radioactivity.toExponential(4)}Bq(←${d.x_meta.derived_from})`)
+          .join(', ');
+        msg += `\n子孫核種を自動生成: ${list}`;
+        msg += `\n不要な場合は poker_confirmDaughterNuclides action="reject" source_name="${name}" で除外できます`;
+      }
+      if (daughterResult.warnings.length > 0) {
+        msg += `\n[!] ${daughterResult.warnings.join(' / ')}`;
+      }
+      return msg;
       
     } catch (error) {
       logger.error('線源提案エラー', { params, error: error.message });
@@ -1504,6 +1566,15 @@ export class TaskManager {
       
       // 更新後の構造最適化分析
       const mergedSource = { ...existingSource, ...normalizedUpdates };
+
+      // 子孫核種の再計算
+      // inventory が更新された場合だけでなく、除外リストが変わった場合も対象になる。
+      // 既存の派生エントリは破棄され、更新後の親から作り直される。
+      let daughterResult = { added: [], skipped: [], warnings: [] };
+      if (normalizedUpdates.inventory || normalizedUpdates.x_meta) {
+        daughterResult = await this.reconcileSourceDaughters(mergedSource);
+        normalizedUpdates.inventory = mergedSource.inventory;
+      }
       const optimization = SourceValidator.analyzeSrcStructureOptimization(mergedSource);
       if (optimization.suggestions.length > 0) {
         logger.info('Source更新後の最適化提案', {
@@ -1518,7 +1589,24 @@ export class TaskManager {
       });
       
       logger.info('線源更新を提案しました', { name, updates: normalizedUpdates });
-      return `提案: 線源 ${name} の更新を保留しました`;
+
+      let umsg = `提案: 線源 ${name} の更新を保留しました`;
+      if (daughterResult.added.length > 0) {
+        const list = daughterResult.added
+          .map(d => `${d.nuclide}=${d.radioactivity.toExponential(4)}Bq(←${d.x_meta.derived_from})`)
+          .join(', ');
+        umsg += `\n子孫核種を再計算: ${list}`;
+      }
+      const excludedNow = daughterResult.skipped
+        .filter(s => s.reason === 'excluded_by_user')
+        .map(s => s.nuclide);
+      if (excludedNow.length > 0) {
+        umsg += `\n除外設定により生成しなかった核種: ${excludedNow.join(', ')}`;
+      }
+      if (daughterResult.warnings.length > 0) {
+        umsg += `\n[!] ${daughterResult.warnings.join(' / ')}`;
+      }
+      return umsg;
       
     } catch (error) {
       logger.error('線源更新エラー', { name, error: error.message });

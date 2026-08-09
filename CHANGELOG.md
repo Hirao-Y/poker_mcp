@@ -1,5 +1,73 @@
-# 📋 CHANGELOG - Poker MCP Server
+# CHANGELOG - Poker MCP Server
 
+## [1.4.0] - 2026-08-10
+
+### 子孫核種の自動管理
+
+親核種を指定すると子孫核種を自動生成し、親の更新・削除に追随させる仕組みを導入しました。
+発火タイミングを `executeCalculation` 時から `proposeSource` / `updateSource` 時へ移しています。
+
+- **新規** `src/utils/DaughterReconciler.js` — 全消し再構築方式による再計算
+- 派生エントリを `x_meta.derived_from` で識別し、ユーザ入力と区別
+- 多世代連鎖に対応（最大8世代、不動点まで展開）
+- 平衡型を親娘の半減期比で判定（永続 / 過渡 / 平衡なし）
+- 平衡が成立しない組み合わせは推定せず警告を出力
+- 除外を線源ごとに `x_meta.excluded_daughters` へ永続化
+
+詳細は `docs/DAUGHTER_NUCLIDE_MANAGEMENT.md` を参照してください。
+
+### 修正
+
+#### ICRP-07 NDX パーサの列位置誤り（重大）
+
+`parseNuclideLine` の固定長列位置が実データと一致しておらず、以下の誤りがありました。
+
+- 半減期を `substring(7,15)` で切っていたため単位が崩壊形式側へ流出し、
+  Cs137 の半減期を 30.17 年ではなく **30.17 秒**と解釈していた（9桁の誤り）
+- 子孫核種の読み取り位置が 47/72/97 だったが、実際は 53/78/103
+- 結果として **全1252核種で子孫核種を1件も取得できていなかった**
+
+`handleSpecialCases` に Cs137→Ba137m のみハードコードされていたのは、
+この不具合を個別に回避していたものと思われます。修正後は 808 核種が
+子孫核種を持つようになりました。
+
+#### 子孫核種の解析順序依存（重大）
+
+解析中に `isRadioactiveDaughter()` で `nuclideData` を参照していましたが、
+NDX は Z 順に並ぶため、親より後に現れる娘（Cs-137 → Ba-137m など）は
+参照時点で未登録であり、常に安定核種と判定されて捨てられていました。
+判定をデータベース読み込み完了後の `getDaughters()` へ移動しました。
+
+#### 半減期パーサの単位解釈
+
+分(m)・ミリ秒(ms)・マイクロ秒・ナノ秒を解釈できず、`"2.552m"` を
+2.552 秒と誤読していました。`ms` を `m` と誤判定しないよう単位表を整理しています。
+
+#### reject のグローバル無効化（設計バグ）
+
+`poker_confirmDaughterNuclides action="reject"` が `source_name` を無視し、
+`setDaughterNuclideCheckDisabled(true)` をグローバルに設定していました。
+1つの線源で拒否すると全線源の検出が無効になる状態でした。
+線源ごとの除外リストへ変更し、当該メソッドは非推奨としています。
+
+#### 計算時のブロック解除
+
+子孫核種が検出されると `executeCalculation` が
+`DAUGHTER_NUCLIDE_CONFIRMATION_REQUIRED` を返して計算を中断していました。
+MCP 層でこの応答が握り潰され、クライアントには理由の分からない実行失敗として
+現れる問題がありました。警告通知に格下げし、計算は継続します。
+
+### 変更
+
+- `poker_confirmDaughterNuclides` に `nuclides` 引数を追加（核種の個別指定）
+- `NuclideManager` に `ensureLoaded()` / `getDaughters()` / `getHalfLifeSeconds()` を追加
+- **新規** `tools/test_daughter_reconcile.mjs` — スモークテスト18項目
+
+### POKER 本体側の対応が必要
+
+本バージョンは POKER が `x_meta` ノードを受理することを前提とします。
+`source` 直下と `inventory` 要素直下の2箇所です。
+未対応の POKER では入力が拒否されます。
 ## [1.3.0] - 2026-07-04
 
 ### ✨ 新機能

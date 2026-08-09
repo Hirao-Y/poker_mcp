@@ -7,6 +7,7 @@ import { DataError } from '../utils/errors.js';
 import CollisionDetector from '../utils/CollisionDetector.js';
 import NuclideManager from '../utils/NuclideManager.js';
 import EnhancedValidator from '../utils/EnhancedValidator.js';
+import { getExcludedDaughters, normalizeNuclide } from '../utils/DaughterReconciler.js';
 import { BACKUPS_DIR, LOGS_DIR, TASKS_DIR, DATA_DIR, NDX_FILE,
          YAML_FILE, PENDING_FILE } from '../utils/paths.js';
 
@@ -1042,7 +1043,16 @@ export class SafeDataManager {
         });
 
         const result = await this.nuclideManager.autoCompleteDaughters(source.inventory);
-        
+
+        // 線源ごとの除外設定を尊重する（x_meta.excluded_daughters）
+        const excluded = new Set(getExcludedDaughters(source));
+        if (result.additions && excluded.size > 0) {
+          result.additions = result.additions.filter(
+            a => !excluded.has(normalizeNuclide(a.nuclide))
+          );
+          result.additionsCount = result.additions.length;
+        }
+
         if (result.additionsCount > 0) {
           allResults.push({
             sourceName: source.name,
@@ -1570,11 +1580,19 @@ export class SafeDataManager {
 
   /**
    * 子孫核種チェック無効化の設定
-   * @param {boolean} disabled - 無効化するかどうか
+   *
+   * @deprecated v1.4.0 で廃止。除外は線源ごとに x_meta.excluded_daughters で管理する。
+   * 旧実装ではこのグローバルフラグにより、1つの線源で reject すると
+   * 全線源の子孫核種検出が無効になっていた（設計バグ）。
+   * 互換性のため残置するが、呼び出しても検出動作には影響しない。
    */
   setDaughterNuclideCheckDisabled(disabled) {
-    this.daughterNuclideCheckDisabled = disabled;
-    logger.info('子孫核種チェック無効化設定', { disabled });
+    logger.warn(
+      'setDaughterNuclideCheckDisabled は廃止されました。' +
+      '除外は poker_confirmDaughterNuclides action="reject" source_name=... を使用してください',
+      { disabled }
+    );
+    this.daughterNuclideCheckDisabled = false;
   }
 
   /**

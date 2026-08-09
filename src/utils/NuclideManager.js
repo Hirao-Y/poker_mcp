@@ -100,68 +100,50 @@ class NuclideManager {
      * @returns {Object|null} 核種データ
      */
     parseNuclideLine(line) {
-        // ICRP-07形式: 実際のデータ構造に基づく解析
+        // ICRP-07 NDX 固定長フォーマット（実データで検証した列位置）
+        //
+        //   0- 6 : 核種名            "Cs-137 "
+        //   7-15 : 半減期(値+単位)   " 30.1671y"   ← 単位は15桁目
+        //  16-24 : 崩壊形式          " B-"
+        //  53-77 : 第1子孫 (名前7 + index7 + 分岐比11)
+        //  78-102: 第2子孫
+        // 103-127: 第3子孫
+        //
+        // 旧実装は半減期を substring(7,15) としていたため単位が崩壊形式側へ
+        // ずれ込み、"30.1671" (=30秒) と誤読していた。子孫核種の列位置も
+        // 47/72/97 とずれており、全核種で子孫が取得できていなかった。
         if (line.length < 150) return null;
-        
-        const name = line.substring(0, 7).trim().replace('-', '');  // Cs-137 → Cs137
-        const halfLife = line.substring(7, 15).trim();
-        const decayMode = line.substring(15, 25).trim();
-        
-        // 子孫核種情報の抽出 (正確な位置に基づく)
+
+        const name = line.substring(0, 7).trim().replace('-', '');
+        const halfLife = line.substring(7, 16).trim();
+        const decayMode = line.substring(16, 25).trim();
+
+        // 子孫核種情報の抽出
+        //
+        // 注意: ここでは安定核種の判定・分岐比の閾値判定を行わない。
+        // NDX は Z 順に並ぶため、親より後ろに現れる娘（例: Cs-137 → Ba-137m）は
+        // 解析時点ではまだ nuclideData に登録されておらず、
+        // isRadioactiveDaughter() が常に false を返してしまうためである。
+        // 判定はデータベース読み込み完了後の getDaughters() で行う。
         const daughters = [];
-        
-        // 第1子孫核種: 位置47から
-        const daughter1Name = line.substring(47, 54).trim().replace('-', '');
-        const daughter1Index = parseInt(line.substring(54, 60).trim()) || 0;
-        const daughter1Ratio = this.parseScientificNumber(line.substring(60, 71).trim());
-        
-        if (daughter1Name && daughter1Ratio > 0 && daughter1Ratio >= this.contributionThreshold) {
-            // 安定核種でない場合のみ追加
-            if (this.isRadioactiveDaughter(daughter1Name, daughter1Index)) {
-                daughters.push({
-                    name: daughter1Name,
-                    branchingRatio: daughter1Ratio,
-                    index: daughter1Index
-                });
+        const OFFSETS = [53, 78, 103];
+
+        for (const base of OFFSETS) {
+            const dName = line.substring(base, base + 7).trim().replace('-', '');
+            const dIndex = parseInt(line.substring(base + 7, base + 14).trim()) || 0;
+            const dRatio = this.parseScientificNumber(line.substring(base + 14, base + 25).trim());
+
+            if (dName && dRatio > 0) {
+                daughters.push({ name: dName, branchingRatio: dRatio, index: dIndex });
             }
         }
-        
-        // 第2子孫核種: 位置72から
-        const daughter2Name = line.substring(72, 79).trim().replace('-', '');
-        const daughter2Index = parseInt(line.substring(79, 85).trim()) || 0;
-        const daughter2Ratio = this.parseScientificNumber(line.substring(85, 96).trim());
-        
-        if (daughter2Name && daughter2Ratio > 0 && daughter2Ratio >= this.contributionThreshold) {
-            if (this.isRadioactiveDaughter(daughter2Name, daughter2Index)) {
-                daughters.push({
-                    name: daughter2Name,
-                    branchingRatio: daughter2Ratio,
-                    index: daughter2Index
-                });
-            }
-        }
-        
-        // 第3子孫核種: 位置97から
-        const daughter3Name = line.substring(97, 104).trim().replace('-', '');
-        const daughter3Index = parseInt(line.substring(104, 110).trim()) || 0;
-        const daughter3Ratio = this.parseScientificNumber(line.substring(110, 121).trim());
-        
-        if (daughter3Name && daughter3Ratio > 0 && daughter3Ratio >= this.contributionThreshold) {
-            if (this.isRadioactiveDaughter(daughter3Name, daughter3Index)) {
-                daughters.push({
-                    name: daughter3Name,
-                    branchingRatio: daughter3Ratio,
-                    index: daughter3Index
-                });
-            }
-        }
-        
+
         return {
             name,
             halfLife,
             decayMode,
             daughters,
-            line: line // デバッグ用に元の行を保持
+            line: line
         };
     }
 
@@ -291,6 +273,41 @@ class NuclideManager {
     }
 
     /**
+     * データベースが未ロードなら読み込む
+     */
+    async ensureLoaded() {
+        if (this.nuclideData.size === 0) {
+            await this.loadNuclideDatabase();
+        }
+        return this.nuclideData.size;
+    }
+
+    /**
+     * 指定核種の娘核種一覧を取得
+     * @param {string} name - 親核種名
+     * @returns {Array} [{ name, branchingRatio, index }]
+     */
+    getDaughters(name) {
+        const data = this.nuclideData.get(this.normalizeNuclideName(name));
+        if (!data || !Array.isArray(data.daughters)) return [];
+        return data.daughters.filter(d =>
+            d && d.name && this.isRadioactiveDaughter(d.name, d.index)
+        );
+    }
+
+    /**
+     * 半減期を秒で取得
+     * @param {string} name - 核種名
+     * @returns {number|null} 半減期[秒]、不明なら null
+     */
+    getHalfLifeSeconds(name) {
+        const data = this.nuclideData.get(this.normalizeNuclideName(name));
+        if (!data) return null;
+        const v = this.parseHalfLife(data.halfLife);
+        return v > 0 ? v : null;
+    }
+
+    /**
      * 核種名の正規化
      * @param {string} nuclideName - 核種名
      * @returns {string} 正規化された核種名
@@ -320,21 +337,46 @@ class NuclideManager {
     }
 
     /**
-     * 半減期の解析（簡略版）
+     * 半減期の解析
+     *
+     * ICRP-07 の表記（例: "30.1671 y", "2.552m", "6.0067 h", "1.2E+01 s"）を秒に変換する。
+     * 旧実装は分(m)・ミリ秒(ms)等を扱えず、"2.552m" を 2.552 秒と誤読していた。
+     * 単位判定は長いトークンから順に行う（ms を m と誤判定しないため）。
+     *
      * @param {string} halfLifeStr - 半減期文字列
-     * @returns {number} 半減期（秒）
+     * @returns {number} 半減期（秒）。解析できない場合は 0
      */
     parseHalfLife(halfLifeStr) {
-        // 実装は簡略化 - 実際にはより複雑な解析が必要
-        if (halfLifeStr.includes('y')) {
-            return parseFloat(halfLifeStr) * 3.154e7; // 年→秒
-        } else if (halfLifeStr.includes('d')) {
-            return parseFloat(halfLifeStr) * 86400; // 日→秒
-        } else if (halfLifeStr.includes('h')) {
-            return parseFloat(halfLifeStr) * 3600; // 時間→秒
-        } else {
-            return parseFloat(halfLifeStr) || 0;
+        if (halfLifeStr === undefined || halfLifeStr === null) return 0;
+        const s = String(halfLifeStr).trim();
+        if (s === '' || /stable/i.test(s)) return 0;
+
+        // 数値部（科学的記数法を含む）と単位部を分離
+        const m = s.match(/^\s*([+-]?\d*\.?\d+(?:[eE][+-]?\d+)?)\s*([a-zA-Zμ]*)/);
+        if (!m) return 0;
+
+        const value = parseFloat(m[1]);
+        if (!isFinite(value) || value <= 0) return 0;
+
+        const unit = (m[2] || 's').toLowerCase();
+        const FACTORS = {
+            'y': 3.1556952e7, 'yr': 3.1556952e7, 'a': 3.1556952e7,
+            'd': 86400,
+            'h': 3600,
+            'm': 60, 'min': 60,
+            's': 1, 'sec': 1,
+            'ms': 1e-3,
+            'us': 1e-6, 'μs': 1e-6,
+            'ns': 1e-9,
+            'ps': 1e-12
+        };
+
+        const factor = FACTORS[unit];
+        if (factor === undefined) {
+            logger.warn('半減期の単位を解釈できません', { halfLifeStr, unit });
+            return 0;
         }
+        return value * factor;
     }
 
     /**
