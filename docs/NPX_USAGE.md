@@ -239,7 +239,7 @@ Node.js 18未満の場合は https://nodejs.org/ から最新版をインスト�
 |------|---|
 | メモリ使用 | 40〜200MB |
 | 起動時間 | 1〜3秒（核種DB読み込み含む） |
-| 応答時間 | <50ms（全29メソッド） |
+| 応答時間 | <50ms（全30メソッド） |
 | バックアップ世代 | 最大10世代（自動管理） |
 
 ---
@@ -276,4 +276,4 @@ npx poker-mcp
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.2.6** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.4.0** | 作者: Yoshihiro Hirao | ライセンス: ISC

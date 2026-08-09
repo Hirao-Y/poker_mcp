@@ -468,6 +468,6 @@ POKER_MCP_HOME/
 
 ---
 
-**🎯 Poker MCP Server v1.2.8**  
+**🎯 Poker MCP Server v1.4.0**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: ISC

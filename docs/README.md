@@ -283,6 +283,14 @@ total_doses = summary['result_total']
 
 ## 🔄 更新履歴
 
+### v1.4.0
+- 子孫核種の自動管理（親の更新・削除に追随、除外は線源ごと）
+- ICRP-07パーサの列位置誤りを修正（全核種で子孫核種が取得不能だった）
+- 核種DBを POKER_INSTALL_PATH/LIB から直接参照
+
+### v1.3.0
+- poker_getDoseMap、構造化 result_total、材料カタログ統合
+
 ### v1.2.8
 - ✅ **poker_openGui 追加**: POKER.exe GUI 起動（自動保存・Windows専用）
 - ✅ **30メソッド完全実装**: System系に openGui を追加

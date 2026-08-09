@@ -2,15 +2,15 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.2.5  
-**🔧 バージョン**: 1.2.5 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.4.0  
+**🔧 バージョン**: 1.4.0 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した28メソッドの詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した30メソッドの詳細仕様を提供します。
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -86,7 +86,7 @@
 | **poker_validateUnitIntegrity** | 単位完全性検証 | 4キー構造・物理整合性・システム分析 |
 | **poker_analyzeUnitConversion** | 単位変換分析 | 変換係数計算・物理整合性評価 |
 
-### 🔧 **System操作系 (5メソッド) - システム制御**
+### 🔧 **System操作系 (6メソッド) - システム制御**
 
 | **メソッド名** | **機能** | **特徴** |
 |---------------|----------|----------|
@@ -95,6 +95,7 @@
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動。除外は線源ごと |
 | **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存 |
+| **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避 |
 
 ### ☢️ **子孫核種の自動管理（v1.4.0）**
 
@@ -158,7 +159,7 @@ poker_updateSource(name="Src",
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.2.5
+⚙️ Poker MCP Server v1.4.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
@@ -257,7 +258,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 ---
 
-## 📊 28メソッド完全仕様
+## 📊 30メソッド完全仕様
 
 ### 📐 **Body系メソッド（立体管理）**
 
