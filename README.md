@@ -4,12 +4,36 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.4.0
+- **バージョン**: 1.5.0
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.5.0の新機能
+
+### 🖥️ POKER GUI を閉じずに表示を切り替え
+`poker_openGui` で別の入力を指定すると、起動中の POKER ウィンドウの表示が
+そのまま切り替わります。従来は先に POKER を閉じる必要がありました。
+
+未保存の編集があるときは POKER 側で保存確認が出るため、編集内容が
+黙って失われることはありません（キャンセルすると切り替わりません）。
+
+> **POKER 2.1.1 以降が必要です。** 2.1.0 以前では従来どおり
+> `POKER_ALREADY_RUNNING` を返すので、先に POKER を閉じてください。
+
+### 🐛 `poker_openGui` の偽の成功報告を修正
+`spawn` の成否のみで判定していたため、POKER が二重起動で弾かれて即座に
+終了しても「起動しました」と PID 付きで成功を返していました。
+起動後の生存確認を追加し、実際に表示されたことを確認してから報告します。
+
+### 📖 ドキュメントの大幅整理
+`ADMIN_GUIDE.md` を実運用に即した内容へ全面改訂しました（699行 → 248行）。
+乱数で「正常」を出力する監視スクリプトなど、実態と乖離した記述を削除し、
+検証可能な手順のみに整理しています。
+
+詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 ## 🆕 バージョン1.4.0の新機能
 

@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.4.0 (30メソッド完全実装)
+**対応バージョン**: Poker MCP Server v1.5.0 (30メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 
@@ -41,7 +41,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
 |---|---|
 | OS | Windows 10/11（`poker_openGui` は Windows 専用） |
 | Node.js | 18 以上（ES Modules 使用） |
-| POKER 本体 | 2.1.0 以上（v1.4.0 の `x_meta` 対応が必要） |
+| POKER 本体 | 2.1.1 以上（GUI入力転送。2.1.0 でも `x_meta` は動作） |
 | ディスク | 作業領域 1GB 程度（バックアップ10世代分を含む） |
 
 ### 導入方法
@@ -53,7 +53,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.4.0"],
+      "args": ["-y", "poker-mcp@1.5.0"],
       "env": {
         "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"

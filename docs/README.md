@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.4.0
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.5.0
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（30メソッド完全実装）
 

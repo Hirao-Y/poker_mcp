@@ -1,4 +1,4 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.4.0)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.5.0)
 
 ## 📦 起動方法
 
@@ -87,7 +87,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.4.0推奨）**
+## 🎯 **Claude Desktop での設定（v1.5.0推奨）**
 
 ### **推奨設定**
 ```json
@@ -95,7 +95,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.4.0"],
+      "args": ["-y", "poker-mcp@1.5.0"],
       "env": {
         "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -107,7 +107,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 `<username>` はご自身のWindowsユーザー名に置き換えてください。
 
 > **⚠️ 版数の固定を推奨**
-> `poker-mcp@latest` ではなく `poker-mcp@1.4.0` のように固定してください。
+> `poker-mcp@latest` ではなく `poker-mcp@1.5.0` のように固定してください。
 > 遮蔽計算では、いつサーバが入れ替わるか分からない状態は再現性の観点から
 > 望ましくありません。更新は設定を書き換える意図的な操作として行います。
 >
@@ -130,7 +130,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.4.0"],
+      "args": ["-y", "poker-mcp@1.5.0"],
       "env": {
         "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
         "POKER_INSTALL_PATH": "/usr/local/share/poker"
@@ -276,4 +276,4 @@ npx poker-mcp
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.4.0** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.5.0** | 作者: Yoshihiro Hirao | ライセンス: ISC

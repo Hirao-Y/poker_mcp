@@ -2,8 +2,8 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.4.0  
-**🔧 バージョン**: 1.4.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.5.0  
+**🔧 バージョン**: 1.5.0 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
@@ -159,7 +159,7 @@ poker_updateSource(name="Src",
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.4.0
+⚙️ Poker MCP Server v1.5.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
