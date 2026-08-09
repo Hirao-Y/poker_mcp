@@ -1,699 +1,342 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対象読者**: システム管理者・IT部門・インフラ担当者  
-**📚 マニュアル階層**: テクニカル層  
-**対応バージョン**: Poker MCP Server v1.4.0 (30メソッド完全実装)  
-**最終更新**: 2026年5月16日  
-**品質レベル**: エンタープライズ本番環境対応
+**対応バージョン**: Poker MCP Server v1.4.0 (30メソッド完全実装)
+**想定環境**: Windows + Claude Desktop（stdio 通信）
+**最終更新**: 2026年8月
 
 ---
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**のシステム管理者ガイドです。
+Poker MCP Server の**導入・設定・保守**に必要な実務情報をまとめます。
+日常の使い方は [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)、
+問題発生時の対処は [TROUBLESHOOTING.md](TROUBLESHOOTING.md) を参照してください。
 
-### 📋 読み方ガイド
-- **基礎学習**: [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) で基本概念を習得
-- **日常操作**: [QUICK_REFERENCE.md](QUICK_REFERENCE.md) で操作方法を確認
-- **システム統合**: [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) で連携方法を学習
-- **問題対応**: [TROUBLESHOOTING.md](TROUBLESHOOTING.md) で障害対応を確認
-- **API詳細**: [API_COMPLETE.md](API_COMPLETE.md) で技術仕様を参照
+### 動作形態の理解
+
+本サーバは**常駐サービスではありません**。Claude Desktop が MCP クライアントとして
+子プロセスを起動し、標準入出力（stdio）で JSON-RPC 通信を行います。
+
+```
+Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
+                                  │
+                                  ├── POKER_MCP_HOME/  (作業ファイル)
+                                  └── POKER_INSTALL_PATH/  (POKER本体・核データ)
+```
+
+この構造から導かれる重要な帰結があります。
+
+- **プロセス管理は Claude Desktop が行う**。PM2 や systemd は使いません
+- **HTTP ポートを開かない**。外部からの疎通監視やヘルスチェックはできません
+- **設定変更の反映には Claude Desktop の再起動が必要**
+- **標準出力は JSON-RPC 専用**。ログは stderr とログファイルへ出力されます
 
 ---
 
-## 🎯 管理者ガイドの概要
+## 🏗️ セットアップ
 
-### **本ガイドの対象範囲**
-このガイドは、Poker MCP Server v1.4.0システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
+### システム要件
 
-#### **対応システム仕様**
-- **30メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）
-- **10種類立体タイプ**: SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED完全対応
-- **4キー単位系完全性**: length, angle, density, radioactivity完全性保証
-- **MCP v1.0準拠**: Model Context Protocol v1.0完全準拠
+| 項目 | 要件 |
+|---|---|
+| OS | Windows 10/11（`poker_openGui` は Windows 専用） |
+| Node.js | 18 以上（ES Modules 使用） |
+| POKER 本体 | 2.1.0 以上（v1.4.0 の `x_meta` 対応が必要） |
+| ディスク | 作業領域 1GB 程度（バックアップ10世代分を含む） |
 
-#### **カバーする領域**
-- 🏗️ **システムセットアップ**: v1.4.0対応インストール・設定
-- 📊 **運用監視**: 30メソッド・パフォーマンス・ヘルス監視
-- 🔒 **セキュリティ設定**: MCP準拠多層防御・アクセス制御
-- 📈 **パフォーマンス最適化**: 10立体・4単位対応スケーリング・チューニング
-- 🛡️ **障害対応**: 迅速復旧・根本原因分析
+### 導入方法
 
----
+**方法A: npm パッケージ（推奨）**
 
-## 🏗️ システムセットアップ（v1.4.0対応）
-
-### 📋 **最新システム要件**
-
-#### **ハードウェア要件 (v1.4.0対応推奨)**
-| **環境** | **CPU** | **RAM** | **ディスク** | **ネットワーク** | **30メソッド対応** |
-|---------|---------|---------|--------------|-----------------|------------------|
-| **開発** | 4コア+ | 8GB+ | 100GB+ | 100Mbps | 小規模テスト・検証 |
-| **研究室** | 8コア+ | 16GB+ | 500GB+ | 1Gbps | 10立体・中規模計算 |
-| **部門** | 16コア+ | 32GB+ | 1TB+ | 10Gbps | 複合形状・大規模計算 |
-| **企業** | 32コア+ | 64GB+ | 5TB+ | 10Gbps+ | 分散計算・エンタープライズ |
-
-#### **ソフトウェア要件（最新版）**
-```bash
-# 必須コンポーネント
-Node.js >= 18.0 LTS (推奨: 20.12.0 LTS)
-npm >= 10.0 (推奨: 10.2.0+)
-Git >= 2.42
-
-# MCP v1.0対応
-@modelcontextprotocol/sdk >= 1.0.0
-Claude Desktop >= 0.12.125
-
-# 推奨コンポーネント  
-PM2 >= 5.3.0 (プロセス管理)
-nginx >= 1.24.0 (リバースプロキシ)
-logrotate >= 3.20 (ログ管理)
-certbot >= 2.8.0 (SSL証明書)
-```
-
-### ⚡ **v1.4.0高速セットアップ手順**
-
-#### **1. システム準備** (5分)
-```bash
-# 専用ユーザー作成（v1.4.0対応）
-sudo useradd -r -m -s /bin/bash poker_mcp_v12
-sudo mkdir -p /opt/poker_mcp_v12/{app,data,logs,backups,config}
-sudo chown -R poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12
-
-# 必要パッケージインストール（最新版）
-sudo apt update && sudo apt install -y \
-  nodejs npm git nginx certbot \
-  build-essential python3-pip
-
-# PM2グローバルインストール（最新版）
-sudo npm install -g pm2@latest
-```
-
-#### **2. Poker MCP v1.4.0配置** (5分)
-```bash
-# アプリケーション配置
-cd /opt/poker_mcp_v12
-sudo -u poker_mcp_v12 git clone [repository] app
-cd app
-
-# v1.4.0依存関係インストール
-sudo -u poker_mcp_v12 npm install --production
-
-# v1.4.0設定ファイル準備
-sudo -u poker_mcp_v12 cp config/.env.v12.example .env
-```
-
-#### **3. 30メソッド対応本番設定** (10分)
-```bash
-# v1.4.0本番環境設定ファイル
-sudo -u poker_mcp_v12 tee .env > /dev/null << 'EOF'
-# Poker MCP v1.4.0 Production Configuration
-NODE_ENV=production
-POKER_VERSION=1.4.0
-MCP_VERSION=1.0.0
-
-# サーバー設定
-PORT=3020
-HOST=127.0.0.1
-BIND_INTERFACE=localhost
-
-# 30メソッド機能設定
-METHODS_ENABLED=28
-BODY_TYPES_SUPPORTED=10
-UNIT_KEYS_REQUIRED=4
-AUTO_BACKUP_ENABLED=true
-UNIT_INTEGRITY_CHECK=true
-
-# パス設定（Claude App Directory対応）
-DATA_PATH=/opt/poker_mcp_v12/data
-BACKUP_PATH=/opt/poker_mcp_v12/backups
-LOG_PATH=/opt/poker_mcp_v12/logs
-CONFIG_PATH=/opt/poker_mcp_v12/config
-
-# セキュリティ設定
-MCP_SECURE_MODE=true
-VALIDATE_ALL_INPUTS=true
-RATE_LIMIT_ENABLED=true
-RATE_LIMIT_MAX=1000
-
-# 監視・ログ設定
-LOG_LEVEL=info
-HEALTH_CHECK_ENABLED=true
-METRICS_ENABLED=true
-PERFORMANCE_MONITORING=true
-
-# 自動バックアップ設定
-BACKUP_INTERVAL=3600
-BACKUP_RETENTION_DAYS=30
-BACKUP_COMPRESSION=true
-
-# Unit系完全性設定
-UNIT_VALIDATION_STRICT=true
-UNIT_AUTO_REPAIR=true
-UNIT_INTEGRITY_LOG=true
-EOF
-```
-
-#### **4. PM2プロセス管理設定** (5分)
-```bash
-# v1.4.0対応PM2設定
-sudo -u poker_mcp_v12 tee ecosystem.config.js > /dev/null << 'EOF'
-module.exports = {
-  apps: [{
-    name: 'poker-mcp-v12',
-    script: 'src/mcp_server_stdio_v4.js',
-    instances: 'max',
-    exec_mode: 'cluster',
-    env: {
-      NODE_ENV: 'production',
-      POKER_VERSION: '1.4.0',
-      MCP_VERSION: '1.0.0'
-    },
-    error_file: '/opt/poker_mcp_v12/logs/error.log',
-    out_file: '/opt/poker_mcp_v12/logs/out.log',
-    log_file: '/opt/poker_mcp_v12/logs/combined.log',
-    time: true,
-    max_memory_restart: '2G',
-    node_args: '--max-old-space-size=4096'
-  }]
-};
-EOF
-
-# PM2起動・自動起動設定
-sudo -u poker_mcp_v12 pm2 start ecosystem.config.js
-sudo -u poker_mcp_v12 pm2 save
-sudo pm2 startup
-```
-
----
-
-## 🌍 環境変数管理とデータファイル管理
-
-### 🔧 **POKER_INSTALL_PATH環境変数管理**
-
-#### **環境変数の目的と設定**
-```bash
-# POKER_INSTALL_PATH環境変数
-# 目的: POKERライブラリのインストールディレクトリ指定
-# 用途: LIB/ICRP-07.NDX（核種DB）・LIB/lib_material.dat（材料カタログ）の参照元
-
-# システム全体での設定 (推奨)
-echo 'export POKER_INSTALL_PATH="/opt/poker/lib"' >> /etc/environment
-
-# ユーザー別設定
-echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc
-
-# セッション単位設定
-export POKER_INSTALL_PATH="/opt/poker/lib"
-```
-
-#### **Claude Desktop環境での設定**
 ```json
-// Claude Desktop設定ファイル
 {
   "mcpServers": {
     "poker-mcp": {
-      "command": "node",
-      "args": ["/opt/poker_mcp_v12/app/src/mcp_server_stdio_v4.js"],
+      "command": "npx",
+      "args": ["-y", "poker-mcp@1.4.0"],
       "env": {
-        "NODE_ENV": "production",
-        "POKER_INSTALL_PATH": "/opt/poker/lib"
+        "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
+        "POKER_INSTALL_PATH": "C:/Poker"
       }
     }
   }
 }
 ```
 
-### 📁 **データディレクトリ自動管理**
+**方法B: ローカルリポジトリ（開発・改修時）**
 
-#### **自動作成されるディレクトリ構造**
-```bash
-# 初回起動時に自動作成される構造（POKER_MCP_HOME 配下）
-/opt/poker_mcp_v12/
-├── tasks/         # 作業用YAMLファイル
-│   ├── poker.yaml
-│   └── pending_changes.json
-├── backups/       # 自動バックアップファイル
-└── logs/          # システムログファイル
-
-# v1.4.0 で data/ は作成されなくなった（下記参照）
-```
-
-#### **核種データベースの参照ポリシー（v1.4.0 変更）**
-```bash
-# ICRP-07.NDX は POKER 本体の LIB を直接参照する。
-# ワークスペースへのコピーは行わない。
-#
-#   ${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX
-#
-# v1.3.0 以前は POKER_MCP_HOME/data/ へコピーし、
-# 「コピー先が存在すればスキップ」していたため、POKER を更新して
-# LIB の核データが新しくなっても古いコピーを読み続けていた。
-
-# 参照先の存在確認
-ls -la "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
-
-# ファイル完全性チェック
-md5sum "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
-
-# 旧構成の残骸（存在すれば削除してよい）
-#   ${POKER_MCP_HOME}/data/ICRP-07.NDX
-# LIB に見つからない場合のみ警告付きでフォールバック参照される。
-```
-
-### 🔍 **環境変数設定の検証**
-
-#### **設定状況確認スクリプト**
-```bash
-#!/bin/bash
-# /opt/poker_mcp_v12/scripts/check_env_vars.sh
-
-echo "=== POKER MCP v1.4.0 環境変数設定チェック ==="
-
-# POKER_INSTALL_PATH確認
-# v1.4.0 では核種データベースの参照元そのものになったため重要度が上がった
-if [ -n "$POKER_INSTALL_PATH" ]; then
-    echo "✅ POKER_INSTALL_PATH: $POKER_INSTALL_PATH"
-
-    # 核種データベース存在確認
-    if [ -f "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX" ]; then
-        echo "✅ 核種データベース: $POKER_INSTALL_PATH/LIB/ICRP-07.NDX 存在"
-        echo "   ファイルサイズ: $(stat -c%s "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX") bytes"
-    else
-        echo "❌ 核種データベース: $POKER_INSTALL_PATH/LIB/ICRP-07.NDX 不存在"
-        echo "   → 子孫核種の自動生成が利用できません"
-    fi
-
-    # 材料カタログ存在確認
-    if [ -f "$POKER_INSTALL_PATH/LIB/lib_material.dat" ]; then
-        echo "✅ 材料カタログ: $POKER_INSTALL_PATH/LIB/lib_material.dat 存在"
-    else
-        echo "❌ 材料カタログ: $POKER_INSTALL_PATH/LIB/lib_material.dat 不存在"
-    fi
-else
-    echo "⚠️ POKER_INSTALL_PATH: 未設定 (デフォルト: C:/Poker 使用予定)"
-fi
-
-# 旧構成の残骸確認（v1.4.0 では使用しない）
-if [ -f "/opt/poker_mcp_v12/data/ICRP-07.NDX" ]; then
-    echo "ℹ️ 旧構成のコピーが残っています: /opt/poker_mcp_v12/data/ICRP-07.NDX"
-    echo "   LIB が参照できていれば削除して問題ありません"
-fi
-
-echo "=== チェック完了 ==="
-```
-
-#### **バックアップ対象の拡張**
-```bash
-# データファイルを含むバックアップスクリプト更新
-#!/bin/bash
-# /opt/poker_mcp_v12/scripts/backup_with_data.sh
-
-BACKUP_DIR="/opt/poker_mcp_v12/backups"
-TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-
-# データディレクトリのバックアップを追加
-tar -czf "$BACKUP_DIR/poker_mcp_data_$TIMESTAMP.tar.gz" \
-    /opt/poker_mcp_v12/data/ \
-    /opt/poker_mcp_v12/tasks/ \
-    /opt/poker_mcp_v12/config/ \
-    /opt/poker_mcp_v12/logs/
-
-echo "✅ データファイル含むバックアップ完了: poker_mcp_data_$TIMESTAMP.tar.gz"
-```
-
-### 🔐 **セキュリティ考慮事項**
-
-#### **パス設定のセキュリティ**
-```bash
-# 環境変数のセキュリティチェック
-# 1. パスインジェクション攻撃防止
-validate_poker_path() {
-    local path="$1"
-    
-    # 危険な文字の排除
-    if [[ "$path" =~ [;|&\$\`] ]]; then
-        echo "❌ 危険な文字が含まれています: $path"
-        return 1
-    fi
-    
-    # 絶対パスの確認
-    if [[ ! "$path" =~ ^/ ]]; then
-        echo "❌ 絶対パスではありません: $path"
-        return 1
-    fi
-    
-    return 0
-}
-
-# 2. ファイル権限の適切な設定
-# 核種DBはPOKER側(LIB)にあるためMCP側の権限設定は不要
-# 読み取り権限のみ必要: $POKER_INSTALL_PATH/LIB/
-```
-
----
-
-## 📊 運用監視（30メソッド対応）
-
-### 🔍 **システム監視項目**
-
-#### **30メソッド動作監視**
-```bash
-# 30メソッド動作状況監視スクリプト
-sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/monitor_28methods.sh > /dev/null << 'EOF'
-#!/bin/bash
-# 30メソッド動作監視スクリプト (v1.4.0対応)
-
-LOGFILE="/opt/poker_mcp_v12/logs/method_monitor.log"
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-
-echo "[$DATE] 30メソッド動作監視開始" >> $LOGFILE
-
-function check_method_group() {
-    local group_name=$1
-    local methods=$2
-    local method_count=$(echo $methods | wc -w)
-    
-    echo "[$DATE] $group_name系メソッド群 ($method_count メソッド) 監視" >> $LOGFILE
-    
-    for method in $methods; do
-        # メソッド応答時間測定（模擬）
-        response_time=$(echo "scale=3; $RANDOM/32767*0.5" | bc)
-        
-        if (( $(echo "$response_time < 1.0" | bc -l) )); then
-            echo "[$DATE] ✅ $method: 正常 (${response_time}s)" >> $LOGFILE
-        else
-            echo "[$DATE] ⚠️ $method: 遅延 (${response_time}s)" >> $LOGFILE
-        fi
-    done
-}
-
-# Body系メソッド監視 (3メソッド)
-check_method_group "Body" "poker_proposeBody poker_updateBody poker_deleteBody"
-
-# Zone系メソッド監視 (3メソッド)  
-check_method_group "Zone" "poker_proposeZone poker_updateZone poker_deleteZone"
-
-# Transform系メソッド監視 (3メソッド)
-check_method_group "Transform" "poker_proposeTransform poker_updateTransform poker_deleteTransform"
-
-# BuildupFactor系メソッド監視 (4メソッド)
-check_method_group "BuildupFactor" "poker_proposeBuildupFactor poker_updateBuildupFactor poker_deleteBuildupFactor poker_changeOrderBuildupFactor"
-
-# Source系メソッド監視 (3メソッド)
-check_method_group "Source" "poker_proposeSource poker_updateSource poker_deleteSource"
-
-# Detector系メソッド監視 (3メソッド)
-check_method_group "Detector" "poker_proposeDetector poker_updateDetector poker_deleteDetector"
-
-# Unit系メソッド監視 (5メソッド) - 4キー完全性保証
-check_method_group "Unit" "poker_proposeUnit poker_getUnit poker_updateUnit poker_validateUnitIntegrity poker_analyzeUnitConversion"
-
-# System系メソッド監視 (5メソッド)
-check_method_group "System" "poker_applyChanges poker_executeCalculation poker_resetYaml poker_confirmDaughterNuclides poker_openGui"
-
-echo "[$DATE] 30メソッド動作監視完了" >> $LOGFILE
-EOF
-
-chmod +x /opt/poker_mcp_v12/scripts/monitor_30methods.sh
-```
-
----
-
-## 🔒 セキュリティ設定（MCP v1.0準拠）
-
-### 🛡️ **MCP準拠セキュリティ設定**
-
-#### **MCP認証・認可設定**
-```bash
-# MCP v1.0準拠セキュリティ設定
-sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/security.json > /dev/null << 'EOF'
+```json
 {
-  "mcp_security": {
-    "version": "1.0.0",
-    "protocol_validation": true,
-    "message_signing": true,
-    "transport_encryption": true
-  },
-  "access_control": {
-    "method_permissions": {
-      "body_methods": ["researcher", "admin"],
-      "zone_methods": ["researcher", "admin"],
-      "transform_methods": ["researcher", "admin"],
-      "buildup_methods": ["researcher", "admin"],
-      "source_methods": ["researcher", "admin"],
-      "detector_methods": ["researcher", "admin"],
-      "unit_methods": ["researcher", "admin"],
-      "system_methods": ["admin"]
-    },
-    "rate_limiting": {
-      "per_user": 1000,
-      "per_method": 100,
-      "burst_limit": 50
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "node",
+      "args": ["C:/path/to/poker_mcp/src/mcp_server_stdio_v4.js"],
+      "env": {
+        "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
+        "POKER_INSTALL_PATH": "C:/Poker"
+      }
     }
-  },
-  "data_protection": {
-    "encryption_at_rest": true,
-    "backup_encryption": true,
-    "log_anonymization": true,
-    "data_retention_days": 365
-  },
-  "audit_logging": {
-    "enabled": true,
-    "log_all_operations": true,
-    "integrity_verification": true,
-    "tamper_detection": true
   }
 }
-EOF
 ```
+
+設定ファイルの場所は `%APPDATA%\Claude\claude_desktop_config.json` です。
+
+> **版数は固定してください。** `@latest` を指定すると、意図しない
+> タイミングでサーバが入れ替わります。遮蔽計算では再現性が重要です。
+
+> **`cwd` は指定しないでください。** 過去に SERVER DISCONNECTED の
+> 原因となりました。作業ディレクトリは `POKER_MCP_HOME` で管理します。
 
 ---
 
-## 📈 パフォーマンス最適化（v1.4.0対応）
+## 🌍 環境変数
 
-### ⚡ **システム最適化設定**
+### `POKER_MCP_HOME`
 
-#### **Node.js最適化（30メソッド対応）**
-```bash
-# Node.js v1.4.0対応最適化設定
-sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/node_optimization.js > /dev/null << 'EOF'
-// Node.js最適化設定 (Poker MCP v1.4.0対応)
-module.exports = {
-  // メモリ最適化
-  memory: {
-    max_old_space_size: '8192',  // 8GB
-    max_new_space_size: '2048',  // 2GB  
-    optimize_for_size: false
-  },
-  
-  // GC最適化
-  garbage_collection: {
-    expose_gc: true,
-    gc_interval: 60000,  // 60秒
-    incremental_marking: true
-  },
-  
-  // 30メソッド並列処理最適化
-  concurrency: {
-    max_concurrent_methods: 10,
-    method_queue_size: 100,
-    worker_threads: true
-  },
-  
-  // 10立体タイプ処理最適化
-  geometry_processing: {
-    shape_cache_size: 1000,
-    calculation_threads: 4,
-    memory_per_shape: '100MB'
-  },
-  
-  // 4キー単位系最適化
-  unit_system: {
-    validation_cache: true,
-    conversion_cache_size: 500,
-    integrity_check_interval: 300000  // 5分
-  }
-};
-EOF
+作業ファイルの格納先です。未設定時は `~/.poker-mcp/` を使用します。
+
 ```
+POKER_MCP_HOME/
+  ├── tasks/      # poker.yaml, pending_changes.json
+  ├── backups/    # 自動バックアップ（最大10世代）
+  ├── logs/       # error.log, combined.log
+  └── config.json # ユーザー設定（任意）
+```
+
+初回起動時に上記ディレクトリが自動作成されます。
+
+### `POKER_INSTALL_PATH`
+
+POKER 本体のインストール先です。未設定時は `C:/Poker` を使用します。
+
+v1.4.0 以降、この配下を**直接参照**するため実質必須です。
+
+| 参照先 | 用途 | 欠けた場合の影響 |
+|---|---|---|
+| `LIB/ICRP-07.NDX` | 核種データベース | 子孫核種の自動生成が不可 |
+| `LIB/lib_material.dat` | 材料カタログ | 材料名正規化・カタログ密度が不可 |
+| `POKER_CUI.exe` | 線量計算 | `executeCalculation` が失敗 |
+| `POKER.exe` | GUI 表示 | `openGui` が失敗 |
+
+> **v1.3.0 以前からの変更**: 核種データベースを `POKER_MCP_HOME/data/` へ
+> コピーする方式を廃止しました。コピーは「存在すればスキップ」だったため、
+> POKER を更新しても古い核データを読み続ける問題がありました。
+> 旧構成の `POKER_MCP_HOME/data/ICRP-07.NDX` が残っていても害はありませんが、
+> 削除して構いません（LIB が参照できない場合のみ警告付きで使用されます）。
+
+### 設定確認
+
+```powershell
+# 環境変数の確認
+$env:POKER_MCP_HOME
+$env:POKER_INSTALL_PATH
+
+# 参照先ファイルの存在確認
+Test-Path "$env:POKER_INSTALL_PATH\LIB\ICRP-07.NDX"
+Test-Path "$env:POKER_INSTALL_PATH\LIB\lib_material.dat"
+Test-Path "$env:POKER_INSTALL_PATH\POKER_CUI.exe"
+```
+
+なお `claude_desktop_config.json` の `env` で指定した値は、その MCP サーバ
+プロセスにのみ適用されます。PowerShell 側の環境変数とは別物である点に
+注意してください。設定を確かめる最も確実な方法は、後述の起動ログ確認です。
 
 ---
 
-## 🛡️ 障害対応（v1.4.0対応）
+## 🔍 動作確認
 
-### 🚨 **障害対応手順**
+外部からの疎通監視はできないため、以下の手段で健全性を確認します。
 
-#### **30メソッド障害診断**
-```bash
-# 30メソッド包括診断スクリプト
-sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/diagnose_28methods.sh > /dev/null << 'EOF'
-#!/bin/bash
-# 30メソッド包括診断 (v1.4.0対応)
+### 1. 起動ログの確認
 
-LOGFILE="/opt/poker_mcp_v12/logs/diagnosis.log"
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
+`POKER_MCP_HOME/logs/combined.log` に初期化の記録が残ります。
+核種データベースの参照先はここで判定できます。
 
-echo "[$DATE] 30メソッド包括診断開始" >> $LOGFILE
-
-# 各メソッド系の診断
-METHOD_GROUPS=("Body:3" "Zone:3" "Transform:3" "BuildupFactor:4" "Source:3" "Detector:3" "Unit:5" "System:4")
-
-total_issues=0
-
-for group_info in "${METHOD_GROUPS[@]}"; do
-    group_name=$(echo $group_info | cut -d: -f1)
-    expected_count=$(echo $group_info | cut -d: -f2)
-    
-    echo "[$DATE] $group_name系診断開始 (期待メソッド数: $expected_count)" >> $LOGFILE
-    
-    # 各群の健全性チェック
-    case $group_name in
-        "Body")
-            check_body_methods
-            ;;
-        "Unit")
-            check_unit_methods
-            ;;
-    esac
-done
-
-function check_body_methods() {
-    # 10種類立体タイプサポート確認
-    local supported_types="SPH RCC RPP BOX CMB TOR ELL REC TRC WED"
-    local missing_types=""
-    
-    for type in $supported_types; do
-        if ! grep -q "type.*$type" /opt/poker_mcp_v12/src/mcp/tools/bodyTools.js 2>/dev/null; then
-            missing_types="$missing_types $type"
-        fi
-    done
-    
-    if [ -n "$missing_types" ]; then
-        echo "[$DATE] ⚠️ Body: 不足立体タイプ:$missing_types" >> $LOGFILE
-        ((total_issues++))
-    else
-        echo "[$DATE] ✅ Body: 10立体タイプ完全サポート確認" >> $LOGFILE
-    fi
-}
-
-function check_unit_methods() {
-    # 4キー完全性確認
-    local required_keys="length angle density radioactivity"
-    local missing_keys=""
-    
-    for key in $required_keys; do
-        if ! grep -q "\"$key\"" /opt/poker_mcp_v12/src/mcp/tools/unitTools.js 2>/dev/null; then
-            missing_keys="$missing_keys $key"
-        fi
-    done
-    
-    if [ -n "$missing_keys" ]; then
-        echo "[$DATE] ⚠️ Unit: 不足必須キー:$missing_keys" >> $LOGFILE
-        ((total_issues++))
-    else
-        echo "[$DATE] ✅ Unit: 4キー完全性確認" >> $LOGFILE
-    fi
-}
-
-# 診断結果サマリー
-if [ $total_issues -eq 0 ]; then
-    echo "[$DATE] ✅ 30メソッド診断: 全て正常" >> $LOGFILE
-else
-    echo "[$DATE] ⚠️ 30メソッド診断: $total_issues 件の課題検出" >> $LOGFILE
-fi
-
-echo "[$DATE] 30メソッド包括診断完了" >> $LOGFILE
-EOF
-
-chmod +x /opt/poker_mcp_v12/scripts/diagnose_28methods.sh
 ```
+核種データベースを確認しました
+  file: C:\Poker\LIB\ICRP-07.NDX
+  source: POKER_INSTALL_PATH/LIB
+```
+
+`旧構成のコピーを使用します` という警告が出る場合は、
+`POKER_INSTALL_PATH` の設定が実際のインストール先と食い違っています。
+
+### 2. サーバ単体の起動確認
+
+Claude Desktop を介さずに起動できるか試します。stdio 待受のため
+何も出力されなければ正常です（Ctrl+C で終了）。
+
+```powershell
+cd C:\path\to\poker_mcp
+$env:POKER_MCP_HOME="C:/Users/<username>/poker_mcp_workspace"
+$env:POKER_INSTALL_PATH="C:/Poker"
+node src/mcp_server_stdio_v4.js
+```
+
+エラーが出る場合は stderr に表示されます。
+
+### 3. ツール定義の整合検証
+
+マニフェストと実行時のツール定義が乖離していないか検証します。
+改修後は必ず実行してください。
+
+```powershell
+npm run check:manifest
+# → OK: マニフェストと実行時ツール定義は同期しています (30 tools)
+```
+
+### 4. 子孫核種機能の動作確認
+
+核種データベースが正しく読めているかは、この操作で判定できます。
+
+```
+poker_proposeSource(name="Test", type="POINT", position="0 0 0",
+                    inventory=[{nuclide:"Cs137", radioactivity:1e12}])
+```
+
+応答に `子孫核種を自動生成: Ba137m=9.4399e+11Bq(←Cs137)` が含まれれば
+正常です。含まれない場合は `POKER_INSTALL_PATH` を確認してください。
+確認後は `poker_deleteSource(name="Test")` で削除します。
+
+### 5. Claude Desktop 側での確認
+
+ツール一覧に 30 個のツールが表示されることを確認します。
+表示されない場合は Claude Desktop のログ（`%APPDATA%\Claude\logs\`）に
+MCP サーバの起動失敗が記録されています。
+
+> **注意**: 以前の版の本ガイドには、応答時間を乱数で生成して「正常」と
+> 出力する監視スクリプトが掲載されていました。実際には MCP サーバへ
+> アクセスしておらず、サーバ停止中でも正常と報告されるため削除しました。
 
 ---
 
-## 📋 運用チェックリスト
+## 💾 バックアップ運用
 
-### ✅ **日次運用チェック**
+### 自動バックアップ
 
-#### **30メソッド完全性確認**
-```bash
-# 日次運用チェックリスト
-sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/daily_check.sh > /dev/null << 'EOF'
-#!/bin/bash
-# 日次運用チェック (Poker MCP v1.4.0対応)
+`poker_applyChanges` の実行時に、適用前の `poker.yaml` が自動保存されます。
 
-LOGFILE="/opt/poker_mcp_v12/logs/daily_check.log"
-DATE=$(date '+%Y-%m-%d %H:%M:%S')
-ISSUES=0
-
-echo "[$DATE] === Poker MCP v1.4.0 日次チェック開始 ===" >> $LOGFILE
-
-# 1. 30メソッド応答確認
-echo "[$DATE] 1. 30メソッド応答確認" >> $LOGFILE
-METHODS=(
-    "poker_proposeBody" "poker_updateBody" "poker_deleteBody"
-    "poker_proposeZone" "poker_updateZone" "poker_deleteZone"
-    "poker_proposeTransform" "poker_updateTransform" "poker_deleteTransform"
-    "poker_proposeBuildupFactor" "poker_updateBuildupFactor" 
-    "poker_deleteBuildupFactor" "poker_changeOrderBuildupFactor"
-    "poker_proposeSource" "poker_updateSource" "poker_deleteSource"
-    "poker_proposeDetector" "poker_updateDetector" "poker_deleteDetector"
-    "poker_proposeUnit" "poker_getUnit" "poker_updateUnit" 
-    "poker_validateUnitIntegrity" "poker_analyzeUnitConversion"
-    "poker_applyChanges" "poker_executeCalculation" 
-    "poker_resetYaml" "poker_confirmDaughterNuclides"
-    "poker_openGui"
-)
-
-for method in "${METHODS[@]}"; do
-    # 模擬応答確認
-    if [ $((RANDOM % 10)) -lt 9 ]; then
-        echo "[$DATE]   ✅ $method: 応答正常" >> $LOGFILE
-    else
-        echo "[$DATE]   ❌ $method: 応答異常" >> $LOGFILE
-        ((ISSUES++))
-    fi
-done
-
-# チェック結果サマリー
-if [ $ISSUES -eq 0 ]; then
-    echo "[$DATE] ✅ 日次チェック完了: 全項目正常" >> $LOGFILE
-else
-    echo "[$DATE] ⚠️ 日次チェック完了: $ISSUES 件の課題検出" >> $LOGFILE
-fi
-
-echo "[$DATE] === Poker MCP v1.4.0 日次チェック完了 ===" >> $LOGFILE
-EOF
-
-chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 ```
+POKER_MCP_HOME/backups/poker.yaml-2026-08-09T18-34-08-955Z
+```
+
+- 命名は `poker.yaml-<ISO8601タイムスタンプ>`（コロンをハイフンに置換）
+- **最大10世代**を保持し、超過分は古いものから自動削除されます
+- `poker_resetYaml` の実行時にもバックアップが作成されます
+
+`backup_comment` 引数を指定すると、何の変更前かを記録できます。
+長期作業では習慣づけると復旧時に役立ちます。
+
+```
+poker_applyChanges(backup_comment="キャスク線源分割を12x6x20に変更する前")
+```
+
+### 手動バックアップ
+
+10世代を超えて保全したい状態（発表用モデル、検証済みモデル）は
+別名で退避してください。自動削除の対象外になります。
+
+```powershell
+$ws = "C:\Users\<username>\poker_mcp_workspace"
+Copy-Item "$ws\tasks\poker.yaml" "$ws\tasks\cask_model_verified.yaml"
+```
+
+計算結果（`.summary` / `.dose`）は入力と同じ `tasks/` に出力されるため、
+モデルと結果をまとめて保全する場合はディレクトリごと圧縮します。
+
+```powershell
+Compress-Archive -Path "$ws\tasks\*" -DestinationPath "$ws\archive_$(Get-Date -f yyyyMMdd).zip"
+```
+
+### ログ
+
+| ファイル | 内容 |
+|---|---|
+| `logs/combined.log` | 全ログ（初期化・各操作・警告） |
+| `logs/error.log` | エラーのみ |
+
+ローテーションは行われないため、長期運用では肥大化します。
+`combined.log` が数百MBに達したら、サーバ停止中に削除または退避してください。
 
 ---
 
-## 📋 まとめ: v1.4.0管理体制
+## 🛡️ 障害切り分け
 
-### ✨ **v1.4.0管理体制の価値**
+### サーバが起動しない（ツール一覧に現れない）
 
-#### **完全対応管理**
-- ✅ **30メソッド完全監視**: 全メソッドの個別監視・性能管理
-- ✅ **10立体タイプサポート**: 複雑形状対応の完全管理
-- ✅ **4キー単位系完全性**: 物理的整合性の自動保証
-- ✅ **MCP v1.0準拠**: 最新プロトコル完全対応
+1. `%APPDATA%\Claude\logs\` の MCP 関連ログで起動失敗の理由を確認
+2. `claude_desktop_config.json` の JSON 構文を検証（末尾カンマ等）
+3. コマンドで直接起動し、stderr のエラーを確認（前掲「動作確認2」）
+4. `cwd` を指定していないか確認（指定すると失敗する場合があります）
 
-#### **運用効率化**
-- ✅ **自動監視**: 24時間無人監視体制
-- ✅ **自動復旧**: 障害時の迅速自動復旧
-- ✅ **予防保守**: 問題の事前検出・予防
-- ✅ **完全バックアップ**: データ損失ゼロ保証
+### 計算が失敗する
 
-#### **品質保証**
-- ✅ **完全性検証**: 4キー単位系の自動整合性確保
-- ✅ **性能監視**: 30メソッド個別性能管理
-- ✅ **セキュリティ**: MCP準拠多層防御
-- ✅ **トレーサビリティ**: 全操作の完全記録
+| 症状 | 確認事項 |
+|---|---|
+| POKER_CUI が見つからない | `POKER_INSTALL_PATH` の設定 |
+| 未知のノードで拒否される | POKER の版数（v1.4.0 は 2.1.0 以上が必要） |
+| ファイルロック | POKER GUI が同じ入力を開いていないか |
+| 応答が返らない | 検出器の評価点数と線源分割数の積が過大でないか |
 
-### 🚀 **継続的改善**
+計算時間は概ね「線源分割数 × 検出器評価点数」に比例します。
+2D マップ（169点）と1440分割の線源で約50秒が目安です。
 
-この管理ガイドは、Poker MCP Server v1.4.0の30メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
+### 子孫核種が生成されない
 
-**エンタープライズレベルの運用品質により、世界最高水準の放射線遮蔽研究基盤を実現してください。**
+1. 起動ログで核種データベースの参照先を確認
+2. `poker_confirmDaughterNuclides(action="check")` で除外設定を確認
+3. 平衡が成立しない組み合わせは意図的に生成されません（警告が出ます）
+
+詳細は [DAUGHTER_NUCLIDE_MANAGEMENT.md](../DAUGHTER_NUCLIDE_MANAGEMENT.md)。
+
+### 入力ファイルが壊れた
+
+```powershell
+$ws = "C:\Users\<username>\poker_mcp_workspace"
+Get-ChildItem "$ws\backups" | Sort-Object LastWriteTime -Descending | Select-Object -First 5
+Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
+```
+
+復元後は Claude Desktop を再起動してください。
+`tasks/pending_changes.json` に未適用の変更が残っている場合は、
+復元した YAML と不整合になるため削除します。
+
+---
+
+## 🔒 セキュリティ上の注意
+
+本サーバはローカルの stdio プロセスであり、ネットワークポートを開きません。
+そのため外部からの攻撃面は限定的ですが、以下に留意してください。
+
+- **ファイル書き込み範囲**: `POKER_MCP_HOME` 配下のみです。
+  同ディレクトリを共有領域に置く場合は書き込み権限を制限してください
+- **POKER_INSTALL_PATH は読み取りのみ**: 核データ・材料カタログを
+  読むだけで、書き換えは行いません。POKER 本体側は読み取り専用で構いません
+- **外部プロセス起動**: `executeCalculation` と `openGui` が
+  `POKER_INSTALL_PATH` 配下の実行ファイルを起動します。この環境変数を
+  信頼できない値に設定しないでください
+- **入力 YAML の出所**: 第三者から受け取った YAML を読み込む際は、
+  参照先ファイルパスが意図しない場所を指していないか確認してください
+
+---
+
+## 📋 保守チェックリスト
+
+### 更新時
+
+- [ ] `npm run check:manifest` が OK
+- [ ] `node tools/test_daughter_reconcile.mjs` が全項目 PASS
+- [ ] `package.json` と `config/mcp-manifest.json` の版数が一致
+- [ ] CHANGELOG に変更内容を記載
+- [ ] Claude Desktop を再起動し、ツール一覧に30個表示されることを確認
+
+### 定期（月次程度）
+
+- [ ] `logs/combined.log` のサイズ確認、必要なら退避
+- [ ] `backups/` に保全すべき状態が埋もれていないか確認
+- [ ] POKER 本体を更新した場合、起動ログで核データの参照先を再確認
+
+---
+
+**Poker MCP Server v1.4.0** | 作者: Yoshihiro Hirao | ライセンス: ISC
