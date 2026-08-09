@@ -2,7 +2,7 @@
 
 **対象読者**: システム管理者・IT部門・インフラ担当者  
 **📚 マニュアル階層**: テクニカル層  
-**対応バージョン**: Poker MCP Server v1.2.8 (30メソッド完全実装)  
+**対応バージョン**: Poker MCP Server v1.4.0 (30メソッド完全実装)  
 **最終更新**: 2026年5月16日  
 **品質レベル**: エンタープライズ本番環境対応
 
@@ -24,7 +24,7 @@
 ## 🎯 管理者ガイドの概要
 
 ### **本ガイドの対象範囲**
-このガイドは、Poker MCP Server v1.2.5システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
+このガイドは、Poker MCP Server v1.4.0システムの**運用・保守・管理**に必要な全ての知識を提供します。放射線遮蔽研究者が安心してシステムを利用できるよう、技術基盤をしっかりと支えることが目的です。
 
 #### **対応システム仕様**
 - **28メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系4
@@ -33,7 +33,7 @@
 - **MCP v1.0準拠**: Model Context Protocol v1.0完全準拠
 
 #### **カバーする領域**
-- 🏗️ **システムセットアップ**: v1.2.5対応インストール・設定
+- 🏗️ **システムセットアップ**: v1.4.0対応インストール・設定
 - 📊 **運用監視**: 28メソッド・パフォーマンス・ヘルス監視
 - 🔒 **セキュリティ設定**: MCP準拠多層防御・アクセス制御
 - 📈 **パフォーマンス最適化**: 10立体・4単位対応スケーリング・チューニング
@@ -41,11 +41,11 @@
 
 ---
 
-## 🏗️ システムセットアップ（v1.2.5対応）
+## 🏗️ システムセットアップ（v1.4.0対応）
 
 ### 📋 **最新システム要件**
 
-#### **ハードウェア要件 (v1.2.5対応推奨)**
+#### **ハードウェア要件 (v1.4.0対応推奨)**
 | **環境** | **CPU** | **RAM** | **ディスク** | **ネットワーク** | **28メソッド対応** |
 |---------|---------|---------|--------------|-----------------|------------------|
 | **開発** | 4コア+ | 8GB+ | 100GB+ | 100Mbps | 小規模テスト・検証 |
@@ -71,11 +71,11 @@ logrotate >= 3.20 (ログ管理)
 certbot >= 2.8.0 (SSL証明書)
 ```
 
-### ⚡ **v1.2.5高速セットアップ手順**
+### ⚡ **v1.4.0高速セットアップ手順**
 
 #### **1. システム準備** (5分)
 ```bash
-# 専用ユーザー作成（v1.2.5対応）
+# 専用ユーザー作成（v1.4.0対応）
 sudo useradd -r -m -s /bin/bash poker_mcp_v12
 sudo mkdir -p /opt/poker_mcp_v12/{app,data,logs,backups,config}
 sudo chown -R poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12
@@ -89,25 +89,25 @@ sudo apt update && sudo apt install -y \
 sudo npm install -g pm2@latest
 ```
 
-#### **2. Poker MCP v1.2.5配置** (5分)
+#### **2. Poker MCP v1.4.0配置** (5分)
 ```bash
 # アプリケーション配置
 cd /opt/poker_mcp_v12
 sudo -u poker_mcp_v12 git clone [repository] app
 cd app
 
-# v1.2.5依存関係インストール
+# v1.4.0依存関係インストール
 sudo -u poker_mcp_v12 npm install --production
 
-# v1.2.5設定ファイル準備
+# v1.4.0設定ファイル準備
 sudo -u poker_mcp_v12 cp config/.env.v12.example .env
 ```
 
 #### **3. 28メソッド対応本番設定** (10分)
 ```bash
-# v1.2.5本番環境設定ファイル
+# v1.4.0本番環境設定ファイル
 sudo -u poker_mcp_v12 tee .env > /dev/null << 'EOF'
-# Poker MCP v1.2.5 Production Configuration
+# Poker MCP v1.4.0 Production Configuration
 NODE_ENV=production
 POKER_VERSION=1.2.5
 MCP_VERSION=1.0.0
@@ -156,7 +156,7 @@ EOF
 
 #### **4. PM2プロセス管理設定** (5分)
 ```bash
-# v1.2.5対応PM2設定
+# v1.4.0対応PM2設定
 sudo -u poker_mcp_v12 tee ecosystem.config.js > /dev/null << 'EOF'
 module.exports = {
   apps: [{
@@ -228,30 +228,37 @@ export POKER_INSTALL_PATH="/opt/poker/lib"
 
 #### **自動作成されるディレクトリ構造**
 ```bash
-# 初回起動時に自動作成される構造
+# 初回起動時に自動作成される構造（POKER_MCP_HOME 配下）
 /opt/poker_mcp_v12/
-├── data/          # 核種データベースファイル
-│   └── ICRP-07.NDX
 ├── tasks/         # 作業用YAMLファイル
 │   ├── poker.yaml
 │   └── pending_changes.json
 ├── backups/       # 自動バックアップファイル
 └── logs/          # システムログファイル
+
+# v1.4.0 で data/ は作成されなくなった（下記参照）
 ```
 
-#### **データファイル管理ポリシー**
+#### **核種データベースの参照ポリシー（v1.4.0 変更）**
 ```bash
-# データファイル配置ルール
-# 1. 初回起動時にdata/ディレクトリを自動作成
-# 2. data/ICRP-07.NDXが存在しない場合のみ、
-#    ${POKER_INSTALL_PATH}/lib/ICRP-07.NDXからコピー
-# 3. 既存ファイルがある場合はスキップ（データ保護）
+# ICRP-07.NDX は POKER 本体の LIB を直接参照する。
+# ワークスペースへのコピーは行わない。
+#
+#   ${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX
+#
+# v1.3.0 以前は POKER_MCP_HOME/data/ へコピーし、
+# 「コピー先が存在すればスキップ」していたため、POKER を更新して
+# LIB の核データが新しくなっても古いコピーを読み続けていた。
 
-# 手動でのファイル配置確認
-ls -la /opt/poker_mcp_v12/data/ICRP-07.NDX
+# 参照先の存在確認
+ls -la "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
 
 # ファイル完全性チェック
-md5sum /opt/poker_mcp_v12/data/ICRP-07.NDX
+md5sum "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
+
+# 旧構成の残骸（存在すれば削除してよい）
+#   ${POKER_MCP_HOME}/data/ICRP-07.NDX
+# LIB に見つからない場合のみ警告付きでフォールバック参照される。
 ```
 
 ### 🔍 **環境変数設定の検証**
@@ -261,31 +268,36 @@ md5sum /opt/poker_mcp_v12/data/ICRP-07.NDX
 #!/bin/bash
 # /opt/poker_mcp_v12/scripts/check_env_vars.sh
 
-echo "=== POKER MCP v1.2.5 環境変数設定チェック ==="
+echo "=== POKER MCP v1.4.0 環境変数設定チェック ==="
 
 # POKER_INSTALL_PATH確認
+# v1.4.0 では核種データベースの参照元そのものになったため重要度が上がった
 if [ -n "$POKER_INSTALL_PATH" ]; then
     echo "✅ POKER_INSTALL_PATH: $POKER_INSTALL_PATH"
-    
-    # ソースファイル存在確認
-    if [ -f "$POKER_INSTALL_PATH/lib/ICRP-07.NDX" ]; then
-        echo "✅ ソースファイル: $POKER_INSTALL_PATH/lib/ICRP-07.NDX 存在"
-        echo "   ファイルサイズ: $(stat -c%s $POKER_INSTALL_PATH/lib/ICRP-07.NDX) bytes"
+
+    # 核種データベース存在確認
+    if [ -f "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX" ]; then
+        echo "✅ 核種データベース: $POKER_INSTALL_PATH/LIB/ICRP-07.NDX 存在"
+        echo "   ファイルサイズ: $(stat -c%s "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX") bytes"
     else
-        echo "❌ ソースファイル: $POKER_INSTALL_PATH/lib/ICRP-07.NDX 不存在"
+        echo "❌ 核種データベース: $POKER_INSTALL_PATH/LIB/ICRP-07.NDX 不存在"
+        echo "   → 子孫核種の自動生成が利用できません"
+    fi
+
+    # 材料カタログ存在確認
+    if [ -f "$POKER_INSTALL_PATH/LIB/lib_material.dat" ]; then
+        echo "✅ 材料カタログ: $POKER_INSTALL_PATH/LIB/lib_material.dat 存在"
+    else
+        echo "❌ 材料カタログ: $POKER_INSTALL_PATH/LIB/lib_material.dat 不存在"
     fi
 else
     echo "⚠️ POKER_INSTALL_PATH: 未設定 (デフォルト: C:/Poker 使用予定)"
 fi
 
-# ターゲットファイル確認
+# 旧構成の残骸確認（v1.4.0 では使用しない）
 if [ -f "/opt/poker_mcp_v12/data/ICRP-07.NDX" ]; then
-    echo "✅ ターゲットファイル: /opt/poker_mcp_v12/data/ICRP-07.NDX 存在"
-    echo "   ファイルサイズ: $(stat -c%s /opt/poker_mcp_v12/data/ICRP-07.NDX) bytes"
-    echo "   最終更新: $(stat -c%y /opt/poker_mcp_v12/data/ICRP-07.NDX)"
-else
-    echo "⚠️ ターゲットファイル: /opt/poker_mcp_v12/data/ICRP-07.NDX 不存在"
-    echo "   初回起動時に自動配置されます"
+    echo "ℹ️ 旧構成のコピーが残っています: /opt/poker_mcp_v12/data/ICRP-07.NDX"
+    echo "   LIB が参照できていれば削除して問題ありません"
 fi
 
 echo "=== チェック完了 ==="
@@ -350,7 +362,7 @@ chown poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12/data/ICRP-07.NDX
 # 28メソッド動作状況監視スクリプト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/monitor_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 28メソッド動作監視スクリプト (v1.2.5対応)
+# 28メソッド動作監視スクリプト (v1.4.0対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/method_monitor.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -458,15 +470,15 @@ EOF
 
 ---
 
-## 📈 パフォーマンス最適化（v1.2.5対応）
+## 📈 パフォーマンス最適化（v1.4.0対応）
 
 ### ⚡ **システム最適化設定**
 
 #### **Node.js最適化（28メソッド対応）**
 ```bash
-# Node.js v1.2.5対応最適化設定
+# Node.js v1.4.0対応最適化設定
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/config/node_optimization.js > /dev/null << 'EOF'
-// Node.js最適化設定 (Poker MCP v1.2.5対応)
+// Node.js最適化設定 (Poker MCP v1.4.0対応)
 module.exports = {
   // メモリ最適化
   memory: {
@@ -508,7 +520,7 @@ EOF
 
 ---
 
-## 🛡️ 障害対応（v1.2.5対応）
+## 🛡️ 障害対応（v1.4.0対応）
 
 ### 🚨 **障害対応手順**
 
@@ -517,7 +529,7 @@ EOF
 # 28メソッド包括診断スクリプト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/diagnose_28methods.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 28メソッド包括診断 (v1.2.5対応)
+# 28メソッド包括診断 (v1.4.0対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/diagnosis.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -608,7 +620,7 @@ chmod +x /opt/poker_mcp_v12/scripts/diagnose_28methods.sh
 # 日次運用チェックリスト
 sudo -u poker_mcp_v12 tee /opt/poker_mcp_v12/scripts/daily_check.sh > /dev/null << 'EOF'
 #!/bin/bash
-# 日次運用チェック (Poker MCP v1.2.5対応)
+# 日次運用チェック (Poker MCP v1.4.0対応)
 
 LOGFILE="/opt/poker_mcp_v12/logs/daily_check.log"
 DATE=$(date '+%Y-%m-%d %H:%M:%S')
@@ -650,7 +662,7 @@ else
     echo "[$DATE] ⚠️ 日次チェック完了: $ISSUES 件の課題検出" >> $LOGFILE
 fi
 
-echo "[$DATE] === Poker MCP v1.2.5 日次チェック完了 ===" >> $LOGFILE
+echo "[$DATE] === Poker MCP v1.4.0 日次チェック完了 ===" >> $LOGFILE
 EOF
 
 chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
@@ -658,9 +670,9 @@ chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 
 ---
 
-## 📋 まとめ: v1.2.5管理体制
+## 📋 まとめ: v1.4.0管理体制
 
-### ✨ **v1.2.5管理体制の価値**
+### ✨ **v1.4.0管理体制の価値**
 
 #### **完全対応管理**
 - ✅ **28メソッド完全監視**: 全メソッドの個別監視・性能管理
@@ -682,6 +694,6 @@ chmod +x /opt/poker_mcp_v12/scripts/daily_check.sh
 
 ### 🚀 **継続的改善**
 
-この管理ガイドは、Poker MCP Server v1.2.5の28メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
+この管理ガイドは、Poker MCP Server v1.4.0の28メソッド機能を最大限活用し、研究者が安心して高品質な放射線遮蔽計算を実行できる技術基盤を提供します。
 
 **エンタープライズレベルの運用品質により、世界最高水準の放射線遮蔽研究基盤を実現してください。**

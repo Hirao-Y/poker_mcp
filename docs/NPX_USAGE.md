@@ -1,4 +1,4 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.2.6)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.4.0)
 
 ## 📦 起動方法
 
@@ -42,9 +42,19 @@ $env:POKER_MCP_HOME="C:\Users\<username>\poker_mcp_workspace"
 export POKER_MCP_HOME="$HOME/.poker-mcp"
 ```
 
-### `POKER_INSTALL_PATH`（オプション）
-ICRP-07.NDX 核種データベースのコピー元を指定します。  
+### `POKER_INSTALL_PATH`（実質必須）
+POKER 本体のインストール先を指定します。  
 **未設定時は `C:/Poker` をデフォルト値として使用します。**
+
+v1.4.0 以降、この配下の `LIB/` を**直接参照**します。設定を誤ると
+以下がすべて機能しません。
+
+| 参照先 | 用途 |
+|---|---|
+| `LIB/ICRP-07.NDX` | 核種データベース（子孫核種の自動生成） |
+| `LIB/lib_material.dat` | 材料カタログ（材料名正規化・カタログ密度） |
+| `POKER_CUI.exe` | 線量計算の実行 |
+| `POKER.exe` | GUI 表示（`poker_openGui`） |
 
 ```bash
 # Windows
@@ -54,19 +64,30 @@ set POKER_INSTALL_PATH=C:/Poker
 export POKER_INSTALL_PATH="/usr/local/share/poker"
 ```
 
+> **v1.3.0 以前からの変更**: 核種データベースを `POKER_MCP_HOME/data/` へ
+> コピーする方式を廃止しました。コピーは「存在すればスキップ」だったため、
+> POKER を更新しても古いコピーを読み続ける問題がありました。
+
 ### データ格納先の構造
 ```
 POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
   ├── tasks/                # poker.yaml, pending_changes.json
   ├── backups/              # 自動バックアップ（最大10世代）
-  ├── data/                 # ICRP-07.NDX 核種データベース
   ├── logs/                 # error.log, combined.log
   └── config.json           # ユーザー設定（任意）
+
+POKER_INSTALL_PATH/         # デフォルト: C:/Poker
+  └── LIB/
+      ├── ICRP-07.NDX       # 核種データベース（読み取りのみ）
+      └── lib_material.dat  # 材料カタログ（読み取りのみ）
 ```
+
+`POKER_MCP_HOME/data/` は v1.4.0 で作成されなくなりました。旧環境に
+残っていても害はありませんが、削除して構いません。
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.2.6推奨）**
+## 🎯 **Claude Desktop での設定（v1.4.0推奨）**
 
 ### **推奨設定**
 ```json
@@ -74,7 +95,7 @@ POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["poker-mcp"],
+      "args": ["-y", "poker-mcp@1.4.0"],
       "env": {
         "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -83,8 +104,20 @@ POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
   }
 }
 ```
-`<username>` はご自身のWindowsユーザー名に置き換えてください。  
-`POKER_INSTALL_PATH` は省略可能（省略時は `C:/Poker` を使用）。
+`<username>` はご自身のWindowsユーザー名に置き換えてください。
+
+> **⚠️ 版数の固定を推奨**
+> `poker-mcp@latest` ではなく `poker-mcp@1.4.0` のように固定してください。
+> 遮蔽計算では、いつサーバが入れ替わるか分からない状態は再現性の観点から
+> 望ましくありません。更新は設定を書き換える意図的な操作として行います。
+>
+> NPX はパッケージをキャッシュするため、同じ版数を再 publish しても古い
+> ものが使われることがあります。その場合は `npm cache clean --force` を実行します。
+
+> **⚠️ `POKER_INSTALL_PATH` は省略しないでください**
+> v1.4.0 以降、核種データベースと材料カタログの参照元になりました。
+> 既定値 `C:/Poker` と実際のインストール先が異なると、子孫核種の自動生成が
+> 動作しません。
 
 > **⚠️ `cwd` の指定は不要・非推奨**  
 > v1.2.5 以前のドキュメントでは `"cwd": "C:\\..."` の指定を案内していましたが、
@@ -97,7 +130,7 @@ POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["poker-mcp"],
+      "args": ["-y", "poker-mcp@1.4.0"],
       "env": {
         "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
         "POKER_INSTALL_PATH": "/usr/local/share/poker"

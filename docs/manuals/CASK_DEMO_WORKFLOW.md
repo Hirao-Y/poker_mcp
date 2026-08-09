@@ -82,7 +82,7 @@ freecad-mcp の `execute_code` で Part API により構築（`Part.makeCylinder
 - name `SpentFuel`, type RCC, geometry {bottom_center `0 0 30`, height_vector `0 0 400`, radius 75}
 - division {r:UNIFORM 8, phi:UNIFORM 16, z:UNIFORM 30}（収束寄り。粗いと近傍接触点を過小評価）
 - inventory [Cs137, Co60 …]、cutoff_rate 0.0001
-- `poker_confirmDaughterNuclides(action=confirm)` で Cs137 の娘 Ba137m（分岐比 0.9439）を追加
+- Cs137 を指定すると娘 Ba137m（分岐比 0.9439）が自動生成される（v1.4.0）。手動追加は不要
 
 ### 3.5 ビルドアップ
 `poker_proposeBuildupFactor`（`use_slant_correction=false, use_finite_medium_correction=false`）:

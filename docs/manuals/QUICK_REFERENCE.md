@@ -2,7 +2,7 @@
 
 **対象読者**: 放射線遮蔽研究者・実務者  
 **更新日**: 2025年1月24日  
-**バージョン**: 1.2.5 MCP Edition  
+**バージョン**: 1.4.0 MCP Edition  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -75,7 +75,7 @@
 | **poker_applyChanges** | 変更適用 | 自動バックアップ付き保存 |
 | **poker_executeCalculation** | 計算実行 | poker_cui実行・結果取得 |
 | **poker_resetYaml** | 初期化 | 3段階リセット・ATMOSPHERE保護 |
-| **poker_confirmDaughterNuclides** | 子孫核種処理 | 自動検出・追加・確認 |
+| **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動 |
 
 ---
 

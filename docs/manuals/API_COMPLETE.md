@@ -93,8 +93,59 @@
 | **poker_applyChanges** | 変更適用・保存 | 自動バックアップ・整合性確認 |
 | **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報・環境変数依存 |
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
-| **poker_confirmDaughterNuclides** | 子孫核種確認・追加 | ICRP-07データベース・自動補完・環境変数必須 |
+| **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動。除外は線源ごと |
 | **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存 |
+
+### ☢️ **子孫核種の自動管理（v1.4.0）**
+
+親核種を指定すると子孫核種が自動生成され、親の更新・削除に追随する。
+生成は `poker_proposeSource` / `poker_updateSource` の実行時に行われる。
+
+```
+poker_proposeSource(name="Src", type="POINT", position="0 0 0",
+                    inventory=[{nuclide:"Cs137", radioactivity:1e12}])
+  → 提案: 線源 Src (POINT) を追加
+    子孫核種を自動生成: Ba137m=9.4399e+11Bq(←Cs137)
+```
+
+親を更新すると娘が追随する。
+
+```
+poker_updateSource(name="Src",
+                   inventory=[{nuclide:"Cs137", radioactivity:2e12}])
+  → 子孫核種を再計算: Ba137m=1.8880e+12Bq(←Cs137)
+```
+
+派生エントリは `x_meta.derived_from` を持ち、ユーザ指定エントリと区別される。
+ユーザが自分で入力した核種は上書きも重複追加もされない。
+
+**poker_confirmDaughterNuclides の引数**
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `action` | string | `check` / `reject` / `confirm` / `confirm_with_modifications` |
+| `source_name` | string | 対象線源名。`check` 以外では必須 |
+| `nuclides` | array | 対象核種名。省略時は全件（v1.4.0 で追加） |
+| `modifications` | array | `confirm_with_modifications` 用 |
+
+| action | 動作 |
+|---|---|
+| `check` | 派生核種・ユーザ指定核種・除外設定の一覧を表示 |
+| `reject` | 対象線源で除外登録。**他の線源には影響しない** |
+| `confirm` | 除外を解除し、次回の再計算で復活させる |
+| `confirm_with_modifications` | 放射能を手動指定（同時に除外登録される） |
+
+除外は `source.x_meta.excluded_daughters` に永続化されるため、以後
+`updateSource` で親を変更しても復活しない。
+
+**v1.3.0 からの変更点**
+
+- 発火が `executeCalculation` 時から `propose/updateSource` 時へ移動。
+  計算が子孫核種の未確認で中断することはなくなった
+- `reject` が線源ごとになった。従来はグローバルフラグを立てており、
+  1つの線源で拒否すると全線源の検出が無効になっていた
+- 平衡が成立しない組み合わせは生成せず警告を返す（従来は分岐比を
+  そのまま掛けていた）
 
 ---
 
