@@ -833,7 +833,7 @@ Claude Desktop 指示:
 
 2. 分割統治法:
    for building in buildings:
-       poker_resetYaml(level="minimal")
+       poker_resetYaml(reset_level="minimal")
        poker_proposeBody(building)
        poker_proposeSource(building_sources)
        poker_executeCalculation()

@@ -68,14 +68,16 @@
 | **poker_validateUnitIntegrity** | 整合性検証 | 4キー完全性・物理整合性確認 |
 | **poker_analyzeUnitConversion** | 変換分析 | 単位変換係数計算 |
 
-### 🔧 System操作系（4メソッド）- システム制御
+### 🔧 System操作系（6メソッド）- システム制御
 
 | メソッド | 機能 | 主要機能 |
 |---------|------|----------|
 | **poker_applyChanges** | 変更適用 | 自動バックアップ付き保存 |
-| **poker_executeCalculation** | 計算実行 | poker_cui実行・結果取得 |
+| **poker_executeCalculation** | 計算実行 | poker_cui実行・構造化result_total取得 |
+| **poker_getDoseMap** | 線量マップ取得 | グリッド検出器の全評価点（1D/2D/3D） |
 | **poker_resetYaml** | 初期化 | 3段階リセット・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動 |
+| **poker_openGui** | GUI表示 | POKER.exe起動・Windows専用 |
 
 ---
 
