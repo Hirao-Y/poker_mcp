@@ -6,12 +6,16 @@
 import fs from 'fs/promises';
 import path from 'path';
 import { logger } from './logger.js';
+import { NDX_FILE } from './paths.js';
 
 class NuclideManager {
     constructor(options = {}) {
         this.contributionThreshold = options.contribution_threshold || 0.05;
         this.userConfirmation = options.user_confirmation !== false;
-        this.databaseFile = options.database_file || 'data/ICRP-07.NDX';
+        // 既定は POKER_INSTALL_PATH/LIB/ICRP-07.NDX（paths.js が解決した絶対パス）。
+        // 旧実装の既定は相対パス 'data/ICRP-07.NDX' で、プロセスの
+        // カレントディレクトリ次第で解決先が変わる不安定な状態だった。
+        this.databaseFile = options.database_file || NDX_FILE;
         this.nuclideData = new Map();
         this.decayChains = new Map();
     }

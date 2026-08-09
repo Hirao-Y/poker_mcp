@@ -66,14 +66,15 @@
     "pending_file": "tasks/pending_changes.json",
     "backup_directory": "backups",
     "logs_directory": "logs",
-    "data_directory": "data",
     "nuclide_database": {
-      "target_file": "data/ICRP-07.NDX",
+      "resolved_file": "${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX",
       "source_env_var": "POKER_INSTALL_PATH",
-      "source_relative_path": "lib/ICRP-07.NDX",
+      "source_relative_path": "LIB/ICRP-07.NDX",
       "default_install_path": "C:/Poker",
-      "skip_if_exists": true,
-      "fallback_behavior": "error_if_missing"
+      "copy_to_workspace": false,
+      "legacy_fallback": "${POKER_MCP_HOME}/data/ICRP-07.NDX",
+      "fallback_behavior": "warn_then_error_if_missing",
+      "note": "v1.4.0 以降、POKER_INSTALL_PATH/LIB を直接参照する。ワークスペースへのコピーは行わない（POKER 更新時に古いコピーを読み続ける問題を回避）"
     }
   },
   "environment_variables": {
@@ -81,7 +82,7 @@
       "description": "POKERインストールディレクトリのパス",
       "required": false,
       "default": "C:/Poker",
-      "purpose": "lib/ICRP-07.NDXファイルの取得元ディレクトリ指定",
+      "purpose": "LIB/ICRP-07.NDX（核種データ）および LIB/lib_material.dat（材料カタログ）の参照元、POKER_CUI.exe / POKER.exe の実行元",
       "example_windows": "C:/Program Files/POKER",
       "example_linux": "/usr/local/share/poker"
     }
