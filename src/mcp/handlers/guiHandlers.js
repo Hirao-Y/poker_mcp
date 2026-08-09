@@ -6,10 +6,55 @@ import { logger } from '../../utils/logger.js';
 import { TASKS_DIR, YAML_FILE } from '../../utils/paths.js';
 
 /**
- * POKER.exe が既に起動しているかを調べる（Windows専用）
+ * POKER.exe のファイルバージョンを取得する（Windows専用）
  *
- * POKER は二重起動を許可しないため、起動中に spawn しても新しい
- * プロセスは即座に終了し、画面は前の入力を表示したままになる。
+ * POKER 2.1.1 以降は二重起動時に入力ファイルパスを既存インスタンスへ
+ * 転送するため、起動中でもそのまま spawn してよい。
+ * 2.1.0 以前は転送機能がなく、メッセージボックスを出して終了する。
+ *
+ * @returns {Promise<string|null>} "2.1.1.1" 形式。取得できなければ null
+ */
+async function getPokerFileVersion(exePath) {
+  if (process.platform !== 'win32') return null;
+
+  return new Promise(resolve => {
+    try {
+      const ps = spawn('powershell', [
+        '-NoProfile', '-NonInteractive', '-Command',
+        `try { [System.Diagnostics.FileVersionInfo]::GetVersionInfo('${exePath.replace(/'/g, "''")}').FileVersion } catch { '' }`
+      ], { windowsHide: true });
+
+      let out = '';
+      ps.stdout.on('data', d => { out += d.toString(); });
+      ps.on('error', () => resolve(null));
+      ps.on('close', () => {
+        const v = out.trim();
+        resolve(/^\d+(\.\d+)*$/.test(v) ? v : null);
+      });
+      setTimeout(() => resolve(null), 5000);
+    } catch {
+      resolve(null);
+    }
+  });
+}
+
+/** "2.1.1.1" >= "2.1.1" を判定する */
+function isVersionAtLeast(version, minimum) {
+  if (!version) return false;
+  const a = version.split('.').map(Number);
+  const b = minimum.split('.').map(Number);
+  for (let i = 0; i < Math.max(a.length, b.length); i++) {
+    const x = a[i] || 0, y = b[i] || 0;
+    if (x !== y) return x > y;
+  }
+  return true;
+}
+
+/** 入力転送に対応する最小バージョン */
+const FORWARDING_MIN_VERSION = '2.1.1';
+
+/**
+ * POKER.exe が既に起動しているかを調べる（Windows専用）
  *
  * @returns {Promise<{detected: boolean, pids: number[]}>}
  */
@@ -116,24 +161,33 @@ export function createGuiHandlers(taskManager) {
         };
       }
 
-      // ── Step 3.5: POKER.exe の多重起動チェック ───────────────────
+      // ── Step 3.5: 多重起動の扱い ────────────────────────────────
       //
-      // POKER は二重起動を許可しない。既に起動している状態で spawn すると
-      // 新しいプロセスは即座に終了し、画面は前の入力を表示したままになる。
-      // 従来は spawn の成否のみで成功を返していたため、実際には表示が
-      // 切り替わっていないのに「起動しました」と報告していた。
+      // POKER 2.1.1 以降は、起動中に別の入力で spawn すると、2つ目の
+      // プロセスがパスを既存インスタンスへ転送して終了する（表示が切替わる）。
+      // 2.1.0 以前は転送機能がなく、メッセージボックスを出して終了するため、
+      // 呼び出し側には「成功したのに表示が変わらない」と見える。
+      // そこでバージョンで分岐する。
+      const pokerVersion = await getPokerFileVersion(pokerExePath);
+      const supportsForwarding = isVersionAtLeast(pokerVersion, FORWARDING_MIN_VERSION);
       const running = await isPokerRunning();
-      if (running.detected) {
-        logger.warn('poker_openGui: POKER.exe が既に起動中', { pids: running.pids });
+
+      if (running.detected && !supportsForwarding) {
+        logger.warn('poker_openGui: 起動中かつ転送非対応版', {
+          pids: running.pids, version: pokerVersion
+        });
         return {
           success:    false,
-          error:      'POKER.exe は既に起動しています。POKER は二重起動できません。',
+          error:      'POKER.exe は既に起動しています。この版は二重起動時の入力転送に対応していません。',
           error_type: 'POKER_ALREADY_RUNNING',
           running_pids: running.pids,
-          suggestion: '別の入力を表示するには、先に起動中の POKER ウィンドウを閉じてください。'
-            + '\n（表示中の入力を再読み込みしたい場合も、いったん閉じる必要があります）'
+          poker_version: pokerVersion ?? '(取得不可)',
+          suggestion: `別の入力を表示するには、先に起動中の POKER ウィンドウを閉じてください。`
+            + `\nPOKER ${FORWARDING_MIN_VERSION} 以降に更新すると、閉じずに切り替えられます。`
         };
       }
+
+      const forwarding = running.detected && supportsForwarding;
 
       // ── Step 4: POKER.exe をデタッチ起動 ─────────────────────────
       try {
@@ -146,15 +200,18 @@ export function createGuiHandlers(taskManager) {
         // 起動直後に終了していないかを確認してから成功を報告する。
         // spawn の成功はプロセス生成の成功でしかなく、GUI が実際に
         // 表示されたことを意味しない。
+        //
+        // ただし転送時（既存インスタンスあり・2.1.1以降）は、2つ目の
+        // プロセスがパスを送って即座に終了するのが正常動作である。
         const died = await new Promise(resolve => {
           const timer = setTimeout(() => resolve(null), 1500);
           child.once('exit', code => { clearTimeout(timer); resolve(code ?? -1); });
           child.once('error', () => { clearTimeout(timer); resolve(-1); });
         });
 
-        if (died !== null) {
+        if (died !== null && !(forwarding && died === 0)) {
           logger.error('poker_openGui: POKER.exe が起動直後に終了', {
-            exitCode: died, executable: pokerExePath, inputFile: resolvedYaml
+            exitCode: died, executable: pokerExePath, inputFile: resolvedYaml, forwarding
           });
           return {
             success:    false,
@@ -162,7 +219,28 @@ export function createGuiHandlers(taskManager) {
             error_type: 'POKER_EXITED_IMMEDIATELY',
             input_file: resolvedYaml,
             suggestion: '入力ファイルが POKER で読める形式か確認してください。'
-              + '\nPOKER が既に起動している場合は、先に閉じてください（二重起動不可）。'
+          };
+        }
+
+        if (forwarding) {
+          logger.info('poker_openGui: 既存インスタンスへ入力を転送', {
+            executable: pokerExePath, inputFile: resolvedYaml,
+            targetPids: running.pids, version: pokerVersion
+          });
+          return {
+            success: true,
+            message: '起動中の POKER に入力を転送しました。',
+            forwarded: true,
+            launched: {
+              executable:  pokerExePath,
+              input_file:  resolvedYaml,
+              target_pids: running.pids
+            },
+            poker_version: pokerVersion,
+            note: '転送の送信までを確認しています。読み込みに失敗した場合は'
+                + ' POKER のウィンドウにエラーが表示されます。'
+                + '\n未保存の編集があるときは POKER 側で保存確認が出ます'
+                + '（キャンセルすると切り替わりません）。'
           };
         }
 
