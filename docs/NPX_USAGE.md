@@ -214,7 +214,7 @@ Claude Desktopで以下のコマンドを試してください：
   "POKER_INSTALL_PATH": "C:/Program Files/POKER"
 }
 ```
-設定したパスの `lib/ICRP-07.NDX` が自動的に `POKER_MCP_HOME/data/` にコピーされます。
+設定したパスの `LIB/ICRP-07.NDX` を直接参照します（v1.4.0以降、コピーは行いません）。
 
 ### **問題3: npm / npx が見つからない**
 ```bash

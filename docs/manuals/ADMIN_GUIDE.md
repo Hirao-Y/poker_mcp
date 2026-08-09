@@ -195,7 +195,7 @@ sudo pm2 startup
 ```bash
 # POKER_INSTALL_PATH環境変数
 # 目的: POKERライブラリのインストールディレクトリ指定
-# 用途: lib/ICRP-07.NDX核種データベースファイルの取得元
+# 用途: LIB/ICRP-07.NDX（核種DB）・LIB/lib_material.dat（材料カタログ）の参照元
 
 # システム全体での設定 (推奨)
 echo 'export POKER_INSTALL_PATH="/opt/poker/lib"' >> /etc/environment
@@ -347,8 +347,8 @@ validate_poker_path() {
 }
 
 # 2. ファイル権限の適切な設定
-chmod 644 /opt/poker_mcp_v12/data/ICRP-07.NDX
-chown poker_mcp_v12:poker_mcp_v12 /opt/poker_mcp_v12/data/ICRP-07.NDX
+# 核種DBはPOKER側(LIB)にあるためMCP側の権限設定は不要
+# 読み取り権限のみ必要: $POKER_INSTALL_PATH/LIB/
 ```
 
 ---

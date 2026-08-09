@@ -1,7 +1,7 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.2.6 MCP Edition  
+**バージョン**: 1.4.0 MCP Edition  
 **最終更新**: 2026年5月16日  
 **使用方法**: Claude Desktop + MCP通信 (29メソッド対応)
 
@@ -48,7 +48,7 @@
 | エラーメッセージ | 原因 | 対処法 |
 |------------------|------|--------|
 | MISSING_SOURCE_FILE | POKER_INSTALL_PATHが不正またはファイル不存在 | 環境変数設定・ファイル存在確認 |
-| ENOENT: no such file | data/ICRP-07.NDXが見つからない | 環境変数確認・手動ファイル配置 |
+| ENOENT: no such file | ${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX が見つからない | POKER_INSTALL_PATH を確認 |
 | EACCES: permission denied | ファイル書き込み権限不足 | dataディレクトリ権限確認 |
 | Database loading failed | 核種データベース読み込み失敗 | ファイル完全性・形式確認 |
 
@@ -402,7 +402,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 ```
 症状:
 - 「MISSING_SOURCE_FILE」エラー
-- 「data/ICRP-07.NDX not found」メッセージ
+- 「${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX not found」メッセージ
 - 核種データベース読み込み失敗
 
 診断・対処:
@@ -418,8 +418,8 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
    Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
    
 3. ソースファイル存在確認:
-   パス確認: %POKER_INSTALL_PATH%\lib\ICRP-07.NDX
-   ファイル確認: dir "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX"
+   パス確認: %POKER_INSTALL_PATH%\LIB\ICRP-07.NDX
+   ファイル確認: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
    
 4. Claude Desktop設定更新:
    claude_desktop_config.jsonのenvセクションに追加:
@@ -441,16 +441,16 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 「データファイル権限修復を実行してください：
 
 1. ディレクトリ権限確認:
-   Windows: dir C:\Users\yoshi\Desktop\poker_mcp\data /Q
-   Linux: ls -la /path/to/poker_mcp/data/
+   Windows: dir "%POKER_MCP_HOME%\tasks" /Q
+   Linux: ls -la "$POKER_MCP_HOME/tasks/"
    
 2. 権限修復:
    Windows: 
-   icacls "C:\Users\yoshi\Desktop\poker_mcp\data" /grant %USERNAME%:F
+   icacls "%POKER_MCP_HOME%\tasks" /grant %USERNAME%:F
    
    Linux/macOS:
-   chmod 755 /path/to/poker_mcp/data/
-   chown $USER:$USER /path/to/poker_mcp/data/
+   chmod 755 "$POKER_MCP_HOME/tasks/"
+   chown $USER:$USER "$POKER_MCP_HOME/tasks/"
    
 3. 親ディレクトリ権限確認:
    mkdir権限の確保
@@ -469,19 +469,19 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 「データベースファイル完全性チェックを実行してください：
 
 1. ファイル存在・サイズ確認:
-   Windows: dir "C:\Users\yoshi\Desktop\poker_mcp\data\ICRP-07.NDX"
+   Windows: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
    予想サイズ: 約285KB (285,684 bytes)
    
 2. ファイル完全性確認:
-   Windows: certutil -hashfile "data\ICRP-07.NDX" MD5
-   Linux: md5sum data/ICRP-07.NDX
+   Windows: certutil -hashfile "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX" MD5
+   Linux: md5sum "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
    
 3. 破損ファイルの再配置:
-   既存ファイル削除: del data\ICRP-07.NDX
-   MCPサーバー再起動で自動再配置
+   POKER本体を再インストールしてLIBを復元
+   （MCP側にコピーは無いため再起動では復旧しません）
    
 4. 手動ファイル配置:
-   copy "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX" data\
+   起動ログで「source: POKER_INSTALL_PATH/LIB」を確認
    
 5. 動作確認:
    poker_confirmDaughterNuclidesで子孫核種機能テスト」
@@ -524,7 +524,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 ```
 症状:
 - 「MISSING_SOURCE_FILE」エラー
-- 「data/ICRP-07.NDX not found」メッセージ
+- 「${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX not found」メッセージ
 - 核種データベース読み込み失敗
 
 診断・対処:
@@ -540,8 +540,8 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
    Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
    
 3. ソースファイル存在確認:
-   パス確認: %POKER_INSTALL_PATH%\lib\ICRP-07.NDX
-   ファイル確認: dir "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX"
+   パス確認: %POKER_INSTALL_PATH%\LIB\ICRP-07.NDX
+   ファイル確認: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
    
 4. Claude Desktop設定更新:
    claude_desktop_config.jsonのenvセクションに追加:
@@ -563,16 +563,16 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 「データファイル権限修復を実行してください：
 
 1. ディレクトリ権限確認:
-   Windows: dir C:\Users\yoshi\Desktop\poker_mcp\data /Q
-   Linux: ls -la /path/to/poker_mcp/data/
+   Windows: dir "%POKER_MCP_HOME%\tasks" /Q
+   Linux: ls -la "$POKER_MCP_HOME/tasks/"
    
 2. 権限修復:
    Windows: 
-   icacls "C:\Users\yoshi\Desktop\poker_mcp\data" /grant %USERNAME%:F
+   icacls "%POKER_MCP_HOME%\tasks" /grant %USERNAME%:F
    
    Linux/macOS:
-   chmod 755 /path/to/poker_mcp/data/
-   chown $USER:$USER /path/to/poker_mcp/data/
+   chmod 755 "$POKER_MCP_HOME/tasks/"
+   chown $USER:$USER "$POKER_MCP_HOME/tasks/"
    
 3. 親ディレクトリ権限確認:
    mkdir権限の確保
@@ -591,19 +591,19 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 「データベースファイル完全性チェックを実行してください：
 
 1. ファイル存在・サイズ確認:
-   Windows: dir "C:\Users\yoshi\Desktop\poker_mcp\data\ICRP-07.NDX"
+   Windows: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
    予想サイズ: 約285KB (285,684 bytes)
    
 2. ファイル完全性確認:
-   Windows: certutil -hashfile "data\ICRP-07.NDX" MD5
-   Linux: md5sum data/ICRP-07.NDX
+   Windows: certutil -hashfile "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX" MD5
+   Linux: md5sum "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
    
 3. 破損ファイルの再配置:
-   既存ファイル削除: del data\ICRP-07.NDX
-   MCPサーバー再起動で自動再配置
+   POKER本体を再インストールしてLIBを復元
+   （MCP側にコピーは無いため再起動では復旧しません）
    
 4. 手動ファイル配置:
-   copy "%POKER_INSTALL_PATH%\lib\ICRP-07.NDX" data\
+   起動ログで「source: POKER_INSTALL_PATH/LIB」を確認
    
 5. 動作確認:
    poker_confirmDaughterNuclidesで子孫核種機能テスト」
@@ -863,5 +863,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2026年5月  
-**バージョン**: 1.2.6 MCP Edition  
+**バージョン**: 1.4.0 MCP Edition  
 **サポート**: GitHub Issues

@@ -34,7 +34,7 @@
 - **Common操作**: 1メソッド(applyChanges)
 - **Calculation操作**: 1メソッド(executeCalculation)
 - **Reset操作**: 1メソッド（resetYaml）
-- **DaughterNuclide操作**: 1メソッド（confirmDaughterNuclides）
+- **DaughterNuclide操作**: 1メソッド（confirmDaughterNuclides。生成自体は propose/updateSource 時に自動）
 
 ### **10種類立体タイプ完全対応**
 - SPH（球体）
@@ -103,7 +103,7 @@
 - **作業ファイル**: `tasks/poker.yaml`
 - **保留変更**: `tasks/pending_changes.json`
 - **バックアップ**: `tasks/backups/`
-- **核種データベース**: `data/ICRP-07.NDX` (自動配置)
+- **核種データベース**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` (直接参照・v1.4.0)
 
 ### 1.3 環境変数設定
 
@@ -111,7 +111,7 @@
 ```bash
 # 目的: POKERライブラリのインストールディレクトリ指定
 # デフォルト値: C:/Poker
-# 機能: 初回起動時にlib/ICRP-07.NDXファイルをdata/にコピー
+# 機能: LIB/ICRP-07.NDX と LIB/lib_material.dat の参照元（コピーは行わない）
 
 # Windows設定例
 set POKER_INSTALL_PATH=C:/Poker

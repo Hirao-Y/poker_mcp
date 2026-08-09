@@ -221,7 +221,7 @@ poker_mcp/
 
 - [ ] Node.js 18.0.0以上インストール確認
 - [ ] POKER_INSTALL_PATH環境変数設定（オプション）
-- [ ] lib/ICRP-07.NDXファイル存在確認
+- [ ] ${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX 存在確認
 - [ ] claude_desktop_config.json編集
 - [ ] Claude Desktop再起動
 - [ ] `poker_getUnit`で動作確認

@@ -31,7 +31,7 @@ Claude Desktop 指示:
 
 環境変数設定確認:
 1. POKER_INSTALL_PATH環境変数の存在確認
-2. 核種データベース（ICRP-07.NDX）の配置確認
+2. 核種データベース（${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX）の存在確認
 3. MCPサーバー接続状態の確認
 
 設定が不完全な場合:
@@ -428,21 +428,25 @@ Claude Desktop 指示:
 「Mo-99/Tc-99m発生器の遮蔽設計で子孫核種を考慮してください。
 
 核種データ:
-- Mo-99: 半減期66時間、β崩壊
-- Tc-99m: 半減期6時間、IT（140 keV γ線）
+- Mo-99: 半減期66時間、β崩壊、分岐比0.8773
+- Tc-99m: 半減期6.01時間、IT（140 keV γ線）
 
-子孫核種処理:
+子孫核種処理（v1.4.0）:
 1. poker_proposeSource で Mo-99 線源を定義
-2. poker_confirmDaughterNuclides:
-   action: "check"
-   → Tc-99mが87.5%の寄与率で検出
-3. poker_confirmDaughterNuclides:
-   action: "confirm"
-   → Tc-99m自動追加
-4. poker_executeCalculation で両核種考慮の計算
+   → Tc-99m が過渡平衡として自動生成される
+     係数 0.8773 / (1 - 6.01/66.0) = 0.9654
+     A(Tc-99m) = A(Mo-99) × 0.9654
+2. poker_executeCalculation で両核種考慮の計算
 
-過渡平衡を考慮した正確な遮蔽設計を実施してください。」
+Mo-99 の放射能を変更すると Tc-99m も自動的に追随します。」
 ```
+
+> **溶出直後の扱い**: カラムから Tc-99m を取り出した直後は過渡平衡が
+> 成立していません。この場合は上記の係数を適用できないため、
+> `poker_confirmDaughterNuclides action="reject" source_name="..."
+> nuclides=["Tc99m"]` で除外するか、`confirm_with_modifications` で
+> 実測値を手動指定してください。除外は線源ごとに記録され、
+> 親を更新しても復活しません。
 
 ---
 

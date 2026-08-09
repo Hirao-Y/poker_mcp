@@ -457,7 +457,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 **🔴 環境変数依存性**:
 - **POKER_MCP_HOME**: 作業ディレクトリ（未設定時は `~/.poker-mcp/`）
-- **POKER_INSTALL_PATH**: 核種データベースのコピー元（未設定時は `C:/Poker`）
+- **POKER_INSTALL_PATH**: 核種データベース `LIB/ICRP-07.NDX` と材料カタログ `LIB/lib_material.dat` の参照元、POKER実行ファイルの場所（未設定時は `C:/Poker`）
 - **poker_cui**: PATH上に実行可能ファイルが必要
 
 **計算オプション**:

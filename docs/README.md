@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.2.8
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.4.0
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（30メソッド完全実装）
 
@@ -14,6 +14,13 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
+
+### 🆕 v1.4.0 新機能・修正
+- **子孫核種の自動管理（v1.4.0）**: 親を指定すると娘が自動生成され、親の更新・削除に追随。除外は線源ごとに記録
+- **ICRP-07パーサ修正（v1.4.0）**: 列位置の誤りで全1252核種の子孫核種が取得できていなかった問題を修正（→808核種が娘を持つ）
+- **核種DB参照先の統一（v1.4.0）**: `POKER_INSTALL_PATH/LIB` を直接参照。コピー方式を廃止
+- **poker_getDoseMap（v1.3.0）**: グリッド検出器の全評価点の線量マップを取得
+- **構造化 result_total（v1.3.0）**: 計算結果を検出器ごとの構造化データで返却
 
 ### 🆕 v1.2.8 新機能・修正
 - **poker_openGui 追加（v1.2.8）**: POKER.exe GUI で入力内容をビジュアル確認
@@ -38,10 +45,10 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### 🌍 環境変数設定
 
-Poker MCP Server は2つの環境変数を参照します。どちらも省略可能です。
+Poker MCP Server は2つの環境変数を参照します。`POKER_INSTALL_PATH` は v1.4.0 以降、核種データベースと材料カタログの参照元となるため実質必須です。
 
 #### `POKER_MCP_HOME`（推奨）
-全作業ファイル（YAML・バックアップ・ログ・核種DB）の格納先ディレクトリです。
+作業ファイル（YAML・バックアップ・ログ）の格納先ディレクトリです。
 
 - **デフォルト値**: `~/.poker-mcp/`（Windows: `C:\Users\<username>\.poker-mcp\`）
 - **未設定時の動作**: ホームディレクトリ配下の `.poker-mcp/` フォルダを自動作成して使用
@@ -50,15 +57,16 @@ Poker MCP Server は2つの環境変数を参照します。どちらも省略�
   POKER_MCP_HOME/
     tasks/      # poker.yaml, pending_changes.json
     backups/    # 自動バックアップ（最大10世代）
-    data/       # ICRP-07.NDX 核種データベース
     logs/       # error.log, combined.log
     config.json # ユーザー設定（任意）
   ```
 
-#### `POKER_INSTALL_PATH`（オプション）
-POKERのインストールディレクトリです。以下の2つの用途で参照されます。
+#### `POKER_INSTALL_PATH`（実質必須）
+POKERのインストールディレクトリです。以下の用途で参照されます。
 
-- **ICRP-07.NDX のコピー元**: `{POKER_INSTALL_PATH}/lib/ICRP-07.NDX` → `POKER_MCP_HOME/data/` に自動コピー（既存時はスキップ）
+- **核種データベース**: `{POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照（v1.4.0以降。コピーは行わない）
+- **材料カタログ**: `{POKER_INSTALL_PATH}/LIB/lib_material.dat` を直接参照
+- **POKER_CUI.exe の場所**: 線量計算の実行
 - **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）
 
 - **デフォルト値**: `C:/Poker`（未設定時は `C:/Poker` を使用）
@@ -132,7 +140,7 @@ Claudeに「poker_getUnitで単位系を確認して」と入力し、MCPツー�
 #### **例2: PET-CT施設の複合遮蔽（Unit操作活用）**
 ```
 「PET-CT×500×300cm、壁厚: コンクリート30cm、F-18線源: 最大750MBq
-poker_confirmDaughterNuclidesで子孫核種を確認してください。」
+Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 ```
 
 ### ⚛️ 原子炉遮蔽評価（サマリーファイル解析）
@@ -152,7 +160,7 @@ poker_confirmDaughterNuclidesで子孫核種を確認してください。」
 
 ---
 
-## 📊 システム仕様（v1.2.8）
+## 📊 システム仕様（v1.4.0）
 
 ### 💻 動作要件
 - **Node.js**: 18.0.0以上（推奨: 20.0.0以上）
@@ -175,7 +183,7 @@ poker_confirmDaughterNuclidesで子孫核種を確認してください。」
 
 ---
 
-## 🔗 外部連携（v1.2.8対応）
+## 🔗 外部連携（v1.4.0対応）
 
 ### 📊 POKER計算コード連携
 - YAML入力ファイル生成（30メソッド対応）
@@ -198,7 +206,7 @@ results = summary['result']
 total_doses = summary['result_total']
 ```
 
-### 📈 結果処理（v1.2.5拡張）
+### 📈 結果処理（v1.4.0拡張）
 - サマリーファイル4セクションの自動解析
 - 線量率分布の可視化
 - 規制値との自動比較
@@ -206,7 +214,7 @@ total_doses = summary['result_total']
 
 ---
 
-## ⚠️ 注意事項（v1.2.5）
+## ⚠️ 注意事項（v1.4.0）
 
 ### 🔧 システム制限
 - YAMLファイルサイズ: 推奨10MB以下
@@ -228,23 +236,24 @@ total_doses = summary['result_total']
 
 ---
 
-## 📞 サポート（v1.2.8対応）
+## 📞 サポート（v1.4.0対応）
 
 ### 🆘 問題発生時
 1. **エラーコード確認**: 13種類のエラーコードから対処法特定
-2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認（v1.2.5更新）
+2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認（v1.4.0更新）
 3. **自動修復機能**の活用（YAMLファイル破損時）
 4. **Unit操作**で単位系の整合性確認
 
 ### 📧 技術サポート
 - **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
 - **30メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
-- **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.2.5更新）
-- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.2.5更新）
+- **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
+- **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
+- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.4.0更新）
 
 ---
 
-## 🌟 プロジェクトの価値（v1.2.8）
+## 🌟 プロジェクトの価値（v1.4.0）
 
 ### ✨ 研究者への価値
 - **効率化**: 30メソッドによる入力ファイル作成時間80%短縮
@@ -292,6 +301,6 @@ total_doses = summary['result_total']
 ---
 
 **🚀 今すぐ始める**: Claude Desktopで「poker_getUnitで単位系を確認して」と入力
-**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照（v1.2.5更新）
+**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照（v1.4.0更新）
 **⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で28メソッド確認
 **💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認
