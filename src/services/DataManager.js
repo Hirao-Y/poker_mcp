@@ -8,8 +8,8 @@ import CollisionDetector from '../utils/CollisionDetector.js';
 import NuclideManager from '../utils/NuclideManager.js';
 import EnhancedValidator from '../utils/EnhancedValidator.js';
 import { getExcludedDaughters, normalizeNuclide } from '../utils/DaughterReconciler.js';
-import { BACKUPS_DIR, LOGS_DIR, TASKS_DIR, DATA_DIR, NDX_FILE,
-         YAML_FILE, PENDING_FILE } from '../utils/paths.js';
+import { BACKUPS_DIR, LOGS_DIR, TASKS_DIR, NDX_FILE, LEGACY_NDX_FILE,
+         POKER_INSTALL_DIR, YAML_FILE, PENDING_FILE } from '../utils/paths.js';
 
 export class SafeDataManager {
   constructor(yamlFile, pendingFile) {
@@ -49,9 +49,9 @@ export class SafeDataManager {
       await fs.mkdir(BACKUPS_DIR, { recursive: true });  // backups
       await fs.mkdir(LOGS_DIR,    { recursive: true });  // logs
       await fs.mkdir(TASKS_DIR,   { recursive: true });  // tasks
-      await fs.mkdir(DATA_DIR,    { recursive: true });  // data
+      // data/ は作成しない（核種データベースは POKER_INSTALL_PATH/LIB を直接参照）
 
-      // 必要なデータファイルをコピー
+      // 核種データベースの所在確認
       await this.ensureDataFiles();
 
       // 初期ファイル配置（既存ファイルがない場合のみ）
@@ -71,79 +71,56 @@ export class SafeDataManager {
     }
   }
 
-  // 新規メソッド: 必要なデータファイルの確保
+  // 核種データベースの所在確認
+  //
+  // v1.4.0 変更: POKER_MCP_HOME/data/ へのコピーを廃止し、
+  // POKER_INSTALL_PATH/LIB/ICRP-07.NDX を直接参照する。
+  // 旧実装は「コピー先が存在すればスキップ」だったため、POKER を更新して
+  // LIB の核データが新しくなっても古いコピーを読み続けていた。
   async ensureDataFiles() {
     try {
-      const targetFile = NDX_FILE;  // 絶対パスを使用
-      
-      // ターゲットファイルの存在チェック
+      // 正本: POKER_INSTALL_PATH/LIB/ICRP-07.NDX
       try {
-        await fs.access(targetFile);
-        logger.info('ICRP-07データベースファイルは既に存在します。コピーをスキップします。', { 
-          file: targetFile 
+        const stats = await fs.stat(NDX_FILE);
+        logger.info('核種データベースを確認しました', {
+          file: NDX_FILE,
+          size: stats.size,
+          source: 'POKER_INSTALL_PATH/LIB'
         });
-        return; // 既に存在する場合は何もしない
-      } catch (targetError) {
-        if (targetError.code !== 'ENOENT') {
-          // アクセス権限などの別のエラー
-          throw targetError;
-        }
-        // ファイルが存在しない場合は以下の処理を続行
+        this.ndxFile = NDX_FILE;
+        return;
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
       }
-      
-      // 環境変数からインストールパスを取得（デフォルト値設定）
-      const installPath = process.env.POKER_INSTALL_PATH || 'C:/Poker';
-      logger.info('POKERインストールパスを確認', { installPath });
-      
-      const sourceFile = path.join(installPath, 'lib', 'ICRP-07.NDX');
-      
-      // ソースファイルの存在チェック
+
+      // 旧構成の互換フォールバック: POKER_MCP_HOME/data/ICRP-07.NDX
       try {
-        await fs.access(sourceFile);
-        logger.info('ソースファイルが見つかりました', { sourceFile });
-      } catch (sourceError) {
-        if (sourceError.code === 'ENOENT') {
-          logger.error('ソースファイルが見つかりません', {
-            expectedPath: sourceFile,
-            installPath: installPath,
-            environmentVariable: 'POKER_INSTALL_PATH',
-            suggestion: installPath === 'C:/Poker' 
-              ? 'POKER_INSTALL_PATH環境変数を正しいインストールディレクトリに設定してください'
-              : 'インストールディレクトリに lib/ICRP-07.NDX ファイルが存在することを確認してください'
-          });
-          throw new DataError(
-            `必要なデータファイルが見つかりません: ${sourceFile}`, 
-            'MISSING_SOURCE_FILE'
-          );
-        } else {
-          throw sourceError;
-        }
+        const stats = await fs.stat(LEGACY_NDX_FILE);
+        logger.warn(
+          '核種データベースが LIB に見つからないため、旧構成のコピーを使用します。' +
+          'POKER のインストール先を確認してください',
+          { expected: NDX_FILE, fallback: LEGACY_NDX_FILE, size: stats.size }
+        );
+        this.ndxFile = LEGACY_NDX_FILE;
+        this.nuclideManager.databaseFile = LEGACY_NDX_FILE;
+        return;
+      } catch (err) {
+        if (err.code !== 'ENOENT') throw err;
       }
-      
-      // ファイルをコピー
-      try {
-        await fs.copyFile(sourceFile, targetFile);
-        logger.info('ICRP-07データベースファイルをコピーしました', { 
-          from: sourceFile, 
-          to: targetFile 
-        });
-      } catch (copyError) {
-        logger.error('ファイルのコピーに失敗しました', {
-          error: copyError.message,
-          sourceFile,
-          targetFile
-        });
-        throw copyError;
-      }
-      
-      // コピー完了後のファイルサイズ確認
-      const finalStats = await fs.stat(targetFile);
-      logger.info('ICRP-07データベースファイルのコピーが完了しました', {
-        file: targetFile,
-        size: finalStats.size,
-        readable: true
+
+      logger.error('核種データベースが見つかりません', {
+        expectedPath: NDX_FILE,
+        installPath: POKER_INSTALL_DIR,
+        environmentVariable: 'POKER_INSTALL_PATH',
+        suggestion: POKER_INSTALL_DIR === 'C:/Poker'
+          ? 'POKER_INSTALL_PATH環境変数を正しいインストールディレクトリに設定してください'
+          : 'インストールディレクトリに LIB/ICRP-07.NDX が存在することを確認してください'
       });
-      
+      throw new DataError(
+        `必要なデータファイルが見つかりません: ${NDX_FILE}`,
+        'MISSING_SOURCE_FILE'
+      );
+
     } catch (error) {
       logger.error('データファイル確保エラー', { error: error.message });
       throw error;
