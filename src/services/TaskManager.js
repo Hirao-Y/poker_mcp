@@ -1518,6 +1518,16 @@ export class TaskManager {
 
       // 更新内容のバリデーションと正規化
       const normalizedUpdates = { ...updates };
+
+      // x_meta の正規化
+      // 中身が空になった x_meta は YAML に `x_meta: {}` として残ってしまうため、
+      // ここで null に落として削除扱いにする（除外を confirm で全解除した場合など）。
+      if (normalizedUpdates.x_meta !== undefined && normalizedUpdates.x_meta !== null) {
+        const keys = Object.keys(normalizedUpdates.x_meta);
+        if (keys.length === 0) {
+          normalizedUpdates.x_meta = null;
+        }
+      }
       
       // POINT線源のposition更新
       if (normalizedUpdates.position) {

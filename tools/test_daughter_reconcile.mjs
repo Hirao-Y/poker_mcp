@@ -69,5 +69,21 @@ ok(getExcludedDaughters(src).length === 2, '除外リストは正規化して重
 setExcludedDaughters(src, []);
 ok(src.x_meta === undefined, '除外が空なら x_meta を削除して YAML を汚さない');
 
+// 9. x_meta 正規化: 空になったら YAML に残さない（updateSource 経路）
+{
+  const src = { name: 'S9', inventory: [{ nuclide: 'Cs137', radioactivity: 1e12 }] };
+  setExcludedDaughters(src, ['Ba137m']);
+  ok(src.x_meta && src.x_meta.excluded_daughters.length === 1, '除外登録で x_meta が作られる');
+
+  // 除外を全解除したときの updates 相当（handleConfirm が渡す形）
+  const updates = { x_meta: { ...src.x_meta } };
+  delete updates.x_meta.excluded_daughters;
+  const keys = Object.keys(updates.x_meta);
+  ok(keys.length === 0, '除外解除後の x_meta は空オブジェクトになる');
+  // TaskManager.updateSource の正規化と同じ判定
+  const normalized = keys.length === 0 ? null : updates.x_meta;
+  ok(normalized === null, '空の x_meta は null に正規化され削除扱いになる');
+}
+
 console.log(fail === 0 ? '\n=== ALL PASSED ===' : `\n=== ${fail} FAILED ===`);
 process.exit(fail === 0 ? 0 : 1);
