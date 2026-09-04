@@ -12,7 +12,7 @@ export const buildupFactorTools = [
         },
         equivalent: {
           type: 'string',
-          description: '非標準材料のビルドアップ等価材料（省略時は組成の光子実効Zで最近傍の標準材料を自動選択）'
+          description: '非標準材料のビルドアップ等価材料（標準材料名）。省略時は組成の散乱/吸収比を実用エネルギー帯域で照合して自動選択'
         },
         use_slant_correction: {
           type: 'boolean',
@@ -45,6 +45,10 @@ export const buildupFactorTools = [
         use_finite_medium_correction: {
           type: 'boolean',
           description: '新しい有限媒体補正設定'
+        },
+        equivalent: {
+          type: 'string',
+          description: '非標準材料のビルドアップ等価材料（標準材料名）。空文字を指定すると等価材料の指定を解除します'
         }
       },
       required: ['material']

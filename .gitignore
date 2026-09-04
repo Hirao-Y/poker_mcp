@@ -4,3 +4,7 @@
 .commit_msg.txt
 _tmp_*.mjs
 *.tgz
+
+# Python (tools/)
+__pycache__/
+*.pyc

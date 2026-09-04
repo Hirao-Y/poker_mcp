@@ -9,7 +9,7 @@ import { DetectorValidator } from '../validators/DetectorValidator.js';
 import { UnitValidator } from '../validators/UnitValidator.js';
 import { PokerMcpError } from '../utils/mcpErrors.js';
 import { MaterialAlternatives } from '../utils/MaterialAlternatives.js';
-import { MaterialCatalog } from '../utils/MaterialCatalog.js';
+import { MaterialCatalog, BUILDUP_MATCH_WARN } from '../utils/MaterialCatalog.js';
 import {
   reconcileInventory,
   getExcludedDaughters,
@@ -1270,11 +1270,29 @@ export class TaskManager {
         throw new ValidationError(error.message, 'material', material);
       }
       
-      // 非標準材料は buildup 等価材料を自動割当（組成の光子実効Zで最近傍の標準材料）
+      // 非標準材料は buildup 等価材料を自動割当（散乱/吸収比を実用帯域で一致させる）
+      let matchNote = '';
       if (!MaterialCatalog.isStandard(material)) {
-        equivalent = equivalent
-          ? MaterialCatalog.normalizeName(equivalent)
-          : MaterialCatalog.nearestBuildupEquivalent(material);
+        if (equivalent) {
+          equivalent = MaterialCatalog.normalizeName(equivalent);
+          if (!MaterialCatalog.isStandard(equivalent)) {
+            throw new ValidationError(
+              `equivalent には単層ビルドアップデータを持つ標準材料を指定してください: ${equivalent}`,
+              'equivalent', equivalent
+            );
+          }
+        } else {
+          equivalent = MaterialCatalog.nearestBuildupEquivalent(material);
+        }
+        const ranked = MaterialCatalog.rankBuildupEquivalents(material);
+        const hit = ranked.find(r => r.material === equivalent);
+        if (hit) {
+          matchNote = `, 一致度 ${hit.score}`;
+          if (hit.score > BUILDUP_MATCH_WARN) {
+            const alt = ranked.slice(0, 3).map(r => `${r.material}(${r.score})`).join(', ');
+            matchNote += ` — 標準材料に近いものがありません。候補: ${alt}`;
+          }
+        }
       } else {
         equivalent = undefined; // 標準材料は自前の buildup データを持つ
       }
@@ -1292,7 +1310,7 @@ export class TaskManager {
       });
       logger.info('ビルドアップ係数提案を追加しました', { material, equivalent });
       return equivalent
-        ? `ビルドアップ係数 ${material} を追加しました (equivalent: ${equivalent})`
+        ? `ビルドアップ係数 ${material} を追加しました (equivalent: ${equivalent}${matchNote})`
         : `ビルドアップ係数 ${material} を追加しました`;
       
     } catch (error) {
@@ -1307,6 +1325,30 @@ export class TaskManager {
       
       // 既存更新専用チェック - マニフェスト仕様準拠
       this.validateUpdatePrerequisites('buildup_factor', material, (m) => this.findBuildupFactorByMaterial(m));
+      
+      material = MaterialCatalog.normalizeName(material);
+      
+      // equivalent の検証: 標準材料のみ指定可、標準材料自身には設定不可
+      if ('equivalent' in updates) {
+        if (updates.equivalent === '' || updates.equivalent === null) {
+          updates.equivalent = '';   // 解除指示
+        } else {
+          if (MaterialCatalog.isStandard(material)) {
+            throw new ValidationError(
+              `${material} は標準材料であり自前のビルドアップデータを持つため、equivalent は指定できません`,
+              'equivalent', updates.equivalent
+            );
+          }
+          const eq = MaterialCatalog.normalizeName(updates.equivalent);
+          if (!MaterialCatalog.isStandard(eq)) {
+            throw new ValidationError(
+              `equivalent には単層ビルドアップデータを持つ標準材料を指定してください: ${eq}`,
+              'equivalent', updates.equivalent
+            );
+          }
+          updates.equivalent = eq;
+        }
+      }
       
       await this.dataManager.addPendingChange({
         action: 'updateBuildupFactor',
@@ -1897,23 +1939,22 @@ export class TaskManager {
         throw new ValidationError(`無効なリセットレベル: ${resetLevel}。有効な値: ${validLevels.join(', ')}`, 'resetLevel', resetLevel);
       }
 
-      // 材料の検証
-      const validMaterials = [
-        'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminum', 'Copper', 'Tungsten',
-        'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
-      ];
-      if (!validMaterials.includes(atmosphereMaterial)) {
-        throw new ValidationError(`無効な材料: ${atmosphereMaterial}。有効な値: ${validMaterials.join(', ')}`, 'atmosphereMaterial', atmosphereMaterial);
+      // 材料の検証（カタログ由来。カスタム材料の追加に追随する）
+      const atmMaterial = MaterialCatalog.normalizeName(atmosphereMaterial);
+      if (!MaterialCatalog.has(atmMaterial)) {
+        throw new ValidationError(
+          `無効な材料: ${atmosphereMaterial}。有効な値: ${MaterialCatalog.allMaterials().join(', ')}`,
+          'atmosphereMaterial', atmosphereMaterial);
       }
 
       // VOID材料の密度指定チェック
-      if (atmosphereMaterial === 'VOID' && atmosphereDensity !== undefined) {
+      if (atmMaterial === 'VOID' && atmosphereDensity !== undefined) {
         logger.warn('VOID材料では密度指定を無視します', { atmosphereDensity });
       }
 
       // VOID以外の材料で密度未指定チェック
-      if (atmosphereMaterial !== 'VOID' && atmosphereDensity === undefined) {
-        throw new ValidationError(`材料 ${atmosphereMaterial} には密度の指定が必要です`, 'atmosphereDensity', atmosphereDensity);
+      if (atmMaterial !== 'VOID' && atmosphereDensity === undefined) {
+        throw new ValidationError(`材料 ${atmMaterial} には密度の指定が必要です`, 'atmosphereDensity', atmosphereDensity);
       }
 
       // 密度の範囲チェック
@@ -1928,7 +1969,7 @@ export class TaskManager {
         backupComment,
         preserveUnits,
         resetLevel,
-        atmosphereMaterial,
+        atmosphereMaterial: atmMaterial,
         atmosphereDensity,
         force
       });

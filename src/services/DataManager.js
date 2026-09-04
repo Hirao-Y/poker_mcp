@@ -473,6 +473,13 @@ export class SafeDataManager {
             if ('use_finite_medium_correction' in data) {
               buildup.use_finite_medium_correction = data.use_finite_medium_correction;
             }
+            if ('equivalent' in data) {
+              if (data.equivalent === '' || data.equivalent === null) {
+                delete buildup.equivalent;
+              } else {
+                buildup.equivalent = data.equivalent;
+              }
+            }
           }
         }
         break;

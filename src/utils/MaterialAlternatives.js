@@ -20,12 +20,22 @@ export class MaterialAlternatives {
     'ATMOSPHERE': { substitute: 'Air', note: '大気はAirで代替' }
   };
 
-  // サポートされる材料一覧（マニフェストと同期）
+  // サポートされる材料一覧の既定値。実際は lib_material.dat のカタログが正で、
+  // カスタム材料が追加されれば supported() を通じて自動的に反映される。
   static SUPPORTED_MATERIALS = [
     'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium',
     'Copper', 'Tungsten', 'Air', 'Water', 'PyrexGlass',
     'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
   ];
+
+  // カタログ（標準材料＋カスタム材料＋VOID）
+  static supported() {
+    try {
+      const all = MaterialCatalog.allMaterials();
+      if (all && all.length) return all;
+    } catch (e) { /* フォールバック */ }
+    return this.SUPPORTED_MATERIALS;
+  }
 
   /**
    * 材料名の代替提案を取得
@@ -52,7 +62,7 @@ export class MaterialAlternatives {
     const input = material.toLowerCase();
     
     // 部分一致による検索
-    for (const supported of this.SUPPORTED_MATERIALS) {
+    for (const supported of this.supported()) {
       if (supported.toLowerCase().includes(input) || 
           input.includes(supported.toLowerCase())) {
         return supported;
@@ -122,7 +132,7 @@ export class MaterialAlternatives {
    * @returns {Object|null} 材料特性情報
    */
   static getMaterialInfo(material) {
-    if (!this.SUPPORTED_MATERIALS.includes(material)) {
+    if (!this.supported().includes(material)) {
       return null;
     }
 

@@ -7,8 +7,9 @@ import { MaterialCatalog } from '../utils/MaterialCatalog.js';
 
 export class PhysicsValidator {
   static getMaterialProperties() {
-    // fallbackデータを返す
-    return {
+    // 標準材料は既知の許容範囲を用い、カスタム材料は lib_material.dat の
+    // 登録密度から自動生成する（カタログに材料が増えても追随する）
+    const props = {
       'Carbon': { densityRange: { min: 2.0, max: 2.3 } },
       'Concrete': { densityRange: { min: 1.8, max: 2.5 } },
       'Iron': { densityRange: { min: 7.6, max: 7.9 } },
@@ -24,6 +25,18 @@ export class PhysicsValidator {
       'Soil': { densityRange: { min: 1.3, max: 2.0 } },
       'VOID': { densityRange: { min: 0, max: 0 } }
     };
+
+    try {
+      const cat = MaterialCatalog.load();
+      for (const [name, info] of Object.entries(cat)) {
+        if (props[name] || !info || !info.density) continue;
+        const d = info.density;
+        props[name] = { densityRange: { min: d * 0.9, max: d * 1.1 } };
+      }
+    } catch (e) {
+      logger.warn('材料カタログから密度範囲を生成できません', { error: e.message });
+    }
+    return props;
   }
 
   static GEOMETRY_TYPES = {

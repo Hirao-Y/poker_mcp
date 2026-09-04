@@ -30,11 +30,7 @@ export const resetTools = [
         },
         atmosphere_material: {
           type: 'string',
-          description: 'ATMOSPHEREゾーンに設定する材料',
-          enum: [
-            'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium', 'Copper', 'Tungsten',
-            'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
-          ],
+          description: 'ATMOSPHEREゾーンに設定する材料。lib_material.dat に登録された材料名（カスタム材料を含む）または VOID',
           default: 'VOID'
         },
         atmosphere_density: {

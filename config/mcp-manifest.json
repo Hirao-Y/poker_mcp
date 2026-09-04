@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
@@ -484,7 +484,7 @@
           },
           "equivalent": {
             "type": "string",
-            "description": "非標準材料のビルドアップ等価材料（省略時は組成の光子実効Zで最近傍の標準材料を自動選択）"
+            "description": "非標準材料のビルドアップ等価材料（標準材料名）。省略時は組成の散乱/吸収比を実用エネルギー帯域で照合して自動選択"
           },
           "use_slant_correction": {
             "type": "boolean",
@@ -521,6 +521,10 @@
           "use_finite_medium_correction": {
             "type": "boolean",
             "description": "新しい有限媒体補正設定"
+          },
+          "equivalent": {
+            "type": "string",
+            "description": "非標準材料のビルドアップ等価材料（標準材料名）。空文字を指定すると等価材料の指定を解除します"
           }
         },
         "required": [
@@ -2292,23 +2296,7 @@
           },
           "atmosphere_material": {
             "type": "string",
-            "description": "ATMOSPHEREゾーンに設定する材料",
-            "enum": [
-              "Carbon",
-              "Concrete",
-              "Iron",
-              "Lead",
-              "Aluminium",
-              "Copper",
-              "Tungsten",
-              "Air",
-              "Water",
-              "PyrexGlass",
-              "AcrylicResin",
-              "Polyethylene",
-              "Soil",
-              "VOID"
-            ],
+            "description": "ATMOSPHEREゾーンに設定する材料。lib_material.dat に登録された材料名（カスタム材料を含む）または VOID",
             "default": "VOID"
           },
           "atmosphere_density": {

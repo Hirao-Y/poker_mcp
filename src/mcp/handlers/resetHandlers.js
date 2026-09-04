@@ -1,6 +1,7 @@
 // handlers/resetHandlers.js - YAML初期化ハンドラー
 import { McpError, ErrorCode } from '@modelcontextprotocol/sdk/types.js';
 import { logger } from '../../utils/logger.js';
+import { MaterialCatalog } from '../../utils/MaterialCatalog.js';
 
 /**
  * poker_resetYaml ハンドラー
@@ -49,12 +50,9 @@ export function createResetYamlHandler(taskManager) {
         throw new McpError(ErrorCode.InvalidParams, `reset_level は ${validResetLevels.join(', ')} のいずれかである必要があります`);
       }
 
-      const validMaterials = [
-        'Carbon', 'Concrete', 'Iron', 'Lead', 'Aluminium', 'Copper', 'Tungsten',
-        'Air', 'Water', 'PyrexGlass', 'AcrylicResin', 'Polyethylene', 'Soil', 'VOID'
-      ];
-      if (!validMaterials.includes(atmosphere_material)) {
-        throw new McpError(ErrorCode.InvalidParams, `atmosphere_material は ${validMaterials.join(', ')} のいずれかである必要があります`);
+      if (!MaterialCatalog.has(atmosphere_material)) {
+        throw new McpError(ErrorCode.InvalidParams,
+          `atmosphere_material は ${MaterialCatalog.allMaterials().join(', ')} のいずれかである必要があります`);
       }
 
       // VOID材料の密度指定チェック
