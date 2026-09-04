@@ -1,0 +1,26 @@
+{
+  "fcstd": "C:/Users/yoshi/Desktop/cask_detailed.FCStd",
+  "fcstd_simple": "C:/Users/yoshi/Desktop/cask_simple.FCStd",
+  "audit_out": "C:/Users/yoshi/Desktop/cask_audit.json",
+  "deviation": 0.5,
+  "unit_scale": 0.1,
+  "poker_dir": "C:/Poker",
+  "mu_energy": 1.25,
+  "audit_tol_mfp": 0.05,
+  "source_rcc": {"x": 0, "y": 0, "z": 300, "r": 750, "h": 4000,
+                 "div": {"r": 8, "phi": 16, "z": 30}},
+  "detectors": [
+    {"name": "CTRL_side_1m", "pos": [2280, 0, 2300]},
+    {"name": "CTRL_lid_1m", "pos": [0, 0, 5650]},
+    {"name": "RIM_graze_low", "pos": [2500, 0, 4660]},
+    {"name": "RIM_15deg", "pos": [2246, 0, 4909]},
+    {"name": "RIM_30deg", "pos": [2146, 0, 5150]},
+    {"name": "RIM_45deg_1m", "pos": [1987, 0, 5357]},
+    {"name": "RIM_45deg_az45", "pos": [1405, 1405, 5357]},
+    {"name": "RIM_60deg", "pos": [1780, 0, 5516]},
+    {"name": "RIM_75deg", "pos": [1539, 0, 5616]},
+    {"name": "RIM_45deg_near", "pos": [1580, 0, 4950]},
+    {"name": "RIM_45deg_far", "pos": [3110, 0, 6480]},
+    {"name": "RIM_lid_edge", "pos": [1000, 0, 5000]}
+  ]
+}
