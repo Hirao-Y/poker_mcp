@@ -1,5 +1,74 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.6.0] - 2026-09-05
+
+### 材料システムのライブラリ完全準拠
+
+材料の一覧・密度範囲・ビルドアップ可用性をコード側に持たず、すべて
+`%POKER_INSTALL_PATH%/LIB/` から読み込むようにしました。**カスタム材料を
+`lib_material.dat` に追加すれば、コード変更なしにサーバ再起動だけで追随します。**
+標準材料を追加する場合は `lib_material.dat` と `lib_setting.dat` の
+`buildup_material` の両方に登録します（片方だけの場合は警告を出します）。
+
+- 標準材料一覧: `lib_setting.dat` の `buildup_material` から読込（従来はハードコード13種）
+- 材料検証: `MaterialAlternatives` の候補提示をカタログ全材料に拡大
+- 密度範囲検証: カスタム材料はライブラリ登録密度の ±10% を自動生成
+- `poker_resetYaml`: `atmosphere_material` の enum を撤廃し実行時検証へ。
+  併せて誤って混入していた米綴り `Aluminum` を解消
+- `MaterialCatalog.reload()` を追加（ライブラリ更新後のキャッシュ破棄）
+
+### ビルドアップ等価材料の自動選定を刷新
+
+従来の光子実効Z最近傍は暫定実装でした。ビルドアップ係数を支配するのは散乱と
+吸収の競合であることから、`atten2_xcom2.dat` の実データを用いて
+
+```
+r(E) = μ_incoherent / (μ_total − μ_incoherent)
+```
+
+を 0.1〜3 MeV の11点で照合し、log r の差のRMSが最小の標準材料を選びます。
+僅差（10%以内）の候補が複数ある場合は実効Zでタイブレークします。
+
+- 選定結果の変更: `Source_Dry` が `Lead` → **`Tungsten`**（一致度 0.6232 → 0.4389）
+- 一致度スコアを応答に付与。0.30 超は「標準材料に近いものが無い」として
+  警告と候補上位3件を提示
+- 減衰係数ファイルが読めない場合は実効Z最近傍にフォールバック
+- `MaterialCatalog.rankBuildupEquivalents()` を追加（候補の順位取得）
+
+### 修正
+
+#### `poker_updateBuildupFactor` が equivalent を更新できない
+
+ツールスキーマと `DataManager` の適用処理の双方に `equivalent` が無く、
+`TaskManager` だけが素通しする三層不整合でした（`updateSource` と同型）。
+
+- スキーマに `equivalent` を追加。空文字の指定で解除
+- `DataManager` の `updateBuildupFactor` に適用処理を追加
+- 検証を追加: 標準材料への `equivalent` 指定を拒否、
+  等価材料が標準材料でない場合を拒否。`propose` 側にも同じ検証を適用
+
+### ドキュメント
+
+- `MATERIAL_SYSTEM.md`: 全面改稿。ライブラリ3ファイルの役割、カスタム材料の
+  追加手順、等価材料の選定原理と一致度の読み方、多層ビルドアップの制約
+  （2層は任意組合せ、3層は2パターン限定）
+- `CAD_RAYTRACE.md`: 新規。FreeCAD連携レイトレース（`tools/`）の仕様、
+  精度・速度の実測、`.paths` フォーマット、層縮約規則、簡易化監査ツール
+- `API_COMPLETE.md`: `equivalent` パラメータの節を追加
+- マニュアル索引にリファレンス層を追加
+
+### 追加（実験的）
+
+`tools/` に FreeCAD 連携のレイトレース一式を追加しました。MCP サーバ本体とは
+独立して動作します。詳細は `docs/manuals/CAD_RAYTRACE.md`。
+
+- `ray_trace_tri.py`: テッセレーション＋BVH＋numpy のレイトレーサ。
+  OCC ブーリアンとの一致は総厚さで 0.02% 以内、約 290 µs/レイ
+- `poker_lib.py`: POKER の LIB 読み込み（組成・減衰係数・ビルドアップ可用性）
+- `gen_paths.py`: 線源×検出器の全レイから `.paths` を生成
+- `audit_mfp.py`: 詳細B-repと簡易CSGの差を線量影響として定量化
+- `make_cask_models.py`: 監査の動作確認用モデル生成
+
 ## [1.5.0] - 2026-08-10
 
 ### POKER GUI の入力転送に対応

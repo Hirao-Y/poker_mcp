@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.5.0 (30メソッド完全実装)
+**対応バージョン**: Poker MCP Server v1.6.0 (30メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 
@@ -53,7 +53,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.5.0"],
+      "args": ["-y", "poker-mcp@1.6.0"],
       "env": {
         "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"

@@ -2,8 +2,8 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.5.0  
-**🔧 バージョン**: 1.5.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.6.0  
+**🔧 バージョン**: 1.6.0 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
@@ -56,9 +56,24 @@
 | **メソッド名** | **機能** | **補正オプション** |
 |---------------|----------|------------------|
 | **poker_proposeBuildupFactor** | ビルドアップ係数設定(非標準材料はequivalent自動割当) | スラント補正、有限媒体補正 |
-| **poker_updateBuildupFactor** | 係数設定更新 | 補正パラメータ変更 |
+| **poker_updateBuildupFactor** | 係数設定更新(equivalent の変更・解除を含む) | 補正パラメータ変更 |
 | **poker_deleteBuildupFactor** | 係数削除 | 計算精度影響評価付き |
 | **poker_changeOrderBuildupFactor** | 係数順序変更 | 計算効率最適化 |
+
+#### equivalent パラメータ
+
+カスタム材料（`lib_material.dat` に登録されているがビルドアップデータを持たない材料）は、`equivalent` として標準材料を割り当てて計算します。減衰は自身の組成・密度で、ビルドアップ係数だけ等価材料のものを使います。
+
+| 操作 | 指定 | 挙動 |
+|---|---|---|
+| 自動選定 | `equivalent` を省略 | 散乱／吸収比の一致で標準材料を選び、一致度スコアを応答に付与 |
+| 明示指定 | `equivalent: "Lead"` | 指定した標準材料を使用 |
+| 変更 | `updateBuildupFactor` に `equivalent` | 既存の指定を上書き |
+| 解除 | `equivalent: ""` | YAML から `equivalent` を削除 |
+
+制約は 2 つです。`equivalent` に指定できるのは単層ビルドアップデータを持つ標準材料のみで、標準材料自身に `equivalent` は指定できません。いずれも `-32007` の検証エラーになります。
+
+一致度スコアが 0.30 を超える場合、標準材料に近いものが無いことを意味し、応答に警告と候補上位 3 件が付きます。選定原理の詳細は [MATERIAL_SYSTEM.md](MATERIAL_SYSTEM.md) を参照してください。
 
 ### ☢️ **Source操作系 (3メソッド) - 5種類線源タイプ対応**
 
@@ -159,7 +174,7 @@ poker_updateSource(name="Src",
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.5.0
+⚙️ Poker MCP Server v1.6.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕

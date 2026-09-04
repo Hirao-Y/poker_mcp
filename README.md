@@ -4,12 +4,47 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.5.0
+- **バージョン**: 1.6.0
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.6.0の新機能
+
+### 🧱 カスタム材料をライブラリ追加だけで使えるように
+材料の一覧・密度範囲・ビルドアップ可用性をコード側に持たず、すべて
+`%POKER_INSTALL_PATH%/LIB/` から読み込むようにしました。**カスタム材料を
+`lib_material.dat` に追記すれば、コード変更なしにサーバ再起動だけで
+ゾーン定義・密度検証・等価材料の自動選定すべてに反映されます。**
+
+標準材料を追加する場合は `lib_material.dat` と `lib_setting.dat` の
+`buildup_material` の両方に登録します（片方だけなら警告が出ます）。
+
+### 🔀 ビルドアップ等価材料の選定を実データ方式へ
+従来の光子実効Z最近傍は暫定実装でした。ビルドアップを支配するのは散乱と吸収の
+競合であることから、POKER の減衰係数ファイルから
+`μ_incoherent / (μ_total − μ_incoherent)` を求め、0.1〜3 MeV の11点で
+最も一致する標準材料を選びます。
+
+一致度スコアを応答に付けるようにしました。0.30 を超える場合は「標準材料に
+近いものが無い」ことを意味し、候補上位3件とともに警告を出します。黙って粗い
+代用材を当てるより、どの程度粗いかを見せる方が判断材料になります。
+
+この変更で `Source_Dry` の等価材料は `Lead` から `Tungsten` に変わります。
+
+### 🐛 `poker_updateBuildupFactor` が equivalent を更新できない問題を修正
+ツールスキーマと `DataManager` の双方に `equivalent` が無く、`TaskManager`
+だけが素通しする三層不整合でした。変更・解除（空文字指定）に対応し、
+標準材料への指定や非標準材料の指定を拒否する検証も追加しています。
+
+### 📡 CAD連携レイトレース（実験的）
+FreeCAD のソリッドモデルを中間フォーマット無しで遮蔽体系として扱うための
+ツール群を `tools/` に追加しました。詳細は
+[CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)。
+
+詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 ## 🆕 バージョン1.5.0の新機能
 
@@ -32,8 +67,6 @@ YAML-based input file management tool for radiation-shielding calculation code P
 `ADMIN_GUIDE.md` を実運用に即した内容へ全面改訂しました（699行 → 248行）。
 乱数で「正常」を出力する監視スクリプトなど、実態と乖離した記述を削除し、
 検証可能な手順のみに整理しています。
-
-詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 ## 🆕 バージョン1.4.0の新機能
 
