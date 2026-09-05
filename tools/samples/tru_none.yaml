@@ -1,0 +1,121 @@
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+body:
+  - name: SRC_cav
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 75
+  - name: IRN_gam
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 115
+  - name: PLY_neu
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 125
+  - name: OUT_full
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 128
+  - name: BOT_plug
+    type: RCC
+    bottom_center: 0 0 0
+    height_vector: 0 0 30
+    radius: 128
+  - name: LID_plug
+    type: RCC
+    bottom_center: 0 0 430
+    height_vector: 0 0 35
+    radius: 128
+  - name: Z_gamma
+    type: CMB
+    expression: IRN_gam - SRC_cav
+  - name: Z_neut
+    type: CMB
+    expression: PLY_neu - IRN_gam
+  - name: Z_outer
+    type: CMB
+    expression: OUT_full - PLY_neu
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: SRC_cav
+    material: Source_Dry
+    density: 1.97
+  - body_name: Z_gamma
+    material: Iron
+    density: 7.8
+  - body_name: Z_neut
+    material: Polyethylene
+    density: 0.92
+  - body_name: Z_outer
+    material: Iron
+    density: 7.8
+  - body_name: BOT_plug
+    material: Iron
+    density: 7.8
+  - body_name: LID_plug
+    material: Iron
+    density: 7.8
+transform: []
+buildup_factor:
+  - material: Iron
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Source_Dry
+    equivalent: Tungsten
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Polyethylene
+    use_slant_correction: false
+    use_finite_medium_correction: false
+source:
+  - name: SpentFuel
+    type: RCC
+    inventory:
+      - nuclide: Co60
+        radioactivity: 50000000000000
+    cutoff_rate: 0.0001
+    geometry:
+      bottom_center: 0 0 30
+      height_vector: 0 0 400
+      radius: 75
+    division:
+      r:
+        number: 6
+        type: UNIFORM
+      phi:
+        number: 12
+        type: UNIFORM
+      z:
+        number: 20
+        type: UNIFORM
+detector:
+  - name: TRU_behind_10cm
+    origin: 156 0 390
+    show_path_trace: false
+  - name: TRU_behind_1m
+    origin: 246 0 390
+    show_path_trace: false
+  - name: TRU_edge_r1m_y10
+    origin: 246 10 390
+    show_path_trace: false
+  - name: TRU_beside_y30
+    origin: 228 30 390
+    show_path_trace: false
+  - name: TRU_above_z30
+    origin: 228 0 420
+    show_path_trace: false
+  - name: CTRL_side_1m_z230
+    origin: 228 0 230
+    show_path_trace: false
+  - name: CTRL_lid_1m
+    origin: 0 0 565
+    show_path_trace: false

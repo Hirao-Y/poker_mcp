@@ -1,0 +1,22 @@
+{
+  "fcstd": "C:/Users/yoshi/Desktop/cask_tru_detail.FCStd",
+  "fcstd_simple": "C:/Users/yoshi/Desktop/cask_tru_none.FCStd",
+  "audit_out": "C:/Users/yoshi/poker_verify/audit_tru.json",
+  "deviation": 0.5,
+  "unit_scale": 0.1,
+  "poker_dir": "C:/Poker",
+  "mu_energy": 1.25,
+  "audit_tol_mfp": 0.05,
+  "saturation_mfp": 80.0,
+  "source_rcc": {"x": 0, "y": 0, "z": 300, "r": 750, "h": 4000,
+                 "div": {"r": 6, "phi": 12, "z": 20}},
+  "detectors": [
+    {"name": "TRU_behind_10cm", "pos": [1560, 0, 3900]},
+    {"name": "TRU_behind_1m", "pos": [2460, 0, 3900]},
+    {"name": "TRU_edge_r1m_y10", "pos": [2460, 100, 3900]},
+    {"name": "TRU_beside_y30", "pos": [2280, 300, 3900]},
+    {"name": "TRU_above_z30", "pos": [2280, 0, 4200]},
+    {"name": "CTRL_side_1m_z230", "pos": [2280, 0, 2300]},
+    {"name": "CTRL_lid_1m", "pos": [0, 0, 5650]}
+  ]
+}
