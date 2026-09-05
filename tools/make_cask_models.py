@@ -73,9 +73,10 @@ def build(path, fillet=True, name=None):
     return {"path": path, "fillet_edges": nfil, "volume_cm3": vol / 1e3}
 
 
-def build_penetration(path, r_hole=50.0, r_pos=400.0, name="cask_penetration"):
-    # 蓋を貫通する配管孔を持つモデル。孔は材料を減らすため、CSG 簡易モデルで
-    # 無視すると遮蔽を過大に見積もる（非保守）。監査ツールの実務的な題材。
+def build_penetration(path, r_hole=50.0, r_pos=400.0, name="cask_penetration",
+                      fill=None):
+    # 蓋を貫通する配管孔を持つモデル。fill に材質名を与えると、孔を塞ぐ栓を
+    # その材質で追加する（充填材の扱いを比較するため）。fill=None は空洞。
     if name in App.listDocuments():
         App.closeDocument(name)
     doc = App.newDocument(name)
@@ -90,7 +91,12 @@ def build_penetration(path, r_hole=50.0, r_pos=400.0, name="cask_penetration"):
         "OuterShell_Iron": _annulus(R_POL, R_OUT, Z_CAV, H_CAV),
         "Lid_Iron": lid,
     }
-    for obj_name, mat in PARTS:
+    parts = list(PARTS)
+    if fill:
+        shapes["Plug_Fill"] = Part.makeCylinder(
+            r_hole, H_LID, App.Vector(r_pos, 0, Z_LID))
+        parts.append(("Plug_Fill", fill))
+    for obj_name, mat in parts:
         o = doc.addObject("Part::Feature", obj_name)
         o.Shape = shapes[obj_name]
         o.addProperty("App::PropertyString", "PokerMaterial", "POKER",
@@ -99,7 +105,7 @@ def build_penetration(path, r_hole=50.0, r_pos=400.0, name="cask_penetration"):
     doc.recompute()
     doc.saveAs(path)
     return {"path": path, "hole_radius_mm": r_hole, "hole_center_r_mm": r_pos,
-            "note": "lid with a through penetration"}
+            "fill": fill or "VOID"}
 
 
 def build_both(outdir):

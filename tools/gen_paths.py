@@ -43,7 +43,7 @@ def reduce_layers(groups, mu, equiv, lib):
             order.append(m)
         tot[m] += t
     mfp = dict((m, mu[m] * tot[m]) for m in order)
-    std = lambda m: equiv.get(m, m)
+    std = lambda k: equiv.get(k[0], k[0])
 
     def roll(keep):
         acc = dict((m, tot[m]) for m in keep)
@@ -121,6 +121,23 @@ def main(spec_path):
         mu[m] = lib.mu(m, energy, spec.get("mu_column", "total"))
     mu.update(spec.get("mu_ref", {}))
 
+    # 材質と密度の組を1つの層種別として扱う。CAD 側で PokerDensity が指定
+    # されていればライブラリ密度ではなくその値を使う（スミアリング等価領域）。
+    # 密度は .paths のヘッダで POKER に渡す。材質名だけでは伝わらないため。
+    def obj_key(i):
+        m = tr.mats[i]
+        d = tr.dens[i] if i < len(tr.dens) else None
+        rho = lib.materials[m][0] if m in lib.materials else None
+        if d and rho and abs(d - rho) > 1e-9:
+            return (m, float(d))
+        return (m, None)
+
+    def key_mu(k):
+        m, d = k
+        base = mu.get(m, 0.0)
+        rho = lib.materials[m][0] if m in lib.materials else None
+        return base * (d / rho) if (d and rho) else base
+
     t0 = time.time()
     doc = App.openDocument(spec["fcstd"])
     tr = rt.Tracer(doc, deviation=dev)
@@ -171,8 +188,16 @@ def main(spec_path):
     t_trace = time.time() - t0
 
     # material id table (VOID always 0)
-    names = ["VOID"] + [m for m in sorted(set(tr.mats)) if m != "VOID"]
-    mid = {m: i for i, m in enumerate(names)}
+    # 層種別 = (材質, 密度上書き)。密度違いは別 ID として扱う。
+    keys = ["VOID"]
+    for i in range(len(tr.mats)):
+        k = obj_key(i)
+        if k[0] != "VOID" and k not in keys:
+            keys.append(k)
+    mid = {}
+    for i, k in enumerate(keys):
+        mid[k] = i
+    kmu = dict((k, 0.0 if k == "VOID" else key_mu(k)) for k in keys)
 
     lines = []
     stat = {"type": {}, "mode": {}, "rolled_max": 0.0, "rolled_sum": 0.0,
@@ -183,31 +208,32 @@ def main(spec_path):
         raw = []
         groups = []
         for lo, hi, oi in segs[k]:
-            m = tr.material(oi)
+            key = "VOID" if oi < 0 else obj_key(oi)
             th = (hi - lo) * scale
-            raw.append("%d %.6g" % (mid[m], th))
+            raw.append("%d %.6g" % (mid[key], th))
             nseg_tot += 1
-            if m in excl:
+            if key == "VOID" or key[0] in excl:
                 continue
-            if groups and groups[-1][0] == m:
+            if groups and groups[-1][0] == key:
                 groups[-1][1] += th
             else:
-                groups.append([m, th])
+                groups.append([key, th])
         bt, bl, rolled, mode = reduce_layers([tuple(g) for g in groups],
-                                             mu, equiv, lib)
+                                             kmu, equiv, lib)
         stat["mode"][mode] = stat["mode"].get(mode, 0) + 1
         if rolled > 1.0:
             stat["rolled_over1"] += 1
         stat["type"][bt] = stat["type"].get(bt, 0) + 1
         stat["rolled_sum"] += rolled
         stat["rolled_max"] = max(stat["rolled_max"], rolled)
-        key = "-".join(m for m, _ in bl) or "(none)"
+        label = lambda k: k[0] if k[1] is None else "%s@%.4g" % (k[0], k[1])
+        key = "-".join(label(m) for m, _ in bl) or "(none)"
         stat["bu"][key] = stat["bu"].get(key, 0) + 1
         lines.append("%d %d %d | %s | %d %s" % (
             si, di, len(segs[k]), "  ".join(raw), bt,
             "  ".join("%d %.6g" % (mid[m], t) for m, t in bl)))
 
-    hdr = ["# POKER-PATHS 1.1",
+    hdr = ["# POKER-PATHS 1.2",
            "model: %s" % os.path.basename(spec["fcstd"]),
            "deviation_mm: %g" % dev,
            "unit: cm",
@@ -217,8 +243,16 @@ def main(spec_path):
                else ("spec" if "source_points" in spec else "generated(verification only)")),
            "n_source_points: %d" % len(SRC),
            "n_detectors: %d" % len(DET),
-           "materials: %s" % ", ".join("%d=%s" % (i, m) for m, i in
-                                       sorted(mid.items(), key=lambda kv: kv[1]))]
+           "n_materials: %d" % len(keys)]
+    # 材質と密度。密度欄が無い場合は POKER の材料ライブラリの登録密度を使う。
+    # スミアリング等価領域のように密度を上書きした場合は、同じ材質でも別 ID。
+    for i, k in enumerate(keys):
+        if k == "VOID":
+            hdr.append("material: 0 VOID")
+        elif k[1] is None:
+            hdr.append("material: %d %s" % (i, k[0]))
+        else:
+            hdr.append("material: %d %s %.6g" % (i, k[0], k[1]))
     for i, d in enumerate(dets):
         p = np.asarray(d["pos"], dtype=float) * scale
         hdr.append("detector: %d %s %.6g %.6g %.6g" % (i, d["name"], p[0], p[1], p[2]))
@@ -242,7 +276,9 @@ def main(spec_path):
         "buildup_mode": stat["mode"],
         "buildup_combos": dict(sorted(stat["bu"].items(), key=lambda kv: -kv[1])[:8]),
         "mu_energy_MeV": energy,
-        "mu_used": dict((m, round(mu[m], 5)) for m in sorted(set(tr.mats))),
+        "mu_used": dict(("%s@%.4g" % (k[0], k[1]) if k != "VOID" and k[1]
+                         else (k if k == "VOID" else k[0]), round(kmu[k], 5))
+                        for k in keys),
         "equivalent": equiv,
         "rays_rolled_over_1mfp": stat["rolled_over1"],
         "rolled_in_mfp_max": round(stat["rolled_max"], 4),

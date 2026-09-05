@@ -9,11 +9,12 @@ TOL = 1e-7
 
 
 def collect(doc, deviation=DEV, visible_only=True):
-    # returns T(n,3,3), O(n,), names[], mats[], bbvol[]
+    # returns T(n,3,3), O(n,), names[], mats[], bbvol[], dens[]
     tris = []
     oids = []
     names = []
     mats = []
+    dens = []
     bbvol = []
     for o in doc.Objects:
         sh = getattr(o, 'Shape', None)
@@ -36,12 +37,19 @@ def collect(doc, deviation=DEV, visible_only=True):
         oids.append(np.full(len(F), k, dtype=np.int32))
         names.append(o.Name)
         mats.append(getattr(o, 'PokerMaterial', None) or o.Label)
+        # 密度の上書き（スミアリングした等価領域など）。未設定ならライブラリ値。
+        d = getattr(o, 'PokerDensity', None)
+        try:
+            d = float(d) if d is not None else None
+        except Exception:
+            d = None
+        dens.append(d if (d is not None and d > 0) else None)
         bb = sh.BoundBox
         bbvol.append(bb.XLength * bb.YLength * bb.ZLength)
     if not tris:
         raise RuntimeError('no solids collected')
     return (np.concatenate(tris, 0), np.concatenate(oids, 0),
-            names, mats, np.array(bbvol))
+            names, mats, np.array(bbvol), dens)
 
 
 def build_bvh(T, leaf=LEAF):
@@ -206,7 +214,8 @@ class Tracer(object):
     def __init__(self, doc, deviation=DEV, visible_only=True):
         if isinstance(doc, str):
             doc = App.getDocument(doc)
-        self.T, self.O, self.names, self.mats, bb = collect(doc, deviation, visible_only)
+        self.T, self.O, self.names, self.mats, bb, self.dens = collect(
+            doc, deviation, visible_only)
         self.bvh = build_bvh(self.T)
         self.priority = np.argsort(np.argsort(bb))  # smaller bbox wins
         span = self.T.reshape(-1, 3)

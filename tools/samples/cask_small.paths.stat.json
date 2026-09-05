@@ -2,8 +2,8 @@
   "rays": 96,
   "segments": 420,
   "overlaps": 0,
-  "load_s": 0.34,
-  "trace_s": 0.02,
+  "load_s": 0.36,
+  "trace_s": 0.03,
   "out_MB": 0.01,
   "buildup_type_counts": {
     "2": 96
@@ -16,9 +16,10 @@
   },
   "mu_energy_MeV": 1.25,
   "mu_used": {
+    "VOID": 0.0,
     "Iron": 0.4173,
-    "Polyethylene": 0.05975,
-    "Source_Dry": 0.11536
+    "Source_Dry": 0.11536,
+    "Polyethylene": 0.05975
   },
   "equivalent": {
     "Source_Dry": "Tungsten"
