@@ -73,6 +73,35 @@ def build(path, fillet=True, name=None):
     return {"path": path, "fillet_edges": nfil, "volume_cm3": vol / 1e3}
 
 
+def build_penetration(path, r_hole=50.0, r_pos=400.0, name="cask_penetration"):
+    # 蓋を貫通する配管孔を持つモデル。孔は材料を減らすため、CSG 簡易モデルで
+    # 無視すると遮蔽を過大に見積もる（非保守）。監査ツールの実務的な題材。
+    if name in App.listDocuments():
+        App.closeDocument(name)
+    doc = App.newDocument(name)
+    lid, _ = _lid(False)
+    hole = Part.makeCylinder(r_hole, H_LID + 20.0, App.Vector(r_pos, 0, Z_LID - 10.0))
+    lid = lid.cut(hole)
+    shapes = {
+        "Bottom_Iron": Part.makeCylinder(R_OUT, H_BOT, App.Vector(0, 0, Z_BOT)),
+        "Source_Dry": Part.makeCylinder(R_CAV, H_CAV, App.Vector(0, 0, Z_CAV)),
+        "GammaShield_Iron": _annulus(R_CAV, R_GAM, Z_CAV, H_CAV),
+        "NeutronShield_Poly": _annulus(R_GAM, R_POL, Z_CAV, H_CAV),
+        "OuterShell_Iron": _annulus(R_POL, R_OUT, Z_CAV, H_CAV),
+        "Lid_Iron": lid,
+    }
+    for obj_name, mat in PARTS:
+        o = doc.addObject("Part::Feature", obj_name)
+        o.Shape = shapes[obj_name]
+        o.addProperty("App::PropertyString", "PokerMaterial", "POKER",
+                      "POKER material name")
+        o.PokerMaterial = mat
+    doc.recompute()
+    doc.saveAs(path)
+    return {"path": path, "hole_radius_mm": r_hole, "hole_center_r_mm": r_pos,
+            "note": "lid with a through penetration"}
+
+
 def build_both(outdir):
     a = build(os.path.join(outdir, "cask_detailed.FCStd"), True, "cask_detailed")
     b = build(os.path.join(outdir, "cask_simple.FCStd"), False, "cask_simple")

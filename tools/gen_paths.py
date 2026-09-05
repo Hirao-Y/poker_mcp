@@ -1,4 +1,4 @@
-# gen_paths.py -- FreeCAD headless ray tracer -> POKER .paths writer
+﻿# gen_paths.py -- FreeCAD headless ray tracer -> POKER .paths writer
 #
 #   freecadcmd gen_paths.py <spec.json>
 #
@@ -77,8 +77,39 @@ def reduce_layers(groups, mu, equiv, lib):
     return 1, layers, rolled, "1layer"
 
 
+def read_point_source(summary_path, source_name=None):
+    # poker_cui -p が出力する input セクションの point_source: を読む。
+    #   - { position:  1.3258e+01  1.3258e+01  9.6667e+01, weight: 2.0833e-02}
+    # 分割規則(UNIFORM/GAUSS_LAST 等)や weight ノードの指定を再実装せず、
+    # POKER が生成した点をそのまま使うため、両者がずれる余地が無い。
+    import re
+    pos, wt, cur, inblock = [], [], None, False
+    pat = re.compile(
+        r"position:\s*(\S+)\s+(\S+)\s+(\S+)\s*,\s*weight:\s*(\S+?)\s*\}")
+    for raw in open(summary_path, encoding="utf-8", errors="replace"):
+        s = raw.strip()
+        m = re.match(r"-\s*name:\s*(\S+)", s)
+        if m:
+            cur = m.group(1)
+        if s.startswith("point_source:"):
+            inblock = (source_name is None or cur == source_name)
+            continue
+        if inblock:
+            m = pat.search(s)
+            if m:
+                pos.append([float(m.group(1)), float(m.group(2)), float(m.group(3))])
+                wt.append(float(m.group(4)))
+            elif s and not s.startswith("-"):
+                inblock = False
+    if not pos:
+        raise SystemExit(
+            "point_source が見つかりません: %s\n"
+            "poker_cui は -p を付けて実行してください" % summary_path)
+    return np.asarray(pos, dtype=np.float64), np.asarray(wt, dtype=np.float64)
+
+
 def main(spec_path):
-    spec = json.load(open(spec_path, encoding="utf-8"))
+    spec = json.load(open(spec_path, encoding="utf-8-sig"))
     dev = float(spec.get("deviation", 0.5))
     scale = float(spec.get("unit_scale", 0.1))
     excl = set(spec.get("buildup_exclude", ["VOID", "Air"]))
@@ -107,20 +138,29 @@ def main(spec_path):
     if nostd:
         raise SystemExit("no buildup data for: %s  (set spec.equivalent)" % nostd)
 
-    if "source_points" in spec:
+    WT = None
+    if "poker_summary" in spec:
+        # 推奨: POKER が生成した分割点をそのまま使う（位置と体積重み）
+        P, WT = read_point_source(spec["poker_summary"], spec.get("source_name"))
+        SRC = P / scale                      # POKER 単位 -> CAD 単位
+    elif "source_points" in spec:
         SRC = np.asarray(spec["source_points"], dtype=np.float64)
+        WT = np.asarray(spec["source_weights"], dtype=np.float64) \
+            if "source_weights" in spec else None
     else:
-        # convenience generator for testing only (UNIFORM equal-area).
-        # production: poker_mcp supplies source_points per the YAML division
-        # (GAUSS_LAST etc.), so POKER and the tracer sample identical points.
+        # 検証専用の簡易生成。POKER の分割規則とは一致しないので実運用では
+        # 使わないこと。POKER の UNIFORM は各軸を等間隔に分割して体積差を
+        # weight で補償する方式で、ここでの等面積分割とは代表点が異なる。
         g = spec["source_rcc"]
         d = g["div"]
         rr = g["r"] * np.sqrt((np.arange(d["r"]) + 0.5) / d["r"])
         ph = (np.arange(d["phi"]) + 0.5) * 2 * np.pi / d["phi"]
         zz = g["z"] + (np.arange(d["z"]) + 0.5) * g["h"] / d["z"]
-        R, P, Z = np.meshgrid(rr, ph, zz, indexing="ij")
-        SRC = np.stack([g["x"] + R * np.cos(P),
-                        g["y"] + R * np.sin(P), Z], -1).reshape(-1, 3)
+        R, P_, Z = np.meshgrid(rr, ph, zz, indexing="ij")
+        SRC = np.stack([g["x"] + R * np.cos(P_),
+                        g["y"] + R * np.sin(P_), Z], -1).reshape(-1, 3)
+        print("WARNING: source_rcc は検証専用です。実運用では poker_summary を"
+              " 指定して POKER の分割点を使ってください", file=sys.stderr)
     dets = spec["detectors"]
     DET = np.asarray([d["pos"] for d in dets], dtype=np.float64)
     A = np.repeat(SRC, len(DET), 0)
@@ -167,11 +207,14 @@ def main(spec_path):
             si, di, len(segs[k]), "  ".join(raw), bt,
             "  ".join("%d %.6g" % (mid[m], t) for m, t in bl)))
 
-    hdr = ["# POKER-PATHS 1.0",
+    hdr = ["# POKER-PATHS 1.1",
            "model: %s" % os.path.basename(spec["fcstd"]),
            "deviation_mm: %g" % dev,
            "unit: cm",
            "source: %s" % spec.get("source_name", "SOURCE"),
+           "source_points_from: %s" % (
+               os.path.basename(spec["poker_summary"]) if "poker_summary" in spec
+               else ("spec" if "source_points" in spec else "generated(verification only)")),
            "n_source_points: %d" % len(SRC),
            "n_detectors: %d" % len(DET),
            "materials: %s" % ", ".join("%d=%s" % (i, m) for m, i in
@@ -179,11 +222,12 @@ def main(spec_path):
     for i, d in enumerate(dets):
         p = np.asarray(d["pos"], dtype=float) * scale
         hdr.append("detector: %d %s %.6g %.6g %.6g" % (i, d["name"], p[0], p[1], p[2]))
-    # 線源点も書き出す。POKER 側が自前の分割から点列を再生成すると、トレーサと
-    # 一致している保証が無い。座標があれば「層厚の総和 = 線源点と検出器の距離」
-    # で照合でき、単位や座標系の取り違えを検出できる。
+    # 線源点は座標と体積重みの両方を書き出す。POKER 側が分割定義から
+    # 再生成すると、分割規則の解釈違いで静かにずれる（実際に等面積分割と
+    # 等間隔分割で代表点が食い違った）。座標があれば距離照合もできる。
     for i, p in enumerate(SRC * scale):
-        hdr.append("source_point: %d %.6g %.6g %.6g" % (i, p[0], p[1], p[2]))
+        w = "" if WT is None else " %.6g" % WT[i]
+        hdr.append("source_point: %d %.6g %.6g %.6g%s" % (i, p[0], p[1], p[2], w))
     hdr.append("# src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...")
 
     out = spec["out"]

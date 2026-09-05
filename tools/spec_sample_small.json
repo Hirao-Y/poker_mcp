@@ -1,13 +1,13 @@
 {
-  "fcstd": "C:/Users/yoshi/Desktop/cask_detailed.FCStd",
+  "fcstd": "C:/Users/yoshi/Desktop/cask_simple.FCStd",
   "out": "C:/Users/yoshi/poker_mcp_github/tools/samples/cask_small.paths",
+  "poker_summary": "C:/Users/yoshi/poker_verify/cask_div_full.yaml.summary",
+  "source_name": "DivSrc",
   "deviation": 0.5,
   "unit_scale": 0.1,
   "poker_dir": "C:/Poker",
   "mu_energy": 1.25,
   "equivalent": {"Source_Dry": "Tungsten"},
-  "source_rcc": {"x": 0, "y": 0, "z": 300, "r": 750, "h": 4000,
-                 "div": {"r": 2, "phi": 4, "z": 3}},
   "detectors": [
     {"name": "D_side_1m", "pos": [2280, 0, 2300]},
     {"name": "D_lid_1m", "pos": [0, 0, 5650]},

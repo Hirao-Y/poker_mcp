@@ -1,9 +1,9 @@
 {
   "rays": 96,
-  "segments": 422,
+  "segments": 420,
   "overlaps": 0,
-  "load_s": 2.78,
-  "trace_s": 0.03,
+  "load_s": 0.34,
+  "trace_s": 0.02,
   "out_MB": 0.01,
   "buildup_type_counts": {
     "2": 96
@@ -24,7 +24,7 @@
     "Source_Dry": "Tungsten"
   },
   "rays_rolled_over_1mfp": 24,
-  "rolled_in_mfp_max": 2.3913,
-  "rolled_in_mfp_mean": 0.6667,
-  "tris": 20370
+  "rolled_in_mfp_max": 2.2136,
+  "rolled_in_mfp_mean": 0.6474,
+  "tris": 5376
 }

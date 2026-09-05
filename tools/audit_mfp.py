@@ -52,7 +52,7 @@ def _mfp(tracer, segs, mu, scale):
 
 
 def main(spec_path):
-    spec = json.load(open(spec_path, encoding="utf-8"))
+    spec = json.load(open(spec_path, encoding="utf-8-sig"))
     scale = float(spec.get("unit_scale", 0.1))
     dev = float(spec.get("deviation", 0.5))
     lib = poker_lib.PokerLib(spec.get("poker_dir", r"C:\Poker"))
