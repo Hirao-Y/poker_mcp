@@ -74,6 +74,13 @@ export class MaterialCatalog {
     const raw = text.split(/\r?\n/);
     let i = 0;
     while (i < raw.length && !/matNum\s*=/.test(raw[i])) i++;
+    // 宣言された材料数を控えておき、パース結果と突き合わせる。
+    // lib_material.dat は matNum= の直後に空行が無く最初の材料が続くため、
+    // ブロック分割が 1 つずれると先頭の材料を取りこぼす（実際に Carbon が
+    // 抜けて 21/22 になった）。件数が合わなければ検出できる。
+    const declared = i < raw.length
+      ? parseInt((raw[i].match(/matNum\s*=\s*(\d+)/) || [])[1], 10)
+      : NaN;
     i++; // matNum 行の次から
     while (i < raw.length) {
       const line = raw[i].trim();
@@ -91,6 +98,17 @@ export class MaterialCatalog {
       }
       if (nElem === 1) { const z = Object.keys(comp)[0]; comp[z] = 1.0; } // 単一元素は分率=1
       cat[name] = { density, composition: comp, isStandard: this.standard().includes(name) };
+    }
+    // 宣言数との照合。合わない場合はパースの取りこぼし、または matNum= の
+    // 更新漏れ。どちらも黙って進むと材料が使えなくなるので知らせる。
+    const parsed = Object.keys(cat).length;
+    if (!isNaN(declared) && declared !== parsed) {
+      logger.warn('材料数が matNum= の宣言と一致しません', {
+        declared, parsed,
+        hint: parsed < declared
+          ? '材料の取りこぼし、または matNum= が実際より多い'
+          : 'matNum= の更新漏れの可能性'
+      });
     }
     return cat;
   }
