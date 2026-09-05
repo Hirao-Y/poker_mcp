@@ -179,6 +179,11 @@ def main(spec_path):
     for i, d in enumerate(dets):
         p = np.asarray(d["pos"], dtype=float) * scale
         hdr.append("detector: %d %s %.6g %.6g %.6g" % (i, d["name"], p[0], p[1], p[2]))
+    # 線源点も書き出す。POKER 側が自前の分割から点列を再生成すると、トレーサと
+    # 一致している保証が無い。座標があれば「層厚の総和 = 線源点と検出器の距離」
+    # で照合でき、単位や座標系の取り違えを検出できる。
+    for i, p in enumerate(SRC * scale):
+        hdr.append("source_point: %d %.6g %.6g %.6g" % (i, p[0], p[1], p[2]))
     hdr.append("# src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...")
 
     out = spec["out"]

@@ -7,6 +7,7 @@ POKER MCP の材料システムは、POKER 本体のライブラリフォルダ 
 | `lib_material.dat` | 材料の密度と元素組成（標準材料＋カスタム材料） |
 | `lib_setting.dat` | 単層ビルドアップデータを持つ標準材料の一覧、使用する減衰係数ファイル名 |
 | `atten2_xcom2.dat`（`lib_setting.dat` の `file_attenuation` で指定） | 元素ごとの光子質量減衰係数（非干渉散乱／全断面） |
+| `lib_equivalent.dat`（任意） | カスタム材料のビルドアップ等価材料の事前計算表 |
 
 **材料一覧をコード側に持たないことが設計方針です。** ライブラリに材料を追加すれば、サーバを再起動するだけで検証・密度・ビルドアップ等価材料のすべてが追随します。ライブラリが読めない環境では、既定の標準材料 13 種にフォールバックして動作を継続します。
 
@@ -81,6 +82,8 @@ Borated_Poly
 
 ### 自動選定の原理
 
+等価材料は 2 通りの経路で決まります。**`lib_equivalent.dat` に当該材料が載っていればその値を使い、載っていなければ以下の計算で選定します。**
+
 ビルドアップ係数を支配するのは、光子が散乱して生き残るか吸収されるかの競合です。そこで各材料について
 
 ```
@@ -94,6 +97,31 @@ r(E) = μ_incoherent(E) / ( μ_total(E) − μ_incoherent(E) )     （散乱／�
 スコア差が僅差（10% 以内）の候補が複数ある場合は、指標への過適合を避けるため**光子実効 Z（Mayneord 型・指数 2.94）の近さ**でタイブレークします。
 
 減衰係数ファイルが読めない場合は、実効 Z の最近傍による選定にフォールバックします。
+
+### 事前計算表（lib_equivalent.dat）
+
+選定結果は組成と減衰係数だけで決まり、線源にも体系にも依存しません。したがって実行時に計算する必要はなく、事前に表として `LIB` に置けます。POKER GUI と poker_mcp が同じ表を引けば、選定アルゴリズムを 2 箇所に実装せずに済みます。
+
+```
+# POKER equivalent buildup material table 1.0
+generated : 2026-09-05 11:59:05  by poker_mcp tools/gen_equivalent_table.mjs
+source    : lib_material.dat   2025-02-12 23:12:44   22 materials
+source    : lib_setting.dat    2026-05-19 08:09:12   13 standard
+method    : scatter/absorb ratio  r(E) = mu_incoherent / (mu_total - mu_incoherent)
+            log-RMS over 11 points, 0.1-3 MeV
+#
+# material          equivalent    score   note
+SUS_A               Iron          0.0128
+Source_Dry          Tungsten      0.4389  coarse
+```
+
+書式の要点は 3 つです。データ行は行頭から始まり、ヘッダの継続行は字下げします。第1トークンがカタログに実在する材料名の行だけがエントリとして扱われます。`score` と `note` は任意で、記録用です。
+
+生成は `node tools/gen_equivalent_table.mjs [出力先]`。既定の出力先は `%POKER_INSTALL_PATH%/LIB/lib_equivalent.dat` です。**表は常に全件を再構築してください。** 標準材料が増えると既存カスタム材料の選定結果も変わりうるため、追記だけでは古い選定が残ります。
+
+poker_mcp は表を読んだ際に自前計算と突き合わせ、食い違えば「表が古い可能性がある」と警告します（採用するのは表の値）。ライブラリを更新したら再構築してください。
+
+なお `equivalent` に明示的なエネルギーを指定して選定させる場合（`nearestBuildupEquivalent(material, energy)`）は、表を使わずその条件で計算します。表は既定条件（0.1〜3 MeV）の結果だからです。
 
 ### 一致度の読み方
 

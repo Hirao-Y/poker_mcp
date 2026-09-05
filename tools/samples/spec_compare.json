@@ -1,0 +1,9 @@
+﻿{
+  "fcstd": "C:/Users/yoshi/Desktop/cask_simple.FCStd",
+  "summary": "C:/Users/yoshi/poker_verify/cask_verify.yaml.summary",
+  "out": "C:/Users/yoshi/poker_verify/compare.json",
+  "unit_scale": 0.1,
+  "deviation": 0.5,
+  "tol_cm": 0.06
+}
+

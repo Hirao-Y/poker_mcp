@@ -1,0 +1,30 @@
+{
+  "rays": 96,
+  "segments": 422,
+  "overlaps": 0,
+  "load_s": 2.78,
+  "trace_s": 0.03,
+  "out_MB": 0.01,
+  "buildup_type_counts": {
+    "2": 96
+  },
+  "buildup_mode": {
+    "2layer": 96
+  },
+  "buildup_combos": {
+    "Source_Dry-Iron": 96
+  },
+  "mu_energy_MeV": 1.25,
+  "mu_used": {
+    "Iron": 0.4173,
+    "Polyethylene": 0.05975,
+    "Source_Dry": 0.11536
+  },
+  "equivalent": {
+    "Source_Dry": "Tungsten"
+  },
+  "rays_rolled_over_1mfp": 24,
+  "rolled_in_mfp_max": 2.3913,
+  "rolled_in_mfp_mean": 0.6667,
+  "tris": 20370
+}

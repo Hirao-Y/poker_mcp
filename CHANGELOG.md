@@ -1,5 +1,45 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.6.1] - 2026-09-05
+
+### 等価材料テーブル (lib_equivalent.dat) への対応
+
+等価材料の選定結果は組成と減衰係数だけで決まり、線源にも体系にも依存しない
+ため、事前計算した表を `LIB` に置けるようにしました。POKER GUI と poker_mcp が
+同じ表を引けば、選定アルゴリズムを二重実装せずに済みます。
+
+- 表があり当該材料が載っていればその値を採用。無ければ従来どおり自前計算
+- 読み込み時に自前計算と突き合わせ、食い違えば「表が古い可能性がある」と警告
+  （採用するのは表の値）
+- エネルギーを明示指定した選定では表を使わずその条件で計算する
+- `tools/gen_equivalent_table.mjs` を追加（表の生成器。PKGMAT 実装時の参照実装）
+
+### 追加 (tools)
+
+- `compare_poker_trace.py`: POKER の `path_trace_from_pseudo_source_point` と
+  レイトレーサの経路を区間単位で突き合わせる。キャスクモデルの 24 経路で
+  材質の並び・区間数の不一致 0、区間長の差は中央値 0.0023 cm・最大 0.0473 cm
+  （テッセレーション偏差 0.5 mm 由来で、理論上限に収まる）
+- spec ファイルを utf-8-sig で読むよう修正（PowerShell の UTF8 は BOM 付き）
+
+### `.paths` フォーマットの変更
+
+- **`source_point:` 行を追加。** 検出器座標のみで線源点座標が無く、POKER 側が
+  自前の分割から点列を再生成する前提になっていた。分割仕様の解釈違いが静かに
+  誤った結果を生むため、座標を記録して距離照合できるようにした
+- `docs/manuals/PATHS_FORMAT.md` を新規追加（リーダ実装向けの規定）
+- `tools/samples/cask_small.paths` を追加（96 レコードの小サンプル）
+
+### ドキュメント
+
+- `MATERIAL_SYSTEM.md`: `lib_equivalent.dat` の節を追加
+- `CAD_RAYTRACE.md`: POKER 本体との突き合わせ検証の節を追加
+
+### 既知の事項
+
+POKER は `path_trace` の材質名を 10 文字で切り詰めて出力します。
+`Heavy_concrete_FP` / `_IL` / `_T` はいずれも `Heavy_conc` となり区別できません。
+
 ## [1.6.0] - 2026-09-05
 
 ### 材料システムのライブラリ完全準拠

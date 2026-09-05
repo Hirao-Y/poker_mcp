@@ -65,7 +65,7 @@ export class MaterialCatalog {
   // ライブラリ更新後にキャッシュを捨てる（カスタム材料の追加を反映）
   static reload() {
     this._catalog = null; this._standard = null; this._atten = null;
-    this._stdZeff = null; this._canon = null;
+    this._stdZeff = null; this._canon = null; this._eqTable = null;
     return this.load(true);
   }
 
@@ -272,14 +272,71 @@ export class MaterialCatalog {
     return n ? Math.sqrt(s / n) : null;
   }
 
-  // 非標準材料の buildup 等価材料。減衰係数データがあれば散乱/吸収比の
-  // 一致で、無ければ実効Zの最近傍で選ぶ。
+  // ---- 等価材料テーブル (lib_equivalent.dat) --------------------------
+  // 選定結果は組成と減衰係数だけで決まり問題ごとに変わらないため、事前計算
+  // した表を LIB に置ける（生成は PKGMAT または tools/gen_equivalent_table.mjs）。
+  // 表があり当該材料が載っていればそれを使い、無ければ自前計算する。
+  static _eqTable = null;
+  static equivalentTable() {
+    if (this._eqTable) return this._eqTable;
+    this._eqTable = {};
+    const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
+    const p = path.join(base, 'LIB', 'lib_equivalent.dat');
+    try {
+      const txt = fs.readFileSync(p, 'utf-8');
+      const cat = this.load();
+      for (const raw of txt.split(/\r?\n/)) {
+        // ヘッダの継続行（method の説明など）は字下げされているので除外する
+        if (/^\s/.test(raw)) continue;
+        const line = raw.trim();
+        if (!line || line.startsWith('#') || /^\w+\s*:/.test(line)) continue;
+        const t = line.split(/\s+/);
+        // 第1トークンがカタログに実在する材料の行だけを採用する
+        if (t.length >= 2 && Object.prototype.hasOwnProperty.call(cat, t[0])) {
+          this._eqTable[t[0]] = {
+            equivalent: t[1],
+            score: t.length > 2 && !isNaN(parseFloat(t[2])) ? parseFloat(t[2]) : null,
+            note: t.slice(3).join(' ') || null
+          };
+        }
+      }
+      logger.info('等価材料テーブルを読み込みました',
+        { path: p, entries: Object.keys(this._eqTable).length });
+    } catch (e) {
+      logger.info('等価材料テーブルが無いため自前計算で選定します', { path: p });
+    }
+    return this._eqTable;
+  }
+
+  // 非標準材料の buildup 等価材料。表があればそれを優先し、無ければ
+  // 散乱/吸収比の一致で選ぶ。減衰係数データも無ければ実効Z最近傍。
   static nearestBuildupEquivalent(name, energy = null) {
     const n = this.normalizeName(name);
     if (this.isStandard(n)) return n;
     const cat = this.load();
     const entry = cat[n];
     if (!entry || !entry.composition) return 'Iron';
+
+    // エネルギー指定がある場合はその条件での計算を優先する（表は既定条件）
+    if (energy == null) {
+      const row = this.equivalentTable()[n];
+      if (row && this.standard().includes(row.equivalent)) {
+        // 表はライブラリ更新後に再構築されないと古くなる。自前計算と食い違えば
+        // 陳腐化の兆候なので知らせる（採用するのは表の値）。
+        const own = this.rankBuildupEquivalents(n)[0];
+        if (own && own.material !== row.equivalent) {
+          logger.warn('等価材料テーブルの値が自前計算と一致しません。表が古い可能性があります', {
+            material: n, table: row.equivalent, computed: own.material,
+            computed_score: own.score,
+            hint: 'ライブラリを更新した場合は lib_equivalent.dat を再構築してください'
+          });
+        }
+        logger.info('等価材料をテーブルから取得しました',
+          { material: n, equivalent: row.equivalent, score: row.score });
+        return row.equivalent;
+      }
+    }
+
     const energies = energy == null ? this.BUILDUP_MATCH_ENERGIES
       : (Array.isArray(energy) ? energy : [energy]);
 
