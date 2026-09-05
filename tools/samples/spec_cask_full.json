@@ -1,0 +1,28 @@
+{
+  "fcstd": "C:/Users/yoshi/Desktop/cask_simple.FCStd",
+  "out": "C:/Users/yoshi/poker_verify/cask_full.paths",
+  "poker_summary": "C:/Users/yoshi/poker_verify/cask_full.yaml.summary",
+  "source_name": "SpentFuel",
+  "deviation": 0.5,
+  "unit_scale": 0.1,
+  "poker_dir": "C:/Poker",
+  "mu_energy": 1.25,
+  "equivalent": {"Source_Dry": "Tungsten"},
+  "detectors": [
+    {"name": "D_side_r130", "pos": [1300, 0, 2300]},
+    {"name": "D_side_r140", "pos": [1400, 0, 2300]},
+    {"name": "D_side_r160", "pos": [1600, 0, 2300]},
+    {"name": "D_side_r200", "pos": [2000, 0, 2300]},
+    {"name": "D_side_1m", "pos": [2280, 0, 2300]},
+    {"name": "D_side_r328", "pos": [3280, 0, 2300]},
+    {"name": "D_lid_z467", "pos": [0, 0, 4670]},
+    {"name": "D_lid_z475", "pos": [0, 0, 4750]},
+    {"name": "D_lid_z495", "pos": [0, 0, 4950]},
+    {"name": "D_lid_1m", "pos": [0, 0, 5650]},
+    {"name": "D_lid_z665", "pos": [0, 0, 6650]},
+    {"name": "D_side_low", "pos": [1300, 0, 500]},
+    {"name": "D_side_high", "pos": [1300, 0, 4100]},
+    {"name": "D_side_low_1m", "pos": [2280, 0, 500]},
+    {"name": "D_side_high_1m", "pos": [2280, 0, 4100]}
+  ]
+}

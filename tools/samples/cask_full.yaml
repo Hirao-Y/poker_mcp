@@ -1,0 +1,157 @@
+thinnedindices:
+  sourcepoint: 5000
+  pseudosourcepoint: 10
+  detectorgrid: 10
+  detectorevaluation: 5
+  pathtrace: 5
+  buildupenergy: 3
+  buildupmfp: 3
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+body:
+  - name: SRC_cav
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 75
+  - name: IRN_gam
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 115
+  - name: PLY_neu
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 125
+  - name: OUT_full
+    type: RCC
+    bottom_center: 0 0 30
+    height_vector: 0 0 400
+    radius: 128
+  - name: BOT_plug
+    type: RCC
+    bottom_center: 0 0 0
+    height_vector: 0 0 30
+    radius: 128
+  - name: LID_plug
+    type: RCC
+    bottom_center: 0 0 430
+    height_vector: 0 0 35
+    radius: 128
+  - name: Z_gamma
+    type: CMB
+    expression: IRN_gam - SRC_cav
+  - name: Z_neut
+    type: CMB
+    expression: PLY_neu - IRN_gam
+  - name: Z_outer
+    type: CMB
+    expression: OUT_full - PLY_neu
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: SRC_cav
+    material: Source_Dry
+    density: 1.97
+  - body_name: Z_gamma
+    material: Iron
+    density: 7.8
+  - body_name: Z_neut
+    material: Polyethylene
+    density: 0.92
+  - body_name: Z_outer
+    material: Iron
+    density: 7.8
+  - body_name: BOT_plug
+    material: Iron
+    density: 7.8
+  - body_name: LID_plug
+    material: Iron
+    density: 7.8
+transform: []
+buildup_factor:
+  - material: Iron
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Source_Dry
+    equivalent: Tungsten
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Polyethylene
+    use_slant_correction: false
+    use_finite_medium_correction: false
+source:
+  - name: SpentFuel
+    type: RCC
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 1000000000000000
+      - nuclide: Co60
+        radioactivity: 50000000000000
+      - nuclide: Ba137m
+        radioactivity: 943900000000000
+    cutoff_rate: 0.0001
+    geometry:
+      bottom_center: 0 0 30
+      height_vector: 0 0 400
+      radius: 75
+    division:
+      r:
+        number: 8
+        type: UNIFORM
+      phi:
+        number: 16
+        type: UNIFORM
+      z:
+        number: 30
+        type: UNIFORM
+detector:
+  - name: D_side_r130
+    origin: 130 0 230
+    show_path_trace: false
+  - name: D_side_r140
+    origin: 140 0 230
+    show_path_trace: false
+  - name: D_side_r160
+    origin: 160 0 230
+    show_path_trace: false
+  - name: D_side_r200
+    origin: 200 0 230
+    show_path_trace: false
+  - name: D_side_1m
+    origin: 228 0 230
+    show_path_trace: false
+  - name: D_side_r328
+    origin: 328 0 230
+    show_path_trace: false
+  - name: D_lid_z467
+    origin: 0 0 467
+    show_path_trace: false
+  - name: D_lid_z475
+    origin: 0 0 475
+    show_path_trace: false
+  - name: D_lid_z495
+    origin: 0 0 495
+    show_path_trace: false
+  - name: D_lid_1m
+    origin: 0 0 565
+    show_path_trace: false
+  - name: D_lid_z665
+    origin: 0 0 665
+    show_path_trace: false
+  - name: D_side_low
+    origin: 130 0 50
+    show_path_trace: false
+  - name: D_side_high
+    origin: 130 0 410
+    show_path_trace: false
+  - name: D_side_low_1m
+    origin: 228 0 50
+    show_path_trace: false
+  - name: D_side_high_1m
+    origin: 228 0 410
+    show_path_trace: false
