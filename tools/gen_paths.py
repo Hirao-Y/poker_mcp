@@ -26,6 +26,24 @@ import ray_trace_tri as rt
 
 import poker_lib
 
+# .paths の構造の版。ファイル種別ごとに独立して進める。
+PATHS_FORMAT_VERSION = "1.2"
+GENERATOR_VERSION = "1.6.3"
+
+
+def _now():
+    import datetime
+    return datetime.datetime.now().astimezone().isoformat(timespec="seconds")
+
+
+def _mtime(path):
+    import datetime
+    try:
+        t = os.path.getmtime(path)
+    except OSError:
+        return None
+    return datetime.datetime.fromtimestamp(t).astimezone().isoformat(timespec="seconds")
+
 
 def reduce_layers(groups, mu, equiv, lib):
     # groups: [(material, thickness_cm)] source->detector, buildup candidates only
@@ -233,40 +251,76 @@ def main(spec_path):
             si, di, len(segs[k]), "  ".join(raw), bt,
             "  ".join("%d %.6g" % (mid[m], t) for m, t in bl)))
 
-    hdr = ["# POKER-PATHS 1.2",
-           "model: %s" % os.path.basename(spec["fcstd"]),
-           "deviation_mm: %g" % dev,
-           "unit: cm",
-           "source: %s" % spec.get("source_name", "SOURCE"),
-           "source_points_from: %s" % (
-               os.path.basename(spec["poker_summary"]) if "poker_summary" in spec
-               else ("spec" if "source_points" in spec else "generated(verification only)")),
-           "n_source_points: %d" % len(SRC),
-           "n_detectors: %d" % len(DET),
-           "n_materials: %d" % len(keys)]
-    # 材質と密度。密度欄が無い場合は POKER の材料ライブラリの登録密度を使う。
-    # スミアリング等価領域のように密度を上書きした場合は、同じ材質でも別 ID。
+    # ヘッダは POKER の .summary / .dose と同じ形に揃える。
+    # 1 行目のマジックコメントで、パースする前に種別が判別できる。
+    # format と format_version でファイル種別とその構造の版を明示する。
+    src_yaml = spec.get("source_yaml") or spec.get("poker_summary", "")
+    if src_yaml.endswith(".summary"):
+        src_yaml = src_yaml[:-len(".summary")]
+    hdr = ["# POKER-PATHS",
+           "information:",
+           "  format: paths",
+           # 版は 1.1 / 1.2 / 1.3 の形でしか進めないので、YAML が float として
+           # 読んでも実害はない。引用符は付けない。
+           "  format_version: %s" % PATHS_FORMAT_VERSION,
+           "  generator: poker_mcp gen_paths.py %s" % GENERATOR_VERSION,
+           "  generated_at: %s" % _now(),
+           "  notation: scientific",
+           "  sig_digits: 6"]
+    if src_yaml:
+        # 対応関係の記録。読み込み時の照合には使わない（移動や再保存で
+        # 一致しなくなるため）。実質的な整合性は n_source_points と
+        # n_detectors を YAML の定義と突き合わせて確認する。
+        hdr.append("  source_yaml: %s" % os.path.basename(src_yaml))
+        mt = _mtime(src_yaml)
+        if mt:
+            hdr.append("  source_yaml_mtime: %s" % mt)
+    hdr += ["  model: %s" % os.path.basename(spec["fcstd"]),
+            "  deviation_mm: %g" % dev,
+            "  unit: cm",
+            "  source: %s" % spec.get("source_name", "SOURCE"),
+            "  source_points_from: %s" % (
+                os.path.basename(spec["poker_summary"]) if "poker_summary" in spec
+                else ("spec" if "source_points" in spec else "generated(verification only)")),
+            "  n_source_points: %d" % len(SRC),
+            "  n_detectors: %d" % len(DET),
+            "  n_materials: %d" % len(keys)]
+    # 材質・検出器・線源点は件数が可変なのでシーケンスにする。
+    # information: の中に同じキーを並べると YAML として重複キーになるため、
+    # トップレベルの別ノードに分ける（POKER の summary で実際に問題になった）。
+    hdr.append("materials:")
     for i, k in enumerate(keys):
         if k == "VOID":
-            hdr.append("material: 0 VOID")
+            hdr.append("  - { id: 0, name: VOID }")
         elif k[1] is None:
-            hdr.append("material: %d %s" % (i, k[0]))
+            hdr.append("  - { id: %d, name: %s }" % (i, k[0]))
         else:
-            hdr.append("material: %d %s %.6g" % (i, k[0], k[1]))
+            # 密度欄がある場合はライブラリの登録密度ではなくこの値を使う。
+            # スミアリング等価領域のように同じ材質でも密度が違えば別 ID。
+            hdr.append("  - { id: %d, name: %s, density: %.6g }" % (i, k[0], k[1]))
+    hdr.append("detectors:")
     for i, d in enumerate(dets):
         p = np.asarray(d["pos"], dtype=float) * scale
-        hdr.append("detector: %d %s %.6g %.6g %.6g" % (i, d["name"], p[0], p[1], p[2]))
+        hdr.append("  - { id: %d, name: %s, pos: [%.6g, %.6g, %.6g] }"
+                   % (i, d["name"], p[0], p[1], p[2]))
     # 線源点は座標と体積重みの両方を書き出す。POKER 側が分割定義から
     # 再生成すると、分割規則の解釈違いで静かにずれる（実際に等面積分割と
     # 等間隔分割で代表点が食い違った）。座標があれば距離照合もできる。
+    hdr.append("source_points:")
     for i, p in enumerate(SRC * scale):
-        w = "" if WT is None else " %.6g" % WT[i]
-        hdr.append("source_point: %d %.6g %.6g %.6g%s" % (i, p[0], p[1], p[2], w))
-    hdr.append("# src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...")
+        w = "" if WT is None else ", weight: %.6g" % WT[i]
+        hdr.append("  - { id: %d, pos: [%.6g, %.6g, %.6g]%s }"
+                   % (i, p[0], p[1], p[2], w))
+    hdr.append("# paths: src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...")
+    hdr.append("paths: |")
 
     out = spec["out"]
     with open(out, "w", encoding="utf-8") as f:
-        f.write("\n".join(hdr) + "\n" + "\n".join(lines) + "\n")
+        # 経路本体は YAML のリテラルブロックに入れる。1 行 1 経路の数値列は
+        # YAML のシーケンスにすると膨れるうえ読み書きが遅くなるため、
+        # ブロックスカラーとして持たせ、中身は独自形式のまま扱う。
+        f.write("\n".join(hdr) + "\n")
+        f.write("\n".join("  " + ln for ln in lines) + "\n")
 
     rep = {
         "rays": len(A), "segments": nseg_tot, "overlaps": ov,
