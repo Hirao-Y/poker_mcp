@@ -1,6 +1,7 @@
 # 引き継ぎ要約 — POKER-MCP / CAD 連携レイトレース
 
-このセッション（v1.5.0 → v1.6.3）で行った作業と、判明した POKER の仕様。
+このセッション（poker_mcp v1.5.0 → v1.6.3、POKER 2.1.1 → 2.1.5）で行った作業と、
+判明した POKER の仕様。
 相手は NMRI の放射線遮蔽研究者（GitHub: Hirao-Y）。会話は日本語。
 
 ---
@@ -21,7 +22,7 @@ FreeCAD のソリッドモデルを遮蔽体系として直接扱うためのパ
 ## 2. 環境
 
 - リポジトリ: `C:\Users\yoshi\poker_mcp_github`（origin `Hirao-Y/poker_mcp`、公開）
-- POKER: `C:\Poker`（`poker_cui.EXE`, v2.1.1）
+- POKER: `C:\Poker`（`poker_cui.EXE`, v2.1.5。本セッション中に 2.1.1 から更新）
 - FreeCAD 1.1: `C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe`（Python 3.11 + numpy）
 - 検証作業ディレクトリ: `C:\Users\yoshi\poker_verify`（リポジトリ外）
 - CAD モデル: `C:\Users\yoshi\Desktop\cask_*.FCStd`
@@ -90,23 +91,28 @@ UTF-8 が ANSI として読まれ日本語コメントが文字化けする（�
 | `pathtrace` | `path_trace` の仮想点線源 | 5 |
 | `buildupenergy` / `buildupmfp` | 多層ビルドアップ係数の表示数 | 3 / 3 |
 
-### poker_cui のオプション
+### poker_cui のオプション（2.1.5 以降）
 
-`poker_cui "入力" -p -s -t -l -o "サマリー" -d "線量"`
+`poker_cui "入力" -p -s -t -l -a -c -o "サマリー" -d "線量" --path-input "経路"`
 
 - `-p` 入力パラメータを書く（**分割点を得るにはこれが必要**）
 - `-s` 線源ごとの計算データ・透過線情報
-- `-t` 検出器ごとの総和（Ver 1.85 以降の機械可読フォーマット）
-- `-l` 同上（旧フォーマット。`-t` と併用すると無視される）
-- **`p,s,t,l` を何も指定しないとサマリーに何も書かれない**
+- `-t` 検出器ごとの総和（機械可読フォーマット）
+- `-l` 同上（旧フォーマット。`-t` と併用すると無視され、通知が出る）
+- `-a` `-p -s -t` と同じ
+- `-c` 入力の検証と経路追跡のみ（`Run_PathTrace`）。線量計算をしない
+- `--path-input FILE` CAD から抽出した経路ファイルを幾何として使う（実装途上）
+- **`p,s,t,l,a` を何も指定しないとサマリーに何も書かれない**（警告＋終了コード 1）
 
-終了コードは成功 0 / エラー −1 の 2 値。警告の有無は区別されない。
+終了コードは 0 正常 / 1 出力オプション未指定 / 2 入力エラー / 3 計算失敗。
+80 mfp 超過とスラント角超過は **0 のまま**（どちらも結果はそのまま採用してよい）。
 
 ### その他
 
-- `path_trace` の**材質名は 10 文字で切り詰められる**。`Heavy_concrete_FP`/`_IL`/`_T`
-  はいずれも `Heavy_conc` となり区別できない（対処予定と伺っている）
-- `.summary` 末尾の `[!]` 警告行は YAML の外にある。パース前に除去が必要
+- ~~`path_trace` の材質名は 10 文字で切り詰められる~~ → **2.1.5 で修正済み**。
+  原因は数値幅 `width = PRECISION + 6 = 10` を名前の `substr` に流用していたこと
+- ~~`.summary` 末尾の `[!]` 警告行は YAML の外にある~~ → **2.1.2 で `warnings`
+  ノードに構造化**。`code` / `severity` / `count` / `occurrences` を持つ
 - 減衰係数ファイルは `lib_setting.dat` の `file_attenuation` が指す
   `atten2_xcom2.dat`（非干渉散乱と全断面の 2 列）。**減衰計算には全断面を使う**
 - 80 mfp クランプは打ち切りではなく、それ以上の精度が意味を持たない領域での
@@ -114,24 +120,46 @@ UTF-8 が ANSI として読まれ日本語コメントが文字化けする（�
 
 ---
 
-## 4. poker_cui への要望（提出済み、対応待ち）
+## 4. poker_cui の改修（対応状況）
 
-| # | 内容 | 状態 |
-|---|---|---|
-| — | `.paths` 入力の受け入れ | 対応予定 |
-| — | 分割点ごとの全経路出力 | 確認予定 |
-| 2 | 材質名を切り詰めない | 対応予定 |
-| 3 | `warnings` ノードの構造化（code/count/occurrences） | 例を提示済み |
-| 4 | 終了コードの整理（0 正常 / 1 警告あり / 2 入力エラー / 3 計算失敗） | 提案済み |
-| 5 | 検証専用モード（POKER 本体にはあるが poker_cui には無い） | 提案済み |
-| 6 | 材料ライブラリの機械可読な照会 | POKER 改造時に検討 |
+要望を出し、POKER 側（ユーザ）が 2.1.2〜2.1.5 で実装した。修正案の C++ は
+こちらで作成し、ユーザがビルドして反映するという進め方をとった。
 
-（入力パラメータの桁数を上げる要望は撤回した。丸めは ±0.005 cm で
-テッセレーション誤差 0.047 cm より一桁小さく、実害がない）
+| 内容 | 状態 |
+|---|---|
+| 終了コードの整理（0/1/2/3） | **完了**。全 10 ケース検証済み |
+| 検出事項の構造化（`warnings` ノード） | **完了**。code / severity / count / occurrences |
+| 検証専用モード（`-c`、`Run_PathTrace`） | **完了** |
+| 出力オプション未指定時の警告 | **完了** |
+| 計算前の古い出力ファイル削除 | **完了** |
+| 進捗・診断の cerr 分離 | **完了** |
+| `-a`（`-p -s -t` の別名） | **完了** |
+| 材質名の 10 文字切り詰めをやめる | **完了** |
+| `.summary` を `-s` 付きでも YAML として読めるように | **完了**（`sources` 配列） |
+| `.summary` / `.dose` / `.paths` のヘッダ統一 | **完了** |
+| `.paths` 入力の受け入れ | オプションと `Run_PathInput` の枠組みまで。**中身は実装途上** |
+| 分割点ごとの全経路出力 | 未対応（現状 `path_trace` は仮想点線源 9 点のみ） |
+| `intermediate` / `result` のキー重複 | `sources` 配列化で解消 |
 
----
+材料ライブラリの機械可読な照会は**取り下げた**。ファイル名も形式も今後ほとんど
+変わらないとのことなので、パースを続ける方が prosess 起動のコストが無く、POKER が
+入っていない環境でもフォールバックで動く。独自解釈のリスクは `matNum=` との
+件数照合で軽減した。
 
-## 5. 本セッションの成果（8 コミット、すべて push 済み）
+### C++ 側の修正内容（参考）
+
+| ファイル | 変更 |
+|---|---|
+| `main.cpp` | 終了コード、`warnings` 出力、`-a` / `-c` / `--path-input`、cerr 分離、古いファイル削除 |
+| `CalculateDose_IO.cpp` | `sources` 配列化（`indent_block` で一括字下げ）、ヘッダ統一、名前の切り詰め解除 |
+| `CalculateDose.cpp` | 無名名前空間の閉じ位置変更（`Calculate_Dose` を外出し）、`MergeAndTotal` の切り出し |
+| `CalculateDose.h` | `Run_PathInput` の宣言、`Calculate_Dose` / `MergeAndTotal` の宣言 |
+| `CalculateDose_PathInput.cpp` | 新規。`.paths` の読み込みと `Run_PathInput` |
+
+`Run_PathInput` の設計は `Run_All` の 4 段（入力の解釈 → 経路 → 線量計算 →
+マージ）のうち**経路だけを差し替える**形。1・3・4 は共有する。
+
+## 5. 本セッションの成果（14 コミット、すべて push 済み）
 
 ### v1.6.0 — 材料システムのライブラリ準拠
 
@@ -185,17 +213,72 @@ CAD のソリッドに `PokerDensity`（g/cm³）を設定すると上書きで�
 
 ---
 
+### POKER 2.1.2〜2.1.5 対応（`summaryParser.js`）
+
+POKER 側の `.summary` が改善されたのに合わせ、パーサを新旧両対応にした。
+
+```yaml
+# POKER-SUMMARY
+information:
+  format: summary
+  format_version: 1.0
+  generator: POKER 2.1.5.1
+  ...
+input: {...}          # -p
+sources:              # -s（線源ごとの配列。従来は重複キーで読めなかった）
+  - name: P0_axis_mid
+    intermediate: {...}
+    result: {...}
+result_total: {...}   # -t
+warnings:             # 常時。何も無ければ warnings: []
+  - code: BUILDUP_MFP_EXCEEDED
+    severity: info
+    count: 1
+    occurrences: [{ source: 3, detector: 2, point: 0 }]
+```
+
+- `code` で判定する（文面の改訂や言語切替に影響されない）
+- `SLANT_ANGLE_EXCEEDED` の注記を追加。80mfp 超過と同じく結果は採用してよい
+- 旧形式の救済も残す。重複するトップレベルキーに添字を付けてパースし配列に戻す
+- 新旧で検出器 6 個・H*(10) = 3.5928e-05 が一致することを確認
+
 ## 6. `.paths` パイプラインの現状
 
 ```
-1. poker_cui -p -t -s model.yaml      分割点(位置・重み)を出力
-2. gen_paths.py                       .summary を読み、CAD をトレースして .paths を生成
-3. poker_cui --path-input model.paths 計算（← 未実装）
+1. poker_cui model.yaml -p -t                        分割点(位置・重み)を出力
+2. gen_paths.py                                      .summary を読み、CAD をトレース
+3. poker_cui model.yaml --path-input model.paths -t  計算（← 中身は実装途上）
 ```
 
 仕様は `docs/manuals/PATHS_FORMAT.md`（v1.2）。サンプルは
 `tools/samples/cask_small.paths`（96 レコード）と `cask_full.paths`
-（57,600 レコード、4.98 MB）。
+（57,600 レコード、4.92 MB）。
+
+**ファイル全体が正しい YAML** になった（`.summary` / `.dose` と同じヘッダ形式）。
+経路本体は `paths: |` のリテラルブロックに入れ、中身は 1 行 1 経路の独自形式のまま。
+4.92 MB を **61 ms** でパースできる（js-yaml 実測）。57,600 行を YAML シーケンスに
+すると膨れて重くなるため、この構成にした。
+
+```yaml
+# POKER-PATHS
+information:
+  format: paths
+  format_version: 1.2
+  n_source_points: 3840
+  n_detectors: 15
+materials:
+  - { id: 4, name: Iron, density: 0.2729 }   # 密度は登録密度より優先
+detectors:
+  - { id: 0, name: D_side_r130, pos: [130, 0, 230] }
+source_points:
+  - { id: 0, pos: [4.5974, 0.91449, 36.667], weight: 3.2552e-05 }
+paths: |
+  0 0 5 | 2 106.244  1 75.1973  3 18.7963  1 5.63859  0 22.5539 | 2 2 106.244  1 83.5273
+```
+
+**YAML と `.paths` の 2 ファイルを渡す**設計にした（`poker_cui model.yaml
+--path-input model.paths -t`）。`.paths` に入力を埋め込む案は、YAML を編集した後に
+再生成し忘れると古い定義で計算される点と、対応関係を検証できなくなる点で採らなかった。
 
 実規模の実績: 線源点 3,840 × 検出器 15、POKER 3.2 秒 + トレース 20.4 秒、
 距離照合の最大相対誤差 3.66e-6、重み総和 0.999997、書式エラー 0。
@@ -301,3 +384,30 @@ push は毎回確認を取る。
 無影響）、繰り込み規則（影響は限定的と述べたが最大 11 mfp）、分割点の生成規則
 （等面積分割と誤認）、入力パラメータの桁数（丸め量を一桁誤認）。**測る前に断定
 しないこと。**
+
+---
+
+## 11. 次にやること
+
+### POKER 側（ユーザ）
+
+- `Run_PathInput` の中身の実装。枠組み（`.paths` の読み込み、検証、
+  `PathTrace_FromFile`）は `CalculateDose_PathInput.cpp` にあり、ビルドは通る
+- 未確認の項目: `.paths` の `detector` id と評価点の対応（グリッド検出器）、
+  `buildup_first_zone` などの索引、線源が複数ある場合の扱い
+- 分割点ごとの全経路出力（`.paths` の照合に使いたい。優先度は低い）
+
+### poker_mcp 側
+
+- `--path-input` が動いたら、`.paths` 経由と CSG 経由で線量を突き合わせる。
+  監査ツールの `flux_ratio_estimate` はビルドアップを含まない近似なので、
+  その誤差特性を実計算で再評価する（トラニオンの 210 対 317 の切り分け）
+- 監査事例の追加（配管群、ボルト列など周期構造の別パターン）
+
+### 検証用の資産
+
+- `tools/samples/cask_small.paths`（96 レコード）— リーダ開発用
+- `tools/samples/cask_full.paths`（57,600 レコード、4.92 MB）— 実規模
+- `tools/samples/cask_full.yaml` / `cask_verify.yaml` — 生成元の POKER 入力
+- `C:\Users\yoshi\Desktop\cask_detailed.FCStd` / `cask_simple.FCStd` — CAD モデル
+  （他の `.FCStd` は `make_cask_models.py` / `make_cask_features.py` で再生成可能）
