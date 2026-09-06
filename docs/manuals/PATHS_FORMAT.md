@@ -10,34 +10,106 @@ CAD から抽出した幾何経路を POKER に渡すためのファイル形式
 
 POKER 側の想定処理は「立体・ゾーン定義から経路を求める処理」を「このファイルの読み込み」に差し替えることです。線源のループ構造、ビルドアップ計算、換算係数、80 mfp クランプ、出力形式は変更を要しません。
 
+```
+poker_cui model.yaml --path-input model.paths -t
+```
+
+**YAML と `.paths` の 2 ファイルを渡します。** `.paths` に入力を埋め込む方式も
+検討しましたが採用しませんでした。埋め込むと、YAML を編集した後に `.paths` を
+再生成し忘れたときに古い定義で計算されます。また YAML を正本にしておけば、
+検出器数などを突き合わせて対応関係を検証できます（埋め込み方式では常に自分自身と
+一致するのでこの検証が働きません）。
+
 ## ファイル構造
 
-```
-<ヘッダ行> ...
-# src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...
-<レコード行> ...
+**ファイル全体が正しい YAML です。** 標準のパーサでそのまま読めます。
+
+```yaml
+# POKER-PATHS
+information:
+  format: paths
+  format_version: 1.2
+  generator: poker_mcp gen_paths.py 1.6.3
+  generated_at: 2026-09-07T00:51:15+09:00
+  notation: scientific
+  sig_digits: 6
+  source_yaml: cask_full.yaml
+  source_yaml_mtime: 2026-09-05T21:56:30+09:00
+  model: cask_simple.FCStd
+  deviation_mm: 0.5
+  unit: cm
+  source: SpentFuel
+  source_points_from: cask_full.yaml.summary
+  n_source_points: 3840
+  n_detectors: 15
+  n_materials: 4
+materials:
+  - { id: 0, name: VOID }
+  - { id: 1, name: Iron }
+  - { id: 2, name: Source_Dry }
+  - { id: 3, name: Polyethylene }
+detectors:
+  - { id: 0, name: D_side_r130, pos: [130, 0, 230] }
+source_points:
+  - { id: 0, pos: [4.5974, 0.91449, 36.667], weight: 3.2552e-05 }
+# paths: src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...
+paths: |
+  0 0 5 | 2 106.244  1 75.1973  3 18.7963  1 5.63859  0 22.5539 | 2 2 106.244  1 83.5273
 ```
 
 - エンコーディング UTF-8、改行 LF。
-- 先頭行は必ず `# POKER-PATHS <major>.<minor>`。**メジャー番号が未知の場合は読み込みを中止してください。**
-- ヘッダは `キー: 値` 形式。`#` で始まる行はコメントで、`# src det nseg ...` の行がヘッダ部の終端を兼ねます。
-- レコードは 1 行 1 経路。行の順序に意味はありません（索引が明示されているため）。
+- **1 行目は必ず `# POKER-PATHS`。** YAML のコメントなので、パースする前に 1 行
+  読むだけで種別を確認できます。`head` や `file` でも判別できます。
+- `.summary` / `.dose` と同じヘッダ形式です。`format` が種別、`format_version` が
+  その種別の構造の版で、3 種類で独立に進みます。
 
-## ヘッダ
+### 経路本体を YAML シーケンスにしない理由
+
+`paths` はリテラルブロック（`|`）に入れた**文字列**です。中身は 1 行 1 経路の
+独自形式で、読み手は文字列を取り出して行ごとに空白区切りで分割します。
+
+57,600 行を YAML のシーケンスにすると、ファイルが大きく膨れるうえパースが重く
+なります。この構成なら **4.92 MB のファイルを 61 ms でパース**できます（js-yaml 実測）。
+
+ヘッダ部分だけ先に読みたい場合は、`paths:` の行までを切り出してパースすれば
+全文を読まずに済みます。
+
+## ヘッダ（information）
 
 | キー | 必須 | 内容 |
 |---|---|---|
+| `format` | **必須** | `paths` 固定。オプション指定が正しいかの検証に使う |
+| `format_version` | **必須** | 構造の版。メジャーが未知なら中止 |
+| `generator` | 任意 | このファイルを作った道具（記録用） |
+| `generated_at` | 任意 | 生成日時（記録用） |
+| `source_yaml` | 任意 | 生成時に参照した入力 YAML（**記録のみ。照合はしない**） |
+| `source_yaml_mtime` | 任意 | 同上の更新時刻（記録のみ） |
 | `model` | 任意 | 生成元の CAD ファイル名（記録用） |
 | `deviation_mm` | 任意 | テッセレーション偏差 [mm]（記録用） |
 | `unit` | **必須** | 長さの単位。現状 `cm` のみ。異なる場合は中止 |
 | `source` | 任意 | 線源名。YAML の線源名との対応確認に使用 |
-| `source_points_from` | 任意 | 線源点の出所。`<summary名>` / `spec` / `generated(verification only)` |
+| `source_points_from` | 任意 | 線源点の出所 |
 | `n_source_points` | **必須** | 線源点数 |
 | `n_detectors` | **必須** | 検出器数 |
 | `n_materials` | **必須** | 層種別数 |
-| `material` | **必須** ×n | `ID 材質名 [密度]`。ID 0 は `VOID` 固定 |
-| `detector` | **必須** ×n | `索引 名前 x y z` |
-| `source_point` | **必須** ×n | `索引 x y z [重み]` |
+
+`source_yaml` と `source_yaml_mtime` は記録用で、読み込み時の照合には使いません。
+ファイルを移動したりコメントを直しただけで弾かれるのは実用的でないためです。
+実質的な整合性は `n_source_points` / `n_detectors` を YAML の定義と突き合わせて
+確認します。
+
+## トップレベルのノード
+
+件数が可変のものは `information` の中に並べず、トップレベルのシーケンスに
+分けています。同じキーを繰り返すと YAML として重複キーになるためです
+（POKER の `.summary` で実際に問題になりました）。
+
+| ノード | 内容 |
+|---|---|
+| `materials` | `{ id, name, density? }`。ID 0 は `VOID` 固定 |
+| `detectors` | `{ id, name, pos: [x, y, z] }` |
+| `source_points` | `{ id, pos: [x, y, z], weight? }` |
+| `paths` | 経路本体（リテラルブロック） |
 
 ### 材質と密度
 
@@ -45,10 +117,11 @@ POKER 側の想定処理は「立体・ゾーン定義から経路を求める�
 
 **密度欄がある場合は、材料ライブラリの登録密度ではなくその値を使ってください。**
 
-```
-material: 0 VOID
-material: 1 Iron
-material: 4 Iron 0.2729
+```yaml
+materials:
+  - { id: 0, name: VOID }
+  - { id: 1, name: Iron }
+  - { id: 4, name: Iron, density: 0.2729 }
 ```
 
 同じ材質でも密度が異なれば**別 ID** になります。上の例は伝熱フィン領域を鉄と空気の体積比で薄めた等価領域（スミアリング）で、CAD 側の `PokerDensity` プロパティに対応します。POKER の入力では、ゾーンの `density` を上書きするのと同じ意味です。
@@ -59,7 +132,7 @@ material: 4 Iron 0.2729
 
 ### 線源点と重み
 
-第 5 欄の重みは、POKER の**線源強度補正係数** `Wgt_src(l,m,n)` です。`weight` ノードを省略した場合は微小体積の体積分率、`weight` ノードで相対強度を指定した場合はそれに基づく強度分率になります。**体積分率とは限りません。** 全点の総和は 1 です。
+`weight` は POKER の**線源強度補正係数** `Wgt_src(l,m,n)` です。`weight` ノードを省略した場合は微小体積の体積分率、`weight` ノードで相対強度を指定した場合はそれに基づく強度分率になります。**体積分率とは限りません。** 全点の総和は 1 です。
 
 線源点と重みは、**`poker_cui -p` が出力する `input:` セクションの `point_source:` をそのまま転記したもの**です。生成側で分割規則を再実装していません。理由は 2 つあります。
 
@@ -75,8 +148,8 @@ src det nseg | mat thick  mat thick ... | bu_type bu_mat bu_thick ...
 
 | 欄 | 型 | 内容 |
 |---|---|---|
-| `src` | 整数 | 線源点索引（0 起点、`source_point` に対応） |
-| `det` | 整数 | 検出器索引（0 起点、`detector` に対応） |
+| `src` | 整数 | 線源点索引（0 起点、`source_points` の `id` に対応） |
+| `det` | 整数 | 検出器索引（0 起点、`detectors` の `id` に対応） |
 | `nseg` | 整数 | 第2区画の層数。1 以上 |
 | 第2区画 | `mat thick` × nseg | **減衰計算に使う生の層構成**。線源側から検出器側の順。`VOID`(id 0) と `Air` を含む |
 | 第3区画 | `bu_type` と `bu_mat bu_thick` × bu_type | **ビルドアップ計算に使う縮約後の指定** |
@@ -97,6 +170,9 @@ src det nseg | mat thick  mat thick ... | bu_type bu_mat bu_thick ...
 
 | 条件 | 検出できる誤り |
 |---|---|
+| `information.format` が `paths` | オプションの指定違い（別種のファイルを渡した） |
+| `format_version` のメジャーが既知 | 未対応の版 |
+| `n_source_points` / `n_detectors` が YAML の定義と一致 | 古い `.paths` を渡した |
 | 第2区画の厚さ総和 = \|検出器座標 − 線源点座標\| | 単位換算ミス、座標系の取り違え、モデルの不整合 |
 | `src` < `n_source_points`、`det` < `n_detectors` | 索引の破損 |
 | 第2区画の要素数 = `nseg` | 行の破損 |
@@ -108,15 +184,23 @@ src det nseg | mat thick  mat thick ... | bu_type bu_mat bu_thick ...
 
 **距離の照合は特に重要です。** 単位換算ミスや座標系の取り違えを確実に捕まえられます。許容差は有効数字 6 桁に対応して相対 1e-5 程度が妥当です。
 
-**ただし重みの誤りは距離照合では検出できません。** `source_point` の値をそのまま使うことが唯一の防御になります。
+**ただし重みや密度の誤りは距離照合では検出できません。** 層厚は正しいまま線量だけが狂うためです。`source_points` の `weight` と `materials` の `density` をそのまま使うことが唯一の防御になります。
 
 ## 運用の流れ
 
 ```
-1. poker_cui -p -t -s model.yaml     分割点(位置・重み)を出力
-2. gen_paths.py                      .summary を読み、CAD をトレースして .paths を生成
-3. poker_cui --path-input model.paths 計算。読み込み時に距離と重み総和を検算
+1. poker_cui model.yaml -p -t                          分割点(位置・重み)を出力
+2. gen_paths.py                                        .summary を読み、CAD をトレース
+3. poker_cui model.yaml --path-input model.paths -t    計算
 ```
+
+3 では **YAML と `.paths` の両方**を渡します。`.paths` が運ぶのは幾何情報だけで、
+線源の核種・放射能・分割定義、検出器の線量種別、材料のビルドアップ設定は従来どおり
+YAML から取得します。入力の正本は YAML に保たれ、幾何が同じなら線源条件を変えても
+`.paths` を作り直す必要はありません。
+
+なお 1 で全分割点を得るには、入力に `thinnedindices` を置いて `sourcepoint` を
+十分大きくしてください（既定は 10 点で間引かれます）。
 
 照合ツール（`compare_poker_trace.py`、`audit_mfp.py`）は開発時の検証手段であり、実運用で毎回走らせるものではありません。実運用で毎回行うのは上の検算だけです。
 
@@ -130,7 +214,9 @@ src det nseg | mat thick  mat thick ... | bu_type bu_mat bu_thick ...
 
 ## 材質名の長さ
 
-`.paths` の材質名は切り詰めていません。POKER の `path_trace` 出力は材質名を 10 文字に切り詰めますが、それに合わせないでください。`Heavy_concrete_FP` / `_IL` / `_T` は 10 文字ではいずれも `Heavy_conc` となり区別できなくなります。
+`.paths` の材質名は切り詰めていません。`Heavy_concrete_FP` / `_IL` / `_T` は 10 文字ではいずれも `Heavy_conc` となり区別できなくなるためです。
+
+（POKER の `path_trace` 出力も以前は 10 文字で切り詰めていましたが、同じ理由で切り詰めないよう修正されています）
 
 ## 規模
 
