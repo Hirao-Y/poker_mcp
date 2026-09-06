@@ -9,7 +9,7 @@
 ## 1. 到達点
 
 FreeCAD のソリッドモデルを遮蔽体系として直接扱うためのパイプラインを構築した。
-**POKER 側のリーダ実装を除いて完成している。**
+**生成側は完成、受け側は線量計算ルーチンの見直しが残っている**（§11 参照）。
 
 狙いは、STEP のような中間フォーマットを介さず、CSG プリミティブで表現し直す
 作業も不要にすること。線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と
@@ -247,8 +247,16 @@ warnings:             # 常時。何も無ければ warnings: []
 ```
 1. poker_cui model.yaml -p -t                        分割点(位置・重み)を出力
 2. gen_paths.py                                      .summary を読み、CAD をトレース
-3. poker_cui model.yaml --path-input model.paths -t  計算（← 中身は実装途上）
+3. poker_cui model.yaml --path-input model.paths -t  計算（← ここで詰まっている）
 ```
+
+**1 と 2 は完成している。** 3 は `.paths` の読み込みと `Result` への詰め込みまで
+動くが、その先の `Calculate_Dose` が `input.zones` を前提に組まれているため通らない。
+`.paths` にはゾーンの概念が無い（CAD 側に無いので当然）。詳細と対応案は §11。
+
+なお **YAML は FreeCAD が作るものではない。** 線源の核種・放射能・分割定義、
+検出器、ビルドアップ設定は poker_mcp のツールで作る（本セッションでは検証を
+急いで手書きした）。FreeCAD が担うのは幾何だけ。
 
 仕様は `docs/manuals/PATHS_FORMAT.md`（v1.2）。サンプルは
 `tools/samples/cask_small.paths`（96 レコード）と `cask_full.paths`
@@ -391,10 +399,55 @@ push は毎回確認を取る。
 
 ### POKER 側（ユーザ）
 
-- `Run_PathInput` の中身の実装。枠組み（`.paths` の読み込み、検証、
-  `PathTrace_FromFile`）は `CalculateDose_PathInput.cpp` にあり、ビルドは通る
-- 未確認の項目: `.paths` の `detector` id と評価点の対応（グリッド検出器）、
-  `buildup_first_zone` などの索引、線源が複数ある場合の扱い
+#### `Run_PathInput` — 線量計算ルーチンの見直しが必要
+
+`.paths` の読み込みから `Result` への詰め込みまでは実装済みでビルドも通るが、
+**その先の `Calculate_Dose` が動かない。** 調査で分かった理由は次のとおり。
+
+`Calculate_Dose` は `input.zones`（YAML のゾーン定義）を前提に組まれている。
+
+```cpp
+// 減衰係数の引き当て: ゾーンの材質と密度から作り、以降はゾーンの索引で参照
+vector<AttenuationCoefficient::Material> materials;
+for (const auto& zone : input.zones)
+    materials.push_back({ zone.material_name, zone.density });
+intermediate.attenuation_coefficients = library.calculate_attenuation_coefficients(...);
+
+// ビルドアップ層の特定: 経路の区間名と input.zones[].body_name を文字列照合
+if (String::Equals(input.zones[z].body_name, path_rep.zones[...].name)) z1 = z;
+```
+
+一方 `.paths` が持つのは**材質名と厚さ**だけで、ゾーンという概念がない
+（CAD 側にゾーンは無いので当然）。`PathTrace::Zone::name` には材質名を入れて
+あるが、`input.zones[].body_name` とは一致しないので照合が通らない。
+
+**YAML に body/zone を書けば済む話ではない。** `--path-input` のときは幾何が
+`.paths` から来るので、YAML の立体定義は本来不要のはず。しかし `Calculate_Dose`
+がゾーン索引で動いている以上、次のどちらかが要る。
+
+1. `Run_PathInput` の中で `.paths` の `materials` から仮想的な `input.zones` を
+   組み立てる（POKER 本体の改造は不要だが、対応付けの正しさを保証する責任が残る）
+2. `Calculate_Dose` を「ゾーン索引」ではなく「材質名」で引くように見直す
+   （本質的だが影響範囲が大きい）
+
+いずれにせよ**線量計算ルーチンの見直しが必要**で、時間がかかる。2026-09 時点で
+保留とした。
+
+#### その他の未確認項目
+
+- `.paths` の `detector` id と評価点の対応。現状は「検出器を平坦化した評価点の
+  通し番号」として扱っているが、`gen_paths.py` は検出器 1 個 = 評価点 1 個の
+  前提で id を振っている。グリッド検出器があると食い違う（`VerifyAgainstInput`
+  で弾かれるので事故にはならない）
+- **線源が複数ある場合は静かに間違う。** `.paths` は線源の区切りを持たないため、
+  全点が 1 番目の線源として扱われる。線源点の座標・重みは `poker_cui -p` の
+  出力から取っているので**区切りの情報は POKER 側にある**（`.summary` の
+  `input:` に線源ごとの `point_source:` ブロックがある）。`gen_paths.py` が
+  1 線源分だけ読んで捨てているだけなので、`.paths` に
+  `sources: [{ name, n_points }]` を足せば対応できる。
+  当面は**複数線源を検出したらエラーにする**チェックを入れるべき
+- `is_too_thick` / `slant_angle` を設定していないので、80mfp 超過とスラント
+  補正の判定が働かない
 - 分割点ごとの全経路出力（`.paths` の照合に使いたい。優先度は低い）
 
 ### poker_mcp 側
