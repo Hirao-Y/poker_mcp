@@ -653,10 +653,39 @@ export class SafeDataManager {
         await this.applyUpdateUnit(data);
         break;
 
+      case 'proposeThinnedIndices':
+        await this.applyProposeThinnedIndices(data);
+        break;
+
+      case 'updateThinnedIndices':
+        await this.applyUpdateThinnedIndices(data);
+        break;
+
       default:
         logger.warn('未知の変更アクション', { action });
         break;
     }
+  }
+
+  //|
+  //| thinnedindices — サマリーに書き出す件数の制御
+  //|   省略したキーは POKER の既定値が使われる。既定値は持たない
+  //|   （.summary に全 7 キーが出力されるので、そちらを正とする）。
+  //|
+  async applyProposeThinnedIndices(data) {
+    if (this.data.thinnedindices) {
+      throw new DataError('thinnedindices セクションは既に存在します',
+        'THINNEDINDICES_ALREADY_EXISTS');
+    }
+    this.data.thinnedindices = { ...data };
+    logger.info('thinnedindices を作成しました', { data });
+  }
+
+  async applyUpdateThinnedIndices(data) {
+    // 無ければ作る（update で新規作成も許す。削除ツールが無いので、
+    // 既定値に戻したい場合もこのメソッドを通る）
+    this.data.thinnedindices = { ...(this.data.thinnedindices || {}), ...data };
+    logger.info('thinnedindices を更新しました', { data: this.data.thinnedindices });
   }
 
   // Unit専用処理メソッド

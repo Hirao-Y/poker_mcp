@@ -293,6 +293,126 @@ export class TaskManager {
     }
   }
 
+  //|
+  //| thinnedindices — サマリーに書き出す件数の制御
+  //|
+  //| 省略時は POKER の既定値が使われる（sourcepoint 10 / pseudosourcepoint 10 /
+  //| detectorgrid 10 / detectorevaluation 5 / pathtrace 5 /
+  //| buildupenergy 3 / buildupmfp 3）。
+  //| 既定値は poker_mcp 側では持たない。省略しても .summary には全 7 キーが
+  //| 値付きで出力されるため、実際の適用値はそちらで確認できる。ここで複製すると
+  //| POKER 側の変更に追随できず静かに食い違う。
+  //|
+  //| 削除は用意しない。削除しても既定値に戻るだけで、update で既定値を指定すれば
+  //| 同じ結果になる。
+  //|
+  async proposeThinnedIndices(indices) {
+    try {
+      // 新規作成専用チェック（unit と同じ方式）
+      this.validateProposalPrerequisites('thinnedindices', 'thinnedindices',
+        () => this.data.thinnedindices ? 'thinnedindices' : null);
+
+      const clean = TaskManager._cleanThinnedIndices(indices);
+      await this.dataManager.addPendingChange({
+        action: 'proposeThinnedIndices',
+        data: clean
+      });
+      logger.info('thinnedindices を提案しました', { indices: clean });
+      return {
+        success: true,
+        thinnedindices: clean,
+        note: '指定しなかったキーは POKER の既定値が使われます'
+      };
+    } catch (error) {
+      logger.error('thinnedindices 提案エラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  async getThinnedIndices() {
+    const current = this.data.thinnedindices || null;
+    const ALL = ['sourcepoint', 'pseudosourcepoint', 'detectorgrid',
+                 'detectorevaluation', 'pathtrace', 'buildupenergy', 'buildupmfp'];
+    const omitted = ALL.filter(k => !current || current[k] === undefined);
+    return {
+      thinnedindices: current,
+      specified: current ? Object.keys(current) : [],
+      omitted,
+      note: omitted.length
+        ? '省略されたキーは POKER の既定値が使われます。実際の適用値は計算後の .summary の「サマリに出力される情報量」セクションで確認できます'
+        : '全キーが明示されています'
+    };
+  }
+
+  async updateThinnedIndices(updates) {
+    try {
+      const merged = {};
+
+      // fit_for_paths: 入力の分割定義と検出器から必要数を計算する。
+      //   .paths の生成には全ての線源分割点と評価点が要るため。
+      //   固定の大きな値ではなく実数に合わせることで、なぜその値かが明確になる。
+      if (updates && updates.fit_for_paths) {
+        const fit = this._countPointsForPaths();
+        merged.sourcepoint = fit.sourcepoint;
+        merged.detectorgrid = fit.detectorgrid;
+        merged.detectorevaluation = fit.detectorevaluation;
+      }
+
+      // 個別指定は fit_for_paths より優先する
+      Object.assign(merged, TaskManager._cleanThinnedIndices(updates));
+
+      if (Object.keys(merged).length === 0) {
+        throw new ValidationError('更新する項目がありません', 'thinnedindices', null);
+      }
+      await this.dataManager.addPendingChange({
+        action: 'updateThinnedIndices',
+        data: merged
+      });
+      logger.info('thinnedindices を更新しました', { indices: merged });
+      return { success: true, thinnedindices: merged };
+    } catch (error) {
+      logger.error('thinnedindices 更新エラー', { error: error.message });
+      throw error;
+    }
+  }
+
+  // 入力から「全点を出すのに必要な件数」を数える
+  _countPointsForPaths() {
+    const data = this.data || {};
+    let srcMax = 1;
+    for (const s of (data.source || [])) {
+      const d = s.division || {};
+      let n = 1;
+      for (const ax of ['r', 'phi', 'z', 'x', 'y', 'edge_1', 'edge_2', 'edge_3']) {
+        if (d[ax] && d[ax].number) n *= d[ax].number;
+      }
+      srcMax = Math.max(srcMax, n);
+    }
+    let detMax = 1;
+    for (const det of (data.detector || [])) {
+      let n = 1;
+      for (const g of (det.grid || [])) n *= (g.number || 1);
+      detMax = Math.max(detMax, n);
+    }
+    return { sourcepoint: srcMax, detectorgrid: detMax, detectorevaluation: detMax };
+  }
+
+  static _cleanThinnedIndices(obj) {
+    const ALL = ['sourcepoint', 'pseudosourcepoint', 'detectorgrid',
+                 'detectorevaluation', 'pathtrace', 'buildupenergy', 'buildupmfp'];
+    const out = {};
+    for (const k of ALL) {
+      if (obj && obj[k] !== undefined && obj[k] !== null) {
+        const v = Number(obj[k]);
+        if (!Number.isInteger(v) || v < 1) {
+          throw new ValidationError(`${k} は 1 以上の整数で指定してください`, k, obj[k]);
+        }
+        out[k] = v;
+      }
+    }
+    return out;
+  }
+
   /**
    * Transformの完全性チェック
    * システム全体でTransform参照の整合性を確認
