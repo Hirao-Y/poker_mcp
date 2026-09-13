@@ -69,7 +69,7 @@ def main(spec_path):
 
     A = np.array([t["src"] for t in traces]) / scale     # POKER cm -> CAD mm
     B = np.array([t["det"] for t in traces]) / scale
-    segs, L, ov = tr.trace(A, B)
+    segs, L, ov, _ang = tr.trace(A, B)
 
     rows, nbad, worst = [], 0, 0.0
     diffs = []

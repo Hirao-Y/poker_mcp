@@ -27,7 +27,7 @@ import ray_trace_tri as rt
 import poker_lib
 
 # .paths の構造の版。ファイル種別ごとに独立して進める。
-PATHS_FORMAT_VERSION = "1.2"
+PATHS_FORMAT_VERSION = "1.3"
 GENERATOR_VERSION = "1.6.3"
 
 
@@ -114,30 +114,105 @@ def read_point_source(summary_path, source_name=None):
     #   - { position:  1.3258e+01  1.3258e+01  9.6667e+01, weight: 2.0833e-02}
     # 分割規則(UNIFORM/GAUSS_LAST 等)や weight ノードの指定を再実装せず、
     # POKER が生成した点をそのまま使うため、両者がずれる余地が無い。
+    #
+    # 戻り値: (pos, wt, groups)
+    #   groups = [(線源名, 点数), ...]  線源ごとの区切り。
+    #   source_name を指定した場合はその線源だけを読む（groups は 1 要素）。
+    #
+    # 区切りが要るのは POKER が線源ごとに Result を作るため。.paths が
+    # 区切りを持たないと、全点が 1 番目の線源として扱われ静かに間違う。
     import re
-    pos, wt, cur, inblock = [], [], None, False
+    pos, wt, groups = [], [], []
+    cur, inblock, n_cur = None, False, 0
     pat = re.compile(
         r"position:\s*(\S+)\s+(\S+)\s+(\S+)\s*,\s*weight:\s*(\S+?)\s*\}")
+
+    def flush():
+        if n_cur:
+            groups.append((cur or "SOURCE", n_cur))
+
     for raw in open(summary_path, encoding="utf-8", errors="replace"):
         s = raw.strip()
         m = re.match(r"-\s*name:\s*(\S+)", s)
         if m:
+            if inblock:
+                flush()
+                n_cur = 0
+            inblock = False
             cur = m.group(1)
         if s.startswith("point_source:"):
             inblock = (source_name is None or cur == source_name)
+            n_cur = 0
             continue
         if inblock:
             m = pat.search(s)
             if m:
                 pos.append([float(m.group(1)), float(m.group(2)), float(m.group(3))])
                 wt.append(float(m.group(4)))
+                n_cur += 1
             elif s and not s.startswith("-"):
+                flush()
+                n_cur = 0
                 inblock = False
+    if inblock:
+        flush()
+
     if not pos:
         raise SystemExit(
             "point_source が見つかりません: %s\n"
             "poker_cui は -p を付けて実行してください" % summary_path)
-    return np.asarray(pos, dtype=np.float64), np.asarray(wt, dtype=np.float64)
+    return (np.asarray(pos, dtype=np.float64),
+            np.asarray(wt, dtype=np.float64), groups)
+
+
+def read_evaluation_points(summary_path):
+    # poker_cui -p が出力する input セクションの detector: を読む。
+    #   - name: D_lid_map
+    #     show_path_trace: false
+    #     evaluation_point:
+    #       -  1.3000e+02  0.0000e+00  2.3000e+02  # No. 1
+    #
+    # 戻り値: [(検出器名, [[x,y,z], ...]), ...]
+    #
+    # グリッド検出器（面・体積）は評価点が複数ある。.paths は検出器ではなく
+    # 評価点の列挙なので、ここで展開したものを detectors として書き出す。
+    # 座標を自前で計算せず POKER の出力を使うのは、線源点と同じ理由
+    # （分割規則の解釈違いで静かにずれるのを避ける）。
+    #
+    # thinnedindices の detectorgrid が既定値(10)のままだと評価点が間引かれる。
+    # 全点を得るには十分大きな値を入力に書くこと。
+    import re
+    out, cur, pts, inblock = [], None, [], False
+    pat = re.compile(r"^-\s+(\S+)\s+(\S+)\s+(\S+)\s*(?:#.*)?$")
+    for raw in open(summary_path, encoding="utf-8", errors="replace"):
+        s = raw.strip()
+        m = re.match(r"-\s*name:\s*(\S+)", s)
+        if m:
+            if cur is not None and pts:
+                out.append((cur, pts))
+            cur, pts, inblock = m.group(1), [], False
+            continue
+        if s.startswith("evaluation_point:"):
+            inblock = True
+            if "一部" in s or "omit" in s.lower():
+                raise SystemExit(
+                    "評価点が間引かれています: %s\n"
+                    "入力の thinnedindices.detectorgrid を評価点数以上にして "
+                    "poker_cui を -p 付きで再実行してください" % summary_path)
+            continue
+        if inblock:
+            m = pat.match(s)
+            if m:
+                pts.append([float(m.group(1)), float(m.group(2)), float(m.group(3))])
+            elif s:
+                inblock = False
+    if cur is not None and pts:
+        out.append((cur, pts))
+    if not out:
+        raise SystemExit(
+            "detector の evaluation_point が見つかりません: %s\n"
+            "poker_cui は -p を付けて実行してください" % summary_path)
+    return out
 
 
 def main(spec_path):
@@ -188,9 +263,11 @@ def main(spec_path):
         raise SystemExit("no buildup data for: %s  (set spec.equivalent)" % nostd)
 
     WT = None
+    SRC_GROUPS = None                        # [(線源名, 点数), ...]
     if "poker_summary" in spec:
         # 推奨: POKER が生成した分割点をそのまま使う（位置と体積重み）
-        P, WT = read_point_source(spec["poker_summary"], spec.get("source_name"))
+        P, WT, SRC_GROUPS = read_point_source(
+            spec["poker_summary"], spec.get("source_name"))
         SRC = P / scale                      # POKER 単位 -> CAD 単位
     elif "source_points" in spec:
         SRC = np.asarray(spec["source_points"], dtype=np.float64)
@@ -210,13 +287,29 @@ def main(spec_path):
                         g["y"] + R * np.sin(P_), Z], -1).reshape(-1, 3)
         print("WARNING: source_rcc は検証専用です。実運用では poker_summary を"
               " 指定して POKER の分割点を使ってください", file=sys.stderr)
-    dets = spec["detectors"]
+    # 検出器（評価点）の取得。
+    #   detectors_from_summary: true なら poker_cui -p の出力から読む。
+    #   グリッド検出器（面・体積）は評価点が複数あるので、.paths では
+    #   「検出器名#評価点番号」の形で 1 点ずつ列挙する。POKER 側は
+    #   input.detectors を平坦化した通し番号として解釈する。
+    if spec.get("detectors_from_summary") and "poker_summary" in spec:
+        eps = read_evaluation_points(spec["poker_summary"])
+        dets = []
+        for name, pts in eps:
+            multi = len(pts) > 1
+            for i, p in enumerate(pts):
+                dets.append({
+                    "name": ("%s#%d" % (name, i + 1)) if multi else name,
+                    "pos": [c / scale for c in p],   # POKER 単位 -> CAD 単位
+                })
+    else:
+        dets = spec["detectors"]
     DET = np.asarray([d["pos"] for d in dets], dtype=np.float64)
     A = np.repeat(SRC, len(DET), 0)
     B = np.tile(DET, (len(SRC), 1))
 
     t0 = time.time()
-    segs, L, ov = tr.trace(A, B, chunk=int(spec.get("chunk", 32768)))
+    segs, L, ov, ANG = tr.trace(A, B, chunk=int(spec.get("chunk", 32768)))
     t_trace = time.time() - t0
 
     # material id table (VOID always 0)
@@ -238,11 +331,15 @@ def main(spec_path):
     for k in range(len(A)):
         si, di = divmod(k, len(DET))
         raw = []
+        ang = []          # 区間ごとの入射角（度）。スラント補正に使う。
         groups = []
-        for lo, hi, oi in segs[k]:
+        for idx, (lo, hi, oi) in enumerate(segs[k]):
             key = "VOID" if oi < 0 else obj_key(oi)
             th = (hi - lo) * scale
             raw.append("%d %.6g" % (mid[key], th))
+            # 入射角は「入射点における接面に対する角度」。テッセレーションでは
+            # 三角形の法線がその接面の法線に相当する。0 度 = 垂直入射。
+            ang.append("%.4g" % (ANG[k][idx] if idx < len(ANG[k]) else 0.0))
             nseg_tot += 1
             if key == "VOID" or key[0] in excl:
                 continue
@@ -261,9 +358,10 @@ def main(spec_path):
         label = lambda k: k[0] if k[1] is None else "%s@%.4g" % (k[0], k[1])
         key = "-".join(label(m) for m, _ in bl) or "(none)"
         stat["bu"][key] = stat["bu"].get(key, 0) + 1
-        lines.append("%d %d %d | %s | %d %s" % (
+        lines.append("%d %d %d | %s | %d %s | %s" % (
             si, di, len(segs[k]), "  ".join(raw), bt,
-            "  ".join("%d %.6g" % (mid[m], t) for m, t in bl)))
+            "  ".join("%d %.6g" % (mid[m], t) for m, t in bl),
+            " ".join(ang)))
 
     # ヘッダは POKER の .summary / .dose と同じ形に揃える。
     # 1 行目のマジックコメントで、パースする前に種別が判別できる。
@@ -298,7 +396,18 @@ def main(spec_path):
                 else ("spec" if "source_points" in spec else "generated(verification only)")),
             "  n_source_points: %d" % len(SRC),
             "  n_detectors: %d" % len(DET),
-            "  n_materials: %d" % len(keys)]
+            "  n_materials: %d" % len(keys),
+            "  n_sources: %d" % (len(SRC_GROUPS) if SRC_GROUPS else 1)]
+    # 線源ごとの区切り。POKER は線源ごとに Result を作り、線源ごとの核種・
+    # 放射能を適用してから合算するので、どの点がどの線源の分割点かが要る。
+    # source_point の id は通し番号のまま、n_points で区切りを表す。
+    hdr.append("sources:")
+    if SRC_GROUPS:
+        for i, (nm, n) in enumerate(SRC_GROUPS):
+            hdr.append("  - { id: %d, name: %s, n_points: %d }" % (i, nm, n))
+    else:
+        hdr.append("  - { id: 0, name: %s, n_points: %d }"
+                   % (spec.get("source_name", "SOURCE"), len(SRC)))
     # 材質・検出器・線源点は件数が可変なのでシーケンスにする。
     # information: の中に同じキーを並べると YAML として重複キーになるため、
     # トップレベルの別ノードに分ける（POKER の summary で実際に問題になった）。
@@ -325,7 +434,7 @@ def main(spec_path):
         w = "" if WT is None else ", weight: %.6g" % WT[i]
         hdr.append("  - { id: %d, pos: [%.6g, %.6g, %.6g]%s }"
                    % (i, p[0], p[1], p[2], w))
-    hdr.append("# paths: src det nseg | (mat thick)... | [ref] bu_type (bu_mat bu_thick)...")
+    hdr.append("# paths: src det nseg | (mat thick)... | [ref] bu_type (bu_mat bu_thick)... | (incidence_deg)...")
     hdr.append("paths: |")
 
     out = spec["out"]

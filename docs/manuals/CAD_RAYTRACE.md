@@ -40,6 +40,73 @@ FreeCAD 1.1 に同梱の Python（3.11）と numpy を使います。**GUI の M
 - 単位は FreeCAD mm、POKER cm。`unit_scale`（既定 0.1）で換算します。
 - ブーリアン演算の元形状は非表示のままドキュメントに残るため、既定では**可視オブジェクトのみ**を対象にします。二重計上を避けるためです。
 
+## 他の CAD で作ったモデルを使う
+
+FreeCAD 以外の CAD（SolidWorks、Inventor、Fusion 360、Rhino など）で設計した
+モデルも、STEP を経由すれば同じパイプラインに乗せられます。ソリッドの読み込みと
+テッセレーションは形式に依存しません。
+
+### 材質は STEP では運べない
+
+**FreeCAD の STEP 書き出しは AP214 で、材質エンティティを含みません。**
+`PokerMaterial` / `PokerDensity` のカスタムプロパティは往復で失われます。
+
+実測（FreeCAD 1.1、2026-09）:
+
+```
+FILE_SCHEMA(('AUTOMOTIVE_DESIGN { 1 0 10303 214 1 1 1 1 }'));
+...
+#7 = PRODUCT('Shield_Iron','Shield_Iron','',(#8));
+```
+
+エクスポート設定にも材質や PMI の項目はありません（`ExportHiddenObject`、
+`ExportLegacy`、`ExportKeepPlacement` など幾何とアセンブリに関するものだけ）。
+読み直すと `Label` にソリッド名が入って戻り、カスタムプロパティは消えます。
+
+**残るのはソリッド名だけ**です。
+
+なお ISO 10303 の規格としては、AP242 が `MATERIAL_DESIGNATION` や
+`PROPERTY_DEFINITION`、PMI（寸法公差・表面性状）を規定しています。**規格上は
+材質を持てます。** FreeCAD が AP242 での書き出しに対応すれば、この制約は
+解消される可能性があります。
+
+### 対応案（未実装）
+
+ソリッド名から材質を引く方式。必要が生じたら実装します。
+
+```json
+{
+  "material_map": {
+    "Shield_Iron": "Iron",
+    "Cavity": "Source_Dry",
+    "Neutron_Poly": { "material": "Polyethylene", "density": 0.92 }
+  },
+  "material_map_patterns": [
+    ["^Shield_Iron", "Iron"],
+    ["^Cavity", "Source_Dry"]
+  ]
+}
+```
+
+`ray_trace_tri.py` の `collect()` で次の順に解決します。
+
+1. `PokerMaterial` プロパティ（FreeCAD ネイティブのモデル）
+2. `material_map[オブジェクト名]` または `material_map[ラベル]`
+3. `material_map_patterns` の正規表現に一致するもの
+4. どれにも当たらなければエラー（既定値で埋めると静かに間違う）
+
+正規表現を併用するのは、設計データのソリッド名が `Shield_Iron_001`、
+`Shield_Iron_002` のように連番を持つことが多いためです。
+
+### 材質名の体系は結局そろえる必要がある
+
+仮に STEP が材質を運べるようになっても、**CAD 側の材質名と POKER の材料名は
+体系が違います**。CAD が「SUS304」と書いても POKER のライブラリは `SUS_A` です。
+どこかで対応づけが要るので、対応表そのものは残ります。
+
+STEP が材質を運べれば、対応表が「ソリッド名 → 材料名」から「CAD 材質名 →
+材料名」に変わり、モデルの構成が変わっても表を直さずに済む、という違いです。
+
 ## 用語: テッセレーション
 
 **テッセレーション**（tessellation）は、曲面を三角形などの平面要素の集まりで

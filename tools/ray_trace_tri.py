@@ -130,9 +130,25 @@ def _mt(T, ti, ri, org, dr, tmax):
     return good, t
 
 
+def _incidence_deg(T, ti, u):
+    # 三角形 ti の法線と経路方向 u のなす角（度）。
+    #   POKER のスラント補正は「入射点における接面に対する角度」を使う。
+    #   テッセレーションでは三角形の法線がその接面の法線に相当する。
+    #   戻り値は 0〜90 度。0 = 面に垂直に入射、90 に近いほど斜め。
+    #   法線の向き（表裏）は問わないので絶対値を取る。
+    v0, v1, v2 = T[ti][0], T[ti][1], T[ti][2]
+    n = np.cross(v1 - v0, v2 - v0)
+    ln = np.linalg.norm(n)
+    if ln < 1e-12:
+        return 0.0
+    c = abs(float(np.dot(n / ln, u)))
+    return float(np.degrees(np.arccos(min(1.0, c))))
+
+
 def intersect(T, O, bvh, org, dr, tmax, chunk=8192):
-    # returns ray_idx, t, obj_idx  (unsorted)
-    R, TT, OO = [], [], []
+    # returns ray_idx, t, obj_idx, tri_idx  (unsorted)
+    # tri_idx は入射角の算出に使う（三角形の法線がその点の接面の法線）
+    R, TT, OO, II = [], [], [], []
     for s in range(0, len(org), chunk):
         e = min(s + chunk, len(org))
         ri = np.arange(s, e)
@@ -164,24 +180,32 @@ def intersect(T, O, bvh, org, dr, tmax, chunk=8192):
         R.append(rep_r[good])
         TT.append(t[good])
         OO.append(O[ti[good]])
+        II.append(ti[good])
     if not R:
-        return (np.array([], dtype=np.int64), np.array([]), np.array([], dtype=np.int32))
-    return np.concatenate(R), np.concatenate(TT), np.concatenate(OO)
+        return (np.array([], dtype=np.int64), np.array([]),
+                np.array([], dtype=np.int32), np.array([], dtype=np.int64))
+    return (np.concatenate(R), np.concatenate(TT),
+            np.concatenate(OO), np.concatenate(II))
 
 
-def segments(nray, hit_r, hit_t, hit_o, tmax, nobj, priority):
+def segments(nray, hit_r, hit_t, hit_o, tmax, nobj, priority, hit_i=None):
     # priority: array, smaller = wins when overlapped
+    # hit_i: 三角形索引（省略可）。与えると各区間の入口の三角形を記録する。
     srt = np.lexsort((hit_t, hit_r))
     hr, ht, ho = hit_r[srt], hit_t[srt], hit_o[srt]
+    hi_tri = hit_i[srt] if hit_i is not None else None
     bnd = np.searchsorted(hr, np.arange(nray + 1))
     out = []
+    tri_out = []          # 各区間の入口の三角形索引（-1 = 不明）
     overlaps = 0
     for r in range(nray):
         a, b = bnd[r], bnd[r + 1]
         ts, os_ = ht[a:b], ho[a:b]
+        tri = hi_tri[a:b] if hi_tri is not None else None
         inside = np.zeros(nobj, dtype=bool)
         segs = []
         prev = 0.0
+        prev_tri = -1
         i = 0
         m = len(ts)
         while i < m:
@@ -191,23 +215,27 @@ def segments(nray, hit_r, hit_t, hit_o, tmax, nobj, priority):
                 j += 1
             if t - prev > 1e-6:
                 act = np.nonzero(inside)[0]
-                segs.append((prev, t, act))
+                segs.append((prev, t, act, prev_tri))
             for oidx in set(int(x) for x in os_[i:j]):
                 inside[oidx] = not inside[oidx]
             prev = t
+            # この境界で入った面の三角形。次の区間の入口になる。
+            prev_tri = int(tri[i]) if tri is not None else -1
             i = j
         if tmax[r] - prev > 1e-6:
-            segs.append((prev, tmax[r], np.nonzero(inside)[0]))
-        cl = []
-        for lo, hi, act in segs:
+            segs.append((prev, tmax[r], np.nonzero(inside)[0], prev_tri))
+        cl, ct = [], []
+        for lo, hi, act, tix in segs:
             if len(act) == 0:
                 cl.append((lo, hi, -1))
             else:
                 if len(act) > 1:
                     overlaps += 1
                 cl.append((lo, hi, int(act[np.argmin(priority[act])])))
+            ct.append(tix)
         out.append(cl)
-    return out, overlaps
+        tri_out.append(ct)
+    return out, overlaps, tri_out
 
 
 class Tracer(object):
@@ -234,20 +262,27 @@ class Tracer(object):
         ext = self.ext
         O0 = P1 - u * ext
         Lx = L + ext
-        hr, ht, ho = intersect(self.T, self.O, self.bvh, O0, u, Lx, chunk)
-        segs, ov = segments(len(P1), hr, ht, ho, Lx, len(self.names), self.priority)
-        out = []
+        hr, ht, ho, hi = intersect(self.T, self.O, self.bvh, O0, u, Lx, chunk)
+        segs, ov, tri = segments(len(P1), hr, ht, ho, Lx, len(self.names),
+                                 self.priority, hi)
+        out, ang = [], []
         for r in range(len(P1)):
-            cl = []
-            for lo, hi, oi in segs[r]:
-                lo, hi = lo - ext, hi - ext
-                if hi <= 1e-6:
+            cl, ca = [], []
+            for k, (lo, hi_, oi) in enumerate(segs[r]):
+                lo, hi_ = lo - ext, hi_ - ext
+                if hi_ <= 1e-6:
                     continue
                 lo = max(lo, 0.0)
-                if hi - lo > 1e-6:
-                    cl.append((lo, hi, oi))
+                if hi_ - lo > 1e-6:
+                    cl.append((lo, hi_, oi))
+                    # 入射角: 区間の入口の三角形の法線と経路のなす角。
+                    #   曲面ではその点の接面の法線に相当する。
+                    #   0 度 = 面に垂直に入射、90 度に近いほど斜め。
+                    ti = tri[r][k] if k < len(tri[r]) else -1
+                    ca.append(_incidence_deg(self.T, ti, u[r]) if ti >= 0 else 0.0)
             out.append(cl)
-        return out, L, ov
+            ang.append(ca)
+        return out, L, ov, ang
 
     def material(self, oi):
         return 'VOID' if oi < 0 else self.mats[oi]

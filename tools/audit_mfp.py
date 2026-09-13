@@ -95,7 +95,7 @@ def main(spec_path):
     for tag, key in (("detailed", "fcstd"), ("simple", "fcstd_simple")):
         doc = App.openDocument(spec[key])
         tr = rt.Tracer(doc, deviation=dev)
-        segs, L, ov = tr.trace(A, B, chunk=int(spec.get("chunk", 32768)))
+        segs, L, ov, _ang = tr.trace(A, B, chunk=int(spec.get("chunk", 32768)))
         res[tag] = _mfp(tr, segs, _mu_per_object(tr, lib, energy), scale)
         App.closeDocument(doc.Name)
     dt = time.time() - t0
