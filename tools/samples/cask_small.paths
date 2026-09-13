@@ -3,7 +3,7 @@ information:
   format: paths
   format_version: 1.2
   generator: poker_mcp gen_paths.py 1.6.3
-  generated_at: 2026-09-06T21:50:53+09:00
+  generated_at: 2026-09-14T03:44:20+09:00
   notation: scientific
   sig_digits: 6
   source_yaml: cask_div_full.yaml
@@ -51,7 +51,7 @@ source_points:
   - { id: 21, pos: [39.775, -39.775, 96.667], weight: 0.0625 }
   - { id: 22, pos: [39.775, -39.775, 230], weight: 0.0625 }
   - { id: 23, pos: [39.775, -39.775, 363.33], weight: 0.0625 }
-# paths: src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...
+# paths: src det nseg | (mat thick)... | [ref] bu_type (bu_mat bu_thick)...
 paths: |
   0 0 5 | 2 72.0379  1 47.6052  3 11.8518  1 3.55454  0 118.066 | 2 2 72.0379  1 52.8568
   0 1 3 | 2 333.6  1 35.028  0 100.08 | 2 2 333.6  1 35.028

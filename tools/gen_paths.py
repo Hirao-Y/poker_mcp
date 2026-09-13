@@ -47,11 +47,25 @@ def _mtime(path):
 
 def reduce_layers(groups, mu, equiv, lib):
     # groups: [(material, thickness_cm)] source->detector, buildup candidates only
-    # Selection is constrained by the buildup data actually present in
-    # lib_setting.dat.  Layer materials are emitted with their REAL names;
-    # `equivalent` is only used to test library availability, because POKER
-    # resolves the substitution itself via the YAML buildup node.
     # returns (n_layers, [(material, thickness)], rolled_in_mfp, mode)
+    #
+    # この結果は .paths の第3区画に書かれるが、**POKER は読まない参考情報**。
+    # POKER は第2区画（材質と厚さの並び）から get_buildup_material で独自に
+    # 層を決める。ビルドアップ材料の選定は物理的な判断であり、生成側が決めて
+    # POKER の判断を上書きすべきではないため。
+    #
+    # 残している理由:
+    #   - 将来、多層ビルドアップの選定基準を実装できれば、生成側で決めた層構成を
+    #     POKER が採用する運用もあり得る。その検討材料になる
+    #   - 生成側と POKER 側の判断が食い違えば、縮約規則を見直す材料になる
+    #
+    # 単層の選定基準には一般に確立したものがなく、実務では「mfp 最大の材質」と
+    # 「最も線量が高くなる材質」がよく使われる。ここでは前者を採る。後者は材質
+    # ごとにビルドアップ係数を引いて線量を比較する必要があり、生成側では扱えない。
+    #
+    # 層の組み合わせは lib_setting.dat のビルドアップデータの有無で制約される。
+    # 層材料は実材質名で出力する。equivalent はライブラリの可用性判定にのみ使い、
+    # 実際の読み替えは POKER が YAML のビルドアップノードから行う。
     if not groups:
         return 0, [], 0.0, "none"
     order, tot = [], {}
@@ -311,7 +325,7 @@ def main(spec_path):
         w = "" if WT is None else ", weight: %.6g" % WT[i]
         hdr.append("  - { id: %d, pos: [%.6g, %.6g, %.6g]%s }"
                    % (i, p[0], p[1], p[2], w))
-    hdr.append("# paths: src det nseg | (mat thick)... | bu_type (bu_mat bu_thick)...")
+    hdr.append("# paths: src det nseg | (mat thick)... | [ref] bu_type (bu_mat bu_thick)...")
     hdr.append("paths: |")
 
     out = spec["out"]

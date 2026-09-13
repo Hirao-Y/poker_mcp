@@ -2,7 +2,7 @@
   "rays": 96,
   "segments": 420,
   "overlaps": 0,
-  "load_s": 0.36,
+  "load_s": 2.02,
   "trace_s": 0.02,
   "out_MB": 0.01,
   "buildup_type_counts": {
