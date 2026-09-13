@@ -9,7 +9,7 @@
 ## 1. 到達点
 
 FreeCAD のソリッドモデルを遮蔽体系として直接扱うためのパイプラインを構築した。
-**生成側は完成、受け側は線量計算ルーチンの見直しが残っている**（§11 参照）。
+**両側とも動作する。** CSG 経由と `.paths` 経由で線量が 0.23% 以内で一致することを確認済み（スラント補正・複数線源・グリッド検出器は未対応。§11 参照）。
 
 狙いは、STEP のような中間フォーマットを介さず、CSG プリミティブで表現し直す
 作業も不要にすること。線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と
@@ -247,12 +247,13 @@ warnings:             # 常時。何も無ければ warnings: []
 ```
 1. poker_cui model.yaml -p -t                        分割点(位置・重み)を出力
 2. gen_paths.py                                      .summary を読み、CAD をトレース
-3. poker_cui model.yaml --path-input model.paths -t  計算（← ここで詰まっている）
+3. poker_cui model.yaml --path-input model.paths -t  計算
 ```
 
-**1 と 2 は完成している。** 3 は `.paths` の読み込みと `Result` への詰め込みまで
-動くが、その先の `Calculate_Dose` が `input.zones` を前提に組まれているため通らない。
-`.paths` にはゾーンの概念が無い（CAD 側に無いので当然）。詳細と対応案は §11。
+**3 まで通る。** 実測でキャスクモデル（線源 3,840 分割点 × 検出器 15 点）の線量が
+CSG 経由と 0.23% 以内で一致し、80 mfp 超過の警告件数（15 件）も一致した。
+差はテッセレーション由来で、側面の近接点で大きく 1 m 離れた点ではほぼゼロ、という
+傾向も理屈と整合する。
 
 なお **YAML は FreeCAD が作るものではない。** 線源の核種・放射能・分割定義、
 検出器、ビルドアップ設定は poker_mcp のツールで作る（本セッションでは検証を
@@ -399,39 +400,43 @@ push は毎回確認を取る。
 
 ### POKER 側（ユーザ）
 
-#### `Run_PathInput` — 線量計算ルーチンの見直しが必要
+#### `Run_PathInput` — 動作確認済み（2026-09）
 
-`.paths` の読み込みから `Result` への詰め込みまでは実装済みでビルドも通るが、
-**その先の `Calculate_Dose` が動かない。** 調査で分かった理由は次のとおり。
+CSG 経由と `.paths` 経由で線量が **0.23% 以内**で一致することを確認した。
+80 mfp 超過の警告件数（15 件）も一致している。
 
-`Calculate_Dose` は `input.zones`（YAML のゾーン定義）を前提に組まれている。
+実装は次の形に落ち着いた。
+
+**`Calculate_Dose` に `from_paths` 引数を追加**（既定 false）。差し替わるのは
+「ゾーンごとの透過長をどこから得るか」の 1 箇所だけで、以降の計算は共通。
 
 ```cpp
-// 減衰係数の引き当て: ゾーンの材質と密度から作り、以降はゾーンの索引で参照
-vector<AttenuationCoefficient::Material> materials;
-for (const auto& zone : input.zones)
-    materials.push_back({ zone.material_name, zone.density });
-intermediate.attenuation_coefficients = library.calculate_attenuation_coefficients(...);
-
-// ビルドアップ層の特定: 経路の区間名と input.zones[].body_name を文字列照合
-if (String::Equals(input.zones[z].body_name, path_rep.zones[...].name)) z1 = z;
+if (from_paths) {
+    // この点線源の透過線の区間を材質ごとに合計する（減衰は順序に依らない）
+    const auto& traces = path_results[sidx].detectors[didx].evaluation_points[n].path_traces;
+    for (const auto& pz : traces[i].zones)
+        if (String::Equals(pz.name, input.zones[j].body_name))
+            sum += pz.length.in(input.unit);
+} else {
+    length_zone_cm = length_to_cm * ranges[input.zones[j].index].length();
+}
 ```
 
-一方 `.paths` が持つのは**材質名と厚さ**だけで、ゾーンという概念がない
-（CAD 側にゾーンは無いので当然）。`PathTrace::Zone::name` には材質名を入れて
-あるが、`input.zones[].body_name` とは一致しないので照合が通らない。
+**`Run_PathInput` 側**は `.paths` の材質から `input.zones` を組み立て
+（`body_name = material_name`）、経路を `path_traces` に詰める。
 
-**YAML に body/zone を書けば済む話ではない。** `--path-input` のときは幾何が
-`.paths` から来るので、YAML の立体定義は本来不要のはず。しかし `Calculate_Dose`
-がゾーン索引で動いている以上、次のどちらかが要る。
+**`get_buildup_material` を無名名前空間の外に出し**、`PathTrace_FromFile` から
+呼ぶ。`.paths` の第3区画は読まない。
 
-1. `Run_PathInput` の中で `.paths` の `materials` から仮想的な `input.zones` を
-   組み立てる（POKER 本体の改造は不要だが、対応付けの正しさを保証する責任が残る）
-2. `Calculate_Dose` を「ゾーン索引」ではなく「材質名」で引くように見直す
-   （本質的だが影響範囲が大きい）
+#### 実装中にはまった点（再発しやすい）
 
-いずれにせよ**線量計算ルーチンの見直しが必要**で、時間がかかる。2026-09 時点で
-保留とした。
+| 症状 | 原因 |
+|---|---|
+| `source point count mismatch: input=9` | `pseudo_source_points` は仮想点線源（バウンディングボックスの角8点＋中心）。分割点は `input.sources[].point_sources` |
+| `ビルドアップ材料 Iron が…在りません` | `.paths` の第3区画が2層と判定していたが YAML は単層。`get_buildup_material` を呼び直して解決 |
+| アクセス違反 0xC0000005 | ループ内の `evaluation_point` はローカルに作られたもので `path_traces` が空。`path_rep` と同じく `path_results[sidx]...` から取る |
+| 線量が1つも出ない（`columns` が空） | `result.input = input` の設定漏れ。`Calculate_PathTrace` は末尾でこれをやっている |
+| オーバーロード解決エラー | 既定値は宣言側（.h）にのみ書く。定義側に書くと二重定義 |
 
 #### その他の未確認項目
 
