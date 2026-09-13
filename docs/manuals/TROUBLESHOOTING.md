@@ -3,7 +3,7 @@
 **対象**: 全ユーザー（問題解決時）  
 **バージョン**: 1.6.0 MCP Edition  
 **最終更新**: 2026年5月16日  
-**使用方法**: Claude Desktop + MCP通信 (30メソッド対応)
+**使用方法**: Claude Desktop + MCP通信 (33メソッド対応)
 
 ---
 
@@ -41,7 +41,7 @@
 | -32079 | 線源が存在しない | poker_proposeSourceを使用 |
 | -32031 | CMB参照立体が未定義 | 参照する立体を先に定義 |
 | -32600 | 不正なリクエスト | パラメータ形式確認 |
-| -32601 | メソッドが見つからない | メソッド名確認（30メソッドリスト参照） |
+| -32601 | メソッドが見つからない | メソッド名確認（33メソッドリスト参照） |
 
 ### 🗂️ データファイル関連エラー
 
@@ -329,7 +329,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 修正を実施してください。」
 ```
 
-#### **問題B3: 30メソッドの使い分け迷い**
+#### **問題B3: 33メソッドの使い分け迷い**
 ```
 症状:
 - proposeとupdateの使い分けが不明
@@ -337,7 +337,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 - エラーコードが頻発
 
 判断基準:
-「30メソッド適切使用ガイド:
+「33メソッド適切使用ガイド:
 
 【propose vs update vs delete】
 新規作成 → propose
@@ -350,7 +350,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 3. BuildupFactorは材料使用前に設定
 4. applyChangesで変更確定
 
-【Unit操作5メソッドの順序】
+【Unit操作5メソッド・ThinnedIndices操作3メソッドの順序】
 1. proposeUnit: 初期設定
 2. getUnit: 現状確認
 3. validateUnitIntegrity: 整合性確認

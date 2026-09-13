@@ -1,6 +1,6 @@
 # 引き継ぎ要約 — POKER-MCP / CAD 連携レイトレース
 
-このセッション（poker_mcp v1.5.0 → v1.6.3、POKER 2.1.1 → 2.1.5）で行った作業と、
+このセッション（poker_mcp v1.5.0 → v1.7.0、POKER 2.1.1 → 2.1.5）で行った作業と、
 判明した POKER の仕様。
 相手は NMRI の放射線遮蔽研究者（GitHub: Hirao-Y）。会話は日本語。
 
@@ -9,7 +9,17 @@
 ## 1. 到達点
 
 FreeCAD のソリッドモデルを遮蔽体系として直接扱うためのパイプラインを構築した。
-**両側とも動作する。** CSG 経由と `.paths` 経由で線量が 0.23% 以内で一致することを確認済み（スラント補正・複数線源・グリッド検出器は未対応。§11 参照）。
+**完成した。** CSG 経由と `.paths` 経由で線量が一致することを 4 通りで確認済み。
+
+| テスト | 検出器数 | 最大相対差 | 警告 |
+|---|---|---|---|
+| 単一線源・点検出器 | 15 | 0.23% | 15 件で一致 |
+| グリッド検出器 | 24 | 0.93% | 24 件で一致 |
+| 複数線源(2線源) | 15 | 0.94% | 30 件で一致 |
+| スラント補正(平板) | 4 | **0.0052%** | — |
+
+差はテッセレーション（曲面の多面体近似）由来。平板のスラント補正で 0.005% まで
+下がることが、その裏付けになっている。
 
 狙いは、STEP のような中間フォーマットを介さず、CSG プリミティブで表現し直す
 作業も不要にすること。線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と
@@ -398,35 +408,15 @@ push は毎回確認を取る。
 
 ## 11. 次にやること
 
-### POKER 側（ユーザ）
+### 完了した項目
 
-#### `Run_PathInput` — 動作確認済み（2026-09）
-
-CSG 経由と `.paths` 経由で線量が **0.23% 以内**で一致することを確認した。
-80 mfp 超過の警告件数（15 件）も一致している。
-
-実装は次の形に落ち着いた。
-
-**`Calculate_Dose` に `from_paths` 引数を追加**（既定 false）。差し替わるのは
-「ゾーンごとの透過長をどこから得るか」の 1 箇所だけで、以降の計算は共通。
-
-```cpp
-if (from_paths) {
-    // この点線源の透過線の区間を材質ごとに合計する（減衰は順序に依らない）
-    const auto& traces = path_results[sidx].detectors[didx].evaluation_points[n].path_traces;
-    for (const auto& pz : traces[i].zones)
-        if (String::Equals(pz.name, input.zones[j].body_name))
-            sum += pz.length.in(input.unit);
-} else {
-    length_zone_cm = length_to_cm * ranges[input.zones[j].index].length();
-}
-```
-
-**`Run_PathInput` 側**は `.paths` の材質から `input.zones` を組み立て
-（`body_name = material_name`）、経路を `path_traces` に詰める。
-
-**`get_buildup_material` を無名名前空間の外に出し**、`PathTrace_FromFile` から
-呼ぶ。`.paths` の第3区画は読まない。
+| 項目 | 結果 |
+|---|---|
+| `Run_PathInput` の実装 | 完了。CSG 経由と 0.23〜0.94% で一致 |
+| グリッド検出器 | 完了。評価点ごとに展開（D_lid_map#1, #2, ...） |
+| 複数線源 | 完了。`.paths` 1.3 の `sources` ノードで区切る |
+| スラント補正 | 完了。第4区画に入射角。平板で 0.0052% 一致 |
+| ThinnedIndices ツール | 完了。30 → 33 メソッド |
 
 #### 実装中にはまった点（再発しやすい）
 
@@ -437,22 +427,14 @@ if (from_paths) {
 | アクセス違反 0xC0000005 | ループ内の `evaluation_point` はローカルに作られたもので `path_traces` が空。`path_rep` と同じく `path_results[sidx]...` から取る |
 | 線量が1つも出ない（`columns` が空） | `result.input = input` の設定漏れ。`Calculate_PathTrace` は末尾でこれをやっている |
 | オーバーロード解決エラー | 既定値は宣言側（.h）にのみ書く。定義側に書くと二重定義 |
+| グリッドの一部しか比較できない | `.summary` が間引かれていた。`thinnedindices.detectorevaluation` を評価点数以上にする |
 
-#### その他の未確認項目
+#### 残っている課題
 
-- `.paths` の `detector` id と評価点の対応。現状は「検出器を平坦化した評価点の
-  通し番号」として扱っているが、`gen_paths.py` は検出器 1 個 = 評価点 1 個の
-  前提で id を振っている。グリッド検出器があると食い違う（`VerifyAgainstInput`
-  で弾かれるので事故にはならない）
-- **線源が複数ある場合は静かに間違う。** `.paths` は線源の区切りを持たないため、
-  全点が 1 番目の線源として扱われる。線源点の座標・重みは `poker_cui -p` の
-  出力から取っているので**区切りの情報は POKER 側にある**（`.summary` の
-  `input:` に線源ごとの `point_source:` ブロックがある）。`gen_paths.py` が
-  1 線源分だけ読んで捨てているだけなので、`.paths` に
-  `sources: [{ name, n_points }]` を足せば対応できる。
-  当面は**複数線源を検出したらエラーにする**チェックを入れるべき
-- `is_too_thick` / `slant_angle` を設定していないので、80mfp 超過とスラント
-  補正の判定が働かない
+- `propose` の直後（`applyChanges` 前）に `get` を呼ぶと保留中の変更が見えない。
+  `unit` 系も同じ作りなので既存の挙動に合わせているが、利用者が「提案したのに
+  反映されていない」と誤解する余地がある
+- 他 CAD の STEP を読む場合の材質対応付け（`material_map` 方式、未実装）
 - 分割点ごとの全経路出力（`.paths` の照合に使いたい。優先度は低い）
 
 ### poker_mcp 側

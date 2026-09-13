@@ -1,0 +1,10 @@
+{
+  "fcstd": "C:/Users/yoshi/Desktop/slant_slab.FCStd",
+  "out": "C:/Users/yoshi/poker_verify/slant_test.paths",
+  "poker_summary": "C:/Users/yoshi/poker_verify/slant_csg.summary",
+  "detectors_from_summary": true,
+  "deviation": 0.5,
+  "unit_scale": 0.1,
+  "poker_dir": "C:/Poker",
+  "mu_energy": 1.25
+}

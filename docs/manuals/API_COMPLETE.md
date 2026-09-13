@@ -10,7 +10,7 @@
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した30メソッドの詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した33メソッドの詳細仕様を提供します。
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -25,7 +25,7 @@
 
 ---
 
-## 📚 30メソッド完全実装一覧
+## 📚 33メソッド完全実装一覧
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -100,6 +100,48 @@
 | **poker_updateUnit** | 単位系更新（部分更新可能） | 結果は4キー構造維持 |
 | **poker_validateUnitIntegrity** | 単位完全性検証 | 4キー構造・物理整合性・システム分析 |
 | **poker_analyzeUnitConversion** | 単位変換分析 | 変換係数計算・物理整合性評価 |
+
+### 📉 **ThinnedIndices操作系 (3メソッド) - サマリー出力量の制御**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_proposeThinnedIndices** | 出力量設定の作成（未存在時のみ） | 全キー省略可。省略キーは POKER の既定値 |
+| **poker_getThinnedIndices** | 出力量設定の取得 | 明示キーと省略キーを区別して返却 |
+| **poker_updateThinnedIndices** | 出力量設定の部分更新 | `fit_for_paths` で入力の実数に自動設定 |
+
+サマリーに書き出す件数を制御する `thinnedindices` ノードを操作します。削除は
+用意していません。削除しても POKER の既定値に戻るだけで、`update` で既定値を
+指定すれば同じ結果になるためです。
+
+**制御できる 7 キー**（括弧内は省略時の既定値）
+
+| キー | 対象 | 既定 |
+|---|---|---|
+| `sourcepoint` | 入力パラメータの線源分割点 | 10 |
+| `pseudosourcepoint` | 入力パラメータの仮想点線源 | 10 |
+| `detectorgrid` | 入力パラメータの検出器評価点 | 10 |
+| `detectorevaluation` | 計算結果のグリッド評価点 | 5 |
+| `pathtrace` | `path_trace` の仮想点線源 | 5 |
+| `buildupenergy` | 多層ビルドアップのエネルギー数 | 3 |
+| `buildupmfp` | 各エネルギーの mfp 数 | 3 |
+
+**既定値は poker_mcp 側で保持していません。** 省略しても `.summary` には全 7 キーが
+値付きで出力されるので、実際の適用値はそちらを正とします。複製すると POKER 側の
+変更に追随できず、静かに食い違うためです。
+
+```javascript
+// 現在の設定を確認（明示キーと省略キーが分かる）
+poker_getThinnedIndices()
+// → { thinnedindices: {...}, specified: [...], omitted: [...], note: "..." }
+
+// .paths の生成向けに、入力の実数へ自動設定
+poker_updateThinnedIndices({ fit_for_paths: true })
+// → 線源分割定義(r×φ×z等)と検出器グリッドから必要数を計算して設定
+```
+
+**`fit_for_paths`** は `.paths` の生成で使います。全ての線源分割点と評価点が
+必要ですが、既定では間引かれるためです。5000 のような固定値ではなく入力の実数に
+合わせるので、なぜその値かが明確になります。
 
 ### 🔧 **System操作系 (6メソッド) - システム制御**
 
@@ -273,7 +315,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 ---
 
-## 📊 30メソッド完全仕様
+## 📊 33メソッド完全仕様
 
 ### 📐 **Body系メソッド（立体管理）**
 

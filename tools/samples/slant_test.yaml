@@ -1,0 +1,50 @@
+thinnedindices:
+  sourcepoint: 5000
+  pseudosourcepoint: 10
+  detectorgrid: 5000
+  detectorevaluation: 5000
+  pathtrace: 5
+  buildupenergy: 3
+  buildupmfp: 3
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+body:
+  - name: SLAB
+    type: RPP
+    min: -200 -200 0
+    max: 200 200 20
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: SLAB
+    material: Iron
+    density: 7.8
+transform: []
+buildup_factor:
+  - material: Iron
+    use_slant_correction: true
+    use_finite_medium_correction: false
+source:
+  - name: PointSrc
+    type: POINT
+    inventory:
+      - nuclide: Co60
+        radioactivity: 370000000000
+    cutoff_rate: 0.0001
+    position: 0 0 -50
+detector:
+  - name: D_normal
+    origin: 0 0 70
+    show_path_trace: true
+  - name: D_deg30
+    origin: 69.28 0 70
+    show_path_trace: true
+  - name: D_deg45
+    origin: 120 0 70
+    show_path_trace: true
+  - name: D_deg60
+    origin: 207.8 0 70
+    show_path_trace: true

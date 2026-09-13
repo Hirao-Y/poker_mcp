@@ -1,7 +1,7 @@
 # 📚 Poker MCP Server - マニュアル体系 (v1.6.0)
 
 **🎯 対象**: 放射線遮蔽研究者・安全解析・申請実務家・設計エンジニア  
-**🔧 システム**: Poker MCP Server v1.6.0 (30メソッド完全実装)  
+**🔧 システム**: Poker MCP Server v1.7.0 (33メソッド完全実装)  
 **📅 最終更新**: 2025年1月  
 **🌟 マニュアル体系**: 段階的学習設計（3層構造）
 
@@ -10,7 +10,7 @@
 ## 🏆 v1.4.0マニュアル体系の革新
 
 ### ✨ **v1.4.0 完全実装機能**
-- **30メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）
+- **33メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）
 - **10種類立体完全対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED全立体タイプ詳細解説
 - **14種類材料完全対応**: コンクリート、鉛、鉄、VOID等標準遮蔽材料
 - **5メソッドUnit操作**: proposeUnit, getUnit, updateUnit, validateUnitIntegrity, analyzeUnitConversion
@@ -19,14 +19,14 @@
 
 ### 🔬 **v1.4.0 新機能ハイライト**
 - **環境変数サポート**: POKER_INSTALL_PATH対応で核種データベースの柔軟な配置
-- **Unit操作5メソッド**: 単位系の完全性検証と変換係数分析機能
+- **Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系の完全性検証と変換係数分析機能
 - **子孫核種自動確認**: 放射平衡を考慮した自動核種追加システム
 - **サマリーファイル完全解析**: 4セクション（入力パラメータ/intermediate/result/result_total）の物理的意味と活用法
 - **エラーコード体系**: 13種類のMCP固有エラーコードと即座対処法
 - **自動修復機能**: YAMLファイル破損時の自動復旧システム
 
 ### 🚀 **研究者フレンドリー設計**
-- **物理的背景重視**: 30メソッドすべての物理的意味を明確化
+- **物理的背景重視**: 33メソッドすべての物理的意味を明確化
 - **実用例豊富**: 医療・原子力・研究での具体的活用例（完全YAMLサンプル付き）
 - **段階的学習**: 初心者→中級者→専門家への明確な道筋
 - **品質保証**: サマリーファイル4セクションによる計算結果の完全検証
@@ -36,29 +36,29 @@
 ## 📖 v1.4.0対応マニュアル構成
 
 ### 🌟 **エッセンシャル層** - 必須知識 (3ファイル)
-最初に読むべき基本文書（30メソッド・10立体・14材料対応）
+最初に読むべき基本文書（33メソッド・10立体・14材料対応）
 
 #### 📘 [ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md) - 統合ガイド
 - **🔬 物理的背景**: 放射線遮蔽計算の目的と価値
 - **⚡ クイックスタート**: 15分で価値を実感
 - **🔷 10種類立体対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED完全活用
 - **🧪 基本計算例**: 3つの代表的ケーススタディ
-- **📋 日常操作**: よく使う操作パターン（30メソッド活用）
+- **📋 日常操作**: よく使う操作パターン（33メソッド活用）
 - **🎯 対象**: Poker MCP v1.4.0を初めて使う方
 
 #### 📋 [PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md) - 放射線遮蔽計算リファレンス ★更新★
 - **⚛️ 遮蔽理論**: 放射線と物質の相互作用機構
 - **🔷 10立体物理意味**: 各立体タイプの物理的背景と適用例
-- **📊 30メソッド物理背景**: 全メソッドの物理的意味と必要性
-- **⚙️ Unit操作5メソッド**: 単位系の物理的整合性と変換分析
+- **📊 33メソッド物理背景**: 全メソッドの物理的意味と必要性
+- **⚙️ Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系の物理的整合性と変換分析
 - **☢️ 子孫核種理論**: 放射平衡と自動追加の物理的根拠
 - **📈 サマリー4セクション**: 計算結果の物理的解釈法
 - **🎯 対象**: 計算の物理的背景を理解したいユーザー
 
 #### 🚀 [QUICK_REFERENCE.md](QUICK_REFERENCE.md) - クイックリファレンス
-- **📖 30メソッド早見表**: 全API・操作の一覧と使い分け
+- **📖 33メソッド早見表**: 全API・操作の一覧と使い分け
 - **🔷 10立体早見表**: 全立体タイプの構文・例・実用例
-- **⚙️ Unit操作5メソッド**: 単位系管理の完全ガイド
+- **⚙️ Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系管理の完全ガイド
 - **📊 サマリーファイル解析**: 4セクションの読み方
 - **⚠️ エラーコード一覧**: 13種類のMCPエラーと対処法
 - **💡 Tips & Tricks**: 効率化のコツ
@@ -69,23 +69,23 @@
 
 #### 🧬 [RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md) - 業務ワークフロー ★更新★
 - **🏥 医療施設遮蔽**: CT/PET/リニアック施設の完全設計例
-- **⚛️ 原子力施設遮蔽**: 使用済燃料貯蔵・原子炉遮蔽の30メソッド活用例
-- **🔬 実験室遮蔽**: 加速器・RI実験室でのUnit操作5メソッド活用
+- **⚛️ 原子力施設遮蔽**: 使用済燃料貯蔵・原子炉遮蔽の33メソッド活用例
+- **🔬 実験室遮蔽**: 加速器・RI実験室でのUnit操作5メソッド・ThinnedIndices操作3メソッド活用
 - **📊 サマリーファイル解析**: 4セクション完全活用のPythonスクリプト例
 - **☢️ 子孫核種考慮**: Mo-99/Tc-99m等の放射平衡計算実例
 - **🎯 対象**: 具体的分野での活用法を知りたいユーザー
 
 #### 🔗 [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) - システム統合ガイド
-- **🖥️ Claude Desktop統合**: MCP v1.0準拠設定・30メソッド活用
+- **🖥️ Claude Desktop統合**: MCP v1.0準拠設定・33メソッド活用
 - **⚛️ MCNP連携**: 10立体対応・設計→計算→解析のワークフロー
-- **🐍 Python自動化**: 30メソッドAPI活用・サマリーファイル4セクション解析
+- **🐍 Python自動化**: 33メソッドAPI活用・サマリーファイル4セクション解析
 - **🤝 チーム共有**: プロジェクト管理・バージョン管理システム
 - **📈 結果可視化**: 10立体対応3D構造・線量分布の可視化
 - **🎯 対象**: システム統合・自動化を必要とするユーザー
 
 #### ⚠️ [TROUBLESHOOTING.md](TROUBLESHOOTING.md) - 問題解決ガイド ★更新★
 - **🚨 エラーコード一覧**: 13種類のMCP固有エラーと即座対処法
-- **🔍 30メソッド使い分け**: propose/update/deleteの適切な選択
+- **🔍 33メソッド使い分け**: propose/update/deleteの適切な選択
 - **📊 サマリーファイル診断**: 4セクションから問題特定
 - **⚙️ Unit操作トラブル**: 5メソッドのエラー対処と整合性確保
 - **🛠️ 自動修復**: YAMLファイル破損時の復旧手順
@@ -103,9 +103,9 @@
 - **🎯 対象**: システム管理者・導入担当者
 
 #### 📋 [API_COMPLETE.md](API_COMPLETE.md) - 全API仕様
-- **🔌 30メソッド詳細仕様**: 全メソッドの詳細仕様・パラメータ・レスポンス
+- **🔌 33メソッド詳細仕様**: 全メソッドの詳細仕様・パラメータ・レスポンス
 - **🔷 10立体タイプ完全仕様**: 各立体の完全パラメータセット・制約・例
-- **⚙️ Unit操作5メソッドAPI**: 単位系管理の完全API仕様
+- **⚙️ Unit操作5メソッド・ThinnedIndices操作3メソッドAPI**: 単位系管理の完全API仕様
 - **📊 サマリーファイル仕様**: 4セクションの詳細構造定義
 - **☢️ 子孫核種API**: confirmDaughterNuclidesの完全仕様
 - **⚡ エラーコード詳細**: 13種類エラーの技術仕様
@@ -142,20 +142,20 @@
 ## 🎯 v1.4.0機能別利用ガイド
 
 ### 👩‍🔬 **初めてPoker MCP v1.4.0を使う研究者**
-1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で30メソッド・10立体の基本概念とクイックスタートを体験
-2. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で物理的背景とUnit操作5メソッドを理解
+1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で33メソッド・10立体の基本概念とクイックスタートを体験
+2. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で物理的背景とUnit操作5メソッド・ThinnedIndices操作3メソッドを理解
 3. **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** で日常操作と13種エラーコード対処をマスター
 
 ### 🏥 **医療施設の遮蔽設計者**
 1. **[ESSENTIAL_GUIDE.md](ESSENTIAL_GUIDE.md)** で基本操作を習得
-2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** でCT/PET施設の30メソッド活用例を実践
+2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** でCT/PET施設の33メソッド活用例を実践
 3. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でサマリーファイル4セクション解析を自動化
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** でエラーコード対処法を習得
 
 ### ⚛️ **原子力施設の安全解析者**
-1. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で子孫核種理論とUnit操作5メソッドを確認
+1. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で子孫核種理論とUnit操作5メソッド・ThinnedIndices操作3メソッドを確認
 2. **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)** で燃料貯蔵施設の大規模計算例を習得
-3. **[API_COMPLETE.md](API_COMPLETE.md)** で30メソッド詳細仕様を活用
+3. **[API_COMPLETE.md](API_COMPLETE.md)** で33メソッド詳細仕様を活用
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** でサマリーファイル診断による品質保証
 
 ### 🔬 **研究機関の研究者**
@@ -165,13 +165,13 @@
 4. **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)** で結果の物理的妥当性評価
 
 ### 💻 **システム統合エンジニア**
-1. **[API_COMPLETE.md](API_COMPLETE.md)** で30メソッド仕様とサマリーファイル4セクション構造を確認
+1. **[API_COMPLETE.md](API_COMPLETE.md)** で33メソッド仕様とサマリーファイル4セクション構造を確認
 2. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でシステム統合手法を実装
-3. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でUnit操作5メソッドの組織管理
+3. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でUnit操作5メソッド・ThinnedIndices操作3メソッドの組織管理
 4. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で13種エラーコードの自動対処実装
 
 ### 🔧 **システム管理者**
-1. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でv1.4.0システム構築・30メソッド監視
+1. **[ADMIN_GUIDE.md](ADMIN_GUIDE.md)** でv1.4.0システム構築・33メソッド監視
 2. **[API_COMPLETE.md](API_COMPLETE.md)** で技術仕様を確認
 3. **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** で自動修復システムを構築
 4. **[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)** でサマリーファイル監視システムを実装
@@ -180,7 +180,7 @@
 
 ## 🚀 v1.4.0実装機能の完全活用
 
-### 📊 **30メソッド完全実装**
+### 📊 **33メソッド完全実装**
 ```yaml
 Body系 (3メソッド): 
 - poker_proposeBody, poker_updateBody, poker_deleteBody
@@ -225,8 +225,8 @@ System系 (4メソッド):
 ```yaml
 入力パラメータセクション:
 - 全設定の記録と再現性保証
-- Unit操作5メソッドによる単位系確認
-- 30メソッドで設定した全パラメータ
+- Unit操作5メソッド・ThinnedIndices操作3メソッドによる単位系確認
+- 33メソッドで設定した全パラメータ
 
 intermediateセクション:
 - 透過経路の物理的詳細
@@ -271,7 +271,7 @@ result_totalセクション:
 
 システム系エラー:
 - -32600: 不正リクエスト → パラメータ形式確認
-- -32601: メソッド不在 → 30メソッド名確認
+- -32601: メソッド不在 → 33メソッド名確認
 ```
 
 ---
@@ -282,30 +282,30 @@ result_totalセクション:
 
 | **習熟段階** | **期間** | **対象マニュアル** | **達成レベル** | **業務効果** |
 |-------------|----------|------------------|--------------|-------------|
-| **入門** | 半日 | ESSENTIAL_GUIDE | 基本30メソッド習得 | 簡単計算実行可能 |
-| **基礎** | 1-2日 | +PHYSICS_REFERENCE | Unit操作5メソッド理解 | 物理的妥当性評価可能 |
+| **入門** | 半日 | ESSENTIAL_GUIDE | 基本33メソッド習得 | 簡単計算実行可能 |
+| **基礎** | 1-2日 | +PHYSICS_REFERENCE | Unit操作5メソッド・ThinnedIndices操作3メソッド理解 | 物理的妥当性評価可能 |
 | **実用** | 1週間 | +QUICK_REFERENCE | エラーコード13種対応 | 日常業務完全効率化 |
 | **応用** | 2週間 | +RESEARCH_WORKFLOWS | サマリー4セクション活用 | 専門業務完全対応 |
 | **統合** | 1ヶ月 | +INTEGRATION_GUIDE | 子孫核種自動化 | 完全自動化達成 |
-| **管理** | 2ヶ月 | +ADMIN_GUIDE | 30メソッド組織管理 | 品質保証体制確立 |
+| **管理** | 2ヶ月 | +ADMIN_GUIDE | 33メソッド組織管理 | 品質保証体制確立 |
 
 ### 💰 **v1.4.0導入によるROI向上**
 
 #### **研究者個人レベル**
 - **学習投資**: 20-40時間
-- **効率向上**: 30メソッドによる業務80%自動化
+- **効率向上**: 33メソッドによる業務80%自動化
 - **品質向上**: サマリー4セクションによる検証で計算ミス95%削減
 - **ROI**: 2ヶ月でペイバック
 
 #### **研究室レベル**
 - **学習投資**: 100-200時間（5-10人チーム）
-- **効率向上**: Unit操作5メソッドによる国際共同研究効率化
+- **効率向上**: Unit操作5メソッド・ThinnedIndices操作3メソッドによる国際共同研究効率化
 - **品質向上**: 子孫核種自動考慮による精度向上
 - **ROI**: 4ヶ月でペイバック
 
 #### **組織レベル**
 - **学習投資**: 500-1000時間（大規模組織）
-- **効率向上**: 30メソッド完全活用による遮蔽設計90%効率化
+- **効率向上**: 33メソッド完全活用による遮蔽設計90%効率化
 - **品質向上**: 13種エラーコード自動対処による障害時間90%削減
 - **ROI**: 8ヶ月でペイバック
 
@@ -321,13 +321,13 @@ result_totalセクション:
 - 計算結果の妥当性確認困難
 
 v1.4.0導入効果:
-- 30メソッドによる設計時間1/5短縮
-- Unit操作5メソッドで単位ミスゼロ化
+- 33メソッドによる設計時間1/5短縮
+- Unit操作5メソッド・ThinnedIndices操作3メソッドで単位ミスゼロ化
 - サマリー4セクション解析で品質保証確立
 - エラーコード13種対応で障害時間90%削減
 
 成功要因:
-1. PHYSICS_REFERENCEでの30メソッド物理理解
+1. PHYSICS_REFERENCEでの33メソッド物理理解
 2. RESEARCH_WORKFLOWSでのCT/PET実例活用
 3. TROUBLESHOOTINGでのエラー自動対処体制
 ```
@@ -343,10 +343,10 @@ v1.4.0導入効果:
 - メモリ管理最適化で大規模計算実現
 - confirmDaughterNuclidesで放射平衡自動考慮
 - サマリーファイル4セクションPython解析で時間1/10
-- 30メソッド完全活用で設計最適化
+- 33メソッド完全活用で設計最適化
 
 成功要因:
-1. ESSENTIAL_GUIDEでの30メソッド体系的習得
+1. ESSENTIAL_GUIDEでの33メソッド体系的習得
 2. API_COMPLETEでの詳細仕様理解
 3. INTEGRATION_GUIDEでのPython自動化実装
 ```
@@ -358,18 +358,18 @@ v1.4.0導入効果:
 ### **最速習得パス（実務者向け）**
 ```yaml
 Week 1: 基礎固め
-- ESSENTIAL_GUIDE: 30メソッド基本操作
+- ESSENTIAL_GUIDE: 33メソッド基本操作
 - QUICK_REFERENCE: エラーコード13種対処法
 - 実践: 簡単な遮蔽計算実行
 
 Week 2: 物理理解と品質
-- PHYSICS_REFERENCE: Unit操作5メソッド習得
+- PHYSICS_REFERENCE: Unit操作5メソッド・ThinnedIndices操作3メソッド習得
 - サマリーファイル4セクション解析実践
 - 子孫核種理論の理解
 
 Week 3: 専門分野特化
 - RESEARCH_WORKFLOWS: 分野別実例（医療/原子力/研究）
-- 30メソッド完全活用ワークフロー実践
+- 33メソッド完全活用ワークフロー実践
 - Python解析スクリプト作成
 
 Week 4: 自動化と統合
@@ -377,15 +377,15 @@ Week 4: 自動化と統合
 - TROUBLESHOOTING: 自動修復実装
 - チーム協働体制構築
 
-成果: 1ヶ月で30メソッド完全習得・実務即戦力
+成果: 1ヶ月で33メソッド完全習得・実務即戦力
 ```
 
 ### **組織導入パス（管理者向け）**
 ```yaml
 Phase 1 (Month 1): 基盤構築
 - ADMIN_GUIDE: v1.4.0システム構築
-- 30メソッド監視体制確立
-- Unit操作5メソッド管理体制
+- 33メソッド監視体制確立
+- Unit操作5メソッド・ThinnedIndices操作3メソッド管理体制
 
 Phase 2 (Month 2): 試行運用
 - パイロットチーム編成
@@ -473,8 +473,8 @@ poker_validateUnitIntegrity      # 整合性確認
 - ✅ API_COMPLETE.md環境変数依存性明記
 
 ### **v1.2.0 (2025年1月) - 前バージョン**
-- ✅ 30メソッド完全実装対応
-- ✅ Unit操作5メソッド詳細追加
+- ✅ 33メソッド完全実装対応
+- ✅ Unit操作5メソッド・ThinnedIndices操作3メソッド詳細追加
 - ✅ サマリーファイル4セクション解析追加
 - ✅ エラーコード13種完全対応
 - ✅ 子孫核種自動追加機能対応
@@ -497,14 +497,14 @@ poker_validateUnitIntegrity      # 整合性確認
 ## 🎊 まとめ: v1.4.0で実現する価値
 
 ### ✨ **技術的完全性**
-- **30メソッド**: すべての操作を網羅
-- **Unit操作5メソッド**: 単位系の完全管理
+- **33メソッド**: すべての操作を網羅
+- **Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系の完全管理
 - **サマリー4セクション**: 結果の完全解析
 - **エラーコード13種**: 全エラーの即座対処
 - **子孫核種自動化**: 物理的完全性確保
 
 ### 🚀 **実務的価値**
-- **設計時間80%削減**: 30メソッド自動化
+- **設計時間80%削減**: 33メソッド自動化
 - **計算ミス95%削減**: サマリーファイル検証
 - **国際対応100%**: Unit操作による標準準拠
 - **障害時間90%削減**: エラーコード自動対処
@@ -535,7 +535,7 @@ poker_validateUnitIntegrity      # 整合性確認
 
 ---
 
-**🎯 Poker MCP Server v1.6.0 - 30メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
+**🎯 Poker MCP Server v1.6.0 - 33メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
 
 **📅 最終更新: 2025年1月24日**  
 **📧 サポート: GitHub Issues**  
