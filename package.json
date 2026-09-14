@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.8.1",
+  "version": "1.8.2",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
@@ -50,6 +50,11 @@
   },
   "files": [
     "src/",
+    "tools/gen_paths.py",
+    "tools/ray_trace_tri.py",
+    "tools/poker_lib.py",
+    "tools/audit_mfp.py",
+    "tools/compare_poker_trace.py",
     "README.md",
     ".mcp.json"
   ]
