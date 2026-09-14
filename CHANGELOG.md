@@ -1,5 +1,39 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.8.3] - 2026-09-15
+
+### generatePaths と executeCalculation のサマリー衝突を修正
+
+`generatePaths` は `poker_cui -p` で分割点と評価点を取得するが、その出力先が
+既定の `<yaml>.summary` だった。`executeCalculation` が `-p` なしで同じファイルを
+上書きするため、次に `generatePaths` を呼ぶと `input:` セクションが無く
+「point_source が見つかりません」で失敗していた。
+
+専用の `.generate_paths.summary` に出すようにした。用途が違うファイルは分ける。
+
+### CAD 連携の E2E テスト
+
+`npm run test:cad` を追加。generatePaths → executeCalculation(path_input) →
+executeCalculation(CSG) を**逐次**実行する。
+
+逐次であることが重要で、全リクエストを一度に流し込むと MCP サーバが並行処理し、
+generatePaths(26秒) の完了前に計算が走って `.paths` が無い状態で失敗する。
+実際のクライアントは 1 つずつ呼ぶので問題にならないが、テストでは再現する。
+
+pending-view.test.mjs でも同じ問題に遭遇しており、2 度目だったため恒久的な
+テストとして残す。
+
+### 検証
+
+| 操作 | 結果 |
+|---|---|
+| 経路生成 | 57,600 経路 |
+| .paths 経由 | D_side_r130 = 1.8314e-2 |
+| CSG 経由 | D_side_r130 = 1.8340e-2 |
+
+差 0.14% はテッセレーション由来で、従来の検証値と一致する。
+
+
 ## [1.8.1] - 2026-09-15
 
 ### executeCalculation に path_input を追加（CAD 連携が MCP だけで完結）

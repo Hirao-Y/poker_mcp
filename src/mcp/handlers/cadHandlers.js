@@ -62,8 +62,15 @@ export function createCadHandlers(taskManager) {
         return fail('poker_cui が見つかりません: ' + exe,
           '環境変数 POKER_INSTALL_PATH を確認してください。');
 
-      const summary = yamlFile + '.summary';
-      const r1 = await run(exe, [yamlFile, '-p', '-t'], { cwd: TASKS_DIR });
+      // 専用のサマリーに出す。
+      //   既定の <yaml>.summary を使うと executeCalculation と衝突する。
+      //   あちらは -p なしで同じファイルを上書きするので、次に generatePaths を
+      //   呼んだとき input: セクションが無く「point_source が見つかりません」で
+      //   失敗する。用途が違うファイルは分ける。
+      const summary = path.join(TASKS_DIR, '.generate_paths.summary');
+      const r1 = await run(exe, [yamlFile, '-p', '-t', '-o', summary,
+                                 '-d', path.join(TASKS_DIR, '.generate_paths.dose')],
+                           { cwd: TASKS_DIR });
       if (r1.code !== 0 || !fssync.existsSync(summary)) {
         return fail('poker_cui -p の実行に失敗しました（終了コード ' + r1.code + '）',
           (r1.err || r1.out || '').slice(-400));
