@@ -251,7 +251,7 @@ total_doses = summary['result_total']
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
 - **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.6.0更新）
 - **CAD連携レイトレース**: [CAD_RAYTRACE.md](manuals/CAD_RAYTRACE.md) / [PATHS_FORMAT.md](manuals/PATHS_FORMAT.md)（v1.6.3）
-- **.paths 受け入れの設計**: [PATHS_INPUT_DESIGN.md](manuals/PATHS_INPUT_DESIGN.md)（POKER 側実装用）
+- **POKER の内部構造**: [POKER_INTERNALS.md](manuals/POKER_INTERNALS.md)（透視線の扱い、zones と ranges の関係）
 - **開発の引き継ぎ**: [HANDOVER_CAD_RAYTRACE.md](HANDOVER_CAD_RAYTRACE.md)
 - **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.4.0更新）
 
