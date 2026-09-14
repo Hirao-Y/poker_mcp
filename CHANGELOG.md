@@ -1,5 +1,47 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.7.2] - 2026-09-14
+
+### get 系ツールが保留中の変更も示すようにした
+
+`propose` の直後に `get` を呼ぶと、変更が見えず「反映されていない」と誤解する
+余地があった。再度 `propose` して重複エラーになる流れが起こり得る。
+
+```javascript
+poker_proposeThinnedIndices({ sourcepoint: 100 })
+poker_getThinnedIndices()
+// 従来: { thinnedindices: null }             ← 提案が見えない
+// 今回: { thinnedindices: null,
+//         pending: { sourcepoint: 100 }, pending_count: 1, note: "..." }
+```
+
+確定値（`this.data`）は書き換えず、保留分を別項目として並べる。確定済みと
+未確定を区別できる。複数の保留は部分更新系ではマージして示す。
+
+対象は `poker_getUnit` と `poker_getThinnedIndices`。
+`poker_getDoseMap` は計算結果を読むツールなので対象外。
+
+### 二段階の位置づけを整理
+
+`propose` → `applyChanges` の二段階は、かつては「ユーザが確認してから適用する」
+仕組みだったが、現在は AI が両方を呼ぶため確認の機会は無い。それでも維持する
+理由は**原子性**にある。
+
+- 一連の操作が途中で失敗しても、中途半端に反映された YAML が残らない
+- POKER 側の「立体を確定してからゾーンを定義する」制約に区切りが対応する
+- 書き込み回数とバックアップ回数を抑えられる
+
+API_COMPLETE.md にこの位置づけを明記した。
+
+### テスト
+
+`npm run test:pending` を追加。7 つの状態（初期／propose 後／適用後／update 後／
+複数保留／再適用後／getUnit）を網羅的に確認する。
+
+なお実装中、まとめてリクエストを流すと処理順が保証されず applyChanges の前後
+関係が崩れることが分かった。テストは 1 件ずつ応答を待って送る。
+
+
 ## [1.7.1] - 2026-09-14
 
 ### 座標の照合を追加（静かに間違う経路を塞ぐ）

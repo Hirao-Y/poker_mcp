@@ -16,6 +16,7 @@ import {
   isDerived
 } from '../utils/DaughterReconciler.js';
 import { logger } from '../utils/logger.js';
+import { pendingInfo } from '../utils/pendingView.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
 export class TaskManager {
@@ -281,10 +282,13 @@ export class TaskManager {
       
       logger.info('4キー完全単位設定を取得しました', { unit: this.data.unit });
       
+      // 保留中の変更も示す（propose 直後の get で見えないと誤解を招くため）
       return {
         unit: this.data.unit,
         integrity: '4-key-complete',
-        keys: Object.keys(this.data.unit)
+        keys: Object.keys(this.data.unit),
+        ...(pendingInfo(this.pendingChanges,
+          ['proposeUnit', 'updateUnit'], { merge: true }) || {})
       };
       
     } catch (error) {
@@ -334,10 +338,17 @@ export class TaskManager {
     const ALL = ['sourcepoint', 'pseudosourcepoint', 'detectorgrid',
                  'detectorevaluation', 'pathtrace', 'buildupenergy', 'buildupmfp'];
     const omitted = ALL.filter(k => !current || current[k] === undefined);
+    // 保留中の変更も示す。propose の直後に get を呼んだとき、変更が見えないと
+    // 「提案が成功したのに反映されていない」と映り、再度 propose して重複エラーに
+    // なる流れが起こり得る。
+    const pend = pendingInfo(this.pendingChanges,
+      ['proposeThinnedIndices', 'updateThinnedIndices'], { merge: true });
+
     return {
       thinnedindices: current,
       specified: current ? Object.keys(current) : [],
       omitted,
+      ...(pend || {}),
       note: omitted.length
         ? '省略されたキーは POKER の既定値が使われます。実際の適用値は計算後の .summary の「サマリに出力される情報量」セクションで確認できます'
         : '全キーが明示されています'

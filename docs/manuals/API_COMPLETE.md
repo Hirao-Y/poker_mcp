@@ -207,6 +207,48 @@ poker_updateSource(name="Src",
 
 ---
 
+## 🔄 propose と applyChanges の二段階
+
+変更系のツールは `propose` / `update` で**保留**され、`poker_applyChanges` で
+YAML に書き込まれます。
+
+```javascript
+poker_proposeBody({ name: 'SHIELD', type: 'RPP', ... })   // 保留
+poker_proposeZone({ body_name: 'SHIELD', material: 'Iron' })
+poker_applyChanges()                                       // ここで YAML に反映
+```
+
+**二段階にしている理由は原子性です。** 立体を 3 つ追加してゾーンを 2 つ作る、と
+いった一連の操作が途中で失敗したとき、中途半端に反映された YAML が残りません。
+POKER 側の「立体を確定してからゾーンを定義する」という制約にも、`applyChanges`
+の区切りが対応します。
+
+### get 系は保留分も示す
+
+`get` 系ツールは YAML に書かれた確定値を返しますが、**保留中の変更があれば
+`pending` として併記**します。
+
+```javascript
+poker_proposeThinnedIndices({ sourcepoint: 100 })
+poker_getThinnedIndices()
+// → {
+//     thinnedindices: null,              ← YAML はまだ空
+//     pending: { sourcepoint: 100 },     ← 保留中の提案
+//     pending_count: 1,
+//     note: "保留中の変更があります。poker_applyChanges で確定するまで…"
+//   }
+
+poker_applyChanges()
+poker_getThinnedIndices()
+// → { thinnedindices: { sourcepoint: 100 }, ... }   ← pending は消える
+```
+
+これが無いと、`propose` が成功したのに `get` が空を返すため「反映されていない」と
+誤解し、再度 `propose` して重複エラーになる流れが起こり得ます。
+
+複数の保留は**マージして**示されます（部分更新系の場合）。確定値は書き換えず、
+別項目として並べるので、確定済みと未確定を区別できます。
+
 ## 🌐 システムアーキテクチャ
 
 ### 🏗️ **MCP準拠アーキテクチャ**
