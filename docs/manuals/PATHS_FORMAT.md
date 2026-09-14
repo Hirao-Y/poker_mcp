@@ -1,4 +1,4 @@
-# POKER-PATHS フォーマット仕様 v1.2
+# POKER-PATHS フォーマット仕様 v1.3
 
 CAD から抽出した幾何経路を POKER に渡すためのファイル形式です。読み手（POKER 本体）の実装に必要な事項を規定します。
 
@@ -28,7 +28,7 @@ poker_cui model.yaml --path-input model.paths -t
 # POKER-PATHS
 information:
   format: paths
-  format_version: 1.2
+  format_version: 1.3
   generator: poker_mcp gen_paths.py 1.6.3
   generated_at: 2026-09-07T00:51:15+09:00
   notation: scientific
@@ -43,6 +43,9 @@ information:
   n_source_points: 3840
   n_detectors: 15
   n_materials: 4
+  n_sources: 1
+sources:
+  - { id: 0, name: SpentFuel, n_points: 3840 }
 materials:
   - { id: 0, name: VOID }
   - { id: 1, name: Iron }
@@ -106,6 +109,7 @@ paths: |
 
 | ノード | 内容 |
 |---|---|
+| `sources` | `{ id, name, n_points }`。線源ごとの区切り（1.3 以降） |
 | `materials` | `{ id, name, density? }`。ID 0 は `VOID` 固定 |
 | `detectors` | `{ id, name, pos: [x, y, z] }` |
 | `source_points` | `{ id, pos: [x, y, z], weight? }` |
@@ -140,6 +144,51 @@ materials:
 
 **読み手は `source_point` の値をそのまま使ってください。** 分割定義から再生成すると同じ食い違いが再発します。位置のずれは距離照合で検出できますが、**重みのずれは検出できません**。線源強度分布が入れ替わったまま計算が完了します。
 
+### 線源ごとの区切り（1.3 以降）
+
+POKER は線源ごとに `Result` を作り、線源ごとの核種・放射能を適用してから合算します。
+`.paths` 側もどの点がどの線源の分割点かを持つ必要があります。
+
+```yaml
+sources:
+  - { id: 0, name: SpentFuel, n_points: 3840 }
+  - { id: 1, name: Activated_Parts, n_points: 480 }
+source_points:
+  - { id: 0, pos: [...], weight: ... }      # id 0..3839    → source 0
+  - { id: 3840, pos: [...], weight: ... }   # id 3840..4319 → source 1
+```
+
+`source_point` の id は通し番号のまま、`n_points` で区切ります。各点に線源番号を
+持たせる方式もありますが、数千点すべてに書くとファイルが膨れます。
+
+**区切りが無いと全点が 1 番目の線源として扱われ、静かに間違います。** 線源点は
+`poker_cui -p` の出力から読んでいるので、区切りの情報は POKER 側にあります。
+
+### 入射角（1.3 以降）
+
+第4区画は区間ごとの入射角[度]です。スラント補正に使います。
+
+```
+0 0 3 | 0 50  1 20  0 50 | 1 1 20 | 0 30 30
+                                    ^^^^^^^ 区間ごとの入射角
+```
+
+POKER のスラント補正は「**入射点における接面に対する角度**」を使います。
+テッセレーションでは三角形の法線がその接面の法線に相当するので、レイトレーサが
+そのまま計算できます。
+
+- **0 度** = 面の法線と同じ方向に入射（垂直入射）
+- **90 度** = 接面に平行（この場合は補正の意味がない）
+
+POKER 側は `buildup_first_zone` の区間の角度を使います。1.3 より前のファイルには
+角度が無いので、その場合は補正なし（0 度）として扱われます。
+
+鉄平板で検証したところ、生成側の角度と POKER の `slant_angle` が完全に一致し
+（0 / 30 / 45 / 59.99 度）、線量も 0.0052% で一致しました。
+
+**スラント補正のデータがあるのは鉄・コンクリート・鉛の 3 材質だけ**です。
+他の材質でビルドアップ第1層が決まる経路では、角度があっても補正されません。
+
 ## レコード
 
 ```
@@ -153,6 +202,7 @@ src det nseg | mat thick  mat thick ... | bu_type bu_mat bu_thick ...
 | `nseg` | 整数 | 第2区画の層数。1 以上 |
 | 第2区画 | `mat thick` × nseg | **減衰計算に使う生の層構成**。線源側から検出器側の順。`VOID`(id 0) と `Air` を含む |
 | 第3区画 | `bu_type` と `bu_mat bu_thick` × bu_type | **[参考] 生成側が判断した縮約後の層構成。POKER は読まない** |
+| 第4区画 | 区間ごとの入射角[度] | スラント補正に使う（1.3 以降、省略可） |
 
 - 区画の区切りは ` | `（空白＋縦棒＋空白）。区画内の値は空白区切りで、桁数は有効数字 6 桁（`%.6g`）。
 - 厚さの単位はヘッダの `unit`。**mfp ではありません。** エネルギー依存があるため、mfp 換算は POKER 側で群ごとに行ってください。
@@ -223,7 +273,10 @@ POKER は第2区画（材質と厚さの並び）から `get_buildup_material` �
 |---|---|
 | `information.format` が `paths` | オプションの指定違い（別種のファイルを渡した） |
 | `format_version` のメジャーが既知 | 未対応の版 |
-| `n_source_points` / `n_detectors` が YAML の定義と一致 | 古い `.paths` を渡した |
+| 線源数・線源ごとの点数が YAML と一致 | 線源や分割数を変えて再生成し忘れた |
+| **線源点の座標**が YAML と一致（相対 1e-4） | 分割の刻み方を変えた（点数が同じでも検出） |
+| 検出器の評価点数が YAML と一致 | 検出器を増減して再生成し忘れた |
+| **検出器の座標**が YAML と一致（相対 1e-4） | 検出器を動かして再生成し忘れた |
 | 第2区画の厚さ総和 = \|検出器座標 − 線源点座標\| | 単位換算ミス、座標系の取り違え、モデルの不整合 |
 | `src` < `n_source_points`、`det` < `n_detectors` | 索引の破損 |
 | 第2区画の要素数 = `nseg` | 行の破損 |
@@ -234,6 +287,10 @@ POKER は第2区画（材質と厚さの並び）から `get_buildup_material` �
 | 重みの総和 = 1 | 線源点の欠落、転記ミス |
 
 **距離の照合は特に重要です。** 単位換算ミスや座標系の取り違えを確実に捕まえられます。許容差は有効数字 6 桁に対応して相対 1e-5 程度が妥当です。
+
+座標の照合が要るのは、**件数だけでは通り抜ける**ためです。検出器を動かしても
+件数は変わらず、経路の層厚は動かす前の幾何のままなので、静かに誤った線量が出ます。
+分割の刻み方も同様で、r2×φ4×z3 と r3×φ4×z2 はどちらも 24 点です。
 
 **ただし重みや密度の誤りは距離照合では検出できません。** 層厚は正しいまま線量だけが狂うためです。`source_points` の `weight` と `materials` の `density` をそのまま使うことが唯一の防御になります。
 
@@ -250,8 +307,16 @@ POKER は第2区画（材質と厚さの並び）から `get_buildup_material` �
 YAML から取得します。入力の正本は YAML に保たれ、幾何が同じなら線源条件を変えても
 `.paths` を作り直す必要はありません。
 
-なお 1 で全分割点を得るには、入力に `thinnedindices` を置いて `sourcepoint` を
-十分大きくしてください（既定は 10 点で間引かれます）。
+なお 1 で全分割点を得るには `thinnedindices` の設定が要ります（既定は 10 点で
+間引かれます）。poker_mcp のツールで入力の実数に合わせられます。
+
+```javascript
+poker_updateThinnedIndices({ fit_for_paths: true })
+// → 線源分割定義(r×φ×z等)と検出器グリッドから必要数を計算して設定
+```
+
+グリッド検出器を使う場合は `detectorgrid` と `detectorevaluation` も要ります。
+`fit_for_paths` は 3 つまとめて設定します。
 
 照合ツール（`compare_poker_trace.py`、`audit_mfp.py`）は開発時の検証手段であり、実運用で毎回走らせるものではありません。実運用で毎回行うのは上の検算だけです。
 
