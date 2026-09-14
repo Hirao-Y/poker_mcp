@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
@@ -287,7 +287,7 @@
     },
     {
       "name": "poker_deleteBody",
-      "description": "立体を削除します（依存関係チェック付き）。依存ゾーンがある立体は孤立ゾーン防止のため既定では削除不可。cascade=true 明示時のみ、依存ゾーンを先に削除してから立体を削除。",
+      "description": "立体を削除します（依存関係チェック付き）。依存ゾーンがある立体は、孤立ゾーンを防ぐため既定では削除できません。cascade=true を明示した場合のみ、依存ゾーンを先に削除してから立体を削除します。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -297,8 +297,8 @@
           },
           "cascade": {
             "type": "boolean",
-            "default": false,
-            "description": "true の場合、この立体に割り当てられたゾーンを先に削除してから立体を削除（省略時 false。依存ゾーンがあるとエラー）"
+            "description": "true の場合、この立体に割り当てられたゾーンを先に削除してから立体を削除します（省略時 false。依存ゾーンがある場合はエラー）",
+            "default": false
           }
         },
         "required": [
@@ -1288,158 +1288,6 @@
       "inputSchema": {
         "type": "object",
         "properties": {
-          "name": {
-            "type": "string",
-            "description": "更新対象線源名"
-          },
-          "position": {
-            "type": "string",
-            "description": "新しい線源位置 (x y z形式)"
-          },
-          "inventory": {
-            "type": "array",
-            "description": "新しい核種インベントリ",
-            "items": {
-              "type": "object",
-              "properties": {
-                "nuclide": {
-                  "type": "string",
-                  "description": "核種名（連結形式、例: Cs137, Co60）",
-                  "pattern": "^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$"
-                },
-                "radioactivity": {
-                  "type": "number",
-                  "description": "放射能 (Bq)",
-                  "minimum": 0.001,
-                  "maximum": 1000000000000000000
-                }
-              },
-              "required": [
-                "nuclide",
-                "radioactivity"
-              ]
-            },
-            "minItems": 1
-          },
-          "geometry": {
-            "type": "object",
-            "description": "新しい線源形状パラメータ（完全なoneOf制約付き）",
-            "oneOf": [
-              {
-                "title": "BOX線源形状",
-                "properties": {
-                  "vertex": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "edge_1": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "edge_2": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "edge_3": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "transform": {
-                    "type": "string",
-                    "description": "適用する変換名",
-                    "pattern": "^[a-zA-Z0-9_]+$",
-                    "maxLength": 50
-                  }
-                },
-                "required": [
-                  "vertex",
-                  "edge_1",
-                  "edge_2",
-                  "edge_3"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "title": "RPP線源形状",
-                "properties": {
-                  "min": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "max": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "transform": {
-                    "type": "string",
-                    "description": "適用する変換名",
-                    "pattern": "^[a-zA-Z0-9_]+$",
-                    "maxLength": 50
-                  }
-                },
-                "required": [
-                  "min",
-                  "max"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "title": "SPH線源形状",
-                "properties": {
-                  "center": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "radius": {
-                    "type": "number",
-                    "minimum": 0.001,
-                    "maximum": 10000
-                  },
-                  "transform": {
-                    "type": "string",
-                    "description": "適用する変換名",
-                    "pattern": "^[a-zA-Z0-9_]+$",
-                    "maxLength": 50
-                  }
-                },
-                "required": [
-                  "center",
-                  "radius"
-                ],
-                "additionalProperties": false
-              },
-              {
-                "title": "RCC線源形状",
-                "properties": {
-                  "bottom_center": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "height_vector": {
-                    "type": "string",
-                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
-                  },
-                  "radius": {
-                    "type": "number",
-                    "minimum": 0.001,
-                    "maximum": 10000
-                  },
-                  "transform": {
-                    "type": "string",
-                    "description": "適用する変換名",
-                    "pattern": "^[a-zA-Z0-9_]+$",
-                    "maxLength": 50
-                  }
-                },
-                "required": [
-                  "bottom_center",
-                  "height_vector",
-                  "radius"
-                ],
-                "additionalProperties": false
-              }
-            ]
-          },
           "division": {
             "type": "object",
             "description": "新しい線源分割パラメータ（完全なoneOf制約付き）",
@@ -1790,6 +1638,158 @@
             "description": "新しいカットオフレート",
             "minimum": 0,
             "maximum": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "更新対象線源名"
+          },
+          "position": {
+            "type": "string",
+            "description": "新しい線源位置 (x y z形式)"
+          },
+          "inventory": {
+            "type": "array",
+            "description": "新しい核種インベントリ",
+            "items": {
+              "type": "object",
+              "properties": {
+                "nuclide": {
+                  "type": "string",
+                  "description": "核種名（連結形式、例: Cs137, Co60）",
+                  "pattern": "^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$"
+                },
+                "radioactivity": {
+                  "type": "number",
+                  "description": "放射能 (Bq)",
+                  "minimum": 0.001,
+                  "maximum": 1000000000000000000
+                }
+              },
+              "required": [
+                "nuclide",
+                "radioactivity"
+              ]
+            },
+            "minItems": 1
+          },
+          "geometry": {
+            "type": "object",
+            "description": "新しい線源形状パラメータ（完全なoneOf制約付き）",
+            "oneOf": [
+              {
+                "title": "BOX線源形状",
+                "properties": {
+                  "vertex": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "edge_1": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "edge_2": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "edge_3": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "transform": {
+                    "type": "string",
+                    "description": "適用する変換名",
+                    "pattern": "^[a-zA-Z0-9_]+$",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "vertex",
+                  "edge_1",
+                  "edge_2",
+                  "edge_3"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "title": "RPP線源形状",
+                "properties": {
+                  "min": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "max": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "transform": {
+                    "type": "string",
+                    "description": "適用する変換名",
+                    "pattern": "^[a-zA-Z0-9_]+$",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "min",
+                  "max"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "title": "SPH線源形状",
+                "properties": {
+                  "center": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "radius": {
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 10000
+                  },
+                  "transform": {
+                    "type": "string",
+                    "description": "適用する変換名",
+                    "pattern": "^[a-zA-Z0-9_]+$",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "center",
+                  "radius"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "title": "RCC線源形状",
+                "properties": {
+                  "bottom_center": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "height_vector": {
+                    "type": "string",
+                    "pattern": "^-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?\\s+-?\\d+(\\.\\d+)?$"
+                  },
+                  "radius": {
+                    "type": "number",
+                    "minimum": 0.001,
+                    "maximum": 10000
+                  },
+                  "transform": {
+                    "type": "string",
+                    "description": "適用する変換名",
+                    "pattern": "^[a-zA-Z0-9_]+$",
+                    "maxLength": 50
+                  }
+                },
+                "required": [
+                  "bottom_center",
+                  "height_vector",
+                  "radius"
+                ],
+                "additionalProperties": false
+              }
+            ]
           }
         },
         "required": [
@@ -2207,7 +2207,7 @@
     },
     {
       "name": "poker_executeCalculation",
-      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します",
+      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2215,6 +2215,10 @@
             "type": "string",
             "description": "計算に使用するYAMLファイル名（拡張子.yamlを含む）。ファイル名のみ指定（例: poker.yaml）で、POKER_MCP_HOME/tasks/ 配下のファイルが自動的に参照されます。絶対パスも指定可能です。",
             "pattern": "^([a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)|([a-zA-Z]:[\\\\/]|\\/)[^\\\\]+\\.(yaml|yml))$"
+          },
+          "path_input": {
+            "type": "string",
+            "description": "CAD から抽出した経路ファイル（.paths）。指定すると、YAML の立体・ゾーン定義の代わりにこのファイルの経路を幾何として使います（poker_cui の --path-input）。poker_generatePaths で生成できます。線源・検出器・材料・ビルドアップ設定は従来どおり YAML から取得するので、入力の正本は YAML に保たれます。ファイル名のみの指定で POKER_MCP_HOME/tasks/ 配下が参照されます。"
           },
           "summary_options": {
             "type": "object",
@@ -2329,6 +2333,13 @@
             "type": "string",
             "description": "対象線源名。check以外では必須（除外は線源ごとの管理のため）"
           },
+          "nuclides": {
+            "type": "array",
+            "description": "reject/confirm の対象核種名。省略時は reject=生成済み派生核種すべて、confirm=除外設定すべてが対象",
+            "items": {
+              "type": "string"
+            }
+          },
           "modifications": {
             "type": "array",
             "description": "confirm_with_modificationsアクション用の修正データ",
@@ -2359,13 +2370,6 @@
                 "include"
               ]
             }
-          },
-          "nuclides": {
-            "type": "array",
-            "description": "reject/confirm の対象核種名。省略時は reject=生成済み派生核種すべて、confirm=除外設定すべてが対象",
-            "items": {
-              "type": "string"
-            }
           }
         },
         "required": [
@@ -2391,7 +2395,7 @@
     },
     {
       "name": "poker_getDoseMap",
-      "description": "グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を .dose ファイルから取得し、線量マップ（grid 入れ子＋points）として返します。",
+      "description": "グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を .dose ファイルから取得し、線量マップとして返します（grid: 1D→[i], 2D→[j][i], 3D→[k][j][i]、points に i/j/k と座標）。サマリーはグリッドを間引く（一部省略）ため、完全なマップはこのツールで取得します。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2401,7 +2405,7 @@
           },
           "yaml_file": {
             "type": "string",
-            "description": "入力YAMLファイル名（省略時 poker.yaml）"
+            "description": "入力YAMLファイル名（.dose はこの名前に .dose を付したもの）。省略時は poker.yaml。"
           },
           "dose_type": {
             "type": "string",

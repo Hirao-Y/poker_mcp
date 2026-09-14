@@ -2,6 +2,7 @@
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { TASKS_DIR } from '../utils/paths.js';
 import { logger } from '../utils/logger.js';
 import { CalculationError } from '../utils/errors.js';
 
@@ -240,7 +241,7 @@ export class CalculationService {
    * @param {number} timeout タイムアウト時間（ミリ秒）
    * @returns {Promise<Object>} 計算結果
    */
-  async executeCalculation(yamlFile, summaryOptions = {}, outputFiles = {}, timeout = this.defaultTimeout) {
+  async executeCalculation(yamlFile, summaryOptions = {}, outputFiles = {}, timeout = this.defaultTimeout, pathInput = null) {
     // 前処理: 各種検証
     logger.info('Starting calculation validation', { yamlFile, summaryOptions, outputFiles });
     
@@ -301,7 +302,7 @@ export class CalculationService {
       absoluteYamlPath = yamlFile;
     } else {
       // 相対パスの場合、tasks/ディレクトリからの相対パスとして解決
-      absoluteYamlPath = path.resolve('tasks', yamlFile);
+      absoluteYamlPath = path.join(TASKS_DIR, yamlFile);
     }
     const args = [absoluteYamlPath];
     
@@ -316,6 +317,16 @@ export class CalculationService {
     }
     if (outputFiles.dose_file) {
       args.push('-d', outputFiles.dose_file);
+    }
+
+    // CAD から抽出した経路を幾何として使う。
+    //   YAML の立体・ゾーン定義の代わりに .paths の経路を読む。線源・検出器・
+    //   材料・ビルドアップ設定は従来どおり YAML から取得するので、入力の
+    //   正本は YAML に保たれる。
+    if (pathInput) {
+      const absPathInput = path.isAbsolute(pathInput)
+        ? pathInput : path.join(TASKS_DIR, pathInput);
+      args.push('--path-input', absPathInput);
     }
 
     logger.info('Executing poker_cui calculation', { 
@@ -540,7 +551,7 @@ export class CalculationService {
    * @param {Object} dataManager - データマネージャーインスタンス（オプション）
    * @returns {Promise<Object>} 実行結果
    */
-  async executeWithValidation(yamlFile, summaryOptions = {}, outputFiles = {}, timeout = this.defaultTimeout, dataManager = null) {
+  async executeWithValidation(yamlFile, summaryOptions = {}, outputFiles = {}, timeout = this.defaultTimeout, dataManager = null, pathInput = null) {
     try {
       logger.info('統合検証付き計算実行を開始', { yamlFile });
 
@@ -615,7 +626,7 @@ export class CalculationService {
       }
 
       // 通常の計算実行
-      const calculationResult = await this.executeCalculation(yamlFile, summaryOptions, outputFiles, timeout);
+      const calculationResult = await this.executeCalculation(yamlFile, summaryOptions, outputFiles, timeout, pathInput);
 
       // poker_cuiがエラーを返した場合、事後診断を実行
       if (!calculationResult.success && dataManager) {

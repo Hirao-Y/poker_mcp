@@ -17,7 +17,7 @@ export const calculationTools = [
   },
   {
     name: 'poker_executeCalculation',
-    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
+    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
     inputSchema: {
       type: 'object',
       properties: {
@@ -25,6 +25,10 @@ export const calculationTools = [
           type: 'string',
           description: '計算に使用するYAMLファイル名（拡張子.yamlを含む）。ファイル名のみ指定（例: poker.yaml）で、POKER_MCP_HOME/tasks/ 配下のファイルが自動的に参照されます。絶対パスも指定可能です。',
           pattern: '^([a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)|([a-zA-Z]:[\\\\\/]|\\/)[^\\\\]+\\.(yaml|yml))$'
+        },
+        path_input: {
+          type: 'string',
+          description: 'CAD から抽出した経路ファイル（.paths）。指定すると、YAML の立体・ゾーン定義の代わりにこのファイルの経路を幾何として使います（poker_cui の --path-input）。poker_generatePaths で生成できます。線源・検出器・材料・ビルドアップ設定は従来どおり YAML から取得するので、入力の正本は YAML に保たれます。ファイル名のみの指定で POKER_MCP_HOME/tasks/ 配下が参照されます。'
         },
         summary_options: {
           type: 'object',

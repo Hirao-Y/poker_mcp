@@ -115,7 +115,8 @@ export function createCalculationHandlers(taskManager) {
           summaryOptions,
           resolvedOutputFiles,
           undefined,
-          taskManager.dataManager
+          taskManager.dataManager,
+          args.path_input || null
         );
 
         // 事前検証で重大エラーが検出された場合の処理
