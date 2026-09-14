@@ -518,127 +518,111 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 
 ---
 
-## 🗂️ 第2.5章: 環境変数・データファイル関連問題
+## 🧭 第2.6章: CAD連携レイトレース（`.paths`）関連
 
-### 🔴 **問題E1: POKER_INSTALL_PATH環境変数未設定**
+FreeCAD から抽出した経路で計算する `--path-input` で遭遇しやすい問題です。
+いずれも**計算前に検出されて停止**します。静かに誤った結果が出ることはありません。
+
+### 🔴 **問題P1: source point count mismatch**
+
 ```
-症状:
-- 「MISSING_SOURCE_FILE」エラー
-- 「${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX not found」メッセージ
-- 核種データベース読み込み失敗
-
-診断・対処:
-「環境変数設定の緊急確認を実行してください：
-
-1. 環境変数確認:
-   Windows: echo %POKER_INSTALL_PATH%
-   Linux/macOS: echo $POKER_INSTALL_PATH
-   
-2. 環境変数未設定の場合:
-   Windows CMD: set POKER_INSTALL_PATH=C:/Poker
-   Windows PS: $env:POKER_INSTALL_PATH="C:/Poker"
-   Linux/macOS: export POKER_INSTALL_PATH="/usr/local/share/poker"
-   
-3. ソースファイル存在確認:
-   パス確認: %POKER_INSTALL_PATH%\LIB\ICRP-07.NDX
-   ファイル確認: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
-   
-4. Claude Desktop設定更新:
-   claude_desktop_config.jsonのenvセクションに追加:
-   "env": {
-     "POKER_INSTALL_PATH": "C:/Program Files/POKER"
-   }
-   
-5. Claude Desktop再起動・確認」
+source point count mismatch for 'SpentFuel': paths=3840 input=1920
+(regenerate the .paths file for the current input)
 ```
 
-### 🔴 **問題E2: データファイル権限問題**
-```
-症状:
-- 「EACCES: permission denied」エラー
-- dataディレクトリ作成失敗
-- ファイルコピー失敗
+**原因**: 入力 YAML の線源分割定義を変えた後、`.paths` を再生成していません。
 
-即座対処:
-「データファイル権限修復を実行してください：
+**対処**: `.paths` を作り直します。
 
-1. ディレクトリ権限確認:
-   Windows: dir "%POKER_MCP_HOME%\tasks" /Q
-   Linux: ls -la "$POKER_MCP_HOME/tasks/"
-   
-2. 権限修復:
-   Windows: 
-   icacls "%POKER_MCP_HOME%\tasks" /grant %USERNAME%:F
-   
-   Linux/macOS:
-   chmod 755 "$POKER_MCP_HOME/tasks/"
-   chown $USER:$USER "$POKER_MCP_HOME/tasks/"
-   
-3. 親ディレクトリ権限確認:
-   mkdir権限の確保
-   
-4. MCPサーバー再起動」
+```bash
+poker_cui model.yaml -p -t                       # 分割点を出力し直す
+freecadcmd -c "... gen_paths.main('spec.json')"  # .paths を再生成
 ```
 
-### 🟠 **問題E3: 核種データベースファイル破損**
+**よくある誤解**: `input=9` と出た場合、分割点ではなく**仮想点線源**の数です。
+`poker_cui` に `-p` を付け忘れると `point_source:` が出力されず、`gen_paths.py`
+が読めません。
+
+### 🔴 **問題P2: detector / source point position mismatch**
+
 ```
-症状:
-- 「Database loading failed」エラー
-- ICRP-07.NDX読み込み失敗
-- 子孫核種機能無効
-
-診断・修復:
-「データベースファイル完全性チェックを実行してください：
-
-1. ファイル存在・サイズ確認:
-   Windows: dir "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX"
-   予想サイズ: 約285KB (285,684 bytes)
-   
-2. ファイル完全性確認:
-   Windows: certutil -hashfile "%POKER_INSTALL_PATH%\LIB\ICRP-07.NDX" MD5
-   Linux: md5sum "$POKER_INSTALL_PATH/LIB/ICRP-07.NDX"
-   
-3. 破損ファイルの再配置:
-   POKER本体を再インストールしてLIBを復元
-   （MCP側にコピーは無いため再起動では復旧しません）
-   
-4. 手動ファイル配置:
-   起動ログで「source: POKER_INSTALL_PATH/LIB」を確認
-   
-5. 動作確認:
-   poker_confirmDaughterNuclidesで子孫核種機能テスト」
+detector position mismatch at index 3 ('D_side_r200'):
+  paths=200 0 230 input=250 0 230
 ```
 
-### 🟠 **問題E4: 環境変数設定の永続化**
+**原因**: 検出器を動かした、または線源の分割の刻み方を変えた後、`.paths` を
+再生成していません。**件数が同じでも座標が違えば検出されます**（r2×φ4×z3 と
+r3×φ4×z2 はどちらも 24 点）。
+
+**対処**: 問題P1 と同じく `.paths` を再生成します。
+
+**なぜ座標まで見るか**: 件数だけでは通り抜け、経路の層厚は動かす前の幾何のまま
+なので、静かに誤った線量が出るためです。
+
+### 🟠 **問題P3: 評価点が間引かれている**
+
 ```
-症状:
-- 再起動後に環境変数が失われる
-- セッション終了で設定リセット
-- Claude Desktop起動時に環境変数未設定
-
-永続化設定:
-「環境変数永続化設定を実行してください：
-
-1. Windows永続化:
-   システム環境変数設定:
-   setx POKER_INSTALL_PATH "C:/Poker"
-   
-   またはGUI設定:
-   システムプロパティ → 環境変数 → システム環境変数
-
-2. Linux/macOS永続化:
-   ~/.bashrc または ~/.profile に追加:
-   echo 'export POKER_INSTALL_PATH="/usr/local/share/poker"' >> ~/.bashrc
-   source ~/.bashrc
-   
-3. Claude Desktop設定永続化:
-   claude_desktop_config.jsonでの確実な設定
-   
-4. 設定確認:
-   新規ターミナル・セッションで環境変数確認」
+評価点が間引かれています: model.yaml.summary
+入力の thinnedindices.detectorgrid を評価点数以上にして poker_cui を -p 付きで
+再実行してください
 ```
 
----
+**原因**: `.summary` の出力件数が既定値（`sourcepoint` 10、`detectorgrid` 10、
+`detectorevaluation` 5）で間引かれており、全点が得られません。
+
+**対処**: MCP から入力の実数に合わせます。
+
+```javascript
+poker_updateThinnedIndices({ fit_for_paths: true })
+poker_applyChanges()
+```
+
+その後 `poker_cui model.yaml -p -t` を実行し直してから `.paths` を生成します。
+
+### 🟠 **問題P4: ビルドアップ材料が見つからない**
+
+```
+入力で定義されたビルドアップ材料：Iron がビルドアップ係数データの中に在りません
+```
+
+**原因**: 入力 YAML の `buildup_factor` で指定した層数と、経路の実際の材質構成が
+合っていません。`numlayers: 2` を指定したのに 2 層データ（`Lead-Iron` のような
+組み合わせ名）が登録されていない場合などです。
+
+**対処**: `lib_setting.dat` の `buildup_material` に該当の組み合わせがあるか
+確認します。単層で足りる場合は `numlayers` の指定を外してください。
+
+### 🟠 **問題P5: material 'X' is not defined in the input YAML**
+
+```
+material 'Concrete' in the paths file is not defined in the input YAML
+(no density available)
+```
+
+**原因**: CAD モデルに `.paths` 生成時点で存在した材質が、入力 YAML のゾーン定義に
+ありません。密度が決まらないので中止します。
+
+**対処**: YAML にその材質のゾーンを足すか、`.paths` の `materials` に `density` を
+書きます。CAD 側で材質を変更した場合は `.paths` の再生成も必要です。
+
+### 🟢 **問題P6: 線量が CSG 経由と食い違う**
+
+`.paths` 経由と CSG 経由で線量に差が出る場合、まず**テッセレーション偏差**を
+疑ってください。曲面を三角形で近似する際の誤差です。
+
+| 体系 | 偏差 0.5 mm での差 |
+|---|---|
+| 平板 | 0.005% |
+| 円筒 | 0.23% |
+| 球 | 0.63% |
+
+**球面や複曲面が支配的な体系では偏差を下げます**（`spec.json` の `deviation`）。
+球殻の実測で 0.1 mm なら 0.045%、0.02 mm なら 0.036% まで縮みます。
+
+これを超える差（数%以上）が出る場合は、材質の対応付けや密度の指定を確認して
+ください。`poker_cui ... --path-input ... -p` の入力エコーで、`zone:` に反映された
+材質と密度が見えます。
+
 
 ## 🔧 第3章: ログファイル活用
 

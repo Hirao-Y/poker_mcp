@@ -12,9 +12,28 @@ FreeCAD で 3D キャスクモデルを作成し、POKER-MCP 経由で点減衰�
 
 FreeCAD は mm、POKER は cm で扱うため、幾何寸法は 1/10 換算する。
 
+### CAD の形状をそのまま使う場合
+
+本手順は FreeCAD のモデルを見ながら POKER の CSG を手で組み立てるものです。
+フィレットや自由曲面のように CSG で表現しにくい形状がある場合は、**CAD から
+経路を抽出して POKER に渡す**方法もあります。
+
+```bash
+poker_cui model.yaml -p -t                            # 分割点を出力
+freecadcmd -c "... gen_paths.main('spec.json')"       # CAD をトレース
+poker_cui model.yaml --path-input model.paths -t      # 計算
+```
+
+この場合、YAML の立体・ゾーン定義は使われず、幾何は `.paths` から来ます。
+線源・検出器・材料・ビルドアップ設定は従来どおり YAML で指定します。
+詳細は [CAD_RAYTRACE.md](CAD_RAYTRACE.md)。
+
+ただし経路数が検出器の評価点数に比例するため、3D グリッド検出器のような
+体系では成立しません。**CSG 入力を置き換えるものではなく、使い分け**てください。
+
 ## 1. 環境
 
-- **poker-mcp サーバ**: `node C:/Users/yoshi/Desktop/poker_mcp/src/mcp_server_stdio_v4.js`
+- **poker-mcp サーバ**: `node C:/Users/yoshi/poker_mcp_github/src/mcp_server_stdio_v4.js`
   - 環境変数 `POKER_MCP_HOME`（作業ディレクトリ, 例 `C:/Users/yoshi/poker_mcp_workspace`）, `POKER_INSTALL_PATH`（`C:/Poker`）
   - 入力/出力は `POKER_MCP_HOME/tasks/poker.yaml`
 - **freecad-mcp サーバ**: FreeCAD 内で Python を実行（3D モデル作成）
