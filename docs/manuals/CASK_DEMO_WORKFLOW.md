@@ -18,10 +18,9 @@ FreeCAD は mm、POKER は cm で扱うため、幾何寸法は 1/10 換算す�
 フィレットや自由曲面のように CSG で表現しにくい形状がある場合は、**CAD から
 経路を抽出して POKER に渡す**方法もあります。
 
-```bash
-poker_cui model.yaml -p -t                            # 分割点を出力
-freecadcmd -c "... gen_paths.main('spec.json')"       # CAD をトレース
-poker_cui model.yaml --path-input model.paths -t      # 計算
+```javascript
+poker_generatePaths({ fcstd: "C:/Users/yoshi/Desktop/cask_simple.FCStd" })
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 ```
 
 この場合、YAML の立体・ゾーン定義は使われず、幾何は `.paths` から来ます。

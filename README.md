@@ -11,6 +11,38 @@ YAML-based input file management tool for radiation-shielding calculation code P
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
 
+## 🆕 バージョン1.8.0〜1.8.1の新機能
+
+### 📐 CAD連携が MCP だけで完結
+従来、CAD からの経路抽出は MCP を経由せず、FreeCAD を手で起動する必要が
+ありました。`spec.json` を手書きし、`poker_cui -p` を叩き、`freecadcmd` に
+スクリプトを渡す。3 手順すべてが手作業でした。
+
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+CAD ファイルを指定するだけになりました。分割点の取得、グリッド検出器の展開、
+ビルドアップ等価材料の解決（`Source_Dry` → `Tungsten` など）は自動です。
+
+### 🔍 FREECAD_PATH
+FreeCAD の場所を、環境変数 → PATH → 既定のインストール先の順で解決します。
+`POKER_INSTALL_PATH` のように固定の既定値を持てないのは、インストール先が
+バージョン番号を含むためです（FreeCAD 1.1, 1.0 …）。
+
+```json
+"env": {
+  "POKER_INSTALL_PATH": "C:\\Poker",
+  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
+}
+```
+
+### 🐛 相対パスの解決を修正
+`tasks/` 配下のファイル名指定が、プロセスのカレントディレクトリを基準に
+解決されていました。MCP サーバの起動場所によっては別の場所を指します。
+
+
 ## 🆕 バージョン1.7.0〜1.7.2の新機能
 
 ### 📉 サマリー出力量の制御（ThinnedIndices 操作系 3メソッド）
@@ -72,27 +104,30 @@ poker_getThinnedIndices()
 
 ### 📡 CAD連携レイトレース
 FreeCAD のソリッドモデルを、STEP のような中間フォーマットを介さず、CSG で
-表現し直す作業も無しに遮蔽体系として扱えます。線源点→検出器の直線を FreeCAD 側で
-追跡し、通過した材質と厚さを `.paths` ファイルで POKER に渡します。
+表現し直す作業も無しに遮蔽体系として扱えます。**MCP の 2 呼び出しで完結**します。
 
-```bash
-poker_cui model.yaml -p -t                            # 分割点を出力
-freecadcmd -c "... gen_paths.main('spec.json')"       # CAD をトレース
-poker_cui model.yaml --path-input model.paths -t      # 計算
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 ```
 
-POKER 側の `--path-input` も実装され、CSG 経由と一致することを平板・円筒・球の
-5 体系で確認済みです。フィレットや自由曲面のように CSG で表現できない形状も
-扱えます。**複数線源・グリッド検出器・スラント補正に対応**。
+線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と厚さを `.paths` に
+記録して POKER に渡します。分割点の取得、グリッド検出器の展開、ビルドアップ
+等価材料の解決はすべて自動です。
+
+CSG 経由と一致することを平板・円筒・球の 5 体系で確認済みです。フィレットや
+自由曲面のように CSG で表現できない形状も扱えます。**複数線源・グリッド検出器・
+スラント補正に対応**。
 
 他の CAD で作ったモデルも、STEP で FreeCAD に読み込めば同じパイプラインに
 乗ります。副産物として、POKER の改造なしで使える**簡易化の監査ツール**
 （ある形状を省略してよいかを定量化する）もあります。
 
+FreeCAD の場所は環境変数 `FREECAD_PATH` で指定します（未設定なら既定の
+インストール先を探索）。
+
 詳細は [CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)、フォーマットは
 [PATHS_FORMAT.md](./docs/manuals/PATHS_FORMAT.md)。
-
-詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
 ## 🆕 バージョン1.5.0の新機能
 

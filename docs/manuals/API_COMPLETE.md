@@ -2,7 +2,7 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.7.2  
+**🔧 対応システム**: Poker MCP Server v1.8.1  
 **🔧 バージョン**: 1.6.0 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
@@ -143,6 +143,70 @@ poker_updateThinnedIndices({ fit_for_paths: true })
 必要ですが、既定では間引かれるためです。5000 のような固定値ではなく入力の実数に
 合わせるので、なぜその値かが明確になります。
 
+### 📐 **CAD操作系 (1メソッド) - 経路ファイルの生成**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_generatePaths** | CAD モデルから経路ファイル(.paths)を生成 | FreeCAD をヘッドレス起動。分割点の取得から等価材料の解決まで自動 |
+
+FreeCAD のソリッドモデルから線源分割点→検出器評価点の直線を追跡し、通過した
+材質と厚さを記録します。フィレットや自由曲面のように CSG プリミティブで表現
+しにくい形状を、そのまま遮蔽計算に使えます。
+
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+```
+
+CAD ファイルを指定するだけです。**内部で次を自動的に行います。**
+
+- `poker_cui -p` の実行（分割点と検出器評価点の取得）
+- 検出器の展開（グリッド検出器も評価点ごとに列挙）
+- ビルドアップ等価材料の解決（`Source_Dry` → `Tungsten` など）
+- FreeCAD のヘッドレス起動とトレース
+
+**指定できる項目**
+
+| 項目 | 既定 | 用途 |
+|---|---|---|
+| `deviation` | 0.5 | テッセレーション偏差[mm]。球面主体なら下げる |
+| `unit_scale` | 0.1 | CAD → POKER の倍率（mm → cm） |
+| `mu_energy` | 1.25 | 層の縮約に使う参照エネルギー |
+| `source_name` | 全線源 | 対象の線源名 |
+| `buildup_exclude` | VOID, Air | ビルドアップ層の候補から除く材質 |
+| `chunk` | 32768 | レイトレースのバッチサイズ |
+
+応答の `spec_used` に、自動設定された内容（等価材料、FreeCAD のパスなど）が
+含まれます。
+
+**生成した経路で計算する**には `executeCalculation` に `path_input` を渡します。
+
+```javascript
+poker_executeCalculation({
+  yaml_file: "poker.yaml",
+  path_input: "poker.paths"
+})
+```
+
+立体・ゾーン定義の代わりに経路が使われますが、線源・検出器・材料・ビルドアップ
+設定は従来どおり YAML から取得します。**入力の正本は YAML に保たれる**ので、
+線源条件を変えても幾何が同じなら `.paths` を作り直す必要はありません。
+
+### FreeCAD の場所
+
+環境変数 `FREECAD_PATH` で指定します。実行ファイルでもインストールフォルダでも
+受け付けます。
+
+```json
+"env": {
+  "POKER_INSTALL_PATH": "C:\\Poker",
+  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
+}
+```
+
+未設定なら PATH を見たうえで、既定のインストール先（`Program Files` 等の
+`FreeCAD*`）を新しいバージョンから順に探します。見つからなければ設定方法を
+案内して中止します。
+
 ### 🔧 **System操作系 (6メソッド) - システム制御**
 
 | **メソッド名** | **機能** | **特徴** |
@@ -258,7 +322,7 @@ poker_getThinnedIndices()
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.7.2
+⚙️ Poker MCP Server v1.8.1
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕

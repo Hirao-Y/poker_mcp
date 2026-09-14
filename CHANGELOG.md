@@ -1,5 +1,37 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.8.1] - 2026-09-15
+
+### executeCalculation に path_input を追加（CAD 連携が MCP だけで完結）
+
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+内部で `poker_cui --path-input` を呼ぶ。線源・検出器・材料・ビルドアップ設定は
+従来どおり YAML から取得するので、入力の正本は YAML に保たれる。
+
+実測でキャスクモデル(3,840分割点 × 15検出器)の線量が従来の検証値と一致した
+(D_side_r130 = 1.8314e-2)。警告件数も 15 件で一致。
+
+### 相対パスの解決を修正
+
+`path.resolve('tasks', ...)` がプロセスのカレントディレクトリを基準にしていた。
+MCP サーバの起動場所によっては別の場所を指す。`TASKS_DIR` 基準に変更。
+
+`path_input` の実装中に発覚したもので、`yaml_file` 側も同じ問題を抱えていた
+(ハンドラが絶対パスに解決してから渡していたため表面化していなかった)。
+
+### ドキュメント
+
+- API_COMPLETE.md に CAD 操作系の節。generatePaths の全パラメータと
+  FREECAD_PATH の設定
+- README の CAD 連携を MCP 経由に書き換え、v1.8.x の節を新設
+- QUICK_REFERENCE に CAD 連携の最短手順とトラブル対応表
+- CASK_DEMO_WORKFLOW の .paths 案内を MCP 経由に
+
+
 ## [1.8.0] - 2026-09-15
 
 ### CAD 連携を MCP ツールにした（poker_generatePaths）

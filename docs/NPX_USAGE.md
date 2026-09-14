@@ -1,4 +1,4 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.7.2)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.8.1)
 
 ## 📦 起動方法
 
@@ -87,7 +87,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.7.2推奨）**
+## 🎯 **Claude Desktop での設定（v1.8.1推奨）**
 
 ### **推奨設定**
 ```json
@@ -276,4 +276,4 @@ npx poker-mcp
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.7.2** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.8.1** | 作者: Yoshihiro Hirao | ライセンス: ISC

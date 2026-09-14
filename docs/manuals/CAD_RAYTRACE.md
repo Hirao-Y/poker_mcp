@@ -212,7 +212,16 @@ CAD ファイルを指定するだけです。入力 YAML はサーバが持っ�
 展開、ビルドアップ等価材料の解決（`Source_Dry` → `Tungsten` など）、FreeCAD の
 場所です。何が使われたかは応答の `spec_used` で確認できます。
 
-生成後は次で計算します。
+生成後は `executeCalculation` に `path_input` を渡して計算します。
+
+```javascript
+poker_executeCalculation({
+  yaml_file: "poker.yaml",
+  path_input: "poker.paths"
+})
+```
+
+コマンドラインから実行する場合は次のとおりです。
 
 ```
 poker_cui model.yaml --path-input model.paths -t

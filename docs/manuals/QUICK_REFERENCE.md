@@ -7,6 +7,26 @@
 
 ---
 
+## 📐 CAD連携（最短手順）
+
+```javascript
+// 1. CAD から経路を抽出（分割点の取得・検出器の展開・等価材料の解決は自動）
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+
+// 2. その経路で計算
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+| 困ったとき | 対処 |
+|---|---|
+| FreeCAD が見つからない | `FREECAD_PATH` を設定（実行ファイルでもフォルダでも可） |
+| count mismatch / position mismatch | 入力を変えたら `.paths` を再生成する |
+| 評価点が間引かれている | `poker_updateThinnedIndices({ fit_for_paths: true })` |
+| CSG 経由と差が出る | まずテッセレーション偏差を疑う（`deviation` を下げる） |
+
+詳細は [CAD_RAYTRACE.md](CAD_RAYTRACE.md)、トラブル対応は
+[TROUBLESHOOTING.md](TROUBLESHOOTING.md) 第2.6章。
+
 ## 📖 第1章: 34メソッド早見表
 
 ### 🔷 Body操作系(3メソッド) - 10種類立体完全対応
