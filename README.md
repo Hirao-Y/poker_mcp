@@ -126,6 +126,36 @@ CSG 経由と一致することを平板・円筒・球の 5 体系で確認済�
 FreeCAD の場所は環境変数 `FREECAD_PATH` で指定します（未設定なら既定の
 インストール先を探索）。
 
+#### 必要なもの
+
+| | 入手 | 環境変数 |
+|---|---|---|
+| poker-mcp | `npm install poker-mcp` | — |
+| **POKER 本体** | 別途入手 | `POKER_INSTALL_PATH` |
+| **FreeCAD** | [freecad.org](https://www.freecad.org/)（無償） | `FREECAD_PATH` |
+
+numpy はレイトレーサが使いますが、FreeCAD に同梱されているので追加の
+インストールは不要です。
+
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\Users\\yoshi\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:\\Poker",
+  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
+}
+```
+
+`FREECAD_PATH` は既定の場所にインストールされていれば省略できます。
+
+#### モデル側の約束
+
+**ソリッドに `PokerMaterial` プロパティで材質名を設定**しておく必要があります
+（`Iron`、`Concrete` など、POKER の材料ライブラリの名前）。密度を上書きする場合は
+`PokerDensity` も設定します。
+
+他の CAD で作ったモデルを STEP で読み込んだ場合、材質情報は失われるので
+FreeCAD 上で設定してください。一度設定すれば `.FCStd` に保存されます。
+
 詳細は [CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)、フォーマットは
 [PATHS_FORMAT.md](./docs/manuals/PATHS_FORMAT.md)。
 

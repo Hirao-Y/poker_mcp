@@ -68,6 +68,31 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 > コピーする方式を廃止しました。コピーは「存在すればスキップ」だったため、
 > POKER を更新しても古いコピーを読み続ける問題がありました。
 
+### `FREECAD_PATH`（CAD連携を使う場合）
+
+`poker_generatePaths` で FreeCAD のモデルから経路を抽出する場合に使います。
+CAD 連携を使わないなら不要です。
+
+```bash
+# Windows（実行ファイルでもインストールフォルダでも可）
+set FREECAD_PATH=C:/Program Files/FreeCAD 1.1
+
+# Linux/macOS
+export FREECAD_PATH="/usr/lib/freecad"
+```
+
+**未設定でも、次の順で自動的に探します。**
+
+1. PATH に `freecadcmd` があるか
+2. 既定のインストール先（`Program Files` 等の `FreeCAD*`）を新しい順に
+
+`POKER_INSTALL_PATH` のように固定の既定値を持てないのは、FreeCAD の
+インストール先がバージョン番号を含むためです（FreeCAD 1.1, 1.0 …）。
+見つからなければ、設定方法を案内して中止します。
+
+レイトレーサは numpy を使いますが、FreeCAD に同梱されているので追加の
+インストールは不要です。
+
 ### データ格納先の構造
 ```
 POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/

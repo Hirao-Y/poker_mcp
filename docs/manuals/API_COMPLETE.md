@@ -191,6 +191,17 @@ poker_executeCalculation({
 設定は従来どおり YAML から取得します。**入力の正本は YAML に保たれる**ので、
 線源条件を変えても幾何が同じなら `.paths` を作り直す必要はありません。
 
+**`path_input` は任意です。** 省略すれば従来どおり YAML の立体・ゾーン定義から
+計算します。CAD 連携を使わない体系には影響しません。
+
+```javascript
+// 従来どおりの計算（CSG）
+poker_executeCalculation({ yaml_file: "poker.yaml" })
+```
+
+同じ体系を両方で計算すると、テッセレーション由来のわずかな差が出ます
+（平板 0.005%、円筒 0.23%、球 0.63%）。
+
 ### FreeCAD の場所
 
 環境変数 `FREECAD_PATH` で指定します。実行ファイルでもインストールフォルダでも

@@ -190,6 +190,20 @@ POKER の CSG（Constructive Solid Geometry、構成立体幾何）は円筒や�
 
 ## 使い方
 
+### 必要なもの
+
+| | 入手 | 環境変数 |
+|---|---|---|
+| poker-mcp | `npm install poker-mcp` | — |
+| POKER 本体 | 別途入手 | `POKER_INSTALL_PATH` |
+| FreeCAD | [freecad.org](https://www.freecad.org/)（無償） | `FREECAD_PATH` |
+
+numpy はレイトレーサが使いますが、FreeCAD に同梱（1.26.4 を確認）されているので
+追加のインストールは不要です。
+
+**モデル側**では、ソリッドに `PokerMaterial` プロパティで材質名を設定して
+おく必要があります。詳細は「モデル側の約束」の節を参照してください。
+
 ### MCP ツールから（推奨）
 
 ```javascript
