@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.8.1 (34メソッド完全実装)
+**対応バージョン**: Poker MCP Server v1.8.3 (34メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 
@@ -201,7 +201,7 @@ poker_proposeSource(name="Test", type="POINT", position="0 0 0",
 
 ### 5. Claude Desktop 側での確認
 
-ツール一覧に 33 個のツールが表示されることを確認します。
+ツール一覧に 34 個のツールが表示されることを確認します。
 表示されない場合は Claude Desktop のログ（`%APPDATA%\Claude\logs\`）に
 MCP サーバの起動失敗が記録されています。
 
@@ -362,4 +362,4 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 
 ---
 
-**Poker MCP Server v1.4.0** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.8.3** | 作者: Yoshihiro Hirao | ライセンス: ISC

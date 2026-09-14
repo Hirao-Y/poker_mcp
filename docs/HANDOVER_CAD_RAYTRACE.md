@@ -1,6 +1,6 @@
 # 引き継ぎ要約 — POKER-MCP / CAD 連携レイトレース
 
-このセッション（poker_mcp v1.5.0 → v1.8.1、POKER 2.1.1 → 2.1.5）で行った作業と、
+このセッション（poker_mcp v1.5.0 → v1.8.3、POKER 2.1.1 → 2.1.5）で行った作業と、
 判明した POKER の仕様。
 相手は NMRI の放射線遮蔽研究者（GitHub: Hirao-Y）。会話は日本語。
 
@@ -252,7 +252,7 @@ warnings:             # 常時。何も無ければ warnings: []
 
 ## 6. `.paths` パイプラインの現状
 
-**MCP の 2 呼び出しで完結する（v1.8.1〜）。**
+**MCP の 2 呼び出しで完結する（v1.8.0〜）。**
 
 ```javascript
 poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
@@ -424,7 +424,7 @@ push は毎回確認を取る。
 | グリッド検出器 | 完了。評価点ごとに展開（D_lid_map#1, #2, ...） |
 | 複数線源 | 完了。`.paths` 1.3 の `sources` ノードで区切る |
 | スラント補正 | 完了。第4区画に入射角。平板で一致 |
-| ThinnedIndices ツール | 完了。30 → 33 メソッド |
+| ThinnedIndices ツール | 完了。30 → 33 メソッド（その後 CAD 連携で 34） |
 | **CAD 連携の MCP ツール化** | 完了。poker_generatePaths + path_input で 2 呼び出し |
 | FREECAD_PATH | 完了。環境変数 → PATH → 既定の探索 |
 | 座標の照合 | 完了。件数だけでは通り抜ける誤りを検出 |

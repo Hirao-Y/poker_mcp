@@ -1,4 +1,4 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.8.1)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.8.3)
 
 ## 📦 起動方法
 
@@ -301,4 +301,4 @@ npx poker-mcp
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.8.1** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.8.3** | 作者: Yoshihiro Hirao | ライセンス: ISC

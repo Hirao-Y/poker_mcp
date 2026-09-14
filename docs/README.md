@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.8.1
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.8.3
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（34メソッド完全実装）
 
@@ -14,6 +14,32 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
+
+### 🆕 v1.8.0〜v1.8.3 新機能
+- **CAD連携が MCP だけで完結（v1.8.0〜）**: `poker_generatePaths` で FreeCAD の
+  モデルから経路を抽出し、`poker_executeCalculation` の `path_input` で計算。
+  従来は FreeCAD を手で起動し `spec.json` を書く必要があった
+- **FREECAD_PATH（v1.8.0）**: 環境変数 → PATH → 既定のインストール先の順で解決
+- **相対パス解決の修正（v1.8.1）**: `tasks/` 配下の指定がプロセスのカレント
+  ディレクトリ基準になっていた問題を修正
+- **サマリー衝突の修正（v1.8.3）**: `generatePaths` と `executeCalculation` が
+  同じ `.summary` を奪い合っていた問題を修正
+
+### 🆕 v1.7.0〜v1.7.2 新機能
+- **ThinnedIndices 操作系 3メソッド（v1.7.0）**: サマリー出力量の制御。
+  `fit_for_paths` で入力の実数に自動設定
+- **保留中の変更の可視化（v1.7.2）**: `get` 系が `pending` を併記。`propose` の
+  直後に `get` を呼んでも変更が見える
+- **`.paths` の座標照合（v1.7.1）**: 検出器を動かして再生成し忘れた場合を検出
+
+### 🆕 v1.6.0 新機能
+- **CAD連携レイトレース（実験的導入）**: FreeCAD のソリッドを遮蔽体系として扱う
+  ツール群。`.paths` フォーマットの策定
+- **材料システムのライブラリ準拠**: `lib_material.dat` を正とする
+
+### 🆕 v1.5.0 新機能
+- **poker_openGui の改善**: POKER を閉じずに表示を切り替え（POKER 2.1.1 以降）
+- **偽の成功報告を修正**: 起動後の生存確認を追加
 
 ### 🆕 v1.4.0 新機能・修正
 - **子孫核種の自動管理（v1.4.0）**: 親を指定すると娘が自動生成され、親の更新・削除に追随。除外は線源ごとに記録
@@ -160,7 +186,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 
 ---
 
-## 📊 システム仕様（v1.4.0）
+## 📊 システム仕様
 
 ### 💻 動作要件
 - **Node.js**: 18.0.0以上（推奨: 20.0.0以上）
@@ -183,7 +209,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 
 ---
 
-## 🔗 外部連携（v1.4.0対応）
+## 🔗 外部連携
 
 ### 📊 POKER計算コード連携
 - YAML入力ファイル生成（34メソッド対応）
@@ -214,7 +240,7 @@ total_doses = summary['result_total']
 
 ---
 
-## ⚠️ 注意事項（v1.4.0）
+## ⚠️ 注意事項
 
 ### 🔧 システム制限
 - YAMLファイルサイズ: 推奨10MB以下
@@ -236,11 +262,11 @@ total_doses = summary['result_total']
 
 ---
 
-## 📞 サポート（v1.4.0対応）
+## 📞 サポート
 
 ### 🆘 問題発生時
 1. **エラーコード確認**: 13種類のエラーコードから対処法特定
-2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認（v1.4.0更新）
+2. **[TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)** を確認
 3. **自動修復機能**の活用（YAMLファイル破損時）
 4. **Unit操作**で単位系の整合性確認
 
@@ -257,7 +283,7 @@ total_doses = summary['result_total']
 
 ---
 
-## 🌟 プロジェクトの価値（v1.4.0）
+## 🌟 プロジェクトの価値
 
 ### ✨ 研究者への価値
 - **効率化**: 34メソッドによる入力ファイル作成時間80%短縮
@@ -287,24 +313,24 @@ total_doses = summary['result_total']
 
 ## 🔄 更新履歴
 
-### v1.4.0
+### v1.8.3
 - 子孫核種の自動管理（親の更新・削除に追随、除外は線源ごと）
 - ICRP-07パーサの列位置誤りを修正（全核種で子孫核種が取得不能だった）
 - 核種DBを POKER_INSTALL_PATH/LIB から直接参照
 
-### v1.3.0
+### v1.8.3
 - poker_getDoseMap、構造化 result_total、材料カタログ統合
 
-### v1.2.8
+### v1.8.3
 - ✅ **poker_openGui 追加**: POKER.exe GUI 起動（自動保存・Windows専用）
 - ✅ **34メソッド完全実装**: System系に openGui を追加
 
-### v1.2.6〜v1.2.7
+### v1.8.3〜v1.2.7
 - ✅ **SERVER DISCONNECTED 修正**: npx 起動時の EPERM 問題を解消
 - ✅ **POKER_MCP_HOME 環境変数**: 作業ディレクトリの柔軟な指定
 - ✅ **yaml_file パス自動解決**: ファイル名のみ指定で TASKS_DIR を参照
 
-### v1.2.5
+### v1.8.3
 - ✅ **29メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・confirmDaughterNuclides 追加
 - ✅ **子孫核種自動追加**: ICRP-07データベース統合
 - ✅ **サマリーファイル4セクション**: 完全解析対応
@@ -313,6 +339,6 @@ total_doses = summary['result_total']
 ---
 
 **🚀 今すぐ始める**: Claude Desktopで「poker_getUnitで単位系を確認して」と入力
-**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照（v1.4.0更新）
+**📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照
 **⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で28メソッド確認
 **💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認
