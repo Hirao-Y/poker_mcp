@@ -1,4 +1,4 @@
-# 📚 Poker MCP Server - マニュアル体系 (v1.6.0)
+# 📚 Poker MCP Server - マニュアル体系 (v1.7.2)
 
 **🎯 対象**: 放射線遮蔽研究者・安全解析・申請実務家・設計エンジニア  
 **🔧 システム**: Poker MCP Server v1.7.0 (33メソッド完全実装)  
@@ -535,7 +535,7 @@ poker_validateUnitIntegrity      # 整合性確認
 
 ---
 
-**🎯 Poker MCP Server v1.6.0 - 33メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
+**🎯 Poker MCP Server v1.7.2 - 33メソッド完全実装により、世界最高水準の放射線遮蔽計算環境を実現**
 
 **📅 最終更新: 2025年1月24日**  
 **📧 サポート: GitHub Issues**  

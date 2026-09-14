@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.6.0
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.7.2
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（33メソッド完全実装）
 
@@ -249,8 +249,8 @@ total_doses = summary['result_total']
 - **33メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
 - **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
-- **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.6.0更新）
-- **CAD連携レイトレース**: [CAD_RAYTRACE.md](manuals/CAD_RAYTRACE.md) / [PATHS_FORMAT.md](manuals/PATHS_FORMAT.md)（v1.6.3）
+- **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.7.2更新）
+- **CAD連携レイトレース**: [CAD_RAYTRACE.md](manuals/CAD_RAYTRACE.md) / [PATHS_FORMAT.md](manuals/PATHS_FORMAT.md)（v1.7.2）
 - **POKER の内部構造**: [POKER_INTERNALS.md](manuals/POKER_INTERNALS.md)（透視線の扱い、zones と ranges の関係）
 - **開発の引き継ぎ**: [HANDOVER_CAD_RAYTRACE.md](HANDOVER_CAD_RAYTRACE.md)
 - **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.4.0更新）

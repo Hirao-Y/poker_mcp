@@ -11,6 +11,37 @@ YAML-based input file management tool for radiation-shielding calculation code P
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
 
+## 🆕 バージョン1.7.0〜1.7.2の新機能
+
+### 📉 サマリー出力量の制御（ThinnedIndices 操作系 3メソッド）
+`thinnedindices` ノードを MCP から設定できます。`.paths` の生成では全ての
+線源分割点と検出器評価点が必要ですが、既定では間引かれるため手で書き足す
+必要がありました。
+
+```javascript
+poker_updateThinnedIndices({ fit_for_paths: true })
+// → 入力の分割定義と検出器グリッドから必要数を計算して設定
+```
+
+既定値は poker_mcp 側で持ちません。省略しても `.summary` には全 7 キーが
+値付きで出力されるので、そちらを正とします。
+
+### 🔄 保留中の変更が `get` で見えるように
+`propose` の直後に `get` を呼ぶと変更が見えず、「反映されていない」と誤解する
+余地がありました。確定値とは別に `pending` として示します。
+
+```javascript
+poker_proposeThinnedIndices({ sourcepoint: 100 })
+poker_getThinnedIndices()
+// → { thinnedindices: null, pending: { sourcepoint: 100 }, pending_count: 1 }
+```
+
+### 🛡️ `.paths` の座標照合
+件数だけでなく座標も YAML と突き合わせます。検出器を動かして `.paths` を
+再生成し忘れると、件数は変わらないため従来は通り抜け、**静かに誤った線量**が
+出ていました。
+
+
 ## 🆕 バージョン1.6.0の新機能
 
 ### 🧱 カスタム材料をライブラリ追加だけで使えるように
@@ -39,10 +70,27 @@ YAML-based input file management tool for radiation-shielding calculation code P
 だけが素通しする三層不整合でした。変更・解除（空文字指定）に対応し、
 標準材料への指定や非標準材料の指定を拒否する検証も追加しています。
 
-### 📡 CAD連携レイトレース（実験的）
-FreeCAD のソリッドモデルを中間フォーマット無しで遮蔽体系として扱うための
-ツール群を `tools/` に追加しました。詳細は
-[CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)。
+### 📡 CAD連携レイトレース
+FreeCAD のソリッドモデルを、STEP のような中間フォーマットを介さず、CSG で
+表現し直す作業も無しに遮蔽体系として扱えます。線源点→検出器の直線を FreeCAD 側で
+追跡し、通過した材質と厚さを `.paths` ファイルで POKER に渡します。
+
+```bash
+poker_cui model.yaml -p -t                            # 分割点を出力
+freecadcmd -c "... gen_paths.main('spec.json')"       # CAD をトレース
+poker_cui model.yaml --path-input model.paths -t      # 計算
+```
+
+POKER 側の `--path-input` も実装され、CSG 経由と一致することを平板・円筒・球の
+5 体系で確認済みです。フィレットや自由曲面のように CSG で表現できない形状も
+扱えます。**複数線源・グリッド検出器・スラント補正に対応**。
+
+他の CAD で作ったモデルも、STEP で FreeCAD に読み込めば同じパイプラインに
+乗ります。副産物として、POKER の改造なしで使える**簡易化の監査ツール**
+（ある形状を省略してよいかを定量化する）もあります。
+
+詳細は [CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)、フォーマットは
+[PATHS_FORMAT.md](./docs/manuals/PATHS_FORMAT.md)。
 
 詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
 
