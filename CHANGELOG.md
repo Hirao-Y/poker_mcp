@@ -1,5 +1,60 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.8.0] - 2026-09-15
+
+### CAD 連携を MCP ツールにした（poker_generatePaths）
+
+従来、CAD からの経路抽出は MCP を経由せず、FreeCAD を手で起動する必要があった。
+
+  1. spec.json を手書き（絶対パスを 4 箇所）
+  2. poker_cui -p で分割点と評価点を出す
+  3. freecadcmd を起動して gen_paths.py を走らせる
+
+これを 1 つのツールにまとめた。
+
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+```
+
+CAD ファイルを指定するだけで、内部で次を行う。
+
+- `poker_cui -p` の実行（分割点と検出器評価点の取得）
+- 検出器の展開（グリッド検出器も評価点ごとに列挙）
+- **ビルドアップ等価材料の自動解決**（`Source_Dry` → `Tungsten` など。
+  未指定だと `no buildup data for` で失敗していた）
+- FreeCAD をヘッドレス起動してトレース
+- 生成結果の要約と、使った spec の報告
+
+実測でキャスクモデル（3,840 分割点 × 15 検出器 = 57,600 経路）が 1 回の呼び出しで
+生成でき、その `.paths` で計算した線量が従来の検証値と一致した。
+
+### FREECAD_PATH 環境変数
+
+FreeCAD の場所を解決する順序。
+
+1. 環境変数 `FREECAD_PATH`（実行ファイルでもインストールフォルダでも可）
+2. PATH に `freecadcmd` があるか
+3. 既定のインストール先を走査（`Program Files` 等の `FreeCAD*` を新しい順）
+
+`POKER_INSTALL_PATH` のように固定の既定値を持てないのは、FreeCAD の
+インストール先がバージョン番号を含むため（FreeCAD 1.1, FreeCAD 1.0 …）。
+見つからなければ設定方法を案内して中止する。
+
+### 指定できるパラメータ
+
+| 項目 | 既定 | 備考 |
+|---|---|---|
+| `deviation` | 0.5 | テッセレーション偏差[mm]。球面主体なら下げる |
+| `unit_scale` | 0.1 | CAD → POKER の倍率（mm → cm） |
+| `mu_energy` | 1.25 | 層の縮約に使う参照エネルギー |
+| `source_name` | 全線源 | 対象の線源名 |
+| `buildup_exclude` | VOID, Air | ビルドアップ層の候補から除く材質 |
+| `chunk` | 32768 | レイトレースのバッチサイズ |
+
+応答に `spec_used` を含めるので、自動設定された等価材料や FreeCAD のパスも
+確認できる。
+
+
 ## [1.7.2] - 2026-09-14
 
 ### get 系ツールが保留中の変更も示すようにした

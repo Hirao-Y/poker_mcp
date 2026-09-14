@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.7.0 (33メソッド完全実装)
+**対応バージョン**: Poker MCP Server v1.7.0 (34メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 
@@ -183,7 +183,7 @@ node src/mcp_server_stdio_v4.js
 
 ```powershell
 npm run check:manifest
-# → OK: マニフェストと実行時ツール定義は同期しています (33 tools)
+# → OK: マニフェストと実行時ツール定義は同期しています (34 tools)
 ```
 
 ### 4. 子孫核種機能の動作確認

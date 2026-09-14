@@ -7,6 +7,7 @@ import { createSourceHandlers } from './sourceHandlers.js';
 import { createDetectorHandlers } from './detectorHandlers.js';
 import { createUnitHandlers } from './unitHandlers.js';
 import { createThinnedIndicesHandlers } from './thinnedIndicesHandlers.js';
+import { createCadHandlers } from './cadHandlers.js';
 import { createCalculationHandlers } from './calculationHandlers.js';
 import { resetHandlers } from './resetHandlers.js';
 import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
@@ -35,6 +36,7 @@ export function createAllHandlers(taskManager) {
     // 単位操作
     ...createUnitHandlers(taskManager),
     ...createThinnedIndicesHandlers(taskManager),
+    ...createCadHandlers(taskManager),
     
     // 計算操作
     ...createCalculationHandlers(taskManager),

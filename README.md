@@ -336,7 +336,7 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **33メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **34メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -355,7 +355,7 @@ Claude Desktopで以下のようにテストできます：
 
 ## 🎯 API構成
 
-### 🔧 **33メソッド完全実装**
+### 🔧 **34メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -368,7 +368,7 @@ Claude Desktopで以下のようにテストできます：
 | **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
 | **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・各種検証 |
 
-### 📋 **全33メソッド一覧**
+### 📋 **全34メソッド一覧**
 ```
 Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
 Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  

@@ -8,6 +8,7 @@ import { detectorTools } from './detectorTools.js';
 import { commonTools } from './commonTools.js';
 import { unitTools } from './unitTools.js';
 import { thinnedIndicesTools } from './thinnedIndicesTools.js';
+import { cadTools } from './cadTools.js';
 import { calculationTools } from './calculationTools.js';
 import { resetTools } from './resetTools.js';
 import { daughterNuclideTools } from './daughterNuclideTools.js';
@@ -23,6 +24,7 @@ export const allTools = [
   ...commonTools,
   ...unitTools,
   ...thinnedIndicesTools,
+  ...cadTools,
   ...calculationTools,
   ...resetTools,
   ...daughterNuclideTools,
@@ -39,6 +41,7 @@ export {
   commonTools,
   unitTools,
   thinnedIndicesTools,
+  cadTools,
   calculationTools,
   resetTools,
   daughterNuclideTools,

@@ -188,6 +188,68 @@ POKER の CSG（Constructive Solid Geometry、構成立体幾何）は円筒や�
 
 規模の目安として、応答時間 5 分を上限とするなら **約 100 万レイ**が現実的な上限になります。線源分割 3,840 点なら検出器 267 点まで。蓋面の 2D グリッド 16×16 = 256 点は約 4 分で収まりますが、3D グリッド 25³ = 15,625 点は 4.9 時間となり成立しません。**経路注入は既存の CSG 入力を置き換えるものではなく、併存させる**前提で使ってください。
 
+## 使い方
+
+### MCP ツールから（推奨）
+
+```javascript
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+```
+
+CAD ファイルを指定するだけです。入力 YAML はサーバが持っているので、分割点の
+取得も検出器の展開も内部で行います。
+
+| 指定できる項目 | 既定 | 用途 |
+|---|---|---|
+| `deviation` | 0.5 | テッセレーション偏差[mm]。球面主体なら下げる |
+| `unit_scale` | 0.1 | CAD → POKER の倍率（mm → cm） |
+| `mu_energy` | 1.25 | 層の縮約に使う参照エネルギー |
+| `source_name` | 全線源 | 対象の線源名 |
+| `buildup_exclude` | VOID, Air | ビルドアップ層の候補から除く材質 |
+| `chunk` | 32768 | レイトレースのバッチサイズ |
+
+**自動で設定されるもの**は、分割点と評価点の取得（`poker_cui -p`）、検出器の
+展開、ビルドアップ等価材料の解決（`Source_Dry` → `Tungsten` など）、FreeCAD の
+場所です。何が使われたかは応答の `spec_used` で確認できます。
+
+生成後は次で計算します。
+
+```
+poker_cui model.yaml --path-input model.paths -t
+```
+
+### FreeCAD の場所
+
+環境変数 `FREECAD_PATH` で指定します。実行ファイルでもインストールフォルダでも
+受け付けます。
+
+```json
+"env": {
+  "POKER_INSTALL_PATH": "C:\\Poker",
+  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
+}
+```
+
+未設定の場合は、PATH を見たうえで既定のインストール先（`Program Files` 等の
+`FreeCAD*`）を新しいバージョンから順に探します。`POKER_INSTALL_PATH` のように
+固定の既定値を持てないのは、インストール先がバージョン番号を含むためです。
+
+見つからなければ、設定方法を案内して中止します。
+
+### 直接実行する場合
+
+MCP を使わずに動かすこともできます。`spec.json` を手で書き、FreeCAD を
+ヘッドレスで起動します。
+
+```powershell
+& "C:\Program Files\FreeCAD 1.1\bin\freecadcmd.exe" -c `
+  "import sys; sys.path.insert(0, r'<repo>\tools'); import gen_paths; gen_paths.main(r'<spec>.json')"
+```
+
+**GUI の MCP ブリッジ経由では実行しないでください。** 数万レイのトレースが GUI
+スレッドを数十秒占有し、RPC タイムアウト後にブリッジの標準出力が壊れます
+（FreeCAD の再起動が必要になります）。
+
 ## 線源点は POKER から取る
 
 `gen_paths.py` は線源の分割点を**自前で生成しません**。`poker_cui -p` が出力する `input:` セクションの `point_source:`（位置と線源強度補正係数）をそのまま読みます。
