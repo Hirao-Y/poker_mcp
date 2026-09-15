@@ -4,14 +4,15 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.6.0
+- **バージョン**: 1.8.3
+- **ツール数**: 34メソッド
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
 
-## 🆕 バージョン1.8.0〜1.8.1の新機能
+## 🆕 バージョン1.8.0〜1.8.3の新機能
 
 ### 📐 CAD連携が MCP だけで完結
 従来、CAD からの経路抽出は MCP を経由せず、FreeCAD を手で起動する必要が
@@ -42,6 +43,15 @@ FreeCAD の場所を、環境変数 → PATH → 既定のインストール先�
 `tasks/` 配下のファイル名指定が、プロセスのカレントディレクトリを基準に
 解決されていました。MCP サーバの起動場所によっては別の場所を指します。
 
+
+### 📦 CAD連携ツールを npm パッケージに同梱（v1.8.2）
+`poker_generatePaths` が使う Python スクリプトが `files` に含まれておらず、
+GitHub から clone した環境でしか動きませんでした。`npm install` / `npx` でも
+使えるようにしています。
+
+### 🐛 サマリーの衝突を修正（v1.8.3）
+`generatePaths` が `-p` 付きで作ったサマリーを `executeCalculation` が上書きし、
+次に `generatePaths` を呼ぶと失敗していました。専用ファイルに分離しています。
 
 ## 🆕 バージョン1.7.0〜1.7.2の新機能
 
@@ -432,6 +442,8 @@ Claude Desktopで以下のようにテストできます：
 | **📡 Source** | 3個 | 線源管理 | propose・update・delete |
 | **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
 | **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
+| **📉 ThinnedIndices** | 3個 | サマリー出力量の制御 | propose・get・update |
+| **📐 CAD** | 1個 | 経路ファイルの生成 | generatePaths |
 | **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・各種検証 |
 
 ### 📋 **全34メソッド一覧**
@@ -445,6 +457,9 @@ Source系 (3):        poker_proposeSource, poker_updateSource, poker_deleteSourc
 Detector系 (3):      poker_proposeDetector, poker_updateDetector, poker_deleteDetector
 Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
                      poker_validateUnitIntegrity, poker_analyzeUnitConversion
+ThinnedIndices系 (3): poker_proposeThinnedIndices, poker_getThinnedIndices,
+                     poker_updateThinnedIndices
+CAD系 (1):           poker_generatePaths
 System系 (6):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
                      poker_confirmDaughterNuclides, poker_openGui, 内部検証メソッド群
 ```
@@ -463,9 +478,10 @@ poker_mcp/
 │   │   ├── logger.js                # ログ出力（絶対パス）
 │   │   └── ...
 │   └── 📁 config/                   # 設定管理
+├── 📁 tools/                        # 🔧 CAD連携（レイトレーサ・経路生成）
 ├── 📁 docs/                         # 📚 完全ドキュメント
 ├── .mcp.json                        # MCPクライアント接続設定
-├── package.json                     # パッケージ定義（v1.2.6）
+├── package.json                     # パッケージ定義
 └── README.md                        # このファイル
 
 # 実行時に自動作成されるディレクトリ（POKER_MCP_HOME配下）
@@ -563,6 +579,7 @@ POKER_MCP_HOME/
 
 - **POKER**: 放射線遮蔽計算メインコード
 - **poker_cui**: コマンドライン実行インターフェース
+- **FreeCAD**: CAD連携レイトレース（`poker_generatePaths` を使う場合のみ）
 
 ## 🔗 システム要件
 
@@ -570,6 +587,8 @@ POKER_MCP_HOME/
 - **OS**: Windows, macOS, Linux
 - **MCP Client**: Claude Desktop (推奨)、その他MCPクライアント
 - **メモリ**: 512MB以上推奨（大規模検出器使用時は1GB以上）
+- **POKER 本体**: v2.1.5 以降（`POKER_INSTALL_PATH` で場所を指定）
+- **FreeCAD**: 1.0 以降（CAD連携を使う場合。`FREECAD_PATH`、未設定なら自動探索）
 
 ## 🎯 実際の使用ワークフロー
 
@@ -593,6 +612,31 @@ POKER_MCP_HOME/
    - 法規制適合性の確認
 
 ## 📝 更新履歴
+
+### v1.8.0〜v1.8.3 (2026-09)
+- ✨ CAD連携が MCP だけで完結（`poker_generatePaths` と `path_input`）
+- ✨ `FREECAD_PATH` 環境変数（未設定なら PATH と既定の場所を自動探索）
+- 🐛 相対パスの解決をプロセスのカレントから `TASKS_DIR` 基準に修正
+- 🐛 `generatePaths` と `executeCalculation` のサマリー衝突を修正
+
+### v1.7.0〜v1.7.2 (2026-09)
+- ✨ ThinnedIndices 操作系 3メソッド（サマリー出力量の制御）
+- ✨ `get` 系が保留中の変更を `pending` として併記
+- ✨ `.paths` の座標照合（検出器を動かして再生成し忘れた場合を検出）
+
+### v1.6.0 (2026-09)
+- ✨ CAD連携レイトレースのツール群と `.paths` フォーマット
+- ✨ 材料システムを `lib_material.dat` 準拠に
+
+### v1.5.0 (2026-08)
+- ✨ `poker_openGui` で POKER を閉じずに表示を切り替え（POKER 2.1.1 以降）
+- 🐛 起動失敗時の偽の成功報告を修正
+
+### v1.4.0 (2026-07)
+- ✨ 子孫核種の自動管理（ICRP-07 準拠）
+
+### v1.3.0 (2026-06)
+- ✨ `poker_getDoseMap`（グリッド検出器の線量マップ取得）
 
 ### v1.2.8 (2026-05-16)
 - ✨ `poker_openGui` メソッドを新設（POKER.exe でGUI確認）
