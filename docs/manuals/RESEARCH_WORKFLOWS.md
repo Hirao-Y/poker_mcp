@@ -127,7 +127,7 @@ Claude Desktop 指示:
    ※ output_files も POKER_MCP_HOME/tasks/ 配下に自動作成されます。
 
 サマリーファイル解析:
-2. ct_room_summary.yamlの4セクションを解析:
+2. ct_room_summary.yamlの5セクションを解析:
    
    a) 入力パラメータセクション:
       - 全設定の確認

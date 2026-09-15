@@ -384,7 +384,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 | **Task Manager** | データ管理 | `src/services/TaskManager.js` | js-yaml |
 | **Validator** | 入力検証 | `src/validators/*.js` | zod |
 | **Logger** | ログ管理 | `src/utils/logger.js` | winston |
-| **Backup System** | 自動バックアップ | `src/services/BackupService.js` | - |
+| **Backup System** | 自動バックアップ | `src/services/DataManager.js` | - |
 
 ### 🔌 **MCP通信プロトコル**
 
@@ -501,7 +501,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 }
 ```
 
-**対応材料13種**:
+**対応材料23種**（lib_material.dat から読み込み）:
 > **材料の正は `%POKER_INSTALL_PATH%/LIB/lib_material.dat`。** 材料名は大文字小文字を無視して指定でき（内部で正式名へ正規化。`Aluminum`→`Aluminium`）、`proposeZone` の密度は省略時にカタログ密度が採用されます。全材料・ビルドアップ等価材料の詳細は [MATERIAL_SYSTEM.md](./MATERIAL_SYSTEM.md) を参照。
 
 **標準材料（固有ビルドアップデータを持つ 13 種）**
