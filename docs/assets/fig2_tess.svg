@@ -1,1 +1,18 @@
-��1�Y�
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 820 285" font-family="Noto Sans CJK JP, Hiragino Sans, Yu Gothic, sans-serif">
+<rect width="820" height="285" fill="#ffffff"/>
+<text x="185" y="30" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">真の円筒面</text>
+<text x="575" y="30" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">テッセレーション後</text>
+<circle cx="185" cy="150" r="78" fill="none" stroke="#2c6fbb" stroke-width="3"/>
+<circle cx="185" cy="150" r="4" fill="#5c6670"/>
+<line x1="300" y1="150" x2="368" y2="150" stroke="#5c6670" stroke-width="2.5"/>
+<polygon points="376,150 362,143 362,157" fill="#5c6670"/>
+<circle cx="575" cy="150" r="78" fill="none" stroke="#2c6fbb" stroke-width="1.5" stroke-dasharray="5,4" opacity="0.7"/>
+<polygon points="575.0,72.0 630.2,94.8 653.0,150.0 630.2,205.2 575.0,228.0 519.8,205.2 497.0,150.0 519.8,94.8" fill="none" stroke="#d64545" stroke-width="3"/>
+<circle cx="575" cy="150" r="4" fill="#5c6670"/>
+<line x1="602.6" y1="83.4" x2="604.9" y2="77.9" stroke="#3e4c59" stroke-width="2"/>
+<circle cx="602.6" cy="83.4" r="2.5" fill="#3e4c59"/>
+<line x1="604" y1="80" x2="676" y2="62" stroke="#3e4c59" stroke-width="1.2"/>
+<text x="682" y="60" font-size="14" fill="#3e4c59">偏差</text>
+<text x="682" y="78" font-size="12" fill="#7b8794">（既定 0.5 mm）</text>
+<text x="380" y="268" font-size="15" text-anchor="middle" fill="#3e4c59">多角形は真の曲面に内接するため、経路長がわずかに短く出る</text>
+</svg>

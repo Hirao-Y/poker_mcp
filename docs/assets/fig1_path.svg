@@ -1,1 +1,22 @@
-��1�Y�
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 200" font-family="Noto Sans CJK JP, Hiragino Sans, Yu Gothic, sans-serif">
+<rect width="760" height="200" fill="#ffffff"/>
+<rect x="215" y="45" width="130" height="110" fill="#9aa5b1" stroke="#5c6670" stroke-width="2"/>
+<text x="280" y="72" font-size="16" text-anchor="middle" fill="#1f2933" font-weight="bold">鉄</text>
+<line x1="80" y1="100" x2="680" y2="100" stroke="#d64545" stroke-width="3"/>
+<polygon points="680,100 666,94 666,106" fill="#d64545"/>
+<circle cx="80" cy="100" r="9" fill="#d64545"/>
+<text x="80" y="140" font-size="15" text-anchor="middle" fill="#1f2933">線源点</text>
+<polygon points="688,100 676,90 664,100 676,110" fill="#2c6fbb"/>
+<text x="678" y="140" font-size="15" text-anchor="middle" fill="#1f2933">検出器</text>
+<g stroke="#5c6670" stroke-width="1.5">
+<line x1="80" y1="165" x2="80" y2="175"/>
+<line x1="215" y1="165" x2="215" y2="175"/>
+<line x1="345" y1="165" x2="345" y2="175"/>
+<line x1="680" y1="165" x2="680" y2="175"/>
+<line x1="80" y1="170" x2="680" y2="170"/>
+</g>
+<text x="147" y="192" font-size="14" text-anchor="middle" fill="#3e4c59">空気 5 cm</text>
+<text x="280" y="192" font-size="14" text-anchor="middle" fill="#3e4c59">鉄 12 cm</text>
+<text x="512" y="192" font-size="14" text-anchor="middle" fill="#3e4c59">空気 80 cm</text>
+<text x="380" y="28" font-size="16" text-anchor="middle" fill="#1f2933" font-weight="bold">通過した材質と厚さの並びを記録する</text>
+</svg>

@@ -1,1 +1,23 @@
-��1�Y�
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 330" font-family="Noto Sans CJK JP, Hiragino Sans, Yu Gothic, sans-serif">
+<rect width="760" height="330" fill="#ffffff"/>
+<text x="190" y="30" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">CSG（角が尖っている）</text>
+<text x="570" y="30" font-size="17" text-anchor="middle" fill="#1f2933" font-weight="bold">CAD（角が丸い）</text>
+<path d="M 100 250 L 100 80 L 280 80 L 280 250 Z" fill="#9aa5b1" stroke="#5c6670" stroke-width="2"/>
+<path d="M 140 250 L 140 120 L 240 120 L 240 250 Z" fill="#ffffff" stroke="#5c6670" stroke-width="2"/>
+<circle cx="190" cy="185" r="7" fill="#d64545"/>
+<line x1="190" y1="185" x2="330" y2="45" stroke="#d64545" stroke-width="3"/>
+<polygon points="336,39 322,43 330,51" fill="#d64545"/>
+<line x1="218" y1="157" x2="272" y2="103" stroke="#b03030" stroke-width="7" opacity="0.55"/>
+<text x="300" y="130" font-size="15" fill="#b03030" font-weight="bold">厚い</text>
+<path d="M 480 250 L 480 110 Q 480 80 510 80 L 630 80 Q 660 80 660 110 L 660 250 Z" fill="#9aa5b1" stroke="#5c6670" stroke-width="2"/>
+<path d="M 520 250 L 520 120 L 620 120 L 620 250 Z" fill="#ffffff" stroke="#5c6670" stroke-width="2"/>
+<circle cx="570" cy="185" r="7" fill="#d64545"/>
+<line x1="570" y1="185" x2="710" y2="45" stroke="#d64545" stroke-width="3"/>
+<polygon points="716,39 702,43 710,51" fill="#d64545"/>
+<line x1="612" y1="143" x2="646" y2="109" stroke="#b03030" stroke-width="7" opacity="0.55"/>
+<text x="672" y="132" font-size="15" fill="#b03030" font-weight="bold">薄い</text>
+<rect x="100" y="272" width="560" height="42" fill="#f5f7fa" stroke="#cbd2d9" stroke-width="1"/>
+<text x="190" y="299" font-size="16" text-anchor="middle" fill="#1f2933">167.5 µSv/h</text>
+<text x="380" y="299" font-size="16" text-anchor="middle" fill="#b03030" font-weight="bold">約 2 倍の差</text>
+<text x="570" y="299" font-size="16" text-anchor="middle" fill="#1f2933">333.4 µSv/h</text>
+</svg>
