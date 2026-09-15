@@ -156,6 +156,7 @@ numpy はレイトレーサが使いますが、FreeCAD に同梱されている
 他の CAD で作ったモデルを STEP で読み込んだ場合、材質情報は失われるので
 FreeCAD 上で設定してください。一度設定すれば `.FCStd` に保存されます。
 
+まずは [CAD_QUICKSTART.md](./docs/manuals/CAD_QUICKSTART.md)（最短手順と実例）を、
 詳細は [CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)、フォーマットは
 [PATHS_FORMAT.md](./docs/manuals/PATHS_FORMAT.md)。
 

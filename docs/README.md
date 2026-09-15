@@ -276,6 +276,7 @@ total_doses = summary['result_total']
 - **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
 - **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.8.1更新）
+- **CAD連携クイックスタート**: [CAD_QUICKSTART.md](manuals/CAD_QUICKSTART.md)（最短手順）
 - **CAD連携レイトレース**: [CAD_RAYTRACE.md](manuals/CAD_RAYTRACE.md) / [PATHS_FORMAT.md](manuals/PATHS_FORMAT.md)（v1.8.1）
 - **POKER の内部構造**: [POKER_INTERNALS.md](manuals/POKER_INTERNALS.md)（透視線の扱い、zones と ranges の関係）
 - **開発の引き継ぎ**: [HANDOVER_CAD_RAYTRACE.md](HANDOVER_CAD_RAYTRACE.md)
