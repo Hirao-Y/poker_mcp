@@ -216,7 +216,7 @@ def read_evaluation_points(summary_path):
 
 
 def dominant_energy(summary_path, floor=0.01):
-    # .summary の inventory から「最も光子放出率の大きい単一エネルギー」を返す。
+    # .summary の inventory から「光子放出率で重み付けした平均エネルギー」を返す。
     #   - { energy: 6.6170e-01, spectrum: 8.9740e-01, radioactivity: 9.4390e+14 }
     # 放出率 = spectrum x radioactivity。
     #
@@ -238,7 +238,7 @@ def dominant_energy(summary_path, floor=0.01):
     pat = re.compile(
         r"energy:\s*([\d.eE+-]+).*?spectrum:\s*([\d.eE+-]+)"
         r".*?radioactivity:\s*([\d.eE+-]+)")
-    best, best_rate, total = None, 0.0, 0.0
+    num, den, best, best_rate = 0.0, 0.0, None, 0.0
     inblock = False
     for raw in open(summary_path, encoding="utf-8", errors="replace"):
         s = raw.strip()
@@ -248,16 +248,19 @@ def dominant_energy(summary_path, floor=0.01):
         if inblock:
             m = pat.search(s)
             if m:
-                e, sp, a = float(m.group(1)), float(m.group(2)), float(m.group(3))
-                rate = sp * a
-                total += rate
-                if e >= floor and rate > best_rate:
+                e = float(m.group(1))
+                if e < floor:
+                    continue
+                rate = float(m.group(2)) * float(m.group(3))
+                num += e * rate
+                den += rate
+                if rate > best_rate:
                     best, best_rate = e, rate
             elif s and not s.startswith("-"):
                 inblock = False
-    if best is None:
+    if den <= 0:
         return None, None
-    return best, (best_rate / total if total > 0 else None)
+    return num / den, (best_rate / den if best is not None else None)
 
 
 def main(spec_path):
@@ -280,7 +283,7 @@ def main(spec_path):
             energy, energy_src = 1.25, "default"
         else:
             energy = e
-            energy_src = "auto(%.1f%% of photon rate)" % (100 * frac) if frac else "auto"
+            energy_src = "auto(weighted mean, top line %.1f%%)" % (100 * frac) if frac else "auto"
     else:
         energy, energy_src = 1.25, "default"
 

@@ -97,13 +97,20 @@ def shape_kind(sh):
     return None
 
 
-def read_source(obj):
+def read_source(obj, nuclide_override=None):
     # 形状から線源の型と幾何を決める。核種と分割は プロパティから。
     sh = obj.Shape
     kind = shape_kind(sh)
     bb = sh.BoundBox
 
     nuc = parse_nuclides(getattr(obj, 'PokerNuclides', None) or '')
+    # 子孫核種を補完した結果が spec で渡されていればそちらを使う。
+    #   Cs137 は β 崩壊のみで光子をほぼ出さず、0.662 MeV は娘核種 Ba137m から
+    #   出る。CAD に Cs137 とだけ書いて Ba137m を忘れると線量が桁違いに小さく
+    #   なるため、poker_mcp 側で DaughterReconciler を通した結果を受け取る。
+    if nuclide_override and obj.Name in nuclide_override:
+        nuc = [(d['nuclide'], float(d['radioactivity']))
+               for d in nuclide_override[obj.Name]]
     if not nuc:
         raise SystemExit(
             '線源 %s に PokerNuclides が設定されていません\n'
@@ -345,7 +352,7 @@ def main(spec_path):
             continue
         r = role_of(o)
         if r == 'source':
-            sources.append(read_source(o))
+            sources.append(read_source(o, spec.get('nuclides')))
         elif r == 'detector':
             detectors.append(read_detector(o))
         else:
