@@ -24,7 +24,11 @@
 #     PokerCutoff    打ち切り率（省略時 1e-4）
 #
 #   検出器 (PokerRole=detector)
-#     PokerGrid          "120 0 0 / 0 120 0 / 5 5"（省略時は点検出器）
+#     PokerDivision      "5 5"（2D）/ "5 5 5"（3D）。省略時は各方向 5
+#                        グリッドの次元は形状から決まる:
+#                          球・小さい立体 -> 点検出器
+#                          薄い直方体     -> 2D（面線量マップ）
+#                          直方体         -> 3D（体積線量マップ）
 #     PokerShowPathTrace True/False（省略時 False）
 
 import json
@@ -36,6 +40,9 @@ import FreeCAD as App
 import poker_lib
 
 # CAD(mm) -> POKER(cm)
+#   FreeCAD の内部表現は常に mm。表示の単位系設定(UserSchema)は Shape の
+#   座標に影響しない。Quantity("1 m").Value == 1000.0 で確認済み。
+#   よってこの係数は固定でよい。
 SCALE = 0.1
 
 # 線源の既定分割数。利用者が PokerDivision で上書きする前提の出発点。
@@ -282,25 +289,62 @@ def read_source(obj, nuclide_override=None):
 
 
 def read_detector(obj):
-    c = obj.Shape.CenterOfMass
+    # 検出器の形状からグリッドを決める。
+    #   球や小さな立体 -> 点検出器
+    #   薄い直方体     -> 2D グリッド（面線量マップ）
+    #   直方体         -> 3D グリッド（体積線量マップ）
+    #
+    # 従来は PokerGrid に "120 0 0 / 0 120 0 / 5 5" と書かせていたが、
+    # 書式を間違えやすく、CAD で形を見ながら決められない。形状から読めば
+    # 「この面の線量マップが欲しい」という意図がそのまま伝わる。
+    sh = obj.Shape
+    kind, geo = classify(sh)
+    bb = sh.BoundBox
+
     det = {
         'name': obj.Name,
-        'origin': _xyz(c),
+        'origin': _xyz(sh.CenterOfMass),
         'show_path_trace': bool(getattr(obj, 'PokerShowPathTrace', False)),
     }
-    grid = (getattr(obj, 'PokerGrid', None) or '').strip()
-    if grid:
-        # "120 0 0 / 0 120 0 / 5 5" -> edge ベクトル2本と分割数
-        parts = [p.strip() for p in grid.split('/')]
-        if len(parts) != 3:
-            raise SystemExit(
-                '検出器 %s の PokerGrid の書式が不正です: %r\n'
-                '  例: "120 0 0 / 0 120 0 / 5 5"' % (obj.Name, grid))
-        ns = parts[2].split()
-        det['grid'] = [
-            {'edge': parts[0], 'number': int(ns[0])},
-            {'edge': parts[1], 'number': int(ns[1])},
-        ]
+
+    # 分割数。"5 5" なら 2 方向、"5 5 5" なら 3 方向。
+    div_text = (getattr(obj, 'PokerDivision', None) or '').strip()
+    div = [int(x) for x in div_text.split()] if div_text else None
+
+    # 点検出器とみなす条件: 球、または十分小さい立体
+    if kind == 'SPH' or sh.Volume * (SCALE ** 3) < 1.0:
+        return det
+
+    if kind != 'BOX':
+        # グリッドは直方体でしか作れない。判定できない形は点として扱い、
+        # 重心を評価点にする（黙って外接箱にすると意図と違う点を評価する）。
+        return det
+
+    # 辺の長さで次元を決める。最も短い辺が他の 1/20 未満なら平板とみなす。
+    L = sorted([(bb.XLength, 0), (bb.YLength, 1), (bb.ZLength, 2)])
+    edges = [
+        ('%g 0 0' % (bb.XLength * SCALE), bb.XLength),
+        ('0 %g 0' % (bb.YLength * SCALE), bb.YLength),
+        ('0 0 %g' % (bb.ZLength * SCALE), bb.ZLength),
+    ]
+    thin = L[0][0] < L[2][0] / 20.0
+
+    if thin:
+        # 2D: 薄い方向を除く 2 辺
+        use = [k for _, k in L[1:]]
+        n = div or [5, 5]
+    else:
+        use = [0, 1, 2]
+        n = div or [5, 5, 5]
+
+    if len(n) < len(use):
+        raise SystemExit(
+            '検出器 %s の PokerDivision は %d 個の数が必要です（指定: %r）'
+            % (obj.Name, len(use), div_text))
+
+    # 原点はグリッドの隅（POKER の grid は origin から edge 方向に伸びる）
+    det['origin'] = '%g %g %g' % (bb.XMin * SCALE, bb.YMin * SCALE, bb.ZMin * SCALE)
+    det['grid'] = [{'edge': edges[k][0], 'number': n[i]} for i, k in enumerate(use)]
     return det
 
 
