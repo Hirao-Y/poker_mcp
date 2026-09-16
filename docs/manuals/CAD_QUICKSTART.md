@@ -58,6 +58,19 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | `PokerCutoff` | 線源 | 打ち切り率。既定 1e-4 |
 | `PokerShowPathTrace` | 検出器 | 既定 false |
 
+汚染を散布する場合は次も使えます（後述）。
+
+| プロパティ | 対象 | 内容 |
+|---|---|---|
+| `PokerSourceType` | 線源 | `volume` で体積汚染として散布 |
+| `PokerInnerNuclides` | 線源 | 内面の汚染密度 [Bq/cm²] |
+| `PokerOuterNuclides` | 線源 | 外面の汚染密度 [Bq/cm²] |
+| `PokerComposition` | 線源 | 組成比（`Cs137:5, Co60:1`） |
+| `PokerConcentration` | 線源 | 総濃度。`PokerComposition` と併用 |
+| `PokerActivity` | 線源 | 総放射能 [Bq]（濃度でなく総量で与える場合） |
+| `PokerPointSpacing` | 線源 | 点の間隔 [mm]。省略時は自動 |
+| `PokerRegionFor` | 領域 | 汚染範囲を限る立体が指す対象（リンク） |
+
 ```python
 o.addProperty('App::PropertyString', 'PokerMaterial', 'POKER', '材質')
 o.PokerMaterial = 'Iron'
@@ -115,6 +128,96 @@ o.PokerMaterial = 'Iron'
 上書きされますが、`backups/` に退避されます（`applyChanges` と同じ場所）。
 CAD が正本なので YAML は生成物であり、毎回確認を求めるのは煩わしいだけという
 判断です。
+
+## 汚染の散布（不定形な線源）
+
+POKER の線源型（POINT / SPH / RCC / RPP / BOX）で表現できない形状も、
+**点線源を散布すれば扱えます**。曲がった配管の内部、不定形な廃棄物、
+床に広がった汚染など。
+
+指定した汚染密度と矛盾しないよう強度を配分するので、総放射能は保存されます。
+
+### 体積汚染
+
+```python
+fluid.PokerRole = 'source'
+fluid.PokerSourceType = 'volume'
+fluid.PokerNuclides = 'Cs137:1.0e6, Co60:2.0e5'   # Bq/cm3
+```
+
+形状の内部に格子状に点を置き、`総放射能 ÷ 点数` を各点に配分します。
+総放射能は `汚染密度 × Shape.Volume` なので、**体積が正確なら総量も正確**です。
+
+### 表面汚染
+
+内面と外面を別々に指定できます。配管なら、流体由来の内面汚染と、漏洩などに
+よる外面汚染が同時にあり得ます。
+
+```python
+wall.PokerRole = 'source'
+wall.PokerInnerNuclides = 'Cs137:1.0e4, Co60:2.0e3'   # Bq/cm2
+wall.PokerOuterNuclides = 'Cs137:5.0e2'               # Bq/cm2
+```
+
+内面・外面は形状から自動判別します。**端面（配管の切断面）は除外されます**。
+実務では配管はつながっていて、端面が露出することはまずないためです。
+
+面のパラメータ空間を刻んで点を置きますが、**等間隔に刻んでも面上で等間隔とは
+限りません**。球面では極付近でセルが潰れ、面積が 4 倍以上ばらつきます。
+そのため各セルの面積で重み付けしています。平面と円筒では重みが一様になるので、
+床や配管では面積等分と同じ結果です。
+
+### 組成が既知で濃度だけ違う場合
+
+```python
+fluid.PokerComposition = 'Cs137:5, Co60:1'   # 比率（単位は不問）
+fluid.PokerConcentration = '1.2e5'           # Bq/cm3（合計）
+```
+
+比率の合計で正規化して配分します。上の例なら Cs137 が 5/6、Co60 が 1/6。
+
+### 汚染範囲を限る
+
+形状の一部だけが汚染している場合、**その範囲を立体で囲みます**。
+
+```python
+region = doc.addObject('Part::Feature', 'ContaminatedArea')
+region.Shape = Part.makeBox(300, 300, 200, App.Vector(-150, 100, 350))
+region.addProperty('App::PropertyLink', 'PokerRegionFor', 'POKER', '')
+region.PokerRegionFor = wall      # 対象をリンクで指す
+```
+
+自由曲面に「この範囲が汚染」という面を貼り付けるのは GUI では困難ですが、
+**箱を置くだけ**なら簡単です。MCNP のクッキーカッター（サンプリング領域を
+別セルで制限する手法）と同じ考え方です。
+
+リンク（`App::PropertyLink`）で指すので、オブジェクト名を変えても壊れません。
+
+### 点の間隔
+
+省略すると、**最も近い検出器までの距離の 1/10** になります。点線源近似では
+線源片の大きさが距離に対して十分小さい必要があり、1/10 なら立体角の誤差が
+1% 程度に収まります。形状の最短辺の 1/4 が上限です。
+
+```python
+fluid.PokerPointSpacing = '20'    # mm
+```
+
+点数が 1 万を超えると警告が出ます（計算は続行します）。1,000 点で約 10 秒、
+3,000 点で約 34 秒が目安です。
+
+### 線源が遮蔽体でもある場合
+
+表面汚染した配管の管壁は、**線源であると同時に遮蔽体**です。
+`PokerMaterial` を設定しておけば、遮蔽体としても登録されます。
+
+```python
+wall.PokerRole = 'source'
+wall.PokerMaterial = 'SUS_A'      # これを忘れると管壁が透明になる
+wall.PokerInnerNuclides = 'Cs137:1.0e4'
+```
+
+忘れると自己遮蔽が効かず、**線量を過大評価します**（実測で 4 割）。
 
 ## サンプル
 

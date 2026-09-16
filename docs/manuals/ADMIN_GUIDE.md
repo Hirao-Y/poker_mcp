@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.9.5 (34メソッド完全実装)
+.9.6 (34メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 

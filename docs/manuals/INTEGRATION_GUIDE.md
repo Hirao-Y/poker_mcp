@@ -1,7 +1,7 @@
 # 🔗 システム統合ガイド - Poker MCP
 
 **対象読者**: システム統合エンジニア・上級ユーザー・研究者  
-**バージョン**: 1.9.5 MCP Edition  
+.9.6 MCP Edition  
 **最終更新**: 2025年1月24日  
 **統合方式**: Claude Desktop + MCP + 外部システム
 
@@ -236,7 +236,7 @@ poker_executeCalculation を使用して計算し、
 #!/usr/bin/env python3
 """
 Poker MCP 自動化システム
-バージョン: 1.4.0 (2026年8月対応)
+バージョン: 1.9.6
 """
 
 import json

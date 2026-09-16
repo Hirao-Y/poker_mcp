@@ -1,7 +1,7 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.9.5 MCP Edition  
+.9.6 MCP Edition  
 **最終更新**: 2026年5月16日  
 **使用方法**: Claude Desktop + MCP通信 (35メソッド対応)
 
@@ -847,5 +847,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2026年5月  
-**バージョン**: 1.9.5 MCP Edition  
+.9.6 MCP Edition  
 **サポート**: GitHub Issues

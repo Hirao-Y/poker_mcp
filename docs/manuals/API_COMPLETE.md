@@ -2,8 +2,8 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.9.5  
-**🔧 バージョン**: 1.9.5 MCP Edition  
+.9.6  
+.9.6 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
@@ -223,6 +223,11 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | `PokerDivision` | 線源・検出器 | 分割数。省略時は自動 |
 | `PokerCutoff` | 線源 | 打ち切り率。既定 1e-4 |
 | `PokerShowPathTrace` | 検出器 | 既定 false |
+| PokerSourceType | 線源 | olume で体積汚染として点線源を散布 |
+| PokerInnerNuclides / PokerOuterNuclides | 線源 | 内面・外面の汚染密度 [Bq/cm2] |
+| PokerComposition + PokerConcentration | 線源 | 組成比と総濃度 |
+| PokerPointSpacing | 線源 | 散布する点の間隔 [mm] |
+| PokerRegionFor | 領域 | 汚染範囲を限る立体（App::PropertyLink） |
 
 **立体型はソリッドの形から判定されます。** 曲面の種別（円柱面・球面・平面）で
 判定するので、傾いた円柱も軸を正しく取得します。対応する型がない形状
