@@ -20,6 +20,11 @@ def collect(doc, deviation=DEV, visible_only=True):
         sh = getattr(o, 'Shape', None)
         if sh is None or sh.isNull() or not sh.Solids:
             continue
+        # PokerRole=source/detector は線源・検出器の印なので遮蔽体ではない。
+        # レイトレースの対象から外す（材質も持たない）。
+        role = (getattr(o, 'PokerRole', None) or 'shield').strip().lower()
+        if role in ('source', 'detector'):
+            continue
         vo = getattr(o, 'ViewObject', None)
         if visible_only and vo is not None:
             try:
