@@ -401,11 +401,12 @@ def read_detector(obj):
     return det
 
 
-def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=None):
+def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=None, buildup_equiv=None):
     # materials: {材質名: 密度 or None}（CAD の PokerDensity）
     # lib_density: {材質名: カタログ密度}（poker_lib から）
     # mfp_order: [材質名, ...] mfp の大きい順。None なら材質名順。
     lib_density = lib_density or {}
+    buildup_equiv = buildup_equiv or {}
 
     # 分割点の総数（最大の線源）と、検出器の評価点の総数を数える
     n_src_points = 1
@@ -487,7 +488,14 @@ def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=N
     for m in names:
         if m in ('VOID', 'Air'):
             continue
-        L.append('  - material: %s' % m)
+        # ビルドアップ係数データがある材質に読み替える。
+        #   lib_setting.dat の buildup_material に列挙された材質しか使えない。
+        #   SUS_A や Source_Dry のようなカスタム材料は、実効原子番号が近い
+        #   標準材料（SUS_A なら Iron）に読み替える。POKER 側も同じ表を見る。
+        bu = buildup_equiv.get(m, m)
+        L.append('  - material: %s' % bu)
+        if bu != m:
+            L.append('    # %s の等価材料として指定' % m)
         L.append('    use_slant_correction: false')
         L.append('    use_finite_medium_correction: false')
     L.append('')
@@ -528,6 +536,38 @@ def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=N
         L.append('    show_path_trace: %s' % ('true' if d['show_path_trace'] else 'false'))
     L.append('')
     return '\n'.join(L)
+
+
+def _nearest_buildup(mat, lib, avail):
+    # ビルドアップ係数データがある材質のうち、実効原子番号が最も近いものを返す。
+    #   SUS_A -> Iron、Source_Dry -> Tungsten のような読み替え。
+    #   POKER の等価材料テーブル(lib_equivalent.dat)があればそれを優先する。
+    try:
+        rho, comp = lib.materials[mat]
+    except Exception:
+        return None
+
+    def zeff(composition):
+        # 実効原子番号（光電効果の m=2.94 乗則）
+        num = den = 0.0
+        for z, w in composition.items():
+            num += w * (z ** 2.94)
+            den += w
+        return (num / den) ** (1.0 / 2.94) if den > 0 else 0.0
+
+    target = zeff(comp)
+    best, best_d = None, None
+    for cand in avail:
+        if cand in ('VOID', 'Air'):
+            continue
+        try:
+            _, c2 = lib.materials[cand]
+        except Exception:
+            continue
+        d = abs(zeff(c2) - target)
+        if best_d is None or d < best_d:
+            best, best_d = cand, d
+    return best
 
 
 def _source_mu(obj, lib, spec):
@@ -589,8 +629,24 @@ def main(spec_path):
         raise SystemExit('PokerRole=detector のオブジェクトがありません')
 
 
+    # ビルドアップ係数データがある材質への読み替え表を作る。
+    #   lib_setting.dat の buildup_material に無い材質（SUS_A, Source_Dry など）は
+    #   そのままでは POKER が受け付けない。実効原子番号が近い標準材料に読み替える。
+    #   spec.buildup_equivalent で明示指定もできる。
+    buildup_equiv = dict(spec.get('buildup_equivalent', {}))
+    try:
+        avail = set(lib.single)
+    except Exception:
+        avail = set()
+    for m in materials:
+        if m in buildup_equiv or m in avail or m in ('VOID', 'Air'):
+            continue
+        e = _nearest_buildup(m, lib, avail)
+        if e:
+            buildup_equiv[m] = e
+
     text = build_yaml(doc, materials, sources, detectors,
-                      spec.get('mfp_order'), lib_density)
+                      spec.get('mfp_order'), lib_density, buildup_equiv)
     open(out, 'w', encoding='utf-8').write(text)
 
     rep = {

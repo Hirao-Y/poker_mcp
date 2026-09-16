@@ -301,6 +301,18 @@ export function createCadHandlers(taskManager) {
         return fail('入力の生成に失敗しました', m ? m[0].trim() : log.slice(-500));
       }
 
+      // 生成した YAML をサーバのデータに反映する。
+      //   これが無いと、メモリ上には起動時に読んだ古い YAML が残る。続けて
+      //   generatePaths を呼んだとき、ゾーンから材質を読めず等価材料を解決
+      //   できない（SUS_A -> Iron の読み替えが効かず "no buildup data" で失敗）。
+      if (out === YAML_FILE) {
+        try {
+          await taskManager.dataManager.loadData();
+        } catch (e) {
+          logger.warn('生成後のデータ再読み込みに失敗', { error: e.message });
+        }
+      }
+
       // --- 3. 生成した入力を POKER に検証させる ---
       //   poker_cui -c は線量計算をせず、入力の妥当性確認と経路追跡だけ行う。
       //   これを通しておけば、線源が遮蔽体の外にある、材質名がライブラリに
