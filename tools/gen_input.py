@@ -38,6 +38,7 @@ import re
 import FreeCAD as App
 
 import poker_lib
+import scatter
 
 # CAD(mm) -> POKER(cm)
 #   FreeCAD の内部表現は常に mm で、表示の単位系設定(UserSchema)は Shape の
@@ -503,6 +504,23 @@ def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=N
     # --- source ---
     L.append('source:')
     for s in sources:
+        if s.get('scatter'):
+            # 散布線源: 点線源の集まりとして展開する。
+            #   汚染密度から各点の強度を決めてあるので、ここでは並べるだけ。
+            L.append('  # %s: %s（%d 点, 合計 %.4g Bq）'
+                     % (s['name'], s.get('kind', '散布'),
+                        len(s['points']), s.get('total_bq', 0.0)))
+            for k, (x, y, z, inv) in enumerate(s['points']):
+                L.append('  - name: %s_%04d' % (s['name'], k + 1))
+                L.append('    type: POINT')
+                L.append('    position: %g %g %g' % (x, y, z))
+                L.append('    inventory:')
+                for nu, bq in inv:
+                    L.append('      - nuclide: %s' % nu)
+                    L.append('        radioactivity: %g' % bq)
+                L.append('    cutoff_rate: %g' % s.get('cutoff_rate', 1e-4))
+            continue
+
         L.append('  - name: %s' % s['name'])
         L.append('    type: %s' % s['type'])
         L.append('    inventory:')
@@ -602,6 +620,21 @@ def main(spec_path):
     lib = poker_lib.PokerLib(spec.get('poker_dir', r'C:\Poker'))
     lib_density = dict((m, v[0]) for m, v in lib.materials.items())
 
+    # 散布線源のピッチを決めるのに検出器の位置が要るので、先に集める。
+    #   点線源近似では線源片の大きさが検出器までの距離に対して十分小さい
+    #   必要があり、既定ピッチはその距離から決まる。
+    det_positions = []
+    for o in doc.Objects:
+        if (getattr(o, 'PokerRole', None) or '').strip().lower() != 'detector':
+            continue
+        sh = getattr(o, 'Shape', None)
+        if sh is None or sh.isNull():
+            continue
+        c = sh.CenterOfMass
+        det_positions.append((c.x, c.y, c.z))
+
+    warnings = []
+
     materials, sources, detectors = {}, [], []
     for o in doc.Objects:
         sh = getattr(o, 'Shape', None)
@@ -609,7 +642,28 @@ def main(spec_path):
             continue
         r = role_of(o)
         if r == 'source':
-            sources.append(read_source(o, spec.get('nuclides'), _source_mu(o, lib, spec)))
+            # 散布指定（体積汚染・表面汚染）があるか
+            #   PokerSourceType=volume、または PokerInner*/PokerOuter* が設定
+            #   されていれば、点線源の集まりとして展開する。
+            # 散布線源のオブジェクトが材質を持つなら遮蔽体としても登録する。
+            #   表面汚染した配管の管壁は、線源であると同時に遮蔽体でもある。
+            #   これを登録しないと管壁が透明になり、自己遮蔽が効かない。
+            m = getattr(o, 'PokerMaterial', None)
+            if m:
+                d = _num(getattr(o, 'PokerDensity', None))
+                if m not in materials or (d and not materials[m]):
+                    materials[m] = d
+
+            sc = scatter.build_scatter_sources(o, doc, SCALE, det_positions, warnings)
+            if sc:
+                for s in sc:
+                    s['scatter'] = True
+                    s['cutoff_rate'] = _num(getattr(o, 'PokerCutoff', None), 1e-4)
+                    s['kind'] = ('表面汚染' if s['name'].endswith(('_inner', '_outer'))
+                                 else '体積汚染')
+                    sources.append(s)
+            else:
+                sources.append(read_source(o, spec.get('nuclides'), _source_mu(o, lib, spec)))
         elif r == 'detector':
             detectors.append(read_detector(o))
         else:
@@ -654,6 +708,10 @@ def main(spec_path):
         'materials': sorted(materials),
         'sources': [s['name'] for s in sources],
         'detectors': [d['name'] for d in detectors],
+        'scatter_sources': [{'name': s['name'], 'points': len(s['points']),
+                            'total_bq': s['total_bq']}
+                           for s in sources if s.get('scatter')],
+        'warnings': warnings,
     }
     print(json.dumps(rep, ensure_ascii=False, indent=2))
     return rep

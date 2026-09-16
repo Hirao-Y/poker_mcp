@@ -23,7 +23,12 @@ def collect(doc, deviation=DEV, visible_only=True):
         # PokerRole=source/detector は線源・検出器の印なので遮蔽体ではない。
         # レイトレースの対象から外す（材質も持たない）。
         role = (getattr(o, 'PokerRole', None) or 'shield').strip().lower()
-        if role in ('source', 'detector'):
+        # 検出器は遮蔽体ではないので常に除外する。
+        # 線源は材質を持つなら遮蔽体としても残す。表面汚染した配管の管壁は
+        # 線源かつ遮蔽体で、除外すると管壁が透明になり自己遮蔽が効かない。
+        if role == 'detector':
+            continue
+        if role == 'source' and not getattr(o, 'PokerMaterial', None):
             continue
         vo = getattr(o, 'ViewObject', None)
         if visible_only and vo is not None:
