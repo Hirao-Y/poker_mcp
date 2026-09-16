@@ -1,4 +1,4 @@
-﻿# gen_paths.py -- FreeCAD headless ray tracer -> POKER .paths writer
+# gen_paths.py -- FreeCAD headless ray tracer -> POKER .paths writer
 #
 #   freecadcmd gen_paths.py <spec.json>
 #
@@ -215,6 +215,51 @@ def read_evaluation_points(summary_path):
     return out
 
 
+def dominant_energy(summary_path, floor=0.01):
+    # .summary の inventory から「最も光子放出率の大きい単一エネルギー」を返す。
+    #   - { energy: 6.6170e-01, spectrum: 8.9740e-01, radioactivity: 9.4390e+14 }
+    # 放出率 = spectrum x radioactivity。
+    #
+    # 層の縮約に使う参照エネルギーは、従来 1.25 MeV 固定だった。これは Co-60 を
+    # 想定した値で、使用済燃料(Cs-137 の 0.662 MeV が支配的)には高すぎる。
+    # 実測では参照エネルギーで層の順序が変わる。鉄20cm+鉛5cm+コンクリート30cm で
+    #   1.25 MeV  -> Iron > Concrete > Lead
+    #   0.662 MeV -> Iron > Lead > Concrete
+    #   0.3 MeV   -> Lead > Iron > Concrete
+    # 鉛は低エネルギーで mu が急増するため順位が最下位から首位へ変わる。
+    #
+    # 加重平均ではなく単一エネルギーを採るのは、混合線源で「どの核種にも
+    # 対応しない中間値」になるのを避けるため。0.662 MeV なら「Cs-137 を使った」
+    # と説明できる。
+    #
+    # floor 未満のエネルギーは除外する。特性 X 線(0.03 MeV 台)が放出率では
+    # 上位に来ることがあるが、遮蔽計算で支配的になることはまずない。
+    import re
+    pat = re.compile(
+        r"energy:\s*([\d.eE+-]+).*?spectrum:\s*([\d.eE+-]+)"
+        r".*?radioactivity:\s*([\d.eE+-]+)")
+    best, best_rate, total = None, 0.0, 0.0
+    inblock = False
+    for raw in open(summary_path, encoding="utf-8", errors="replace"):
+        s = raw.strip()
+        if s == "inventory:":
+            inblock = True
+            continue
+        if inblock:
+            m = pat.search(s)
+            if m:
+                e, sp, a = float(m.group(1)), float(m.group(2)), float(m.group(3))
+                rate = sp * a
+                total += rate
+                if e >= floor and rate > best_rate:
+                    best, best_rate = e, rate
+            elif s and not s.startswith("-"):
+                inblock = False
+    if best is None:
+        return None, None
+    return best, (best_rate / total if total > 0 else None)
+
+
 def main(spec_path):
     spec = json.load(open(spec_path, encoding="utf-8-sig"))
     dev = float(spec.get("deviation", 0.5))
@@ -222,7 +267,23 @@ def main(spec_path):
     excl = set(spec.get("buildup_exclude", ["VOID", "Air"]))
     equiv = dict(spec.get("equivalent", {}))
     lib = poker_lib.PokerLib(spec.get("poker_dir", r"C:\Poker"))
-    energy = float(spec.get("mu_energy", 1.25))
+
+    # 参照エネルギー。spec で明示されていればそれを使い、無ければ .summary の
+    # inventory から「最も光子放出率の大きい単一エネルギー」を採る。
+    # 従来の 1.25 MeV 固定は Co-60 を想定した値で、Cs-137 主体の体系には高すぎる。
+    energy_src = "spec"
+    if "mu_energy" in spec:
+        energy = float(spec["mu_energy"])
+    elif "poker_summary" in spec:
+        e, frac = dominant_energy(spec["poker_summary"])
+        if e is None:
+            energy, energy_src = 1.25, "default"
+        else:
+            energy = e
+            energy_src = "auto(%.1f%% of photon rate)" % (100 * frac) if frac else "auto"
+    else:
+        energy, energy_src = 1.25, "default"
+
     mu = {"VOID": 0.0}
     for m in lib.materials:
         mu[m] = lib.mu(m, energy, spec.get("mu_column", "total"))
@@ -389,6 +450,8 @@ def main(spec_path):
             hdr.append("  source_yaml_mtime: %s" % mt)
     hdr += ["  model: %s" % os.path.basename(spec["fcstd"]),
             "  deviation_mm: %g" % dev,
+            "  mu_energy_MeV: %g" % energy,
+            "  mu_energy_from: %s" % energy_src,
             "  unit: cm",
             "  source: %s" % spec.get("source_name", "SOURCE"),
             "  source_points_from: %s" % (
@@ -453,6 +516,7 @@ def main(spec_path):
         "buildup_mode": stat["mode"],
         "buildup_combos": dict(sorted(stat["bu"].items(), key=lambda kv: -kv[1])[:8]),
         "mu_energy_MeV": energy,
+        "mu_energy_from": energy_src,
         "mu_used": dict(("%s@%.4g" % (k[0], k[1]) if k != "VOID" and k[1]
                          else (k if k == "VOID" else k[0]), round(kmu[k], 5))
                         for k in keys),
