@@ -84,30 +84,70 @@ def parse_nuclides(text):
     return out
 
 
-def shape_kind(sh):
-    # ソリッドの形から POKER の立体型を推定する。
-    # 厳密な判定は難しいので、面の構成で大まかに分ける。
-    n = len(sh.Faces)
-    if n == 1:
-        return 'SPH'
-    if n == 3:
-        return 'RCC'      # 側面 + 上下の平面
-    if n == 6:
-        return 'BOX'
-    return None
+def surface_types(sh):
+    # 面の種類を数える。OCC は Surface の型で曲面種別が分かる。
+    #   Cylinder / Sphere / Cone / Toroid / Plane / BSplineSurface ...
+    from collections import Counter
+    return Counter(type(f.Surface).__name__ for f in sh.Faces)
+
+
+def classify(sh):
+    # ソリッドの形から POKER の立体型を判定する。
+    #
+    # 面の数だけで判定すると誤る。三角柱も五面体も「平面だけ」だが、
+    # 面数は形によって変わる。曲面の種別で分ける方が確実。
+    #
+    # 返り値: ('RCC'|'SPH'|'BOX'|None, 補足情報)
+    t = surface_types(sh)
+    n_plane = t.get('Plane', 0)
+    n_face = len(sh.Faces)
+
+    # 球: 球面1枚だけ
+    if t.get('Sphere', 0) == 1 and n_face == 1:
+        s = sh.Faces[0].Surface
+        return 'SPH', {'center': s.Center, 'radius': s.Radius}
+
+    # 円柱: 円柱面1枚 + 平面2枚（上下の蓋）
+    if t.get('Cylinder', 0) == 1 and n_plane == 2 and n_face == 3:
+        cyl = [f for f in sh.Faces if type(f.Surface).__name__ == 'Cylinder'][0]
+        s = cyl.Surface
+        ax = s.Axis
+        # 底面と上面を軸方向の位置で見分ける
+        planes = [f for f in sh.Faces if type(f.Surface).__name__ == 'Plane']
+        ts = sorted(((f.CenterOfMass - s.Center).dot(ax), f.CenterOfMass)
+                    for f in planes)
+        h = ts[-1][0] - ts[0][0]
+        return 'RCC', {'bottom': ts[0][1], 'axis': ax, 'height': h,
+                       'radius': s.Radius}
+
+    # 直方体: 平面6枚で、法線が3方向（各2枚ずつ）
+    if n_plane == 6 and n_face == 6:
+        axes = []
+        for f in sh.Faces:
+            a = f.Surface.Axis
+            if not any(abs(abs(a.dot(b)) - 1.0) < 1e-6 for b in axes):
+                axes.append(a)
+        if len(axes) == 3:
+            # 直交しているか（斜方体でないか）確認
+            ok = (abs(axes[0].dot(axes[1])) < 1e-6 and
+                  abs(axes[1].dot(axes[2])) < 1e-6 and
+                  abs(axes[0].dot(axes[2])) < 1e-6)
+            if ok:
+                return 'BOX', {'axes': axes}
+
+    return None, {'faces': n_face, 'types': dict(t)}
 
 
 def read_source(obj, nuclide_override=None):
     # 形状から線源の型と幾何を決める。核種と分割は プロパティから。
     sh = obj.Shape
-    kind = shape_kind(sh)
+    kind, geo = classify(sh)
     bb = sh.BoundBox
 
     nuc = parse_nuclides(getattr(obj, 'PokerNuclides', None) or '')
     # 子孫核種を補完した結果が spec で渡されていればそちらを使う。
     #   Cs137 は β 崩壊のみで光子をほぼ出さず、0.662 MeV は娘核種 Ba137m から
-    #   出る。CAD に Cs137 とだけ書いて Ba137m を忘れると線量が桁違いに小さく
-    #   なるため、poker_mcp 側で DaughterReconciler を通した結果を受け取る。
+    #   出る。忘れると線量が 1/3 になるため、poker_mcp 側で補完した結果を渡す。
     if nuclide_override and obj.Name in nuclide_override:
         nuc = [(d['nuclide'], float(d['radioactivity']))
                for d in nuclide_override[obj.Name]]
@@ -125,13 +165,71 @@ def read_source(obj, nuclide_override=None):
     div_text = (getattr(obj, 'PokerDivision', None) or '').strip()
     div = [int(x) for x in div_text.split()] if div_text else None
 
-    # 体積が無視できるほど小さければ点線源として扱う。
-    # 印として小さな球を置く使い方を想定している。
+    # 体積が無視できるほど小さければ点線源として扱う（印として置いた球など）
     if sh.Volume * (SCALE ** 3) < 1.0:      # 1 cm3 未満
-        c = sh.CenterOfMass
         src['type'] = 'POINT'
-        src['position'] = _xyz(c)
+        src['position'] = _xyz(sh.CenterOfMass)
         return src
+
+    if kind == 'RCC':
+        # 軸は円柱面から取る。バウンディングボックスから作ると傾いた円柱に
+        # 対応できず、横倒しの燃料棒や斜めの配管がまったく違う形になる。
+        b, ax, h = geo['bottom'], geo['axis'], geo['height']
+        src['type'] = 'RCC'
+        src['geometry'] = {
+            'bottom_center': _xyz(b),
+            'height_vector': '%g %g %g' % (ax.x * h * SCALE,
+                                           ax.y * h * SCALE,
+                                           ax.z * h * SCALE),
+            'radius': geo['radius'] * SCALE,
+        }
+        d = div or DEFAULT_DIVISION['RCC']
+        src['division'] = {
+            'r': {'number': d[0], 'type': 'UNIFORM'},
+            'phi': {'number': d[1], 'type': 'UNIFORM'},
+            'z': {'number': d[2], 'type': 'UNIFORM'},
+        }
+        return src
+
+    if kind == 'SPH':
+        # POKER の SPH 線源。分割は r/phi/theta。
+        src['type'] = 'SPH'
+        src['geometry'] = {
+            'center': _xyz(geo['center']),
+            'radius': geo['radius'] * SCALE,
+        }
+        d = div or DEFAULT_DIVISION['SPH']
+        src['division'] = {
+            'r': {'number': d[0], 'type': 'UNIFORM'},
+            'phi': {'number': d[1], 'type': 'UNIFORM'},
+            'theta': {'number': d[2], 'type': 'UNIFORM'},
+        }
+        return src
+
+    if kind == 'BOX':
+        src['type'] = 'BOX'
+        src['geometry'] = {
+            'vertex': '%g %g %g' % (bb.XMin * SCALE, bb.YMin * SCALE, bb.ZMin * SCALE),
+            'edge_1': '%g 0 0' % (bb.XLength * SCALE),
+            'edge_2': '0 %g 0' % (bb.YLength * SCALE),
+            'edge_3': '0 0 %g' % (bb.ZLength * SCALE),
+        }
+        d = div or DEFAULT_DIVISION['BOX']
+        src['division'] = {
+            'edge_1': {'number': d[0], 'type': 'UNIFORM'},
+            'edge_2': {'number': d[1], 'type': 'UNIFORM'},
+            'edge_3': {'number': d[2], 'type': 'UNIFORM'},
+        }
+        return src
+
+    # 判定できない形（円錐、トーラス、自由曲面、フィレット付きなど）。
+    # 黙って外接直方体で近似すると、利用者が気づかないまま違う線源分布で
+    # 計算することになる。明示的に拒否し、対処法を示す。
+    raise SystemExit(
+        '線源 %s の形状を判定できません（面: %s）\n'
+        '  POKER の線源は POINT / RCC(円柱) / SPH(球) / BOX(直方体) です。\n'
+        '  この形状を線源に使うには、外接する円柱か直方体に置き換えるか、\n'
+        '  YAML を手で書いてください。' % (obj.Name, geo))
 
     if kind == 'RCC':
         # 円柱。軸は最も長い辺の方向とみなす
