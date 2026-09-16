@@ -45,7 +45,7 @@ const un = o => {
 
 console.log('--- 1. CAD から YAML を生成 ---');
 const a = un(await send(2, 'poker_generateInput',
-  { fcstd: 'C:/Users/tora/emev_chk/gi_test.FCStd', overwrite: true }));
+  { fcstd: 'C:/Users/tora/emev_chk/gi_test.FCStd' }));
 console.log(a._e || a.error ? ('  NG: ' + (a._e || a.error) + ' | ' + (a.hint || ''))
   : '  OK ' + JSON.stringify(a.summary) + (a.note ? '\n  ' + a.note : ''));
 

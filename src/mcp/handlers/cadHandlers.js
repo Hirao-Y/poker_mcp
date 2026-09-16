@@ -210,11 +210,19 @@ export function createCadHandlers(taskManager) {
         return fail('CAD ファイルが見つかりません: ' + args.fcstd);
 
       const out = args.output || YAML_FILE;
-      if (fssync.existsSync(out) && !args.overwrite) {
-        return fail(
-          '出力先が既に存在します: ' + out,
-          'CAD が正本なので上書きして構いませんが、手で編集した内容があると' +
-          '失われます。overwrite: true を指定してください。');
+      // 既存の YAML はバックアップしてから上書きする。
+      //   CAD が正本なので YAML は生成物であり、毎回 overwrite を
+      //   求めるのは煩わしいだけ。退避先は applyChanges と同じ
+      //   backups/ に混ぜる。CAD 連携と手動編集が同じセッションで
+      //   混ざるので、区別しても探しにくくなるだけ。
+      let backedUp = false;
+      if (fssync.existsSync(out) && out === YAML_FILE) {
+        try {
+          await taskManager.dataManager.createBackup();
+          backedUp = true;
+        } catch (e) {
+          logger.warn('バックアップに失敗（生成は続行）', { error: e.message });
+        }
       }
 
       // --- 1. CAD から線源の核種を読み、子孫核種を補完する ---

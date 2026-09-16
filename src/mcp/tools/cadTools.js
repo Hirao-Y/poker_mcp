@@ -80,10 +80,6 @@ export const cadTools = [
         output: {
           type: 'string',
           description: '出力する YAML のパス。省略時は作業ディレクトリの poker.yaml。'
-        },
-        overwrite: {
-          type: 'boolean',
-          description: '既存の YAML を上書きするか。既定 false。CAD が正本なので通常は上書きしてよいが、手で編集した内容があると失われるため既定では拒否する。'
         }
       },
       required: ['fcstd'],

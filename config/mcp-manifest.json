@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.9.0",
+  "version": "1.9.1",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
@@ -2608,10 +2608,6 @@
           "output": {
             "type": "string",
             "description": "出力する YAML のパス。省略時は作業ディレクトリの poker.yaml。"
-          },
-          "overwrite": {
-            "type": "boolean",
-            "description": "既存の YAML を上書きするか。既定 false。CAD が正本なので通常は上書きしてよいが、手で編集した内容があると失われるため既定では拒否する。"
           }
         },
         "required": [
