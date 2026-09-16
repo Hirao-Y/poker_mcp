@@ -4,7 +4,8 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 
-const FCSTD = 'C:/Users/tora/emev_chk/curved_pipe.FCStd';
+const FCSTD = (process.env.POKER_TEST_PIPE ||
+  path.resolve('tools/samples/curved_pipe.FCStd')).replace(/\\/g, '/');
 const T = path.join(os.tmpdir(), 'poker_pipe').replace(/\\/g, '/');
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(T + '/tasks', { recursive: true });

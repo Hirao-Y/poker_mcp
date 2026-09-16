@@ -15,7 +15,8 @@
     "test:pending": "node tests/pending-view.test.mjs",
     "test:cad": "node tests/cad-e2e.test.mjs",
     "test:cad-full": "node tests/cad-full.test.mjs",
-    "test:cad-validate": "node tests/cad-validate.test.mjs"
+    "test:cad-validate": "node tests/cad-validate.test.mjs",
+    "test:cad-pipe": "node tests/cad-pipe.test.mjs"
   },
   "keywords": [
     "mcp",
