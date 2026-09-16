@@ -387,7 +387,10 @@ def main(spec_path):
 
     lines = []
     stat = {"type": {}, "mode": {}, "rolled_max": 0.0, "rolled_sum": 0.0,
-            "rolled_over1": 0, "bu": {}}
+            "rolled_over1": 0, "bu": {},
+            # 材質ごとの mfp 合計。ビルドアップノードの並び順を決めるのに使う。
+            # 経路を書き出すループの中で足すだけなので追加コストはほぼ無い。
+            "mfp_sum": {}}
     nseg_tot = 0
     for k in range(len(A)):
         si, di = divmod(k, len(DET))
@@ -404,6 +407,8 @@ def main(spec_path):
             nseg_tot += 1
             if key == "VOID" or key[0] in excl:
                 continue
+            # 材質ごとの mfp を集計（ビルドアップノードの並び順用）
+            stat["mfp_sum"][key] = stat["mfp_sum"].get(key, 0.0) + kmu[key] * th
             if groups and groups[-1][0] == key:
                 groups[-1][1] += th
             else:
@@ -515,6 +520,13 @@ def main(spec_path):
         "buildup_type_counts": stat["type"],
         "buildup_mode": stat["mode"],
         "buildup_combos": dict(sorted(stat["bu"].items(), key=lambda kv: -kv[1])[:8]),
+        # ビルドアップノードに並べる順序。全経路の mfp 合計が大きい順。
+        #   POKER は buildup_factor の並び順でビルドアップ材料を選ぶため、
+        #   透過線上で最も効く材質を先頭に置きたい。経路ごとに最大の材質は
+        #   異なるので、全経路の合計で代表させる。
+        "material_order_by_mfp": [
+            {"material": k[0], "density": k[1], "mfp_sum": round(v, 3)}
+            for k, v in sorted(stat["mfp_sum"].items(), key=lambda kv: -kv[1])],
         "mu_energy_MeV": energy,
         "mu_energy_from": energy_src,
         "mu_used": dict(("%s@%.4g" % (k[0], k[1]) if k != "VOID" and k[1]
