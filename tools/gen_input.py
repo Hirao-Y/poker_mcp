@@ -40,13 +40,13 @@ import FreeCAD as App
 import poker_lib
 
 # CAD(mm) -> POKER(cm)
-#   FreeCAD の内部表現は常に mm。表示の単位系設定(UserSchema)は Shape の
-#   座標に影響しない。Quantity("1 m").Value == 1000.0 で確認済み。
+#   FreeCAD の内部表現は常に mm で、表示の単位系設定(UserSchema)は Shape の
+#   座標に影響しない。UnitsSchemaInternal の定義に「FreeCAD uses a mm/kg/deg
+#   scala」と明記されており、UserSchema(SI1/SI2/Imperial/Centimeters 等)は
+#   表示の切り替えにすぎない。実測でも Quantity("1 m").Value == 1000.0。
 #   よってこの係数は固定でよい。
 SCALE = 0.1
 
-# 線源の既定分割数。利用者が PokerDivision で上書きする前提の出発点。
-# 粗すぎると精度が出ず、細かすぎると経路数が爆発するので中庸を取る。
 # 線源の分割数を寸法から決めるときの基準。
 #
 #   1 区画の厚さが DIV_MFP mfp 以下になるよう分割する。
