@@ -177,3 +177,109 @@ def default_pitch(shape, detectors_mm):
     if dmin is None or dmin <= 0:
         return cap
     return max(1.0, min(cap, dmin / PITCH_DISTANCE_RATIO))
+
+
+def clip_face(face, region_shape):
+    """面を領域立体で切り取る。
+
+    自由曲面の一部だけが汚染している場合、その範囲を面として作るのは GUI では
+    難しい。汚染範囲を単純な立体（直方体など）で囲めば、その共通部分として
+    切り出せる。MCNP のクッキーカッター（サンプリング領域を別セルで制限する
+    手法）と同じ考え方。
+
+    返り値: 切り取られた面のリスト。共通部分が無ければ空。
+    """
+    try:
+        cut = face.common(region_shape)
+    except Exception:
+        return []
+    return [f for f in cut.Faces if f.Area > 1e-9]
+
+
+def clip_solid(shape, region_shape):
+    """ソリッドを領域立体で切り取る。体積汚染の範囲指定に使う。"""
+    try:
+        cut = shape.common(region_shape)
+    except Exception:
+        return None
+    return cut if (cut.Solids and cut.Volume > 1e-9) else None
+
+
+def pick_faces(shape, which):
+    """ソリッドから汚染面を選ぶ。
+
+    which:
+      'inner'  内面（法線が重心を向く面）
+      'outer'  外面
+      'top'    上面（法線の Z 成分が正で最大）
+      'bottom' 下面
+      'all'    すべての面
+      数字     Face のインデックス（1 始まり）
+
+    内外の判定は、面の中心から法線方向に少し進んだ点がソリッドの内部かで見る。
+    """
+    import FreeCAD as App
+    faces = list(shape.Faces)
+    if not faces:
+        return []
+
+    w = (which or 'all').strip().lower()
+
+    if w.isdigit():
+        i = int(w) - 1
+        return [faces[i]] if 0 <= i < len(faces) else []
+
+    if w == 'all':
+        return faces
+
+    if w in ('top', 'bottom'):
+        sign = 1.0 if w == 'top' else -1.0
+        best, best_z = None, None
+        for f in faces:
+            try:
+                u0, u1, v0, v1 = f.ParameterRange
+                n = f.normalAt((u0 + u1) / 2, (v0 + v1) / 2)
+            except Exception:
+                continue
+            if n.z * sign < 0.7:      # ほぼ真上／真下を向く面だけ
+                continue
+            z = f.CenterOfMass.z * sign
+            if best_z is None or z > best_z:
+                best, best_z = f, z
+        return [best] if best else []
+
+    if w in ('inner', 'outer'):
+        # 管状の形状の内面／外面を分ける。
+        #
+        # 曲がった配管には直線の中心軸が無いので、軸からの距離では判定
+        # できない（実測で誤判定した）。法線の向きも使えない。OCC は各面の
+        # 表側が外部を向くよう向き付けするので、内面も外面も「法線の逆側が
+        # 形状の内部」で同じになる。
+        #
+        # 面から法線の逆方向にレイを飛ばし、形状と交わる回数で判定する。
+        #   外面から内向きに飛ばす -> 管壁を抜けて中空に出て、反対側の壁を
+        #                             通り、外へ抜ける
+        #   内面から内向き（＝中空側）に飛ばす -> すぐ中空で、反対側の壁だけ
+        # 交点の数が違うので分けられるが、接線方向で不安定になる。
+        #
+        # 実用上は「外面の方が広い」で足りる。同じ長さの管なら半径が大きい
+        # 分だけ外面が広く、曲がっていれば外側の曲率でさらに広がる。
+        # 端面は法線が隣接面の法線とほぼ直交するので、それで除く。
+        cand = []
+        for f in faces:
+            try:
+                u0, u1, v0, v1 = f.ParameterRange
+                uc, vc = (u0 + u1) / 2.0, (v0 + v1) / 2.0
+                f.normalAt(uc, vc)
+            except Exception:
+                continue
+            cand.append(f)
+        if len(cand) < 2:
+            return cand
+        # 面積の大きい2面を内外とみなす。端面は管壁より小さい。
+        cand.sort(key=lambda f: -f.Area)
+        big = cand[:2]
+        big.sort(key=lambda f: -f.Area)
+        return [big[0]] if w == 'outer' else [big[1]]
+
+    return faces
