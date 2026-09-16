@@ -1,8 +1,10 @@
 // CAD -> YAML -> .paths -> 計算 の一気通貫（逐次実行）
 import { spawn } from 'child_process';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
-const T = 'C:/Users/tora/e2e_cad';
+const T = path.join(os.tmpdir(), 'poker_test_e2e_cad').replace(/\\/g, '/');
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(T + '/tasks', { recursive: true });
 // 空の YAML を置いておく（サーバ起動に必要）
@@ -45,13 +47,13 @@ const un = o => {
 
 console.log('--- 1. CAD から YAML を生成 ---');
 const a = un(await send(2, 'poker_generateInput',
-  { fcstd: 'C:/Users/tora/emev_chk/gi_test.FCStd' }));
+  { fcstd: (process.env.POKER_TEST_FCSTD || path.resolve('tools/samples/gi_test.FCStd')).replace(/\\/g, '/') }));
 console.log(a._e || a.error ? ('  NG: ' + (a._e || a.error) + ' | ' + (a.hint || ''))
   : '  OK ' + JSON.stringify(a.summary) + (a.note ? '\n  ' + a.note : ''));
 
 console.log('--- 2. 経路を抽出 ---');
 const b = un(await send(3, 'poker_generatePaths',
-  { fcstd: 'C:/Users/tora/emev_chk/gi_test.FCStd' }));
+  { fcstd: (process.env.POKER_TEST_FCSTD || path.resolve('tools/samples/gi_test.FCStd')).replace(/\\/g, '/') }));
 console.log(b._e || b.error ? ('  NG: ' + (b._e || b.error) + ' | ' + (b.hint || ''))
   : '  OK 経路数 ' + b.summary['経路数']);
 

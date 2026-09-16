@@ -1,11 +1,13 @@
 // generatePaths -> executeCalculation を逐次実行する（応答を待ってから次を送る）
 import { spawn } from 'child_process';
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 
-const T = 'C:/Users/yoshi/seq_ws';
+const T = path.join(os.tmpdir(), 'poker_test_seq_ws').replace(/\\/g, '/');
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(T + '/tasks', { recursive: true });
-fs.copyFileSync('C:/Users/yoshi/poker_verify/cask_full.yaml', T + '/tasks/poker.yaml');
+fs.copyFileSync(path.resolve('tools/samples/cask_full.yaml'), T + '/tasks/poker.yaml');
 
 const proc = spawn(process.execPath, ['src/mcp_server_stdio_v4.js'], {
   env: { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: 'C:/Poker' },
@@ -51,7 +53,7 @@ const show = (label, o) => {
 };
 
 show('経路生成    ', await send(2, 'poker_generatePaths',
-  { fcstd: 'C:/Users/yoshi/Desktop/cask_simple.FCStd' }));
+  { fcstd: (process.env.POKER_TEST_FCSTD || path.resolve('tools/samples/gi_test.FCStd')).replace(/\\/g, '/') }));
 show('.paths 経由 ', await send(3, 'poker_executeCalculation',
   { yaml_file: 'poker.yaml', path_input: 'poker.paths',
     summary_options: { show_total_dose: true, show_source_data: false } }));

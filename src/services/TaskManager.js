@@ -405,7 +405,18 @@ export class TaskManager {
       for (const g of (det.grid || [])) n *= (g.number || 1);
       detMax = Math.max(detMax, n);
     }
-    return { sourcepoint: srcMax, detectorgrid: detMax, detectorevaluation: detMax };
+    // 下限を設ける理由:
+    //   detectorgrid は「1〜3次元検出器のグリッド点の出力数」なので、点検出器
+    //   （0次元）だけのモデルでは detMax が 1 になる。ところが実測では、
+    //   detectorgrid が 2 以上でないと点検出器の evaluation_point が
+    //   .summary に出力されない。.paths の生成にはこれが要るので、
+    //   少なくとも 10 は確保しておく。
+    const FLOOR = 10;
+    return {
+      sourcepoint: Math.max(FLOOR, srcMax),
+      detectorgrid: Math.max(FLOOR, detMax),
+      detectorevaluation: Math.max(FLOOR, detMax),
+    };
   }
 
   static _cleanThinnedIndices(obj) {

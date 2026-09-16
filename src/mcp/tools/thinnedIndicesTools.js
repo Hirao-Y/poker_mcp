@@ -1,6 +1,14 @@
 // thinnedIndicesTools.js
 //
-// サマリーに書き出す件数を制御する thinnedindices ノードの CRU ツール。
+// thinnedindices ノードの CRU ツール。
+//
+// このノードは計算の入力に関するものではなく、計算結果のサマリーに出力する
+// 情報量を調整するためのもの。指定した出力数が全数より多い場合は全数を、
+// 少ない場合は全数から均等にピックアップした情報が出力される（少ない場合は
+// 該当箇所に「一部を表示」等のコメントが入る）。
+//
+// 個別の体積線源や個別の検出器に対して異なる出力数を指定することはできない。
+// 全て同じ値が適用される。
 // D（削除）は用意しない。削除しても POKER 側の既定値に戻るだけで、
 // updateThinnedIndices で既定値を指定すれば同じ結果になるため。
 //
@@ -13,13 +21,13 @@
 // 複製すると POKER 側の変更に追随できず、静かに食い違う。
 
 const KEY_DESC = {
-  sourcepoint: '入力パラメータに書き出す線源分割点の数',
-  pseudosourcepoint: '入力パラメータに書き出す仮想点線源の数',
-  detectorgrid: '入力パラメータに書き出す検出器評価点の数',
-  detectorevaluation: '計算結果に書き出すグリッド検出器の評価点数',
-  pathtrace: 'path_trace に書き出す仮想点線源の数',
-  buildupenergy: '多層ビルドアップ係数のエネルギー数',
-  buildupmfp: '各エネルギーに対する mfp 数'
+  sourcepoint: '入力パラメータのうち、体積線源を分割して得られる点線源の出力数（既定 10）',
+  pseudosourcepoint: '入力パラメータのうち、体積線源の仮想点線源の出力数（既定 10）',
+  detectorgrid: '入力パラメータのうち、1〜3次元検出器を分割したグリッド点の出力数（既定 10）',
+  detectorevaluation: '計算出力のうち、1〜3次元検出器を分割したグリッド点の出力数（既定 5）。次の3箇所すべてに同じ値が適用されます: (1) 検出器のグリッド点 (2) show_path_trace が true のときの path_trace の to: (3) 全線源からの総和線量',
+  pathtrace: 'show_path_trace が true のとき、path_trace の from:（仮想点線源）の出力数（既定 5）',
+  buildupenergy: '計算で用いた多重層ビルドアップ係数を表示するときのエネルギー数（既定 3）',
+  buildupmfp: '各エネルギーに対する mfp 数（既定 3）。既定では 3×3=9 個が線量出力ごとに表示されます'
 };
 
 const keyProps = (prefix) => {

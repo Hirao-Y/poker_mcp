@@ -8,15 +8,16 @@
 //   S4 applyChanges 後           → マージ結果 + pending 消える
 //   S5 複数 propose を重ねた場合  → pending がマージされる
 import fs from 'fs';
+import path from 'path';
+import os from 'os';
 import { spawn } from 'child_process';
 
-const T = 'C:/Users/yoshi/pv_tmp';
-const REPO = 'C:/Users/yoshi/poker_mcp_github';
+const T = path.join(os.tmpdir(), 'poker_test_pv_tmp').replace(/\\/g, '/');
 
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(T + '/tasks', { recursive: true });
 // thinnedindices を持たない入力を用意
-let y = fs.readFileSync('C:/Users/yoshi/poker_verify/cask_full.yaml', 'utf8');
+let y = fs.readFileSync(path.resolve('tools/samples/cask_full.yaml'), 'utf8');
 y = y.replace(/^thinnedindices:[\s\S]*?(?=^unit:)/m, '');
 fs.writeFileSync(T + '/tasks/poker.yaml', y, 'utf8');
 
@@ -48,7 +49,6 @@ calls.forEach(([, name, args], i) => {
 });
 
 const proc = spawn(process.execPath, ['src/mcp_server_stdio_v4.js'], {
-  cwd: REPO,
   env: { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: 'C:/Poker' },
   stdio: ['pipe', 'pipe', 'ignore']
 });
