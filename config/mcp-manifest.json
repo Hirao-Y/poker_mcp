@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.8.3",
+  "version": "1.9.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
@@ -2593,6 +2593,33 @@
         "additionalProperties": false,
         "title": "CAD から経路ファイルを生成",
         "description": "入力 YAML の線源・検出器の定義と、FreeCAD のモデルを突き合わせて .paths を作ります。"
+      }
+    },
+    {
+      "name": "poker_generateInput",
+      "description": "FreeCAD のモデルから POKER の YAML 入力を生成します。CAD が正本という前提で、線源・検出器・材質・分割数を CAD のカスタムプロパティから読み取ります。子孫核種（Cs137 → Ba137m など）は自動で補完します。忘れると線量が桁違いに小さくなるため（実測で 1/3）、poker_mcp 側で必ず通します。続けて poker_generatePaths を呼べば、CAD の形状で計算できます。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "fcstd": {
+            "type": "string",
+            "description": "FreeCAD モデルのパス（.FCStd）。"
+          },
+          "output": {
+            "type": "string",
+            "description": "出力する YAML のパス。省略時は作業ディレクトリの poker.yaml。"
+          },
+          "overwrite": {
+            "type": "boolean",
+            "description": "既存の YAML を上書きするか。既定 false。CAD が正本なので通常は上書きしてよいが、手で編集した内容があると失われるため既定では拒否する。"
+          }
+        },
+        "required": [
+          "fcstd"
+        ],
+        "additionalProperties": false,
+        "title": "CAD から POKER 入力を生成",
+        "description": "CAD のカスタムプロパティ: PokerRole(shield/source/detector)、PokerMaterial、PokerDensity、PokerNuclides、PokerDivision、PokerCutoff、PokerGrid、PokerShowPathTrace。"
       }
     }
   ],

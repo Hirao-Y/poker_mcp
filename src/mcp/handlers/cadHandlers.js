@@ -13,6 +13,7 @@ import path from 'path';
 import { FREECAD_CMD, CAD_TOOLS_DIR, POKER_INSTALL_DIR, TASKS_DIR, YAML_FILE }
   from '../../utils/paths.js';
 import { logger } from '../../utils/logger.js';
+import { reconcileInventory } from '../../utils/DaughterReconciler.js';
 import { MaterialCatalog } from '../../utils/MaterialCatalog.js';
 
 function run(cmd, args, opts = {}) {
@@ -189,6 +190,135 @@ export function createCadHandlers(taskManager) {
           }, null, 2)
         }]
       };
-    }
+    },
+    async generateInput(args) {
+      const fail = (msg, hint) => ({
+        content: [{
+          type: 'text',
+          text: JSON.stringify({ success: false, error: msg, hint }, null, 2)
+        }],
+        isError: true
+      });
+
+      if (!FREECAD_CMD) {
+        return fail(
+          'FreeCAD が見つかりません',
+          '環境変数 FREECAD_PATH に freecadcmd の場所を設定してください。');
+      }
+      if (!args || !args.fcstd) return fail('fcstd を指定してください');
+      if (!fssync.existsSync(args.fcstd))
+        return fail('CAD ファイルが見つかりません: ' + args.fcstd);
+
+      const out = args.output || YAML_FILE;
+      if (fssync.existsSync(out) && !args.overwrite) {
+        return fail(
+          '出力先が既に存在します: ' + out,
+          'CAD が正本なので上書きして構いませんが、手で編集した内容があると' +
+          '失われます。overwrite: true を指定してください。');
+      }
+
+      // --- 1. CAD から線源の核種を読み、子孫核種を補完する ---
+      //   まず核種だけを抜き出すために FreeCAD を一度呼ぶ。
+      const probe = path.join(TASKS_DIR, '.probe_nuclides.py');
+      const probeOut = path.join(TASKS_DIR, '.probe_nuclides.json');
+      await fs.writeFile(probe,
+        'import FreeCAD as App, json, os\n' +
+        'd = App.openDocument(r"' + args.fcstd + '")\n' +
+        'out = {}\n' +
+        'for o in d.Objects:\n' +
+        '    r = (getattr(o, "PokerRole", None) or "shield").strip().lower()\n' +
+        '    if r != "source":\n' +
+        '        continue\n' +
+        '    out[o.Name] = getattr(o, "PokerNuclides", None) or ""\n' +
+        'json.dump(out, open(r"' + probeOut + '", "w"), ensure_ascii=False)\n',
+        'utf8');
+
+      const r0 = await run(FREECAD_CMD, [probe], { cwd: TASKS_DIR });
+      let nuclides = null;
+      let daughterNote = null;
+      if (fssync.existsSync(probeOut)) {
+        const raw = JSON.parse(await fs.readFile(probeOut, 'utf8'));
+        nuclides = {};
+        const added = [];
+        for (const [name, text] of Object.entries(raw)) {
+          const inv = [];
+          for (const part of String(text).split(/[,;]/)) {
+            const m = part.trim().match(/^([A-Za-z]+[-_]?\d+m?)\s*[:=]\s*([\d.eE+-]+)$/);
+            if (m) inv.push({
+              nuclide: m[1].replace(/[-_]/g, ''),
+              radioactivity: parseFloat(m[2])
+            });
+          }
+          if (!inv.length) continue;
+          try {
+            const rec = await reconcileInventory(inv,
+              { nuclideManager: taskManager.dataManager.nuclideManager });
+            nuclides[name] = rec.inventory;
+            for (const a of (rec.added || [])) added.push(name + ': ' + a.nuclide);
+          } catch (e) {
+            nuclides[name] = inv;
+            logger.warn('子孫核種の補完に失敗', { source: name, error: e.message });
+          }
+        }
+        if (added.length) daughterNote = '子孫核種を補完しました: ' + added.join(', ');
+      }
+
+      // --- 2. gen_input.py で YAML を組み立てる ---
+      const spec = {
+        fcstd: args.fcstd.replace(/\\/g, '/'),
+        out: out.replace(/\\/g, '/'),
+        poker_dir: POKER_INSTALL_DIR.replace(/\\/g, '/'),
+      };
+      if (nuclides && Object.keys(nuclides).length) spec.nuclides = nuclides;
+
+      const specFile = path.join(TASKS_DIR, '.generate_input_spec.json');
+      await fs.writeFile(specFile, JSON.stringify(spec, null, 2), 'utf8');
+
+      const script = path.join(TASKS_DIR, '.generate_input.py');
+      await fs.writeFile(script,
+        'import sys, traceback\n' +
+        'sys.path.insert(0, r"' + CAD_TOOLS_DIR + '")\n' +
+        'try:\n' +
+        '    import gen_input\n' +
+        '    gen_input.main(r"' + specFile + '")\n' +
+        '    print("GEN_INPUT_OK")\n' +
+        'except BaseException:\n' +
+        '    print("GEN_INPUT_ERROR")\n' +
+        '    traceback.print_exc()\n', 'utf8');
+
+      const r1 = await run(FREECAD_CMD, [script], { cwd: TASKS_DIR });
+      const log = (r1.out || '') + (r1.err || '');
+      if (!log.includes('GEN_INPUT_OK') || !fssync.existsSync(out)) {
+        const m = log.match(/(?:SystemExit|Error|Exception)[^\n]*(?:\n[^\n]*){0,3}/);
+        return fail('入力の生成に失敗しました', m ? m[0].trim() : log.slice(-500));
+      }
+
+      // --- 3. 生成結果を要約する ---
+      const text = await fs.readFile(out, 'utf8');
+      const count = (re) => (text.match(re) || []).length;
+      // YAML の節を切り出して、その中の "  - name:" を数える。
+      // 節をまたいで数えると線源と検出器が混ざる。
+      const sectionCount = (t, sec) => {
+        const m = t.split(new RegExp('^' + sec + ':', 'm'))[1];
+        if (!m) return 0;
+        const body = m.split(/^[a-z_]+:/m)[0];
+        return (body.match(/^  - name: /gm) || []).length;
+      };
+      const result = {
+        success: true,
+        message: '入力を生成しました',
+        output: out,
+        summary: {
+          材質数: count(/^  - body_name: REF_/gm),
+          線源数: sectionCount(text, 'source'),
+          検出器数: sectionCount(text, 'detector'),
+        },
+        next: 'poker_generatePaths で経路を抽出し、executeCalculation の path_input に渡してください',
+      };
+      if (daughterNote) result.note = daughterNote;
+
+      logger.info('CAD から入力を生成しました', { out, added: daughterNote });
+      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+    },
   };
 }
