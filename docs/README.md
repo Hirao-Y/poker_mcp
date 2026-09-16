@@ -1,6 +1,6 @@
 # Poker MCP Server - 放射線遮蔽計算支援ツール v1.8.3
 
-**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（34メソッド完全実装）
+**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（35メソッド完全実装）
 
 ## 🔬 概要
 
@@ -55,7 +55,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 - **POKER_MCP_HOME 環境変数（v1.2.6）**: 作業ディレクトリを柔軟に指定可能
 
 ### 🆕 v1.2.5 実装済み機能
-- **34メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・GUI起動を含む全機能
+- **35メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・GUI起動を含む全機能
 - **子孫核種自動追加**: ICRP-07準拠の放射平衡考慮
 - **サマリーファイル完全解析**: 5セクション対応
 - **エラーコード13種対応**: 即座の問題解決
@@ -195,7 +195,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 - **OS**: Windows, macOS, Linux（poker_openGui は Windows 専用）
 
 ### ⚡ パフォーマンス
-- **メソッド応答**: <50ms（34メソッド全対応）
+- **メソッド応答**: <50ms（35メソッド全対応）
 - **データ保存**: <200ms
 - **メモリ使用**: 40-200MB（データサイズ依存）
 - **自動修復**: <1秒（YAMLファイル破損時）
@@ -212,7 +212,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 ## 🔗 外部連携
 
 ### 📊 POKER計算コード連携
-- YAML入力ファイル生成（34メソッド対応）
+- YAML入力ファイル生成（35メソッド対応）
 - poker_cui 実行サポート（poker_executeCalculation）
 - POKER.exe GUI 起動（poker_openGui、Windows専用）
 - サマリーファイル（5セクション）取得と解析
@@ -272,7 +272,7 @@ total_doses = summary['result_total']
 
 ### 📧 技術サポート
 - **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
-- **34メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
+- **35メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
 - **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
 - **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.8.1更新）
@@ -287,13 +287,13 @@ total_doses = summary['result_total']
 ## 🌟 プロジェクトの価値
 
 ### ✨ 研究者への価値
-- **効率化**: 34メソッドによる入力ファイル作成時間80%短縮
+- **効率化**: 35メソッドによる入力ファイル作成時間80%短縮
 - **品質向上**: Unit操作5メソッド・ThinnedIndices操作3メソッドによる設定ミスゼロ化
 - **精度向上**: 子孫核種自動考慮による物理的完全性
 - **検証強化**: サマリー5セクション解析
 
 ### 🏢 組織への価値
-- **標準化**: 34メソッドによる手法統一
+- **標準化**: 35メソッドによる手法統一
 - **エラー削減**: 13種エラーコード自動対処
 - **知識共有**: サマリーファイル解析の形式知化
 - **品質保証**: Unit操作による国際標準準拠
@@ -302,7 +302,7 @@ total_doses = summary['result_total']
 - **安全性向上**: 子孫核種考慮による精密計算
 - **医療安全**: Unit操作による単位ミス防止
 - **研究促進**: サマリーファイル解析効率化
-- **教育支援**: 34メソッドによる体系的学習
+- **教育支援**: 35メソッドによる体系的学習
 
 ---
 
@@ -324,7 +324,7 @@ total_doses = summary['result_total']
 
 ### v1.8.3
 - ✅ **poker_openGui 追加**: POKER.exe GUI 起動（自動保存・Windows専用）
-- ✅ **34メソッド完全実装**: System系に openGui を追加
+- ✅ **35メソッド完全実装**: System系に openGui を追加
 
 ### v1.8.3〜v1.2.7
 - ✅ **SERVER DISCONNECTED 修正**: npx 起動時の EPERM 問題を解消

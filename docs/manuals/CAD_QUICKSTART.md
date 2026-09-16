@@ -36,28 +36,85 @@ numpy は FreeCAD に同梱されているので追加のインストールは�
 
 ## 手順
 
-### 1. モデルに材質を設定する
+CAD が正本です。**YAML を手で書く必要はありません。**
 
-**ソリッドに `PokerMaterial` プロパティで材質名を設定します。** これだけが
-モデル側の約束です。
+```javascript
+poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })   // YAML を生成
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })   // 経路を抽出
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+### CAD 側の約束
+
+ソリッドにカスタムプロパティを設定します。これだけが利用者の仕事です。
+
+| プロパティ | 対象 | 内容 |
+|---|---|---|
+| `PokerRole` | 全体 | `shield`（既定）/ `source` / `detector` |
+| `PokerMaterial` | 遮蔽体 | 材質名（`Iron`、`Concrete` など） |
+| `PokerDensity` | 遮蔽体 | 密度の上書き [g/cm³]。省略時はカタログ密度 |
+| `PokerNuclides` | 線源 | `"Cs137:1.0e13, Co60:5.0e11"` |
+| `PokerDivision` | 線源・検出器 | 分割数。省略時は自動（後述） |
+| `PokerCutoff` | 線源 | 打ち切り率。既定 1e-4 |
+| `PokerShowPathTrace` | 検出器 | 既定 false |
 
 ```python
-o = doc.getObject('Shield')
 o.addProperty('App::PropertyString', 'PokerMaterial', 'POKER', '材質')
 o.PokerMaterial = 'Iron'
 ```
 
-密度を標準値から変える場合は `PokerDensity`（g/cm3）も設定します。
+### 形状から決まるもの
 
-### 2. 経路を抽出して計算する
+**線源と検出器の型は、ソリッドの形から判定されます。** 面の数ではなく曲面の
+種別（円柱面・球面・平面）で判定するので、傾いた円柱も正しく扱えます。
 
-```javascript
-poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
-poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+| CAD の形 | 線源として | 検出器として |
+|---|---|---|
+| 球・小さい立体 | POINT（1 cm³ 未満）/ SPH | 点検出器 |
+| 円柱 | RCC（軸と底面を自動取得） | — |
+| 薄い直方体 | BOX | **2D グリッド**（面線量マップ） |
+| 直方体 | BOX | **3D グリッド**（体積線量マップ） |
+
+円錐やトーラスなど POKER に対応する型がない形状は、**黙って近似せずエラーに
+します**。気づかないまま違う体系を計算するより安全です。
+
+### 自動で決まるもの
+
+**子孫核種**が補完されます。Cs137 は β 崩壊のみで光子をほぼ出さず、0.662 MeV は
+娘核種 Ba137m から出ます。忘れると線量が 1/3 になるため、`DaughterReconciler`
+を通して自動で追加します。
+
+**線源の分割数**は、1 区画が 2 mfp 以下になるよう寸法と材質から決まります。
+`PokerDivision` で上書きできます。
+
+```
+キャスク相当（Source_Dry, r=75cm, h=400cm）-> r=8, phi=16, z=41
 ```
 
-分割点の取得、グリッド検出器の展開、ビルドアップ等価材料の解決は自動です。
-応答の `spec_used` で、実際に使われた設定を確認できます。
+これは出発点であって最適値ではありません。**本来は分割数を変えて線量の収束を
+確認して決めるもの**です。
+
+**参照エネルギー**は線源の核種から光子放出率で重み付けした平均を使います。
+層の縮約に使う値で、線量計算には影響しません。
+
+**`thinnedindices`** は分割点数・評価点数に合わせて設定されます。`.paths` の
+生成には全点が必要ですが、既定では間引かれるためです。
+
+### 生成物の検証
+
+`poker_generateInput` は生成直後に `poker_cui -c` を走らせ、結果を返します。
+
+```json
+"validation": { "ok": true, "message": "poker_cui -c で検証を通過しました" }
+```
+
+材質名がライブラリに無いといった誤りを、計算まで進む前に捕まえられます。
+
+### 既存の YAML
+
+上書きされますが、`backups/` に退避されます（`applyChanges` と同じ場所）。
+CAD が正本なので YAML は生成物であり、毎回確認を求めるのは煩わしいだけという
+判断です。
 
 ## サンプル
 

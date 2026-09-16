@@ -1,9 +1,9 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.6.0 MCP Edition  
+**バージョン**: 1.9.5 MCP Edition  
 **最終更新**: 2026年5月16日  
-**使用方法**: Claude Desktop + MCP通信 (34メソッド対応)
+**使用方法**: Claude Desktop + MCP通信 (35メソッド対応)
 
 ---
 
@@ -41,7 +41,7 @@
 | -32079 | 線源が存在しない | poker_proposeSourceを使用 |
 | -32031 | CMB参照立体が未定義 | 参照する立体を先に定義 |
 | -32600 | 不正なリクエスト | パラメータ形式確認 |
-| -32601 | メソッドが見つからない | メソッド名確認（34メソッドリスト参照） |
+| -32601 | メソッドが見つからない | メソッド名確認（35メソッドリスト参照） |
 
 ### 🗂️ データファイル関連エラー
 
@@ -329,7 +329,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 修正を実施してください。」
 ```
 
-#### **問題B3: 34メソッドの使い分け迷い**
+#### **問題B3: 35メソッドの使い分け迷い**
 ```
 症状:
 - proposeとupdateの使い分けが不明
@@ -337,7 +337,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 - エラーコードが頻発
 
 判断基準:
-「34メソッド適切使用ガイド:
+「35メソッド適切使用ガイド:
 
 【propose vs update vs delete】
 新規作成 → propose
@@ -847,5 +847,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2026年5月  
-**バージョン**: 1.6.0 MCP Edition  
+**バージョン**: 1.9.5 MCP Edition  
 **サポート**: GitHub Issues

@@ -2,15 +2,15 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.8.3  
-**🔧 バージョン**: 1.6.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.9.5  
+**🔧 バージョン**: 1.9.5 MCP Edition  
 **📅 最終更新**: 2025年1月24日
 
 ---
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した34メソッドの詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した35メソッドの詳細仕様を提供します。
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -25,7 +25,7 @@
 
 ---
 
-## 📚 34メソッド完全実装一覧
+## 📚 35メソッド完全実装一覧
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -143,10 +143,11 @@ poker_updateThinnedIndices({ fit_for_paths: true })
 必要ですが、既定では間引かれるためです。5000 のような固定値ではなく入力の実数に
 合わせるので、なぜその値かが明確になります。
 
-### 📐 **CAD操作系 (1メソッド) - 経路ファイルの生成**
+### 📐 **CAD操作系 (2メソッド) - CAD から入力と経路を生成**
 
 | **メソッド名** | **機能** | **特徴** |
 |---------------|----------|----------|
+| **poker_generateInput** | CAD モデルから YAML 入力を生成 | 子孫核種を自動補完。生成物を poker_cui -c で検証 |
 | **poker_generatePaths** | CAD モデルから経路ファイル(.paths)を生成 | FreeCAD をヘッドレス起動。分割点の取得から等価材料の解決まで自動 |
 
 FreeCAD のソリッドモデルから線源分割点→検出器評価点の直線を追跡し、通過した
@@ -201,6 +202,38 @@ poker_executeCalculation({ yaml_file: "poker.yaml" })
 
 同じ体系を両方で計算すると、テッセレーション由来のわずかな差が出ます
 （平板 0.005%、円筒 0.23%、球 0.63%）。
+
+### CAD が正本の運用
+
+`poker_generateInput` は CAD のカスタムプロパティから YAML を組み立てます。
+**YAML は生成物であり、人が編集するものではありません。**
+
+```javascript
+poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+| CAD のプロパティ | 対象 | 内容 |
+|---|---|---|
+| `PokerRole` | 全体 | `shield`（既定）/ `source` / `detector` |
+| `PokerMaterial` | 遮蔽体 | 材質名 |
+| `PokerDensity` | 遮蔽体 | 密度の上書き。省略時はカタログ密度 |
+| `PokerNuclides` | 線源 | `"Cs137:1.0e13, Co60:5.0e11"` |
+| `PokerDivision` | 線源・検出器 | 分割数。省略時は自動 |
+| `PokerCutoff` | 線源 | 打ち切り率。既定 1e-4 |
+| `PokerShowPathTrace` | 検出器 | 既定 false |
+
+**立体型はソリッドの形から判定されます。** 曲面の種別（円柱面・球面・平面）で
+判定するので、傾いた円柱も軸を正しく取得します。対応する型がない形状
+（円錐、トーラスなど）はエラーにし、黙って近似しません。
+
+**自動で決まるもの**は、子孫核種の補完（Cs137 → Ba137m）、線源の分割数
+（1 区画が 2 mfp 以下）、参照エネルギー（光子放出率の加重平均）、
+`thinnedindices`（分割点数・評価点数に合わせる）です。
+
+生成直後に `poker_cui -c` で検証し、結果を `validation` として返します。
+既存の YAML は `backups/` に退避してから上書きします。
 
 ### FreeCAD の場所
 
@@ -432,7 +465,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 ---
 
-## 📊 34メソッド完全仕様
+## 📊 35メソッド完全仕様
 
 ### 📐 **Body系メソッド（立体管理）**
 

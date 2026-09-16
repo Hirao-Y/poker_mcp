@@ -4,8 +4,8 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.8.3
-- **ツール数**: 34メソッド
+- **バージョン**: 1.9.5
+- **ツール数**: 35メソッド
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
@@ -20,6 +20,7 @@ YAML-based input file management tool for radiation-shielding calculation code P
 スクリプトを渡す。3 手順すべてが手作業でした。
 
 ```javascript
+poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })   // YAML を生成
 poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
 poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 ```
@@ -114,16 +115,18 @@ poker_getThinnedIndices()
 
 ### 📡 CAD連携レイトレース
 FreeCAD のソリッドモデルを、STEP のような中間フォーマットを介さず、CSG で
-表現し直す作業も無しに遮蔽体系として扱えます。**MCP の 2 呼び出しで完結**します。
+表現し直す作業も無しに遮蔽体系として扱えます。**MCP の 3 呼び出しで完結**します。
 
 ```javascript
+poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })
 poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
 poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 ```
 
+CAD が正本です。**YAML を手で書く必要はありません。** ソリッドに材質・線源・
+検出器をカスタムプロパティで設定しておけば、そこから入力が生成されます。
 線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と厚さを `.paths` に
-記録して POKER に渡します。分割点の取得、グリッド検出器の展開、ビルドアップ
-等価材料の解決はすべて自動です。
+記録して POKER に渡します。
 
 CSG 経由と一致することを平板・円筒・球の 5 体系で確認済みです。フィレットや
 自由曲面のように CSG で表現できない形状も扱えます。**複数線源・グリッド検出器・
@@ -412,7 +415,7 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **34メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **35メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -431,7 +434,7 @@ Claude Desktopで以下のようにテストできます：
 
 ## 🎯 API構成
 
-### 🔧 **34メソッド完全実装**
+### 🔧 **35メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -446,7 +449,7 @@ Claude Desktopで以下のようにテストできます：
 | **📐 CAD** | 1個 | 経路ファイルの生成 | generatePaths |
 | **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・各種検証 |
 
-### 📋 **全34メソッド一覧**
+### 📋 **全35メソッド一覧**
 ```
 Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
 Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  

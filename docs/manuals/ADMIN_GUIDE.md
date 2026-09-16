@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**対応バージョン**: Poker MCP Server v1.8.3 (34メソッド完全実装)
+**対応バージョン**: Poker MCP Server v1.9.5 (34メソッド完全実装)
 **想定環境**: Windows + Claude Desktop（stdio 通信）
 **最終更新**: 2026年8月
 
@@ -183,7 +183,7 @@ node src/mcp_server_stdio_v4.js
 
 ```powershell
 npm run check:manifest
-# → OK: マニフェストと実行時ツール定義は同期しています (34 tools)
+# → OK: マニフェストと実行時ツール定義は同期しています (35tools)
 ```
 
 ### 4. 子孫核種機能の動作確認
@@ -201,7 +201,7 @@ poker_proposeSource(name="Test", type="POINT", position="0 0 0",
 
 ### 5. Claude Desktop 側での確認
 
-ツール一覧に 34 個のツールが表示されることを確認します。
+ツール一覧に 35個のツールが表示されることを確認します。
 表示されない場合は Claude Desktop のログ（`%APPDATA%\Claude\logs\`）に
 MCP サーバの起動失敗が記録されています。
 
