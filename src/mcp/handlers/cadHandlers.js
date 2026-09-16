@@ -301,6 +301,30 @@ export function createCadHandlers(taskManager) {
         return fail('入力の生成に失敗しました', m ? m[0].trim() : log.slice(-500));
       }
 
+      // --- 3. 生成した入力を POKER に検証させる ---
+      //   poker_cui -c は線量計算をせず、入力の妥当性確認と経路追跡だけ行う。
+      //   これを通しておけば、線源が遮蔽体の外にある、材質名がライブラリに
+      //   無い、立体が重なっている、といった誤りを生成の時点で捕まえられる。
+      //   利用者が計算まで進んでから気づくより早い。
+      let validation = null;
+      {
+        const exe2 = path.join(POKER_INSTALL_DIR, 'poker_cui.EXE');
+        if (fssync.existsSync(exe2)) {
+          const rv = await run(exe2, [out, '-c'], { cwd: TASKS_DIR });
+          if (rv.code === 0) {
+            validation = { ok: true, message: 'poker_cui -c で検証を通過しました' };
+          } else {
+            const text = (rv.out || "") + (rv.err || "");
+            const m = text.match(/(?:ERROR|INPUT ERROR)[\s\S]{0,300}/);
+            validation = {
+              ok: false,
+              message: 'poker_cui -c で問題が見つかりました（終了コード ' + rv.code + '）',
+              detail: m ? m[0].trim() : text.slice(-300),
+            };
+          }
+        }
+      }
+
       // --- 3. 生成結果を要約する ---
       const text = await fs.readFile(out, 'utf8');
       const count = (re) => (text.match(re) || []).length;
@@ -324,6 +348,7 @@ export function createCadHandlers(taskManager) {
         next: 'poker_generatePaths で経路を抽出し、executeCalculation の path_input に渡してください',
       };
       if (daughterNote) result.note = daughterNote;
+      if (validation) result.validation = validation;
 
       logger.info('CAD から入力を生成しました', { out, added: daughterNote });
       return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
