@@ -283,3 +283,192 @@ def pick_faces(shape, which):
         return [big[0]] if w == 'outer' else [big[1]]
 
     return faces
+
+
+
+# ---------------------------------------------------------------------------
+# CAD プロパティの読み取り
+# ---------------------------------------------------------------------------
+
+def parse_nuclide_values(text):
+    """'Cs137:1.0e6, Co60:2.0e5' -> [('Cs137', 1.0e6), ('Co60', 2.0e5)]
+
+    値の意味（濃度か総放射能か）は呼び出し側の文脈で決まる。
+    """
+    import re
+    out = []
+    for part in re.split(r'[,;]', text or ''):
+        part = part.strip()
+        if not part:
+            continue
+        m = re.match(r'^([A-Za-z]+[-_]?\d+m?)\s*[:=]\s*([\d.eE+-]+)$', part)
+        if not m:
+            raise SystemExit(
+                '核種の書式が不正です: %r\n'
+                '  例: "Cs137:1.0e6, Co60:2.0e5"' % part)
+        out.append((m.group(1).replace('-', '').replace('_', ''), float(m.group(2))))
+    return out
+
+
+def resolve_inventory(obj, amount, prefix=''):
+    """CAD のプロパティから核種と量を決める。
+
+    3 つの指定方法を許す:
+      (a) PokerNuclides = 'Cs137:1.0e6, Co60:2.0e5'
+          核種ごとの濃度（または総放射能）を直接指定
+      (b) PokerComposition = 'Cs137:5, Co60:1' と PokerConcentration = '1.0e6'
+          組成比と総量。比率の合計で正規化して配分する。
+          組成が既知で濃度だけ違う場合に使う
+      (c) PokerActivity = 'Co60:3.7e10'
+          総放射能を直接
+
+    amount: 濃度指定のときに掛ける量（体積 cm3 または面積 cm2）。
+            総放射能指定のときは使わない。
+    prefix: 面ごとに別の濃度を与える場合の接頭辞（'Inner' / 'Outer'）
+
+    返り値: [(核種, Bq), ...]
+    """
+    def get(name):
+        key = (prefix or 'Poker') + name
+        return (getattr(obj, key, None) or '').strip()
+
+    # (c) 総放射能
+    act = get('Activity')
+    if act:
+        return parse_nuclide_values(act)
+
+    # (b) 組成比 + 総濃度
+    comp = get('Composition')
+    conc = get('Concentration')
+    if comp and conc:
+        pairs = parse_nuclide_values(comp)
+        total_ratio = sum(v for _, v in pairs)
+        if total_ratio <= 0:
+            raise SystemExit('%s の組成比の合計が 0 です' % obj.Name)
+        try:
+            c = float(conc)
+        except ValueError:
+            raise SystemExit('%s の濃度が数値ではありません: %r' % (obj.Name, conc))
+        return [(n, c * amount * v / total_ratio) for n, v in pairs]
+
+    # (a) 核種ごとの濃度
+    nuc = get('Nuclides')
+    if nuc:
+        pairs = parse_nuclide_values(nuc)
+        return [(n, v * amount) for n, v in pairs]
+
+    return []
+
+
+
+def find_region(obj, doc):
+    """この線源の汚染範囲を制限する立体を探す。
+
+    別オブジェクトに PokerRegionFor でこの線源を指させる。
+    App::PropertyLink を使うので、オブジェクト名を変えてもリンクは保たれる
+    （名前の一致に頼ると壊れる）。
+    """
+    for o in doc.Objects:
+        tgt = getattr(o, 'PokerRegionFor', None)
+        if tgt is None:
+            continue
+        # リンクなら Object そのもの、文字列なら名前で比較
+        name = getattr(tgt, 'Name', None) or str(tgt)
+        if name == obj.Name:
+            sh = getattr(o, 'Shape', None)
+            if sh is not None and not sh.isNull():
+                return sh
+    return None
+
+
+def build_scatter_sources(obj, doc, scale, detectors_mm, warn):
+    """CAD オブジェクトから散布線源を作る。
+
+    返り値: [{'name':..., 'points':[(x,y,z,{核種:Bq}), ...]}, ...]
+            線源の種類ごとに 1 つ（体積／内面／外面）
+
+    warn: 警告を受け取るリスト
+    """
+    sh = obj.Shape
+    region = find_region(obj, doc)
+    pitch = _num(getattr(obj, 'PokerPointSpacing', None)) or default_pitch(sh, detectors_mm)
+
+    out = []
+
+    # --- 体積汚染 ---
+    vol_spec = (getattr(obj, 'PokerNuclides', None) or
+                getattr(obj, 'PokerComposition', None) or
+                getattr(obj, 'PokerActivity', None))
+    stype = (getattr(obj, 'PokerSourceType', None) or '').strip().lower()
+    if stype == 'volume' and vol_spec:
+        target = clip_solid(sh, region) if region is not None else sh
+        if target is None:
+            warn.append('%s: 領域との共通部分がありません' % obj.Name)
+        else:
+            vol_cm3 = target.Volume * (scale ** 3)
+            inv = resolve_inventory(obj, vol_cm3)
+            if inv:
+                total = sum(a for _, a in inv)
+                pts = scatter_volume(target, pitch, total, scale)
+                if pts:
+                    out.append(_mk(obj.Name, pts, inv, total))
+                else:
+                    warn.append('%s: 点が 1 つも入りませんでした（ピッチ %.1f mm）'
+                                % (obj.Name, pitch))
+
+    # --- 表面汚染（内面・外面を別々に）---
+    for side, prefix in (('inner', 'PokerInner'), ('outer', 'PokerOuter')):
+        spec = (getattr(obj, prefix + 'Nuclides', None) or
+                getattr(obj, prefix + 'Composition', None) or
+                getattr(obj, prefix + 'Activity', None))
+        if not spec:
+            continue
+        faces = pick_faces(sh, side)
+        if region is not None:
+            clipped = []
+            for f in faces:
+                clipped += clip_face(f, region)
+            faces = clipped
+        if not faces:
+            warn.append('%s: %s 面が見つかりません' % (obj.Name, side))
+            continue
+        area_cm2 = sum(f.Area for f in faces) * (scale ** 2)
+        inv = resolve_inventory(obj, area_cm2, prefix=prefix)
+        if not inv:
+            continue
+        total = sum(a for _, a in inv)
+        pts = []
+        for f in faces:
+            a = f.Area * (scale ** 2)
+            pts += scatter_surface(f, pitch, total * a / area_cm2, scale)
+        if pts:
+            out.append(_mk('%s_%s' % (obj.Name, side), pts, inv, total))
+        else:
+            warn.append('%s: %s 面に点が入りませんでした' % (obj.Name, side))
+
+    # 点数の警告
+    n = sum(len(s['points']) for s in out)
+    if n > SCATTER_WARN_POINTS:
+        warn.append('%s: 点線源が %d 個になります（ピッチ %.1f mm）。'
+                    '計算時間が長くなるので PokerPointSpacing での調整を検討してください'
+                    % (obj.Name, n, pitch))
+    return out
+
+
+def _mk(name, pts, inv, total):
+    """散布点を線源の形にする。核種の比率は全点で同じ。"""
+    ratio = [(nu, a / total) for nu, a in inv] if total > 0 else []
+    return {
+        'name': name,
+        'pitch_points': len(pts),
+        'total_bq': total,
+        'points': [(x, y, z, [(nu, bq * r) for nu, r in ratio])
+                   for (x, y, z, bq) in pts],
+    }
+
+
+def _num(v):
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
