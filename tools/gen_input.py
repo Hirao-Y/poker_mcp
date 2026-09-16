@@ -47,11 +47,38 @@ SCALE = 0.1
 
 # 線源の既定分割数。利用者が PokerDivision で上書きする前提の出発点。
 # 粗すぎると精度が出ず、細かすぎると経路数が爆発するので中庸を取る。
-DEFAULT_DIVISION = {
-    'RCC': [4, 8, 10],      # r, phi, z
-    'BOX': [5, 5, 5],       # edge_1, edge_2, edge_3
-    'SPH': [4, 8, 8],       # r, phi, theta
-}
+# 線源の分割数を寸法から決めるときの基準。
+#
+#   1 区画の厚さが DIV_MFP mfp 以下になるよう分割する。
+#
+# これは出発点であって最適値ではない。本来は分割数を変えて線量の収束を
+# 確認し、それで決めるもの。ここでの既定値は「収束解析を始める前の、
+# ひとまず妥当な値」という位置づけ。利用者は PokerDivision で上書きできる。
+#
+# 2 mfp としたのは、実運用の分割（キャスクで r 方向 1.9 mfp、z 方向 2.7 mfp）
+# に近いため。1 mfp だと点数が現実的でなくなる（キャスクで半径 16 分割、
+# 高さ 81 分割）。
+DIV_MFP = 2.0
+
+# 軸ごとの上限は設けない。2 mfp という基準を軸によって変える理由がなく、
+# 細長い線源では z 方向に、扁平な線源では r 方向に、自然に多く配分される。
+#
+# 周方向(phi)だけは寸法で決まらないので固定値を使う。円周を何分割するかは
+# 半径の mfp とは別の話で、方位角方向の線量分布をどれだけ解像したいかで決まる。
+DIV_PHI = 16
+DIV_MIN = 2
+
+# 点数が過大になったときに気づけるよう、この数を超えたら警告する。
+# 止めはしない（利用者が意図して細かくしている場合もある）。
+DIV_WARN_POINTS = 20000
+
+
+def _div_from_size(size_cm, mu):
+    # size_cm を DIV_MFP mfp 以下に刻むのに必要な分割数
+    if mu is None or mu <= 0:
+        return DIV_MIN
+    n = int(size_cm * mu / DIV_MFP + 0.999)
+    return max(DIV_MIN, n)
 
 
 def _num(v, default=None):
@@ -145,7 +172,9 @@ def classify(sh):
     return None, {'faces': n_face, 'types': dict(t)}
 
 
-def read_source(obj, nuclide_override=None):
+def read_source(obj, nuclide_override=None, mu_src=None):
+    # mu_src: 線源材質の線減弱係数 [1/cm]。分割数を寸法から決めるのに使う。
+    #   線源自身の自己遮蔽が効くので、1区画が厚すぎると精度が落ちる。
     # 形状から線源の型と幾何を決める。核種と分割は プロパティから。
     sh = obj.Shape
     kind, geo = classify(sh)
@@ -190,7 +219,11 @@ def read_source(obj, nuclide_override=None):
                                            ax.z * h * SCALE),
             'radius': geo['radius'] * SCALE,
         }
-        d = div or DEFAULT_DIVISION['RCC']
+        d = div or [
+            _div_from_size(geo['radius'] * SCALE, mu_src),
+            DIV_PHI,
+            _div_from_size(abs(h) * SCALE, mu_src),
+        ]
         src['division'] = {
             'r': {'number': d[0], 'type': 'UNIFORM'},
             'phi': {'number': d[1], 'type': 'UNIFORM'},
@@ -205,7 +238,11 @@ def read_source(obj, nuclide_override=None):
             'center': _xyz(geo['center']),
             'radius': geo['radius'] * SCALE,
         }
-        d = div or DEFAULT_DIVISION['SPH']
+        d = div or [
+            _div_from_size(geo['radius'] * SCALE, mu_src),
+            DIV_PHI,
+            DIV_PHI,
+        ]
         src['division'] = {
             'r': {'number': d[0], 'type': 'UNIFORM'},
             'phi': {'number': d[1], 'type': 'UNIFORM'},
@@ -221,7 +258,11 @@ def read_source(obj, nuclide_override=None):
             'edge_2': '0 %g 0' % (bb.YLength * SCALE),
             'edge_3': '0 0 %g' % (bb.ZLength * SCALE),
         }
-        d = div or DEFAULT_DIVISION['BOX']
+        d = div or [
+            _div_from_size(bb.XLength * SCALE, mu_src),
+            _div_from_size(bb.YLength * SCALE, mu_src),
+            _div_from_size(bb.ZLength * SCALE, mu_src),
+        ]
         src['division'] = {
             'edge_1': {'number': d[0], 'type': 'UNIFORM'},
             'edge_2': {'number': d[1], 'type': 'UNIFORM'},
@@ -249,7 +290,11 @@ def read_source(obj, nuclide_override=None):
             'height_vector': '0 0 %g' % (bb.ZLength * SCALE),
             'radius': max(bb.XLength, bb.YLength) / 2 * SCALE,
         }
-        d = div or DEFAULT_DIVISION['RCC']
+        d = div or [
+            _div_from_size(geo['radius'] * SCALE, mu_src),
+            DIV_PHI,
+            _div_from_size(abs(h) * SCALE, mu_src),
+        ]
         src['division'] = {
             'r': {'number': d[0], 'type': 'UNIFORM'},
             'phi': {'number': d[1], 'type': 'UNIFORM'},
@@ -263,7 +308,11 @@ def read_source(obj, nuclide_override=None):
             'edge_2': '0 %g 0' % (bb.YLength * SCALE),
             'edge_3': '0 0 %g' % (bb.ZLength * SCALE),
         }
-        d = div or DEFAULT_DIVISION['BOX']
+        d = div or [
+            _div_from_size(bb.XLength * SCALE, mu_src),
+            _div_from_size(bb.YLength * SCALE, mu_src),
+            _div_from_size(bb.ZLength * SCALE, mu_src),
+        ]
         src['division'] = {
             'edge_1': {'number': d[0], 'type': 'UNIFORM'},
             'edge_2': {'number': d[1], 'type': 'UNIFORM'},
@@ -279,7 +328,11 @@ def read_source(obj, nuclide_override=None):
             'edge_2': '0 %g 0' % (bb.YLength * SCALE),
             'edge_3': '0 0 %g' % (bb.ZLength * SCALE),
         }
-        d = div or DEFAULT_DIVISION['BOX']
+        d = div or [
+            _div_from_size(bb.XLength * SCALE, mu_src),
+            _div_from_size(bb.YLength * SCALE, mu_src),
+            _div_from_size(bb.ZLength * SCALE, mu_src),
+        ]
         src['division'] = {
             'edge_1': {'number': d[0], 'type': 'UNIFORM'},
             'edge_2': {'number': d[1], 'type': 'UNIFORM'},
@@ -477,6 +530,23 @@ def build_yaml(doc, materials, sources, detectors, mfp_order=None, lib_density=N
     return '\n'.join(L)
 
 
+def _source_mu(obj, lib, spec):
+    # 線源材質の線減弱係数。PokerMaterial が設定されていればその材質、
+    # 無ければ既定として Water を使う（多くの線源は水と同程度の減衰）。
+    #
+    # 参照エネルギーは spec.mu_energy、無ければ 0.662 MeV（Cs-137）。
+    # ここでは分割数を決めるだけなので、厳密なエネルギーは要らない。
+    mat = getattr(obj, 'PokerMaterial', None) or 'Water'
+    energy = float(spec.get('mu_energy', 0.6617))
+    try:
+        return lib.mu(mat, energy)
+    except Exception:
+        try:
+            return lib.mu('Water', energy)
+        except Exception:
+            return None
+
+
 def main(spec_path):
     spec = json.load(open(spec_path, encoding='utf-8-sig'))
     fcstd = spec['fcstd']
@@ -487,6 +557,11 @@ def main(spec_path):
         App.closeDocument(name)
     doc = App.openDocument(fcstd)
 
+    # mfp 順は .paths 生成後にしか分からないので、spec で渡された場合のみ使う
+    # カタログ密度を読む。CAD 側の PokerDensity が無い材質に使う。
+    lib = poker_lib.PokerLib(spec.get('poker_dir', r'C:\Poker'))
+    lib_density = dict((m, v[0]) for m, v in lib.materials.items())
+
     materials, sources, detectors = {}, [], []
     for o in doc.Objects:
         sh = getattr(o, 'Shape', None)
@@ -494,7 +569,7 @@ def main(spec_path):
             continue
         r = role_of(o)
         if r == 'source':
-            sources.append(read_source(o, spec.get('nuclides')))
+            sources.append(read_source(o, spec.get('nuclides'), _source_mu(o, lib, spec)))
         elif r == 'detector':
             detectors.append(read_detector(o))
         else:
@@ -513,10 +588,6 @@ def main(spec_path):
     if not detectors:
         raise SystemExit('PokerRole=detector のオブジェクトがありません')
 
-    # mfp 順は .paths 生成後にしか分からないので、spec で渡された場合のみ使う
-    # カタログ密度を読む。CAD 側の PokerDensity が無い材質に使う。
-    lib = poker_lib.PokerLib(spec.get('poker_dir', r'C:\Poker'))
-    lib_density = dict((m, v[0]) for m, v in lib.materials.items())
 
     text = build_yaml(doc, materials, sources, detectors,
                       spec.get('mfp_order'), lib_density)
