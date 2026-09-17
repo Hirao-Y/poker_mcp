@@ -1,0 +1,57 @@
+thinnedindices:
+  sourcepoint: 5000
+  pseudosourcepoint: 10
+  detectorgrid: 5000
+  detectorevaluation: 5000
+  pathtrace: 5
+  buildupenergy: 3
+  buildupmfp: 3
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+body:
+  - name: OUTER
+    type: RPP
+    min: -30 -30 0
+    max: 30 30 40
+  - name: CAVITY
+    type: RPP
+    min: -20 -20 10
+    max: 20 20 30
+  - name: SHELL
+    type: CMB
+    expression: OUTER - CAVITY
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: SHELL
+    material: Iron
+    density: 7.87
+  - body_name: CAVITY
+    material: Air
+    density: 0.0012
+transform: []
+buildup_factor:
+  - material: Iron
+    use_slant_correction: false
+    use_finite_medium_correction: false
+source:
+  - name: Co60_source
+    type: POINT
+    inventory:
+      - nuclide: Co60
+        radioactivity: 37000000000
+    cutoff_rate: 0.0001
+    position: 0 0 20
+detector:
+  - name: D_top_1m
+    origin: 0 0 140
+    show_path_trace: false
+  - name: D_side_1m
+    origin: 130 0 20
+    show_path_trace: false
+  - name: D_corner
+    origin: 92 92 20
+    show_path_trace: false

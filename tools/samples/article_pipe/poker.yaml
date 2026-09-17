@@ -1,0 +1,1064 @@
+# このファイルは gen_input.py が CAD モデルから生成したものです。
+# 正本は CAD モデルです。形状を変えたら再生成してください。
+
+thinnedindices:
+  sourcepoint: 10
+  pseudosourcepoint: 10
+  detectorgrid: 10
+  detectorevaluation: 10
+  pathtrace: 5
+  buildupenergy: 3
+  buildupmfp: 3
+
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+
+# [ダミー] 以下の body / zone は --path-input では幾何として使われません。
+# 幾何は .paths から読み込まれます。ここに置くのは、POKER の入力規約上
+# ゾーンに実在する立体が必要なことと、材質の密度をここから引くためです。
+# 立体どうしが重ならないよう x 方向に並べてあります。
+body:
+  - name: REF_Concrete
+    type: RPP
+    min: 0 -1 -1
+    max: 1 1 1
+  - name: REF_SUS_A
+    type: RPP
+    min: 10 -1 -1
+    max: 11 1 1
+  - name: REF_Water
+    type: RPP
+    min: 20 -1 -1
+    max: 21 1 1
+
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: REF_Concrete
+    material: Concrete
+    density: 2.1
+  - body_name: REF_SUS_A
+    material: SUS_A
+    density: 7.8
+  - body_name: REF_Water
+    material: Water
+    density: 1
+
+transform: []
+
+# 並び順で選択されるビルドアップ材料が変わります。
+buildup_factor:
+  - material: Concrete
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Iron
+    # SUS_A の等価材料として指定
+    use_slant_correction: false
+    use_finite_medium_correction: false
+  - material: Water
+    use_slant_correction: false
+    use_finite_medium_correction: false
+
+source:
+  # PipeWall_inner: 表面汚染（44 点, 合計 3.166e+07 Bq）
+  - name: PipeWall_inner_0001
+    type: POINT
+    position: -1.4545 1.46728 5.26117
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 621427
+      - nuclide: Co60
+        radioactivity: 124285
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0002
+    type: POINT
+    position: -1.4545 -0.262656 12.233
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 558067
+      - nuclide: Co60
+        radioactivity: 111613
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0003
+    type: POINT
+    position: -1.4545 -0.157476 18.8499
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 530930
+      - nuclide: Co60
+        radioactivity: 106186
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0004
+    type: POINT
+    position: -1.4545 1.55059 25.0893
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 529422
+      - nuclide: Co60
+        radioactivity: 105884
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0005
+    type: POINT
+    position: -1.4545 4.67897 30.8687
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 540836
+      - nuclide: Co60
+        radioactivity: 108167
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0006
+    type: POINT
+    position: -1.4545 9.03721 36.0447
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 554888
+      - nuclide: Co60
+        radioactivity: 110978
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0007
+    type: POINT
+    position: -1.4545 14.4036 40.4482
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 565166
+      - nuclide: Co60
+        radioactivity: 113033
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0008
+    type: POINT
+    position: -1.4545 20.5298 43.9113
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 568673
+      - nuclide: Co60
+        radioactivity: 113735
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0009
+    type: POINT
+    position: -1.4545 27.152 46.2802
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 565211
+      - nuclide: Co60
+        radioactivity: 113042
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0010
+    type: POINT
+    position: -1.4545 34.0019 47.42
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 557249
+      - nuclide: Co60
+        radioactivity: 111450
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0011
+    type: POINT
+    position: -1.4545 40.8204 47.2165
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 550301
+      - nuclide: Co60
+        radioactivity: 110060
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0012
+    type: POINT
+    position: -8.53543 1.47671 5.26479
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 621878
+      - nuclide: Co60
+        radioactivity: 124376
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0013
+    type: POINT
+    position: -8.53543 -0.252617 12.2342
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 558472
+      - nuclide: Co60
+        radioactivity: 111694
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0014
+    type: POINT
+    position: -8.53543 -0.14748 18.8484
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 531315
+      - nuclide: Co60
+        radioactivity: 106263
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0015
+    type: POINT
+    position: -8.53543 1.55995 25.0855
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 529805
+      - nuclide: Co60
+        radioactivity: 105961
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0016
+    type: POINT
+    position: -8.53543 4.6873 30.863
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 541228
+      - nuclide: Co60
+        radioactivity: 108246
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0017
+    type: POINT
+    position: -8.53543 9.04429 36.0375
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 555289
+      - nuclide: Co60
+        radioactivity: 111058
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0018
+    type: POINT
+    position: -8.53543 14.4093 40.4398
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 565574
+      - nuclide: Co60
+        radioactivity: 113115
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0019
+    type: POINT
+    position: -8.53543 20.534 43.9022
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 569084
+      - nuclide: Co60
+        radioactivity: 113817
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0020
+    type: POINT
+    position: -8.53543 27.1545 46.2705
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 565619
+      - nuclide: Co60
+        radioactivity: 113124
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0021
+    type: POINT
+    position: -8.53543 34.0026 47.4099
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 557652
+      - nuclide: Co60
+        radioactivity: 111530
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0022
+    type: POINT
+    position: -8.53543 40.819 47.2065
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 550700
+      - nuclide: Co60
+        radioactivity: 110140
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0023
+    type: POINT
+    position: -8.53543 -5.12365 2.72741
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 718112
+      - nuclide: Co60
+        radioactivity: 143622
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0024
+    type: POINT
+    position: -8.53543 -7.27933 11.4415
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 659871
+      - nuclide: Co60
+        radioactivity: 131974
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0025
+    type: POINT
+    position: -8.53543 -7.14467 19.8694
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 629667
+      - nuclide: Co60
+        radioactivity: 125933
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0026
+    type: POINT
+    position: -8.53543 -4.99195 27.7455
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 619534
+      - nuclide: Co60
+        radioactivity: 123907
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0027
+    type: POINT
+    position: -8.53543 -1.14326 34.8639
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 621186
+      - nuclide: Co60
+        radioactivity: 124237
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0028
+    type: POINT
+    position: -8.53543 4.08725 41.0804
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 627502
+      - nuclide: Co60
+        radioactivity: 125500
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0029
+    type: POINT
+    position: -8.53543 10.4168 46.2762
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 633425
+      - nuclide: Co60
+        radioactivity: 126685
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0030
+    type: POINT
+    position: -8.53543 17.5891 50.3311
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 636288
+      - nuclide: Co60
+        radioactivity: 127258
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0031
+    type: POINT
+    position: -8.53543 25.3637 53.1112
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 635823
+      - nuclide: Co60
+        radioactivity: 127165
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0032
+    type: POINT
+    position: -8.53543 33.5045 54.4636
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 634107
+      - nuclide: Co60
+        radioactivity: 126821
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0033
+    type: POINT
+    position: -8.53543 41.7661 54.2141
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 635517
+      - nuclide: Co60
+        radioactivity: 127103
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0034
+    type: POINT
+    position: -1.4545 -5.11422 2.73104
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 717592
+      - nuclide: Co60
+        radioactivity: 143518
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0035
+    type: POINT
+    position: -1.4545 -7.26929 11.4426
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 659393
+      - nuclide: Co60
+        radioactivity: 131879
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0036
+    type: POINT
+    position: -1.4545 -7.13467 19.868
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 629211
+      - nuclide: Co60
+        radioactivity: 125842
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0037
+    type: POINT
+    position: -1.4545 -4.98259 27.7417
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 619085
+      - nuclide: Co60
+        radioactivity: 123817
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0038
+    type: POINT
+    position: -1.4545 -1.13493 34.8582
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 620737
+      - nuclide: Co60
+        radioactivity: 124147
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0039
+    type: POINT
+    position: -1.4545 4.09433 41.0732
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 627049
+      - nuclide: Co60
+        radioactivity: 125410
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0040
+    type: POINT
+    position: -1.4545 10.4225 46.2678
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 632967
+      - nuclide: Co60
+        radioactivity: 126593
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0041
+    type: POINT
+    position: -1.4545 17.5934 50.3219
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 635829
+      - nuclide: Co60
+        radioactivity: 127166
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0042
+    type: POINT
+    position: -1.4545 25.3663 53.1015
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 635364
+      - nuclide: Co60
+        radioactivity: 127073
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0043
+    type: POINT
+    position: -1.4545 33.5052 54.4535
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 633648
+      - nuclide: Co60
+        radioactivity: 126730
+    cutoff_rate: 0.0001
+  - name: PipeWall_inner_0044
+    type: POINT
+    position: -1.4545 41.7648 54.2041
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 635057
+      - nuclide: Co60
+        radioactivity: 127011
+    cutoff_rate: 0.0001
+  # PipeWall_outer: 表面汚染（55 点, 合計 1.715e+06 Bq）
+  - name: PipeWall_outer_0001
+    type: POINT
+    position: -1.22953 1.72741 5.36117
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 31667
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0002
+    type: POINT
+    position: -1.22953 0.0142805 12.2643
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28343.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0003
+    type: POINT
+    position: -1.22953 0.118296 18.8097
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 26955.4
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0004
+    type: POINT
+    position: -1.22953 1.80881 24.9844
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 26935.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0005
+    type: POINT
+    position: -1.22953 4.90876 30.711
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27593.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0006
+    type: POINT
+    position: -1.22953 9.23258 35.846
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28374.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0007
+    type: POINT
+    position: -1.22953 14.5609 40.2182
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28937.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0008
+    type: POINT
+    position: -1.22953 20.6458 43.658
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 29124
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0009
+    type: POINT
+    position: -1.22953 27.2226 46.0106
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28924.3
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0010
+    type: POINT
+    position: -1.22953 34.0215 47.142
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28469.3
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0011
+    type: POINT
+    position: -1.22953 40.7831 46.9404
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 28052.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0012
+    type: POINT
+    position: -8.50692 3.94722 6.21453
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 29946.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0013
+    type: POINT
+    position: -8.50692 2.37747 12.5309
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 26510.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0014
+    type: POINT
+    position: -8.50692 2.47156 18.4663
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 25167.4
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0015
+    type: POINT
+    position: -8.50692 4.01232 24.0898
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 25300.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0016
+    type: POINT
+    position: -8.50692 6.86967 29.3654
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 26136.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0017
+    type: POINT
+    position: -8.50692 10.8997 34.15
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27061.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0018
+    type: POINT
+    position: -8.50692 15.9037 38.2553
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27705.3
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0019
+    type: POINT
+    position: -8.50692 21.6362 41.4958
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27904.2
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0020
+    type: POINT
+    position: -8.50692 27.8248 43.71
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27649.3
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0021
+    type: POINT
+    position: -8.50692 34.189 44.7697
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 27079.4
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0022
+    type: POINT
+    position: -8.50692 40.4645 44.5836
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 26510.7
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0023
+    type: POINT
+    position: -13 -1.82347 3.9961
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34695.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0024
+    type: POINT
+    position: -13 -3.76597 11.8378
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 31532.8
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0025
+    type: POINT
+    position: -13 -3.64607 19.3589
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 30055.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0026
+    type: POINT
+    position: -13 -1.716 26.4155
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 29774.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0027
+    type: POINT
+    position: -13 1.77202 32.8635
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 30133.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0028
+    type: POINT
+    position: -13 6.56577 38.559
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 30677
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0029
+    type: POINT
+    position: -13 12.413 43.358
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 31105.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0030
+    type: POINT
+    position: -13 19.0616 47.1166
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 31271.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0031
+    type: POINT
+    position: -13 26.2591 49.6909
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 31164.4
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0032
+    type: POINT
+    position: -13 33.7536 50.9367
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 30901.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0033
+    type: POINT
+    position: -13 41.2926 50.7103
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 30740.8
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0034
+    type: POINT
+    position: -8.50692 -7.59416 1.77767
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 39990.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0035
+    type: POINT
+    position: -8.50692 -9.90942 11.1448
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 37098.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0036
+    type: POINT
+    position: -8.50692 -9.76371 20.2516
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 35434.8
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0037
+    type: POINT
+    position: -8.50692 -7.44433 28.7411
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34662.1
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0038
+    type: POINT
+    position: -8.50692 -3.32563 36.3615
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34474.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0039
+    type: POINT
+    position: -8.50692 2.23183 42.968
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34588.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0040
+    type: POINT
+    position: -8.50692 8.92236 48.4607
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34776.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0041
+    type: POINT
+    position: -8.50692 16.4869 52.7374
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34908
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0042
+    type: POINT
+    position: -8.50692 24.6935 55.6717
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34966.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0043
+    type: POINT
+    position: -8.50692 33.3181 57.1038
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 35050.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0044
+    type: POINT
+    position: -8.50692 42.1206 56.837
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 35357.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0045
+    type: POINT
+    position: -1.22953 -5.37435 2.63103
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 37835.5
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0046
+    type: POINT
+    position: -1.22953 -7.54622 11.4114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 34841.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0047
+    type: POINT
+    position: -1.22953 -7.41045 19.9082
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33259.2
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0048
+    type: POINT
+    position: -1.22953 -5.24082 27.8465
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 32687.7
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0049
+    type: POINT
+    position: -1.22953 -1.36472 35.0159
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 32720.6
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0050
+    type: POINT
+    position: -1.22953 3.89896 41.2719
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33005.9
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0051
+    type: POINT
+    position: -1.22953 10.2651 46.4978
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33289.2
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0052
+    type: POINT
+    position: -1.22953 17.4773 50.5753
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33434.2
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0053
+    type: POINT
+    position: -1.22953 25.2957 53.3711
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33426.7
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0054
+    type: POINT
+    position: -1.22953 33.4856 54.7315
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33372
+    cutoff_rate: 0.0001
+  - name: PipeWall_outer_0055
+    type: POINT
+    position: -1.22953 41.8021 54.4803
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 33490.5
+    cutoff_rate: 0.0001
+  # Fluid: 体積汚染（23 点, 合計 7.916e+08 Bq）
+  - name: Fluid_0001
+    type: POINT
+    position: -9.37279 -2.53254 6.44716
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0002
+    type: POINT
+    position: -9.37279 -2.53254 13.7079
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0003
+    type: POINT
+    position: -9.37279 -2.53254 20.9686
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0004
+    type: POINT
+    position: -9.37279 -2.53254 28.2293
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0005
+    type: POINT
+    position: -9.37279 5.13488 35.49
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0006
+    type: POINT
+    position: -9.37279 12.8023 42.7507
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0007
+    type: POINT
+    position: -9.37279 20.4697 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0008
+    type: POINT
+    position: -9.37279 28.1371 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0009
+    type: POINT
+    position: -9.37279 35.8045 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0010
+    type: POINT
+    position: -9.37279 43.472 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0011
+    type: POINT
+    position: -3.12426 -2.53254 -0.813551
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0012
+    type: POINT
+    position: -3.12426 -2.53254 6.44716
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0013
+    type: POINT
+    position: -3.12426 -2.53254 13.7079
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0014
+    type: POINT
+    position: -3.12426 -2.53254 20.9686
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0015
+    type: POINT
+    position: -3.12426 -2.53254 28.2293
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0016
+    type: POINT
+    position: -3.12426 5.13488 35.49
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0017
+    type: POINT
+    position: -3.12426 5.13488 42.7507
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0018
+    type: POINT
+    position: -3.12426 12.8023 42.7507
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0019
+    type: POINT
+    position: -3.12426 20.4697 42.7507
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0020
+    type: POINT
+    position: -3.12426 20.4697 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0021
+    type: POINT
+    position: -3.12426 28.1371 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0022
+    type: POINT
+    position: -3.12426 35.8045 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+  - name: Fluid_0023
+    type: POINT
+    position: -3.12426 43.472 50.0114
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 2.86802e+07
+      - nuclide: Co60
+        radioactivity: 5.73603e+06
+    cutoff_rate: 0.0001
+
+detector:
+  - name: D_behind
+    origin: 150 40 40
+    show_path_trace: false
+  - name: D_open
+    origin: -100 40 45
+    show_path_trace: false
