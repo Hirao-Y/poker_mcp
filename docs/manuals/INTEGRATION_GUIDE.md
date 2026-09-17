@@ -180,6 +180,65 @@ poker_cui -t -s -o custom_summary.yaml -d custom_dose.yaml tasks/poker.yaml
 poker_cui -t -s -p tasks/poker.yaml
 ```
 
+#### **入力の検査（--validate）**
+
+計算の前に、入力の書式と整合性をまとめて確認できる。エラーを最初の1件で止めず、
+全件を行番号付きで報告する。
+
+```bash
+# 検査だけ実行して終了する（計算はしない）
+POKER_CUI.exe tasks/poker.yaml --validate
+
+# 人が読む形式
+POKER_CUI.exe tasks/poker.yaml --validate --format=text
+
+# 結果をファイルへ
+POKER_CUI.exe tasks/poker.yaml --validate -o result.yaml
+```
+
+出力（既定は YAML）:
+
+```yaml
+ok: false
+file: 'tasks/poker.yaml'
+stage: structure
+summary:
+  error: 1
+  warning: 0
+  info: 0
+issues:
+  - severity: error
+    path: 'unit.length'
+    line: 2
+    column: 11
+    message: 'unit:length に "km" は指定できません'
+```
+
+終了コード:
+
+| 値 | 意味 |
+|---|---|
+| 0 | 問題なし |
+| 1 | 警告のみ（計算は通る） |
+| 2 | エラーあり（計算できない） |
+
+`-c` との違い:
+
+| | `--validate` | `-c` |
+|---|---|---|
+| 目的 | 入力の書式を直す | 幾何と経路を確かめる |
+| エラー | 全件まとめて | 1件目で停止 |
+| 行番号 | あり | なし |
+| 実測 | 約 20 ms | 約 1.8 秒 |
+
+**警告**も出る。計算は通るが疑わしい状態を知らせるもの。
+
+- 使われていない body / transform
+- zone にあるが buildup_factor に定義が無い材料（係数 1 として扱われる）
+- thinnedindices が実際の点数より小さい（出力が間引かれる）
+
+2番目は書き忘れが多く、線量を過小評価するがエラーにならないので気づきにくい。
+
 #### **出力ファイル構造**
 ```yaml
 # poker.yaml.summary - サマリーファイル構造

@@ -711,6 +711,30 @@ def extract_timestamp(line):
 
 ## 🔨 第4章: YAMLファイルトラブル
 
+### 4.0 まず --validate を通す
+
+YAML の誤りは、計算する前に検査できる。エラーを全件まとめて、行番号付きで
+報告するので、1つずつ直して再実行する必要がない。
+
+```bash
+POKER_CUI.exe tasks/poker.yaml --validate --format=text
+```
+
+```
+poker.yaml: 4 件のエラー
+
+  ERROR   11:5
+          body[name="B"]ノードの不具合 : minノードの値は数値にしてください
+
+  ERROR   15:5
+          body[name="C"]ノードの不具合 : bodyノードのtype: 'UNKNOWN_TYPE'は許されません
+```
+
+約 20 ms で終わるので、入力を書いている途中に何度でも回せる。以下の節は、
+検査で捕まらない問題や、メッセージの意味が分かりにくい場合に読むこと。
+
+詳細は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) の「入力の検査」を参照。
+
 ### 4.1 インデントエラー
 
 ```

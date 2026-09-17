@@ -332,7 +332,7 @@ total_doses = summary['result_total']
 - ✅ **yaml_file パス自動解決**: ファイル名のみ指定で TASKS_DIR を参照
 
 ### v1.8.3
-- ✅ **29メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・confirmDaughterNuclides 追加
+- ✅ **35メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・confirmDaughterNuclides 追加
 - ✅ **子孫核種自動追加**: ICRP-07データベース統合
 - ✅ **サマリー5セクション**: 完全解析対応
 - ✅ **エラーコード13種**: 即座の問題解決

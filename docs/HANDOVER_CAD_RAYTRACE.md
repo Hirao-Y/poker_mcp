@@ -424,7 +424,7 @@ push は毎回確認を取る。
 | グリッド検出器 | 完了。評価点ごとに展開（D_lid_map#1, #2, ...） |
 | 複数線源 | 完了。`.paths` 1.3 の `sources` ノードで区切る |
 | スラント補正 | 完了。第4区画に入射角。平板で一致 |
-| ThinnedIndices ツール | 完了。30 → 33 メソッド（その後 CAD 連携で 34） |
+| ThinnedIndices ツール | 完了。30 → 33 メソッド（その後 CAD 連携で 34、generateInput で 35） |
 | **CAD 連携の MCP ツール化** | 完了。poker_generatePaths + path_input で 2 呼び出し |
 | FREECAD_PATH | 完了。環境変数 → PATH → 既定の探索 |
 | 座標の照合 | 完了。件数だけでは通り抜ける誤りを検出 |

@@ -249,6 +249,30 @@ wall.PokerInnerNuclides = 'Cs137:1.0e4'
 形状の簡略化が線量をどれだけ動かすかは事前には分かりません。CAD 連携を使えば、
 簡略化そのものが不要になります。
 
+### そのまま追試できる一式
+
+記事で使ったファイルを、入力・モデル・経路まで揃えて置いてあります。
+
+| フォルダ | 内容 |
+|---|---|
+| `tools/samples/article_fillet/` | 上の比較の一式。CSG 入力、フィレット付き FCStd、経路 |
+| `tools/samples/article_pipe/` | 曲がった配管。内面・外面・流体の3種類の汚染 |
+
+同梱の `poker.yaml` と `poker.paths` だけで、**CAD 無しに計算を再現**できます。
+
+```
+# フィレットの比較
+cd tools/samples/article_fillet
+POKER_CUI.exe poker.yaml -t -o csg.summary
+POKER_CUI.exe poker.yaml --path-input poker.paths -t -o cad.summary
+
+# 配管
+cd tools/samples/article_pipe
+POKER_CUI.exe poker.yaml --path-input poker.paths -t -o out.summary
+```
+
+各フォルダの README に体系と結果をまとめてあります。
+
 ## 精度
 
 CAD の曲面は計算前に三角形の集まりに変換されます（テッセレーション）。

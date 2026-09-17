@@ -503,7 +503,7 @@ poker_validateUnitIntegrity      # 整合性確認
 - ✅ TROUBLESHOOTING.md自動修復追加
 
 ### **v1.1.0 (2024年9月)**
-- 24メソッド実装対応
+- 35メソッド実装対応
 - 基本Unit操作3メソッド
 - 10立体タイプ詳細解説
 
