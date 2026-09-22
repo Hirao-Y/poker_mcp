@@ -570,7 +570,9 @@ r3×φ4×z2 はどちらも 24 点）。
 **原因**: `.summary` の出力件数が既定値（`sourcepoint` 10、`detectorgrid` 10、
 `detectorevaluation` 5）で間引かれており、全点が得られません。
 
-**対処**: MCP から入力の実数に合わせます。
+**対処**: `poker_generatePaths` を使っていれば自動で合わせるので、この問題は
+起きません。`poker_cui` を直接叩いて `.paths` を作る場合は、先に MCP から
+入力の実数に合わせます。
 
 ```javascript
 poker_updateThinnedIndices({ fit_for_paths: true })

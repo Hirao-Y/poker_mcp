@@ -295,7 +295,7 @@ poker_executeCalculation を使用して計算し、
 #!/usr/bin/env python3
 """
 Poker MCP 自動化システム
-バージョン: 1.9.6
+バージョン: 1.9.7
 """
 
 import json

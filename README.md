@@ -61,6 +61,9 @@ GitHub から clone した環境でしか動きませんでした。`npm install
 線源分割点と検出器評価点が必要ですが、既定では間引かれるため手で書き足す
 必要がありました。
 
+**`poker_generatePaths` が自動で合わせる**ので、通常は意識する必要はありません。
+手で設定したい場合はこうします。
+
 ```javascript
 poker_updateThinnedIndices({ fit_for_paths: true })
 // → 入力の分割定義と検出器グリッドから必要数を計算して設定

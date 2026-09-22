@@ -332,5 +332,5 @@ AP214 形式で、材質エンティティを含みません。残るのはソ�
 |---|---|
 | FreeCAD が見つかりません | `FREECAD_PATH` を設定 |
 | count / position mismatch | 入力を変えたら `.paths` を再生成 |
-| 評価点が間引かれています | `poker_updateThinnedIndices({ fit_for_paths: true })` |
+| 評価点が間引かれています | `poker_generatePaths` が自動で合わせます。直接 `poker_cui` を使う場合は `poker_updateThinnedIndices({ fit_for_paths: true })` |
 | CSG 経由と差が出る | まずテッセレーション偏差を疑う |

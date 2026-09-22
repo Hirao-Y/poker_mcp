@@ -24,7 +24,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 |---|---|
 | FreeCAD が見つからない | `FREECAD_PATH` を設定（実行ファイルでもフォルダでも可） |
 | count mismatch / position mismatch | 入力を変えたら `.paths` を再生成する |
-| 評価点が間引かれている | `poker_updateThinnedIndices({ fit_for_paths: true })` |
+| 評価点が間引かれている | `generatePaths` が自動調整。直接 `poker_cui` なら `poker_updateThinnedIndices({ fit_for_paths: true })` |
 | CSG 経由と差が出る | まずテッセレーション偏差を疑う（`deviation` を下げる） |
 
 詳細は [CAD_RAYTRACE.md](CAD_RAYTRACE.md)、トラブル対応は

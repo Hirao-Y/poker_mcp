@@ -143,6 +143,14 @@ poker_updateThinnedIndices({ fit_for_paths: true })
 必要ですが、既定では間引かれるためです。5000 のような固定値ではなく入力の実数に
 合わせるので、なぜその値かが明確になります。
 
+**`poker_generatePaths` はこれを自動で呼ぶ**ので、CAD 連携では手で設定する必要は
+ありません。調整した場合は応答の `note` で知らせます。`poker_cui` を直接叩いて
+`.paths` を作る場合だけ、事前にこのツールを使ってください。
+
+`.paths` の生成に効くのは `sourcepoint`（線源分割点）と `detectorgrid`（検出器の
+評価点）の 2 つです。他の項目（`pseudosourcepoint`、`pathtrace`、`buildupenergy`、
+`buildupmfp`）はサマリーの出力量を変えるだけで、`.paths` には関与しません。
+
 ### 📐 **CAD操作系 (2メソッド) - CAD から入力と経路を生成**
 
 | **メソッド名** | **機能** | **特徴** |

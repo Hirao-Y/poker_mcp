@@ -1,5 +1,47 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.9.7] - 2026-09-23
+
+### generatePaths が thinnedindices を自動で合わせる
+
+`.paths` の生成には線源の全分割点と検出器の全評価点が要る。`thinnedindices` が
+小さいとサマリーに一部しか出ず、経路が足りない `.paths` ができる。
+
+これまでは利用者が `poker_updateThinnedIndices({ fit_for_paths: true })` を明示的に
+呼ぶ必要があり、呼び忘れると静かに誤った `.paths` ができていた。`generatePaths` の
+中で自動的に合わせる。
+
+調整した場合だけ応答に知らせる（毎回出すと煩わしい）。
+
+```json
+"note": "thinnedindices を入力の分割数・評価点数に合わせました"
+```
+
+実測では `sourcepoint: 5` の状態から `generatePaths` を呼ぶと 144（3×6×8）に戻り、
+経路 288 本が全て生成される。
+
+`.paths` を作らない通常の計算では全点が出る必要はないので、この調整は
+`generatePaths` のときだけ行う。`executeCalculation` は従来どおり。
+
+### .paths に効く項目
+
+`.paths` の生成に関与するのは次の 2 つだけであることを確認した。
+
+| 項目 | 対象 |
+|---|---|
+| `sourcepoint` | `input` の `point_source`（線源の分割点） |
+| `detectorgrid` | `input` の `evaluation_point`（検出器の評価点） |
+
+`pseudosourcepoint`、`pathtrace`、`buildupenergy`、`buildupmfp` はサマリーの
+出力量を変えるだけで、`.paths` には関与しない。
+
+### その他
+
+- `npm run test:cad-thinned` を追加
+- ドキュメントから「呼び忘れ」前提の記述を整理（README、API_COMPLETE、
+  PATHS_FORMAT、CAD_QUICKSTART、QUICK_REFERENCE、TROUBLESHOOTING）
+
+
 ## [1.8.3] - 2026-09-15
 
 ### generatePaths と executeCalculation のサマリー衝突を修正

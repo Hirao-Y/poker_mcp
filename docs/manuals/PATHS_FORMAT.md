@@ -308,15 +308,24 @@ YAML から取得します。入力の正本は YAML に保たれ、幾何が同
 `.paths` を作り直す必要はありません。
 
 なお 1 で全分割点を得るには `thinnedindices` の設定が要ります（既定は 10 点で
-間引かれます）。poker_mcp のツールで入力の実数に合わせられます。
+間引かれます）。**`poker_generatePaths` はこれを自動で合わせる**ので、MCP から
+使う分には意識する必要はありません。調整したときは応答に知らせます。
+
+```json
+"note": "thinnedindices を入力の分割数・評価点数に合わせました"
+```
+
+手で設定する場合はこうします。
 
 ```javascript
 poker_updateThinnedIndices({ fit_for_paths: true })
 // → 線源分割定義(r×φ×z等)と検出器グリッドから必要数を計算して設定
 ```
 
-グリッド検出器を使う場合は `detectorgrid` と `detectorevaluation` も要ります。
-`fit_for_paths` は 3 つまとめて設定します。
+`.paths` の生成に効くのは `sourcepoint`（線源分割点）と `detectorgrid`
+（検出器の評価点）の 2 つです。`fit_for_paths` は `detectorevaluation` も
+含めて設定します。他の項目（`pseudosourcepoint`、`pathtrace`、
+`buildupenergy`、`buildupmfp`）は `.paths` には関与しません。
 
 照合ツール（`compare_poker_trace.py`、`audit_mfp.py`）は開発時の検証手段であり、実運用で毎回走らせるものではありません。実運用で毎回行うのは上の検算だけです。
 
