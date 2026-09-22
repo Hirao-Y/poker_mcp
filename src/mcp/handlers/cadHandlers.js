@@ -56,6 +56,30 @@ export function createCadHandlers(taskManager) {
         return fail('入力 YAML がありません: ' + yamlFile,
           'applyChanges で入力を確定してから実行してください。');
 
+      // --- thinnedindices を全点が出る値に合わせる ---
+      //   .paths の生成には、線源の全分割点と検出器の全評価点が要る。
+      //   thinnedindices が小さいままだと、サマリーに一部しか出ず、経路が
+      //   足りない .paths ができてしまう。利用者が updateThinnedIndices を
+      //   呼び忘れても起きないよう、ここで自動的に合わせる。
+      //
+      //   .paths を作らない通常の計算では全点が出る必要はないので、この調整は
+      //   generatePaths のときだけ行う。
+      let thinnedNote = null;
+      try {
+        const before = JSON.stringify(taskManager.data?.thinnedindices ?? {});
+        await taskManager.updateThinnedIndices({ fit_for_paths: true });
+        await taskManager.applyChanges();
+        const after = JSON.stringify(taskManager.data?.thinnedindices ?? {});
+        if (before !== after) {
+          thinnedNote = 'thinnedindices を入力の分割数・評価点数に合わせました';
+          logger.info(thinnedNote, { thinnedindices: taskManager.data?.thinnedindices });
+        }
+      } catch (e) {
+        // 合わせられなくても処理は続ける。点が足りなければ gen_paths.py が
+        // エラーにするので、黙って誤った .paths ができることはない。
+        logger.warn('thinnedindices の自動調整に失敗しました', { error: e.message });
+      }
+
       // --- 1. poker_cui -p で分割点と評価点を出す ---
       // .paths には全点が必要。間引かれていると gen_paths.py がエラーにする。
       const exe = path.join(POKER_INSTALL_DIR, 'poker_cui.EXE');
@@ -186,6 +210,8 @@ export function createCadHandlers(taskManager) {
               freecad: FREECAD_CMD,
               poker_dir: spec.poker_dir
             },
+            // thinnedindices を調整した場合だけ知らせる（毎回出すと煩わしい）
+            ...(thinnedNote ? { note: thinnedNote } : {}),
             next: 'poker_cui "' + yamlFile + '" --path-input "' + out + '" -t で計算できます'
           }, null, 2)
         }]
