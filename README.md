@@ -4,13 +4,51 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- .9.6
-- **ツール数**: 35メソッド
+- **バージョン**: 1.9.8
+- **ツール数**: 36メソッド
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.9.8の新機能
+
+### 📜 `poker_getSchema` — ファイル書式を JSON Schema で取得
+
+POKER が扱う4種類のファイルの書式を、機械可読な形で取得できます。
+
+```javascript
+poker_getSchema()                   // 入力 YAML
+poker_getSchema({ kind: "paths" })  // CAD から抽出した経路ファイル
+poker_getSchema({ kind: "summary" })
+poker_getSchema({ kind: "dose" })
+```
+
+スキーマは静的なファイルではなく、`poker_cui --schema` をその場で呼んで
+生成します。そのため実行環境の POKER の版と材料ライブラリに必ず一致し、
+`lib_material.dat` に材料を追加していれば、その材料も材料名の一覧
+（`$defs` の `x-poker-names`）に現れます。
+
+規定するのは書式・型・値域までです。参照の解決（`zone.body_name` が
+`body` に在るか）や名前の存在確認は従来どおり `poker_cui --validate`
+（`poker_executeCalculation` が内部で実施）の担当で、両者で役割が分かれます。
+
+`.dose` のスキーマには、YAML の頭部に続く数値表の読み方
+（ブロックの区切り・列の索引 `[dose, ray, energy]`・行の索引
+`i + j*number_i + k*number_i*number_j`）が `x-poker-data-layout` として
+書かれています。
+
+### 🐛 `poker_getDoseMap` が線量種別の増加に追随
+
+`.dose` の列構成を、線量種別3種・線種4種と決め打ちしていました。線量種別は
+ライブラリ設定で増えるため（`E(PA)` や空気カーマを足した場合）、その環境では
+誤った列を読むか、集計ブロックを見つけられず失敗していました。
+
+冒頭の `information` から `dose_type` / `ray_type` / 線源ごとの `energy_bin` を
+数えて列構成を決めるようにしました。1D/2D/3D 検出器の全評価点について、
+`.summary` の `statistics_total`（min/max）と一致することを
+`npm run test:schema` で検証しています。
 
 ## 🆕 バージョン1.8.0〜1.8.3の新機能
 
@@ -418,7 +456,7 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **35メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **36メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -437,7 +475,7 @@ Claude Desktopで以下のようにテストできます：
 
 ## 🎯 API構成
 
-### 🔧 **35メソッド完全実装**
+### 🔧 **36メソッド完全実装**
 
 | **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
 |-------------|---------------|----------|-------------|
@@ -449,10 +487,11 @@ Claude Desktopで以下のようにテストできます：
 | **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
 | **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
 | **📉 ThinnedIndices** | 3個 | サマリー出力量の制御 | propose・get・update |
-| **📐 CAD** | 1個 | 経路ファイルの生成 | generatePaths |
-| **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・各種検証 |
+| **📐 CAD** | 2個 | CAD から入力と経路を生成 | generateInput・generatePaths |
+| **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・getDoseMap |
+| **📜 Schema** | 1個 | ファイル書式の取得 | getSchema |
 
-### 📋 **全35メソッド一覧**
+### 📋 **全36メソッド一覧**
 ```
 Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
 Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  
@@ -465,9 +504,10 @@ Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
                      poker_validateUnitIntegrity, poker_analyzeUnitConversion
 ThinnedIndices系 (3): poker_proposeThinnedIndices, poker_getThinnedIndices,
                      poker_updateThinnedIndices
-CAD系 (1):           poker_generatePaths
+CAD系 (2):           poker_generateInput, poker_generatePaths
 System系 (6):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
-                     poker_confirmDaughterNuclides, poker_openGui, 内部検証メソッド群
+                     poker_confirmDaughterNuclides, poker_openGui, poker_getDoseMap
+Schema系 (1):        poker_getSchema
 ```
 
 ## 📁 プロジェクト構造
@@ -618,6 +658,16 @@ POKER_MCP_HOME/
    - 法規制適合性の確認
 
 ## 📝 更新履歴
+
+### v1.9.8 (2026-10)
+- ✨ `poker_getSchema`（入力YAML・`.paths`・`.summary`・`.dose` の書式を JSON Schema で取得）
+- 🐛 `poker_getDoseMap` が `.dose` の列構成を `information` から読むようになり、線量種別の増加に追随
+- ✅ `npm run test:schema` を追加
+
+### v1.9.0〜v1.9.7 (2026-09)
+- ✨ `poker_generateInput`（CAD から入力 YAML を生成）
+- ✨ `generatePaths` が `thinnedindices` を `.paths` 生成に必要な値へ自動調整
+- ✨ `.paths` の座標・個数照合を強化
 
 ### v1.8.0〜v1.8.3 (2026-09)
 - ✨ CAD連携が MCP だけで完結（`poker_generatePaths` と `path_input`）

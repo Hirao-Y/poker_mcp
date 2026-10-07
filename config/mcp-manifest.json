@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.9.7",
+  "version": "1.9.8",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "ISC",
@@ -12,7 +12,7 @@
   "mcp_version": "2024-11-05",
   "_generated": {
     "by": "regenerated from live tools/list + lib_material.dat",
-    "date": "2026-07-04",
+    "date": "2026-10-07",
     "note": "実行時には読み込まれない文書用マニフェスト。材料検証の権限は src/utils/MaterialCatalog.js + MaterialAlternatives.js が持つ。"
   },
   "capabilities": {
@@ -2616,6 +2616,26 @@
         "additionalProperties": false,
         "title": "CAD から POKER 入力を生成",
         "description": "CAD のカスタムプロパティ: PokerRole(shield/source/detector)、PokerMaterial、PokerDensity、PokerNuclides、PokerDivision、PokerCutoff、PokerGrid、PokerShowPathTrace。"
+      }
+    },
+    {
+      "name": "poker_getSchema",
+      "description": "POKER のファイル書式を JSON Schema で取得します。入力YAMLの書き方を確かめたいとき、出力（.summary/.dose）や経路ファイル（.paths）を読む前に構造を知りたいときに使います。スキーマが規定するのは書式・型・値域までで、参照の解決や名前の存在確認は poker_cui --validate の担当です。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "input",
+              "paths",
+              "summary",
+              "dose"
+            ],
+            "description": "取得するスキーマの種類（既定 input）。input=入力YAML、paths=CADから抽出した経路ファイル、summary=計算結果のサマリー、dose=全評価点の線量ファイル",
+            "default": "input"
+          }
+        }
       }
     }
   ],

@@ -12,6 +12,7 @@ import { createCalculationHandlers } from './calculationHandlers.js';
 import { resetHandlers } from './resetHandlers.js';
 import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
 import { createGuiHandlers } from './guiHandlers.js';
+import { createSchemaHandlers } from './schemaHandlers.js';
 
 export function createAllHandlers(taskManager) {
   return {
@@ -49,6 +50,9 @@ export function createAllHandlers(taskManager) {
 
     // GUI表示操作
     ...createGuiHandlers(taskManager),
+
+    // スキーマ取得（poker_cui --schema）
+    ...createSchemaHandlers(),
     
     // 共通操作
     async applyChanges(args) {

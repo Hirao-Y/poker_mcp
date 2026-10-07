@@ -4,6 +4,11 @@ CAD から抽出した幾何経路を POKER に渡すためのファイル形式
 
 生成側の実装は `tools/gen_paths.py`、背景と使い方は [CAD_RAYTRACE.md](CAD_RAYTRACE.md) を参照してください。
 
+機械可読な形式は `poker_getSchema({ kind: "paths" })`（内部で
+`poker_cui --schema --kind=paths`）で取得できます。本書と同じ内容を JSON Schema で
+返すので、自前のツールで `.paths` を書く場合はそちらを検証に使ってください。
+スキーマは実行環境の POKER の版から生成されるため、本書より確実に最新です。
+
 ## 位置づけ
 
 このファイルは**幾何情報だけ**を運びます。線源の核種・放射能・分割定義、検出器の線量種別、材料の物性値はすべて従来どおり YAML と POKER の材料ライブラリから取得します。

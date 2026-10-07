@@ -1,5 +1,78 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.9.8] - 2026-10-07
+
+### poker_getSchema を追加
+
+POKER が扱うファイルの書式を JSON Schema で返す。`kind` で 4 種類を選ぶ。
+
+| kind | 対象 |
+|---|---|
+| `input`（既定） | 入力 YAML |
+| `paths` | CAD から抽出した経路ファイル |
+| `summary` | 計算結果のサマリー |
+| `dose` | 全評価点の線量ファイル |
+
+実装は `poker_cui --schema [--kind=X]` を呼んで標準出力の JSON を読むだけで、
+スキーマ本体は POKER 側（`data/SchemaGen.cpp` と `schema_*.inc`）が持つ。
+
+静的なファイルとして同梱しないのは 2 つの理由から。
+
+1. スキーマが実行環境の POKER の版と必ず一致する。同梱すると MCP サーバの
+   更新と POKER の更新がずれた時点で嘘になる。
+2. 材料名・核種名・ビルドアップ材料名の一覧を、その環境の材料ライブラリから
+   埋められる。利用者が `lib_material.dat` に材料を追加していれば、その材料も
+   `$defs` の `x-poker-names` に現れる。
+
+名前の照合は大文字小文字を区別しないため、名前の一覧は JSON Schema の `enum`
+ではなく `x-poker-names` に置いてある。`enum` は完全一致なので、大文字の名前を
+並べると `Iron` と書いた正しい入力が弾かれてしまう。
+
+スキーマが規定するのは書式・型・値域まで。参照の解決（`zone.body_name` が
+`body` に在るか、`CMB` の式に現れる立体名）、名前の存在確認、幾何の整合は
+`poker_cui --validate` の担当で、役割が分かれている。
+
+### getDoseMap が線量種別の増加に追随
+
+`.dose` の列構成を、線量種別 3 種（`E(AP)` / `DskinM(AP)` / `H*(10)`）・
+線種 4 種と決め打ちしていた。さらに TOTAL 線源の集計ブロックを「12 列」という
+固定値で見分けていた。
+
+線量種別はライブラリ設定で増えるため（`E(PA)` や空気カーマを足した場合）、
+その環境では誤った列を読むか、集計ブロックを見つけられず `null` を返していた。
+
+冒頭の `information` から数を読んで列構成を決めるようにした。
+
+```
+列数 = len(dose_type) × len(ray_type) × len(その線源の energy_bin)
+列の索引 = (dose-1) × len(ray_type) × E + (ray-1) × E + energy
+```
+
+`information` から数が読めなかった場合は従来の 3 種・4 種を既定として使う。
+
+### テスト
+
+`npm run test:schema`（`tests/schema-dose.test.mjs`）を追加。
+
+- `poker_getSchema` の 4 種類が JSON として取れ、`information.format` で
+  自身の種類を名乗ること。`kind` 省略で `input` が返ること
+- 入力スキーマに材料名・核種名・ビルドアップ材料名の一覧があること
+- 不正な `kind` が失敗になること
+- `tests/fixtures/dosemap.yaml`（点・1D・2D・3D の検出器）を計算し、
+  `.dose` から読んだ全評価点の min/max が `.summary` の `statistics_total` と
+  一致すること。列と行の索引が両方正しくないと一致しない
+- `dose_type` / `ray` の指定で読む列が変わること
+- 異常系（未知の検出器・存在しないファイル・未知の `dose_type`）が `null`
+
+検証結果（POKER 2.2.1.1）:
+
+```
+D_1d (1次元, 4点)   E(AP) / DskinM(AP) / H*(10)  min・max 一致
+D_2d (2次元, 4×3)   同上
+D_3d (3次元, 3×2×2) 同上
+```
+
+
 ## [1.9.7] - 2026-09-23
 
 ### generatePaths が thinnedindices を自動で合わせる

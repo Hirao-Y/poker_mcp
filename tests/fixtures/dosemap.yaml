@@ -1,0 +1,78 @@
+unit:
+  length: cm
+  angle: degree
+  density: g/cm3
+  radioactivity: Bq
+body:
+  - name: SRC
+    type: SPH
+    center: 0 0 0
+    radius: 2
+  - name: SHIELD
+    type: RPP
+    min: -30 -30 10
+    max: 30 30 20
+zone:
+  - body_name: ATMOSPHERE
+    material: VOID
+  - body_name: SRC
+    material: Water
+    density: 1.0
+  - body_name: SHIELD
+    material: Iron
+    density: 7.87
+transform: []
+buildup_factor:
+  - use_slant_correction: true
+    use_finite_medium_correction: false
+    material: Iron
+source:
+  - name: S1
+    type: SPH
+    geometry:
+      center: 0 0 0
+      radius: 2
+    division:
+      r:
+        type: UNIFORM
+        number: 2
+      theta:
+        type: UNIFORM
+        number: 2
+      phi:
+        type: UNIFORM
+        number: 2
+    inventory:
+      - nuclide: Cs137
+        radioactivity: 1.0e10
+      - nuclide: Co60
+        radioactivity: 1.0e9
+    cutoff_rate: 0.0001
+detector:
+  - name: D_pt
+    origin: 0 0 100
+    show_path_trace: false
+  - name: D_1d
+    origin: 0 0 30
+    grid:
+      - edge: 0 0 70
+        number: 4
+    show_path_trace: false
+  - name: D_2d
+    origin: -20 0 30
+    grid:
+      - edge: 40 0 0
+        number: 4
+      - edge: 0 0 70
+        number: 3
+    show_path_trace: false
+  - name: D_3d
+    origin: -10 -10 30
+    grid:
+      - edge: 20 0 0
+        number: 3
+      - edge: 0 20 0
+        number: 2
+      - edge: 0 0 40
+        number: 2
+    show_path_trace: false

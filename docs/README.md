@@ -1,6 +1,6 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.8.3
+# Poker MCP Server - 放射線遮蔽計算支援ツール v1.9.8
 
-**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（35メソッド完全実装）
+**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装）
 
 ## 🔬 概要
 
@@ -14,6 +14,14 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
+
+### 🆕 v1.9.8 新機能
+- **poker_getSchema**: POKER が扱う4種類のファイル（入力YAML・`.paths`・
+  `.summary`・`.dose`）の書式を JSON Schema で取得。`poker_cui --schema` を
+  その場で呼ぶため、実行環境の POKER の版と材料ライブラリに必ず一致する。
+  材料名・核種名の一覧は `$defs` の `x-poker-names` に入る
+- **getDoseMap の修正**: `.dose` の列構成を `information` から読むようになり、
+  線量種別がライブラリ設定で増えた環境でも正しい列を読む
 
 ### 🆕 v1.8.0〜v1.8.3 新機能
 - **CAD連携が MCP だけで完結（v1.8.0〜）**: `poker_generatePaths` で FreeCAD の
@@ -55,7 +63,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 - **POKER_MCP_HOME 環境変数（v1.2.6）**: 作業ディレクトリを柔軟に指定可能
 
 ### 🆕 v1.2.5 実装済み機能
-- **35メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・GUI起動を含む全機能
+- **メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・GUI起動を含む全機能
 - **子孫核種自動追加**: ICRP-07準拠の放射平衡考慮
 - **サマリーファイル完全解析**: 5セクション対応
 - **エラーコード13種対応**: 即座の問題解決
@@ -195,7 +203,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 - **OS**: Windows, macOS, Linux（poker_openGui は Windows 専用）
 
 ### ⚡ パフォーマンス
-- **メソッド応答**: <50ms（35メソッド全対応）
+- **メソッド応答**: <50ms（36メソッド全対応）
 - **データ保存**: <200ms
 - **メモリ使用**: 40-200MB（データサイズ依存）
 - **自動修復**: <1秒（YAMLファイル破損時）
@@ -212,11 +220,12 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 ## 🔗 外部連携
 
 ### 📊 POKER計算コード連携
-- YAML入力ファイル生成（35メソッド対応）
+- YAML入力ファイル生成（36メソッド対応）
 - poker_cui 実行サポート（poker_executeCalculation）
 - POKER.exe GUI 起動（poker_openGui、Windows専用）
 - サマリーファイル（5セクション）取得と解析
 - 子孫核種の自動考慮
+- ファイル書式の取得（poker_getSchema、`poker_cui --schema` を利用）
 
 ### 🐍 Python自動化対応
 ```python
@@ -272,7 +281,7 @@ total_doses = summary['result_total']
 
 ### 📧 技術サポート
 - **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
-- **35メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
+- **36メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
 - **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
 - **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.8.1更新）
@@ -287,13 +296,13 @@ total_doses = summary['result_total']
 ## 🌟 プロジェクトの価値
 
 ### ✨ 研究者への価値
-- **効率化**: 35メソッドによる入力ファイル作成時間80%短縮
+- **効率化**: 36メソッドによる入力ファイル作成時間80%短縮
 - **品質向上**: Unit操作5メソッド・ThinnedIndices操作3メソッドによる設定ミスゼロ化
 - **精度向上**: 子孫核種自動考慮による物理的完全性
 - **検証強化**: サマリー5セクション解析
 
 ### 🏢 組織への価値
-- **標準化**: 35メソッドによる手法統一
+- **標準化**: 36メソッドによる手法統一
 - **エラー削減**: 13種エラーコード自動対処
 - **知識共有**: サマリーファイル解析の形式知化
 - **品質保証**: Unit操作による国際標準準拠
@@ -302,7 +311,7 @@ total_doses = summary['result_total']
 - **安全性向上**: 子孫核種考慮による精密計算
 - **医療安全**: Unit操作による単位ミス防止
 - **研究促進**: サマリーファイル解析効率化
-- **教育支援**: 35メソッドによる体系的学習
+- **教育支援**: 36メソッドによる体系的学習
 
 ---
 
@@ -314,32 +323,43 @@ total_doses = summary['result_total']
 
 ## 🔄 更新履歴
 
-### v1.8.3
-- 子孫核種の自動管理（親の更新・削除に追随、除外は線源ごと）
-- ICRP-07パーサの列位置誤りを修正（全核種で子孫核種が取得不能だった）
-- 核種DBを POKER_INSTALL_PATH/LIB から直接参照
+詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
 
-### v1.8.3
+### v1.9.8
+- poker_getSchema（ファイル書式を JSON Schema で取得）
+- getDoseMap が `.dose` の列構成を `information` から読むよう修正
+
+### v1.9.0〜v1.9.7
+- poker_generateInput（CAD から入力 YAML を生成）
+- generatePaths が thinnedindices を自動調整
+
+### v1.8.0〜v1.8.3
+- CAD連携が MCP だけで完結（generatePaths と path_input）
+- FREECAD_PATH 環境変数、相対パス解決とサマリー衝突の修正
+
+### v1.7.0〜v1.7.2
+- ThinnedIndices 操作系3メソッド、保留中の変更の可視化
+
+### v1.6.0
+- CAD連携レイトレースのツール群、材料システムの lib_material.dat 準拠
+
+### v1.5.0
+- poker_openGui で POKER を閉じずに表示を切り替え
+
+### v1.4.0
+- 子孫核種の自動管理（親の更新・削除に追随、除外は線源ごと）
+- ICRP-07パーサの列位置誤りを修正、核種DBを POKER_INSTALL_PATH/LIB から直接参照
+
+### v1.3.0
 - poker_getDoseMap、構造化 result_total、材料カタログ統合
 
-### v1.8.3
-- ✅ **poker_openGui 追加**: POKER.exe GUI 起動（自動保存・Windows専用）
-- ✅ **35メソッド完全実装**: System系に openGui を追加
-
-### v1.8.3〜v1.2.7
-- ✅ **SERVER DISCONNECTED 修正**: npx 起動時の EPERM 問題を解消
-- ✅ **POKER_MCP_HOME 環境変数**: 作業ディレクトリの柔軟な指定
-- ✅ **yaml_file パス自動解決**: ファイル名のみ指定で TASKS_DIR を参照
-
-### v1.8.3
-- ✅ **35メソッド完全実装**: Unit操作5メソッド・ThinnedIndices操作3メソッド・confirmDaughterNuclides 追加
-- ✅ **子孫核種自動追加**: ICRP-07データベース統合
-- ✅ **サマリー5セクション**: 完全解析対応
-- ✅ **エラーコード13種**: 即座の問題解決
+### v1.2.5〜v1.2.8
+- poker_openGui 追加、Unit操作5メソッド、子孫核種自動追加
+- SERVER DISCONNECTED 修正、POKER_MCP_HOME 環境変数、yaml_file パス自動解決
 
 ---
 
 **🚀 今すぐ始める**: Claude Desktopで「poker_getUnitで単位系を確認して」と入力
 **📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照
-**⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で28メソッド確認
+**⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で全36メソッド確認
 **💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認
