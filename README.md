@@ -729,6 +729,16 @@ POKER_MCP_HOME/
 - 初期リリース
 - YAML管理基本機能
 
+## 📜 ライセンス
+
+**MIT License** — 著作権 (c) 2025-2026 Yoshihiro Hirao。全文は
+[LICENSE](LICENSE) を参照してください。
+
+このライセンスが及ぶのは本リポジトリの内容（poker-mcp）だけです。POKER itself is
+obtained separately and licensed separately. poker-mcp は `poker_cui` を外部
+プロセスとして起動するだけなので、POKER 本体の許諾には影響しません。FreeCAD も
+別途入手が必要で、それぞれのライセンスに従います。
+
 ## 📞 サポート・詳細情報
 
 - **📖 詳細README**: [docs/README.md](docs/README.md)
@@ -739,6 +749,6 @@ POKER_MCP_HOME/
 
 ---
 
-**🎯 Poker MCP Server v1.4.0**  
+**🎯 Poker MCP Server v1.9.8**  
 **プロトコル**: MCP 1.0.0 完全準拠  
-**作者**: Yoshihiro Hirao | **ライセンス**: ISC
+**作者**: Yoshihiro Hirao | **ライセンス**: MIT

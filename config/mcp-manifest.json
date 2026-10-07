@@ -3,7 +3,7 @@
   "version": "1.9.8",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
-  "license": "ISC",
+  "license": "MIT",
   "homepage": "https://github.com/Hirao-Y/poker_mcp#readme",
   "repository": {
     "type": "git",
