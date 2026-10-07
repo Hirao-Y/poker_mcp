@@ -30,7 +30,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 詳細は [CAD_RAYTRACE.md](CAD_RAYTRACE.md)、トラブル対応は
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 第2.6章。
 
-## 📖 第1章: 35メソッド早見表
+## 📖 第1章: 36メソッド早見表
 
 ### 🔷 Body操作系(3メソッド) - 10種類立体完全対応
 
@@ -101,6 +101,22 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | **poker_resetYaml** | 初期化 | 3段階リセット・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動 |
 | **poker_openGui** | GUI表示 | POKER.exe起動・Windows専用 |
+
+### 📜 Schema操作系（1メソッド）- ファイル書式の取得
+
+| メソッド | 機能 | 主要機能 |
+|---------|------|----------|
+| **poker_getSchema** | ファイル書式を JSON Schema で取得 | `kind` = `input`（既定）/ `paths` / `summary` / `dose` |
+
+```
+poker_getSchema()                  # 入力 YAML の書式
+poker_getSchema(kind="summary")    # .summary の読み方
+poker_getSchema(kind="dose")       # .dose の読み方（数値表の索引は x-poker-data-layout）
+```
+
+材料名・核種名の一覧は実行環境の材料ライブラリから埋められます。
+参照の解決や名前の存在確認は `poker_executeCalculation`（内部で
+`poker_cui --validate`）の担当で、スキーマは書式・型・値域までを規定します。
 
 ---
 
@@ -467,7 +483,7 @@ Claude Desktop指示:
 | **-32079** | 線源が存在しない | poker_proposeSourceを使用 |
 | **-32031** | CMB参照立体未定義 | 参照立体を先に作成 |
 | **-32600** | 不正リクエスト | パラメータ形式確認 |
-| **-32601** | メソッド不在 | 35メソッド名確認 |
+| **-32601** | メソッド不在 | 36メソッド名確認 |
 
 ### エラー対処の原則
 - propose ↔ update の使い分け
@@ -547,7 +563,7 @@ divisions:
 ## 💡 まとめ: クイックリファレンス活用法
 
 ### ✨ **日常使用パターン**
-1. **35メソッド早見表**で適切なメソッド選択
+1. **36メソッド早見表**で適切なメソッド選択
 2. **立体タイプ表**で形状パラメータ確認
 3. **エラーコード表**で迅速トラブル解決
 4. **標準ワークフロー**で効率的作業実行
@@ -564,7 +580,7 @@ divisions:
 - 分割数の最適化
 - 物理的妥当性の系統的確認
 
-**このクイックリファレンスで、35メソッド・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
+**このクイックリファレンスで、36メソッド・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
 
 ---
 

@@ -10,7 +10,7 @@
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した35メソッドの詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した36メソッドの詳細仕様を提供します。
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -25,7 +25,7 @@
 
 ---
 
-## 📚 35メソッド完全実装一覧
+## 📚 36メソッド完全実装一覧
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -275,6 +275,59 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存 |
 | **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避 |
 
+### 📜 **Schema操作系 (1メソッド) - ファイル書式の機械可読な取得**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_getSchema** | POKER のファイル書式を JSON Schema で取得 | 入力YAML・`.paths`・`.summary`・`.dose` の4種類・材料名/核種名の一覧は実行環境のライブラリから |
+
+**引数**
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `kind` | string | `input`（既定） / `paths` / `summary` / `dose` |
+
+**返り値**
+
+```json
+{
+  "success": true,
+  "kind": "input",
+  "schema_id": "https://pointkernel.com/schema/poker-input-2.2.1.schema.json",
+  "generator": "POKER 2.2.1",
+  "schema": { "$schema": "https://json-schema.org/draft/2020-12/schema", "...": "..." }
+}
+```
+
+**4種類の内容**
+
+| kind | 対象 | 備考 |
+|---|---|---|
+| `input` | 入力 YAML | `unit` / `body` / `zone` / `transform` / `buildup_factor` / `source` / `detector` / `thinnedindices`。材料名・核種名・ビルドアップ材料名は `$defs` の `x-poker-names` に実在する名前が列挙される |
+| `paths` | `.paths`（CAD から抽出した経路） | `paths` ノードは1行1レコードの平文。書式はその `description` に記載 |
+| `summary` | `.summary` | `information` / `sources` / `result_total` / `warnings`。`-l` の旧形式 `result_total` も `oneOf` で許容 |
+| `dose` | `.dose` | YAML の頭部のみを規定。数値表の読み方（ブロック・列・行の索引）は `x-poker-data-layout` に記載 |
+
+**静的ファイルを配らない理由**
+
+`poker_cui --schema` をその場で呼ぶため、スキーマは常に実行環境の POKER の版と
+材料ライブラリに一致します。利用者が `lib_material.dat` に材料を追加していても、
+`x-poker-names` にはその材料が含まれます。
+
+**--validate との役割分担**
+
+スキーマが規定するのは書式・型・値域までです。次の検査はスキーマでは表現できず、
+`poker_cui --validate`（`poker_executeCalculation` も内部で実施）の担当になります。
+
+- 参照の解決（`zone.body_name` が `body` に在るか、`transform` 名が在るか）
+- 名前の存在確認（材料名・核種名がライブラリに在るか）
+- `CMB` の式に現れる立体名の解決
+- 幾何の整合（線源が遮蔽体の外に出ていないか等）
+
+材料名・核種名の照合は**大文字小文字を区別しない**ため、`x-poker-names` は
+`enum` ではなく参考値として置かれています。`Iron` と書いても `iron` と書いても
+POKER は受け付けます。
+
 ### ☢️ **子孫核種の自動管理（v1.4.0）**
 
 親核種を指定すると子孫核種が自動生成され、親の更新・削除に追随する。
@@ -478,7 +531,7 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 ---
 
-## 📊 35メソッド完全仕様
+## 📊 36メソッド完全仕様
 
 ### 📐 **Body系メソッド（立体管理）**
 

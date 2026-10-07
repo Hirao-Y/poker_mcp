@@ -13,6 +13,7 @@ import { calculationTools } from './calculationTools.js';
 import { resetTools } from './resetTools.js';
 import { daughterNuclideTools } from './daughterNuclideTools.js';
 import { guiTools } from './guiTools.js';
+import { schemaTools } from './schemaTools.js';
 
 export const allTools = [
   ...bodyTools,
@@ -28,7 +29,8 @@ export const allTools = [
   ...calculationTools,
   ...resetTools,
   ...daughterNuclideTools,
-  ...guiTools
+  ...guiTools,
+  ...schemaTools
 ];
 
 export {
@@ -45,5 +47,6 @@ export {
   calculationTools,
   resetTools,
   daughterNuclideTools,
-  guiTools
+  guiTools,
+  schemaTools
 };
