@@ -317,7 +317,12 @@ total_doses = summary['result_total']
 
 ## 📜 ライセンス
 
-**ISC License** - オープンソースライセンス
+**MIT License** - 著作権 (c) 2025-2026 Yoshihiro Hirao。全文は
+[LICENSE](../LICENSE) を参照してください。
+
+このライセンスが及ぶのは本リポジトリの内容（poker-mcp）だけです。POKER itself is
+obtained separately and licensed separately. FreeCAD も別途入手が必要で、
+それぞれのライセンスに従います。
 
 ---
 
