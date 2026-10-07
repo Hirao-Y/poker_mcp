@@ -91,6 +91,25 @@ D_3d (3次元, 3×2×2) 同上
 `.dose` は斜め補正の有無に関わらず線種 4 種をすべて保持する（`ray_type` は常に
 4 エントリ）。`result_total.columns` と `statistics_total` も不変。
 
+### initialize が返す版を package.json と揃える
+
+`initialize` の `serverInfo.version` に `'1.0.0'` を直書きしていたため、どの版を
+入れてもクライアント（Claude Desktop 等）には 1.0.0 と表示されていた。
+`package.json` から読むようにした。`package.json` は npm の tarball に必ず
+含まれるので、npm から入れた場合も読める。
+
+### 公開前の確認
+
+`npm pack` した tarball を空のフォルダへ `npm install` し、そこから起動して
+`initialize` → `tools/list` → `tools/call` を通す確認を行った。`files` の
+whitelist に抜けがあるとここで露出する。
+
+```
+initialize    : OK  poker-mcp 1.9.8  (package.json = 1.9.8)
+tools/list    : OK  36 tools
+getSchema 実行 : OK  https://pointkernel.com/schema/poker-dose-2.2.1.schema.json
+```
+
 
 ## [1.9.7] - 2026-09-23
 
