@@ -190,6 +190,101 @@ if (!fs.existsSync(pokerCui)) {
   ok(parseDoseMap(dosePath, 'NOSUCH', {}) === null, '未知の検出器は null');
   ok(parseDoseMap(path.join(T, 'nosuch.dose'), 'D_1d', {}) === null, '存在しないファイルは null');
   ok(parseDoseMap(dosePath, 'D_1d', { doseType: 'NOSUCH' }) === null, '未知の dose_type は null');
+
+  // --------------------------------------------------- 線種別線量と斜め補正
+  // 斜め補正を立てると result_total から g1 の行が落ちる（斜め補正は全光子に
+  // 一括で掛かるため、一次光子だけを分離できない）。その分岐で線種のキーと
+  // 値の対応が崩れたことがあるので、.dose を基準に突き合わせる。
+  console.log('=== result_total の線種別線量 ===');
+
+  const DOSES = ['E(AP)', 'DskinM(AP)', 'H*(10)'];
+  const RAYS = ['g1', 'n', 'g12', 'TOTAL'];
+
+  // .dose の TOTAL 線源は energy_bin が 1 本なので 12 列 = 3 線量 x 4 線種。
+  // 検出器ごとに 1 点目（1 行目）を取る。
+  const doseRef = (file) => {
+    const L = fs.readFileSync(file, 'utf8').split(/\r?\n/);
+    let start = -1;
+    for (let i = 0; i < L.length; i++) if (/^#\s*\S+[：:]\s*TOTAL/.test(L[i])) start = i;
+    const out = {};
+    let det = null;
+    for (let i = start; i < L.length; i++) {
+      const m = L[i].match(/検出器[：:]\s*(\S+)/);
+      if (m) { det = m[1]; continue; }
+      const t = L[i].trim();
+      if (det && t && !t.startsWith('#')) {
+        const c = t.split(/\s+/).map(Number);
+        const o = {};
+        DOSES.forEach((d, di) => { o[d] = {}; RAYS.forEach((r, ri) => { o[d][r] = c[di * 4 + ri]; }); });
+        out[det] = o; det = null;
+      }
+    }
+    return out;
+  };
+
+  // summary の result_total.detector から、検出器ごとに 1 点目の線種別線量を取る
+  const summaryRays = (file) => {
+    const s = fs.readFileSync(file, 'utf8').replace(/\r/g, '');
+    const detKey = s.indexOf('\n  detector:', s.indexOf('\nresult_total:'));
+    const out = {};
+    const re = /\n    - name: (\S+)\n/g;
+    re.lastIndex = detKey;
+    let m;
+    while ((m = re.exec(s))) {
+      const blk = s.slice(m.index, s.indexOf('statistics_total', m.index));
+      const first = blk.indexOf('doses:');
+      const nextPoint = blk.indexOf('\n        - id:', first);
+      const one = nextPoint > 0 ? blk.slice(first, nextPoint) : blk.slice(first);
+      const o = {};
+      for (const d of DOSES) {
+        const e = one.indexOf('\n            ' + d + ': ');
+        if (e < 0) continue;
+        const kv = {};
+        for (const l of one.slice(e + 1).split('\n').slice(1)) {
+          const q = l.match(/^ {14}(\S+):\s*(\S+)\s*$/);
+          if (!q) break;
+          kv[q[1]] = Number(q[2]);
+        }
+        o[d] = kv;
+      }
+      out[m[1]] = o;
+    }
+    return out;
+  };
+
+  for (const [tag, slant] of [['slant_off', false], ['slant_on', true]]) {
+    const y = path.join(T, tag + '.yaml');
+    fs.writeFileSync(y, slant
+      ? fs.readFileSync(path.join(__dirname, 'fixtures', 'dosemap.yaml'), 'utf8')
+      : fs.readFileSync(path.join(__dirname, 'fixtures', 'dosemap.yaml'), 'utf8')
+          .replace('use_slant_correction: true', 'use_slant_correction: false'));
+    const p = spawn(pokerCui, ['-t', '-s', tag + '.yaml'], { cwd: T, stdio: 'ignore' });
+    const c = await new Promise(r => p.on('close', r));
+    if (c !== 0) { ok(false, tag + ' の計算', 'exit=' + c); continue; }
+
+    const ref = doseRef(path.join(T, tag + '.yaml.dose'));
+    const got = summaryRays(path.join(T, tag + '.yaml.summary'));
+    const label = tag + '（斜め補正' + (slant ? 'あり' : 'なし') + '）';
+    let bad = 0, checked = 0;
+    const detail = [];
+    for (const det of Object.keys(got)) {
+      for (const d of DOSES) {
+        const g = got[det][d], r = ref[det] && ref[det][d];
+        if (!g || !r) { bad++; detail.push(det + ' ' + d + ': 見つからず'); continue; }
+        checked++;
+        for (const ray of ['TOTAL', 'n', 'g12']) {
+          if (g[ray] !== r[ray]) { bad++; detail.push(det + ' ' + d + ' ' + ray + '=' + g[ray] + ' / .dose ' + r[ray]); }
+        }
+        // g1 は斜め補正ありで落ちる
+        if (slant && 'g1' in g) { bad++; detail.push(det + ' ' + d + ': 斜め補正ありなのに g1 がある'); }
+        if (!slant) {
+          if (!('g1' in g)) { bad++; detail.push(det + ' ' + d + ': g1 が無い'); }
+          else if (g.g1 !== r.g1) { bad++; detail.push(det + ' ' + d + ' g1=' + g.g1 + ' / .dose ' + r.g1); }
+        }
+      }
+    }
+    ok(bad === 0, label, checked + ' 組を .dose と照合' + (bad ? ' / ' + detail.slice(0, 4).join('; ') : ''));
+  }
 }
 
 console.log(ng === 0 ? '\nすべて一致' : '\n' + ng + ' 件の不一致');
