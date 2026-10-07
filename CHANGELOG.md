@@ -109,8 +109,9 @@ D_3d (3次元, 3×2×2) 同上
 
 著作権者は Yoshihiro Hirao、年は最初のコミット（2025-08-14）から 2025-2026。
 
-`files` に `LICENSE` と `CHANGELOG.md` を追加し、npm から入れた利用者にも
-ライセンス本文と変更履歴が届くようにした。README と docs/README のライセンス節に、
+`files` に `LICENSE` を追加し、npm から入れた利用者にもライセンス本文が届く
+ようにした。変更履歴は GitHub で読めるので同梱しない。README と docs/README の
+ライセンス節に、
 このライセンスが及ぶのは本リポジトリの内容だけで、POKER 本体と FreeCAD は別途
 入手・別ライセンスである旨を明記した。
 
