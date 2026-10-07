@@ -8,13 +8,27 @@ import { createAllHandlers } from './handlers/index.js';
 import { safeExecute } from './middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 import { YAML_FILE, PENDING_FILE } from '../utils/paths.js';
+import { readFileSync } from 'fs';
+
+// initialize の serverInfo で返す版。クライアント（Claude Desktop 等）が
+// 表示するのはこの値なので、package.json から読んで実際の版と揃える。
+// 以前は '1.0.0' を直書きしていたため、どの版を入れても 1.0.0 と出ていた。
+// package.json は npm の tarball に必ず含まれるので、公開後も読める。
+const PKG_VERSION = (() => {
+  try {
+    const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
+    return pkg.version || '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
 
 export class PokerMcpServer {
   constructor(yamlFile = YAML_FILE, pendingFile = PENDING_FILE) {
     this.server = new Server(
       {
         name: 'poker-mcp',
-        version: '1.0.0',
+        version: PKG_VERSION,
       },
       {
         capabilities: {
