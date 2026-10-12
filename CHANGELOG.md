@@ -1,5 +1,87 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.11.0] - 2026-10-13
+
+MCP を HTTP（Streamable HTTP）で受ける入口を追加した。別の機械の Claude Code や、
+`mcp-remote` を介した Claude Desktop から、POKER が入った Windows のサーバを使える。
+stdio 版（`src/mcp_server_stdio_v4.js`、bin `poker-mcp`）は従来どおりで、手元の Windows で
+Claude Desktop から使う普段の環境では何も変わらない。
+
+### HTTP の入口 `src/mcp_server_http.js` を追加
+
+| 追加物 | 内容 |
+|---|---|
+| `src/mcp_server_http.js` | 起動スクリプト。npm の bin 名 `poker-mcp-http` |
+| `src/mcp/httpServer.js` | HTTP の受け口（Host・Origin・トークンの検査、`/mcp` と `/health`） |
+| `src/utils/httpConfig.js` | 環境変数から設定を作り、誤りがあれば起動を止める |
+| `npm run start:http` | HTTP 版を起動 |
+| `npm run test:http` | HTTP 版の試験 |
+
+| エンドポイント | 内容 |
+|---|---|
+| `POST /mcp` | MCP の要求。トークンを設定したときは `Authorization: Bearer <token>` が要る |
+| `GET /health` | 死活確認。認証なし。`{"status":"ok","name":"poker-mcp","version":"1.11.0"}` |
+
+`GET /mcp`・`DELETE /mcp` は 405、他のパスは 404、壊れた JSON は 400、本文 10 MB 超は 413。
+
+#### 設定
+
+| 環境変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上（32 文字以上の乱数を推奨） |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名をカンマ区切りで追加（トンネルの公開名など）。ポートは無視して名前で比べる |
+
+次の場合は起動しない（終了コード 2、stderr に `設定の誤り: …`）。
+
+- 外から届く設定（`POKER_MCP_HTTP_HOST` が loopback 以外、または `POKER_MCP_HTTP_ALLOWED_HOSTS`
+  に loopback 以外の名前）で、トークンが無い
+- トークンが 16 文字未満
+- ポートが不正
+
+#### 守り
+
+- **Host ヘッダの検査（DNS rebinding 対策）。** `POKER_MCP_HTTP_ALLOWED_HOSTS` を設定すると
+  localhost / 127.0.0.1 / [::1] と指定した名前だけを受け付ける。未設定で loopback に待ち受けるときは
+  loopback の名前だけ。未設定で loopback 以外に待ち受けるときは検査せず、警告を出してトークンで守る。
+  違反は 403。`/health` にも適用する。
+- **ブラウザからの要求を受けない。** Origin ヘッダ付きの要求は 403。MCP クライアントは Origin を付けない。
+- **トークン。** 不一致・無しは 401 と `WWW-Authenticate: Bearer`。照合は SHA-256 同士を
+  `timingSafeEqual` で比べる。トークンは 1 つで、使う人を区別しない。
+- トークンを持つ人は、サーバのプロセスが読み書きできるファイルに道具経由で触れうる
+  （`yaml_file` などのパス）。専用のユーザーアカウントで動かす、作業フォルダを分ける、
+  トークンを共有しない、を勧める。
+- TLS（https）は本サーバ自体は持たない。外に出すときは Cloudflare Tunnel などの前段で https にする。
+
+#### 設計
+
+- **道具の処理は stdio 版と共有する。** `PokerMcpServer` に `createProtocolServer()` を設け、
+  MCP の Server（プロトコル処理）を通信路ごとに作る。36 ツールのハンドラ、TaskManager・JobManager、
+  非同期ジョブ・GUI の判定は全体で 1 つ。stdio は Server を 1 つ、HTTP は要求ごとに 1 つ作って捨てる。
+- **セッションを持たない（stateless）。** サーバからの通知の受け口（`GET /mcp`）は無い。
+- **応答は SSE ではなく素の JSON**（`enableJsonResponse`）。プロキシやトンネルを通しやすい。
+- **Node の `requestTimeout`（既定 300 秒）を無効にした。** 同期の計算は数分かかることがある。
+  ただし中継（Cloudflare Tunnel 約 100 秒）やクライアントの待ち時間（MCP SDK 既定 60 秒）には
+  切られうるので、リモートでは `POKER_MCP_ASYNC=1`（v1.10.0 の非同期ジョブ）を勧める。
+- **トークンなしで外の Host 名を許す設定は起動しない。** 「トンネルで公開したのにトークンが無い」状態を防ぐため。
+
+推奨構成: `POKER_MCP_HTTP_HOST=127.0.0.1` のまま cloudflared が localhost:3939 へ中継し、
+`POKER_MCP_HTTP_ALLOWED_HOSTS=<公開名>`、`POKER_MCP_HTTP_TOKEN=<乱数>`、`POKER_MCP_ASYNC=1`、
+`POKER_MCP_GUI=0` を設定する。
+
+#### 確認した試験
+
+- `npm run test:http`: 36 項目すべて合格。設定の判定、`/health`、ツール一覧と計算結果
+  （`result_total`）が stdio 版と同一、2 クライアントの同時利用、403（Host・Origin）・405・400・404、
+  401（トークンなし・誤り）、トークンなしの外向き設定が終了コード 2 で起動しないこと、
+  HTTP 越しの非同期ジョブの結果が同期の計算と同じこと。
+- 既存の `test:jobs` 32 項目・`test:gui` 16 項目・`schema-dose` 27 項目すべて合格。
+- `npm run check:manifest` の 3 モードすべて OK。
+- PC で、トークン付きの HTTP 版に `mcp-remote`（0.14.3）経由で接続し（Claude Desktop と同じく
+  stdio で mcp-remote を起動する MCP クライアントから）、36 ツールが見えることを確認した。
+  Claude Desktop 本体からの接続は未確認。
+
 ## [1.10.0] - 2026-10-13
 
 リモート公開に向けた 2 つの機能。どちらも、手元の Windows で Claude Desktop から使う

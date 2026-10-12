@@ -1,9 +1,9 @@
 # 🔗 システム統合ガイド - Poker MCP
 
 **対象読者**: システム統合エンジニア・上級ユーザー・研究者  
-**バージョン**: 1.10.0 MCP Edition  
+**バージョン**: 1.11.0 MCP Edition  
 **最終更新**: 2026年10月  
-**統合方式**: Claude Desktop + MCP + 外部システム
+**統合方式**: Claude Desktop + MCP + 外部システム（別の機械からは HTTP 版、v1.11.0）
 
 ---
 
@@ -17,7 +17,7 @@
 - **データ可視化**: 結果の効果的な可視化・解析
 
 ### 📊 **実装ベース実用性**
-現在のPoker MCP Server v1.10.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
+現在のPoker MCP Server v1.11.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
 
 ---
 
@@ -100,20 +100,70 @@
 }
 ```
 
-#### **リモート公開するサーバで使う想定の設定（v1.10.0）**
+#### **別の機械から HTTP 版に接続する（v1.11.0）**
 
-現時点で本サーバは stdio でのみ通信し、HTTP の入口はまだありません。
-将来リモート公開したサーバで使うことを想定する場合は、非同期ジョブを有効にし、
-GUI ツールを外します（GUI はサーバの画面に開き、利用者からは見えないため）。
+v1.11.0 で、MCP を HTTP（Streamable HTTP）で受ける入口 `src/mcp_server_http.js`
+（bin `poker-mcp-http`）を追加しました。POKER が入った Windows でサーバを動かし、
+別の機械（Windows / Mac / Linux）から接続します。POKER 本体が要るのはサーバ側だけです。
+サーバ側の設定（トークン、Host 名、Cloudflare Tunnel、常駐）は
+[ADMIN_GUIDE.md](ADMIN_GUIDE.md) の「リモート公開するサーバの設定」を参照してください。
+
+ツール一覧と計算結果は stdio 版と同一です。リモートのサーバでは非同期ジョブを有効にし
+（`POKER_MCP_ASYNC=1`）、GUI ツールを外します（`POKER_MCP_GUI=0`。GUI はサーバの画面に開き、
+利用者からは見えないため）。この場合のツール数は 38 です。
+
+以下、URL は `https://poker.example.com/mcp`、`<token>` はサーバの `POKER_MCP_HTTP_TOKEN` とします。
+
+**Claude Code**（ヘッダを直接渡せます。公式文書 https://code.claude.com/docs/en/mcp ）
+
+```bash
+claude mcp add --transport http poker https://poker.example.com/mcp --header "Authorization: Bearer <token>"
+```
+
+`.mcp.json` に書く場合は次のとおりです（`${...}` は環境変数から展開されます）。
 
 ```json
-"env": {
-  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
-  "POKER_INSTALL_PATH": "C:/Poker",
-  "POKER_MCP_ASYNC": "1",
-  "POKER_MCP_GUI": "0"
+{
+  "mcpServers": {
+    "poker": {
+      "type": "http",
+      "url": "https://poker.example.com/mcp",
+      "headers": { "Authorization": "Bearer ${POKER_MCP_TOKEN}" }
+    }
+  }
 }
 ```
+
+**Claude Desktop**（設定ファイルに書けるのは stdio のサーバだけです）
+
+中継役の `mcp-remote`（第三者の npm パッケージ。0.14.3 で確認）を使います。Windows の
+Claude Desktop は `args` 内の空白を正しく渡さない不具合があるため、ヘッダは `env` 経由で
+渡します（mcp-remote の README の推奨）。
+
+```json
+{
+  "mcpServers": {
+    "poker-remote": {
+      "command": "npx",
+      "args": ["-y", "mcp-remote", "https://poker.example.com/mcp", "--transport", "http-only", "--header", "Authorization:${AUTH_HEADER}"],
+      "env": { "AUTH_HEADER": "Bearer <token>" }
+    }
+  }
+}
+```
+
+- `--transport http-only` を付けます。本サーバは SSE 方式の接続（`GET /mcp`）には 405 を返します
+- http（非 TLS）の URL に繋ぐときだけ `--allow-http` が要ります（同じ機械や信頼できる LAN での試験用）
+- トークン付きの HTTP 版に mcp-remote 経由で接続し（試験用の MCP クライアントから）、36 ツールが見えることを確認しています。Claude Desktop 本体からの接続はまだ確かめていません
+
+**claude.ai / Claude Desktop の「カスタムコネクタ」**（URL を登録する方式）
+
+カスタムコネクタの認証は OAuth、認証なし、固定ヘッダ（static headers。組織のオーナーが設定し、
+ベータで一部の組織のみ）のいずれかです（出典 https://claude.com/docs/connectors/building/authentication ）。
+本サーバは OAuth を実装しておらず、外向きの設定ではトークンが必須なので、個人アカウントでは
+現状カスタムコネクタからは使えません。OAuth への対応は今後の課題です。
+
+Mac / Linux からも、Claude Code、または Claude Desktop + `mcp-remote` で同じように使えます。
 
 #### **開発環境設定**
 ```json
@@ -137,7 +187,8 @@ GUI ツールを外します（GUI はサーバの画面に開き、利用者か
 ### 1.2 サーバー構成詳細
 
 #### **コアファイル構成**
-- **エントリポイント**: `src/mcp_server_stdio_v4.js`
+- **エントリポイント**: `src/mcp_server_stdio_v4.js`（stdio）、`src/mcp_server_http.js`（HTTP、v1.11.0）
+- **HTTP の受け口**: `src/mcp/httpServer.js`、設定は `src/utils/httpConfig.js`（v1.11.0）
 - **サーバークラス**: `src/mcp/server.js` (PokerMcpServer)
 - **ツール定義**: `src/mcp/tools/` (16ファイル＋index.js)
 - **非同期ジョブ管理**: `src/services/JobManager.js`（`POKER_MCP_ASYNC=1` のときだけ使用）
@@ -186,6 +237,20 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 `無効（理由）` として残ります。後から POKER を入れた場合はサーバを再起動してください。
 上の Linux 設定例のように Windows 以外で動かす場合、`poker_openGui` は登録されません。
 GUI を外しても、計算（POKER_CUI.exe）を使うツールには影響しません。
+
+#### **HTTP 版の環境変数（v1.11.0）**
+
+HTTP 版（`poker-mcp-http`）だけが使います。
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上（32 文字以上の乱数を推奨） |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名をカンマ区切りで追加（トンネルの公開名など）。ポートは無視して名前で比べる |
+
+`POKER_MCP_HTTP_HOST` が loopback 以外、または `POKER_MCP_HTTP_ALLOWED_HOSTS` に loopback 以外の名前を
+入れた「外から届く設定」でトークンが無いと、起動しません（終了コード 2）。
 
 #### **統合環境での環境変数管理**
 ```python
@@ -1020,7 +1085,7 @@ class OptimizationEngine:
 3. 簡単なモデルから開始
 4. 段階的に複雑な統合へ
 
-**この統合ガイドにより、Poker MCP Server v1.10.0の36メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
+**この統合ガイドにより、Poker MCP Server v1.11.0の36メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
 
 ---
 

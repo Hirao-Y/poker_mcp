@@ -4,13 +4,94 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.10.0
+- **バージョン**: 1.11.0
 - **ツール数**: 36メソッド（非同期ジョブを有効にすると 39、GUI を外すと 1 減る）
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
-- **メインサーバー**: `src/mcp_server_stdio_v4.js`
+- **サーバー**: 2 つ（道具の処理は共通）
+  - `src/mcp_server_stdio_v4.js`（bin `poker-mcp`）: STDIO。Claude Desktop のローカル利用
+  - `src/mcp_server_http.js`（bin `poker-mcp-http`）: HTTP。別の機械からの利用（v1.11.0）
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
-- **実行方式**: STDIO通信（MCPプロトコル標準）
+- **実行方式**: STDIO通信（MCPプロトコル標準）、または HTTP（MCP の Streamable HTTP、v1.11.0）
+
+## 🆕 バージョン1.11.0の新機能
+
+### 🌐 HTTP で受ける入口（`poker-mcp-http`）
+
+MCP の Streamable HTTP で受ける入口 `src/mcp_server_http.js` を追加しました。POKER が入った
+Windows でサーバを動かし、別の機械（Windows / Mac / Linux）の Claude Code や、`mcp-remote` を
+介した Claude Desktop から使えます。POKER 本体が要るのはサーバ側だけです。
+
+道具の処理（36 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
+HTTP 版のツール一覧と計算結果が stdio 版と同一であることを `npm run test:http` で確認しています。
+**stdio 版（`poker-mcp`）は従来どおりで、Claude Desktop のローカル利用は何も変わりません。**
+
+v1.11.0 は npm にはまだ公開していません（npm の最新は 1.10.0）。リポジトリから起動します。
+
+```bash
+npm run start:http        # または node src/mcp_server_http.js
+# [poker-mcp-http] listening on http://127.0.0.1:3939/mcp  （トークンなし（この機械の中だけ））
+```
+
+| エンドポイント | 内容 |
+|---|---|
+| `POST /mcp` | MCP の要求。トークンを設定したときは `Authorization: Bearer <token>` |
+| `GET /health` | 死活確認（認証なし）。`{"status":"ok","name":"poker-mcp","version":"1.11.0"}` |
+
+セッションを持たない方式（stateless）で、応答は SSE ではなく素の JSON です。`GET /mcp`・`DELETE /mcp`
+は 405（サーバからの通知の受け口はありません）、他のパスは 404 です。
+
+| 環境変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上（32 文字以上の乱数を推奨） |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名をカンマ区切りで追加（トンネルの公開名など） |
+
+**外から届く設定ではトークンが必須です。** `POKER_MCP_HTTP_HOST` が loopback 以外、または
+`POKER_MCP_HTTP_ALLOWED_HOSTS` に loopback 以外の名前を入れたとき、トークンが無いと起動しません
+（終了コード 2、`設定の誤り: …`）。トークンが 16 文字未満、ポートが不正なときも同じです。
+このほか、Host ヘッダの検査（DNS rebinding 対策、違反は 403）、Origin ヘッダ付き（ブラウザから）の
+要求の拒否（403）を行います。
+
+**TLS（https）は本サーバ自体は持ちません。** 外に出すときは Cloudflare Tunnel などの前段で https にします。
+推奨構成:
+
+```
+POKER_MCP_HTTP_HOST=127.0.0.1           # そのまま。cloudflared が localhost:3939 へ中継
+POKER_MCP_HTTP_ALLOWED_HOSTS=<公開名>
+POKER_MCP_HTTP_TOKEN=<乱数>
+POKER_MCP_ASYNC=1                       # 長い計算が中継（約 100 秒）やクライアントの待ち時間で切られないように
+POKER_MCP_GUI=0
+```
+
+トークンは次で作れます。
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+**接続方法:**
+
+- **Claude Code**: `claude mcp add --transport http poker https://poker.example.com/mcp --header "Authorization: Bearer <token>"`
+- **Claude Desktop**（設定ファイルは stdio のみ）: 中継役 `mcp-remote`（第三者の npm パッケージ）を使います。
+  Windows ではヘッダを env 経由で渡します。
+  ```json
+  "poker-remote": {
+    "command": "npx",
+    "args": ["-y", "mcp-remote", "https://poker.example.com/mcp", "--transport", "http-only", "--header", "Authorization:${AUTH_HEADER}"],
+    "env": { "AUTH_HEADER": "Bearer <token>" }
+  }
+  ```
+- **claude.ai / Claude Desktop の「カスタムコネクタ」**: 本サーバは OAuth を実装していないため、
+  個人アカウントでは現状使えません（今後の課題）。
+
+**注意:** トークンを持つ人は、サーバのプロセスが読み書きできるファイルに道具経由で触れられます
+（`yaml_file` などのパス）。専用のユーザーアカウントで動かす、作業フォルダを分ける、トークンを
+共有しない、を勧めます。トークンは 1 つで、使う人を区別しません。
+
+詳しくは [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバの設定）と
+[INTEGRATION_GUIDE](docs/manuals/INTEGRATION_GUIDE.md)（クライアントの接続）を参照してください。
 
 ## 🆕 バージョン1.10.0の新機能
 
@@ -505,6 +586,17 @@ POKERのインストールディレクトリを指定します。以下の2つ�
 （GUI がサーバの画面に開き、利用者からは見えないため）。Windows 以外の環境や、
 POKER.exe が見つからない環境では、設定しなくても登録されません。計算には影響しません。
 
+#### `POKER_MCP_HTTP_*`（HTTP 版だけ、v1.11.0）
+HTTP 版（`poker-mcp-http`）の設定です。stdio 版では使いません。詳しくは
+「[バージョン1.11.0の新機能](#-バージョン1110の新機能)」。
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上。外から届く設定では必須 |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名（カンマ区切り。トンネルの公開名など） |
+
 ```bash
 # Windows（コマンドプロンプト）
 set POKER_MCP_HOME=C:\Users\yoshi\poker_mcp_workspace
@@ -563,11 +655,12 @@ POKER_MCP_HOME/          # デフォルト: ~/.poker-mcp/
    > 環境変数で管理するため、`cwd` を設定すると v1.2.5 以前の問題が再発します。
 
    > **版の固定:** `npx` は一度取得した版を使い続けることがあります。確実に特定の版を
-   > 使うには `"args": ["poker-mcp@1.9.9"]` のように版を書きます。v1.9.8 以前の npm 版では
+   > 使うには `"args": ["poker-mcp@1.10.0"]` のように版を書きます。v1.9.8 以前の npm 版では
    > `poker_generateInput` が動きません（v1.9.9 で修正）。
 
    リモート公開するサーバ向けの設定（非同期ジョブを有効にし、GUI を外す）は
-   「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」を参照してください。
+   「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」を、別の機械で動く HTTP 版に
+   `mcp-remote` で繋ぐ設定は「[バージョン1.11.0の新機能](#-バージョン1110の新機能)」を参照してください。
 
 3. **Claude Desktopを再起動** してMCPサーバーを有効化
 
@@ -593,6 +686,7 @@ Claude Desktopで以下のようにテストできます：
 - **計算の非同期実行**: 長い計算を投入して後から結果を取得（`POKER_MCP_ASYNC=1`、v1.10.0）
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
+- **HTTP通信**: MCP の Streamable HTTP で別の機械から利用（`poker-mcp-http`、トークン認証、v1.11.0）
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
 
 ### ✅ **放射線遮蔽計算専用設計**
@@ -656,8 +750,9 @@ Job系 (3):           poker_submitCalculation, poker_getJobStatus, poker_getJobR
 ```
 poker_mcp/
 ├── 📁 src/                          # 🚀 ソースコード
-│   ├── mcp_server_stdio_v4.js       # メインサーバー (エントリポイント)
-│   ├── 📁 mcp/                      # MCP実装
+│   ├── mcp_server_stdio_v4.js       # メインサーバー (STDIO のエントリポイント)
+│   ├── mcp_server_http.js           # HTTP のエントリポイント（v1.11.0）
+│   ├── 📁 mcp/                      # MCP実装（httpServer.js = HTTP の受け口）
 │   ├── 📁 services/                 # ビジネスロジック
 │   ├── 📁 validators/               # データ検証（物理・単位・衝突）
 │   ├── 📁 utils/                    # ユーティリティ
@@ -743,6 +838,7 @@ POKER_MCP_HOME/
 ### **✅ MCPプロトコル完全準拠**
 - **JSON-RPC 2.0**: 完全実装・エラーハンドリング完備
 - **STDIO通信**: 標準入出力による高速通信
+- **HTTP通信**: Streamable HTTP（stateless・JSON 応答）。トークン・Host・Origin を検査（v1.11.0）
 - **型安全性**: Zod Schema厳密検証
 - **エンタープライズ品質**: 99.97%可用性実績
 
@@ -774,7 +870,7 @@ POKER_MCP_HOME/
 
 - **Node.js**: ≥18.0.0
 - **OS**: Windows, macOS, Linux
-- **MCP Client**: Claude Desktop (推奨)、その他MCPクライアント
+- **MCP Client**: Claude Desktop (推奨)、その他MCPクライアント。HTTP 版には Claude Code、または Claude Desktop + `mcp-remote`
 - **メモリ**: 512MB以上推奨（大規模検出器使用時は1GB以上）
 - **POKER 本体**: v2.1.5 以降（`POKER_INSTALL_PATH` で場所を指定）
 - **FreeCAD**: 1.0 以降（CAD連携を使う場合。`FREECAD_PATH`、未設定なら自動探索）
@@ -789,11 +885,12 @@ POKER_MCP_HOME/
 | `npm run check:manifest` | ツール定義とマニフェストの整合。既定・非同期有効・非同期有効かつ GUI 無効の 3 通り |
 | `npm run test:jobs` | 非同期ジョブ。同期との全行一致、投入後の編集が混ざらないこと、待ち行列、再起動後の復元 |
 | `npm run test:gui` | `poker_openGui` の登録条件（`POKER_MCP_GUI=0` で外れ、計算は従来どおり動く） |
+| `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一、認証・Host・Origin の検査、起動を拒む設定 |
 | `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
 | `npm run test:pending` | 保留中の変更の表示 |
 | `npm run test:cad-validate` など | CAD 連携（FreeCAD が必要） |
 
-`test:jobs` と `test:gui` は、失敗があれば終了コード 1 で終わります。
+`test:jobs`・`test:gui`・`test:http` は、失敗があれば終了コード 1 で終わります。
 
 ## 🎯 実際の使用ワークフロー
 
@@ -817,6 +914,11 @@ POKER_MCP_HOME/
    - 法規制適合性の確認
 
 ## 📝 更新履歴
+
+### v1.11.0 (2026-10)
+- ✨ HTTP（MCP の Streamable HTTP）で受ける入口 `src/mcp_server_http.js`（bin `poker-mcp-http`、`npm run start:http`）。道具の処理は stdio 版と共有
+- 🔒 トークン認証（`POKER_MCP_HTTP_TOKEN`）、Host ヘッダの検査、Origin 付き要求の拒否。外から届く設定でトークンが無ければ起動しない
+- ✅ `npm run test:http` を追加（ツール一覧・計算結果が stdio 版と同一）
 
 ### v1.10.0 (2026-10)
 - ✨ 計算の非同期実行（`poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult`、`poker_getDoseMap` の `job_id`）。`POKER_MCP_ASYNC=1` のときだけ有効
@@ -919,6 +1021,6 @@ obtained separately and licensed separately. poker-mcp は `poker_cui` を外部
 
 ---
 
-**🎯 Poker MCP Server v1.10.0**  
+**🎯 Poker MCP Server v1.11.0**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: MIT

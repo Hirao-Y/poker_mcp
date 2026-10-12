@@ -1,7 +1,7 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**バージョン**: 1.10.0（ツール数は既定 36。条件により 35〜39。「ツール数」の節を参照）
-**想定環境**: Windows + Claude Desktop（stdio 通信）
+**バージョン**: 1.11.0（ツール数は既定 36。条件により 35〜39。「ツール数」の節を参照）
+**想定環境**: Windows + Claude Desktop（stdio 通信）。別の機械から使う HTTP 版は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」
 **最終更新**: 2026年10月
 
 ---
@@ -14,7 +14,16 @@ Poker MCP Server の**導入・設定・保守**に必要な実務情報をま�
 
 ### 動作形態の理解
 
-本サーバは**常駐サービスではありません**。Claude Desktop が MCP クライアントとして
+入口は 2 つあり、道具の処理（36 ツール）は共通です。
+
+| 入口 | 通信 | 用途 |
+|---|---|---|
+| `src/mcp_server_stdio_v4.js`（bin `poker-mcp`） | stdio | Claude Desktop から手元で使う（通常） |
+| `src/mcp_server_http.js`（bin `poker-mcp-http`、v1.11.0） | HTTP（Streamable HTTP） | 別の機械から使う。常駐させる |
+
+以下この節は stdio 版の説明です。HTTP 版は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」を参照してください。
+
+stdio 版は**常駐サービスではありません**。Claude Desktop が MCP クライアントとして
 子プロセスを起動し、標準入出力（stdio）で JSON-RPC 通信を行います。
 
 ```
@@ -28,6 +37,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
 
 - **プロセス管理は Claude Desktop が行う**。PM2 や systemd は使いません
 - **HTTP ポートを開かない**。外部からの疎通監視やヘルスチェックはできません
+  （HTTP 版は `GET /health` で確認できます）
 - **設定変更の反映には Claude Desktop の再起動が必要**
 - **標準出力は JSON-RPC 専用**。ログは stderr とログファイルへ出力されます
 
@@ -53,7 +63,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.9.9"],
+      "args": ["-y", "poker-mcp@1.10.0"],
       "env": {
         "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -88,8 +98,8 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
 > **npm 版は 1.9.9 以上を使ってください。** 1.9.8 までの npm パッケージには
 > `tools/gen_input.py` と `tools/scatter.py` が含まれておらず、`poker_generateInput` が
 > `No module named 'gen_input'` で失敗していました（リポジトリから動かす場合は問題ありません）。
-> 非同期ジョブと `POKER_MCP_GUI` は v1.10.0 の機能で、npm にはまだ公開していません。
-> 使う場合は方法B（ローカルリポジトリ）で起動してください。
+> 非同期ジョブと `POKER_MCP_GUI` は v1.10.0 の機能で、npm に公開済みです（`poker-mcp@1.10.0`）。
+> HTTP 版（v1.11.0）は npm にはまだ公開していません。使う場合はローカルリポジトリから起動してください。
 
 > **`cwd` は指定しないでください。** 過去に SERVER DISCONNECTED の
 > 原因となりました。作業ディレクトリは `POKER_MCP_HOME` で管理します。
@@ -234,7 +244,8 @@ Test-Path "$env:POKER_INSTALL_PATH\POKER_CUI.exe"
 
 ## 🔍 動作確認
 
-外部からの疎通監視はできないため、以下の手段で健全性を確認します。
+stdio 版は外部からの疎通監視ができないため、以下の手段で健全性を確認します
+（HTTP 版の確認は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」）。
 
 ### 1. 起動ログの確認
 
@@ -299,6 +310,7 @@ POKER.exe が無い環境（Windows 以外を含む）では `poker_openGui` が
 ```powershell
 npm run test:jobs   # 非同期ジョブ（同期計算と .summary / .dose / 線量マップが一致するか等）
 npm run test:gui    # POKER_MCP_GUI による poker_openGui の登録・非登録
+npm run test:http   # HTTP 版（v1.11.0）
 ```
 
 ### 4. 子孫核種機能の動作確認
@@ -463,8 +475,9 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 
 ## 🔒 セキュリティ上の注意
 
-本サーバはローカルの stdio プロセスであり、ネットワークポートを開きません。
+stdio 版はローカルのプロセスであり、ネットワークポートを開きません。
 そのため外部からの攻撃面は限定的ですが、以下に留意してください。
+HTTP 版の注意は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」に書きます。
 
 - **ファイル書き込み範囲**: `POKER_MCP_HOME` 配下のみです。
   同ディレクトリを共有領域に置く場合は書き込み権限を制限してください
@@ -478,28 +491,158 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 
 ---
 
-## 🌐 リモート公開するサーバの設定（v1.10.0）
+## 🌐 リモート公開するサーバの設定（v1.11.0）
 
-本サーバ自体は stdio でのみ通信します。HTTP（Streamable HTTP）の入口は
-まだ実装されていません。ここでは、将来リモート公開したサーバで使うことを
-想定して、その場合に向けた環境変数の設定を示します。
+v1.11.0 で、MCP を HTTP（Streamable HTTP）で受ける入口 `src/mcp_server_http.js`
+（bin `poker-mcp-http`）を追加しました。POKER が入った Windows でこれを常駐させ、
+別の機械の Claude Code や、`mcp-remote` を介した Claude Desktop から使います。
+クライアント側の設定は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) を参照してください。
 
-```json
-"env": {
-  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
-  "POKER_INSTALL_PATH": "C:/Poker",
-  "POKER_MCP_ASYNC": "1",
-  "POKER_MCP_GUI": "0"
-}
+道具の処理（36 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
+HTTP 版のツール一覧と計算結果は stdio 版と同一です（`npm run test:http` で確認）。
+stdio 版は従来どおりで、Claude Desktop のローカル利用は何も変わりません。
+
+> v1.11.0 は npm にはまだ公開していません。ローカルリポジトリから起動してください。
+
+### 起動
+
+```powershell
+cd C:\path\to\poker_mcp
+npm run start:http          # または node src/mcp_server_http.js
 ```
 
-- **`POKER_MCP_ASYNC=1`**: 中継（Cloudflare Tunnel は約 100 秒）やクライアントの
-  待ち時間の上限で長い計算が切られないよう、投入・確認・取得に分けます
+既定では `http://127.0.0.1:3939/mcp` で待ち受け、この機械の中からだけ接続できます。
+
+| エンドポイント | 内容 |
+|---|---|
+| `POST /mcp` | MCP の要求 |
+| `GET /health` | 死活確認（認証なし）。`{"status":"ok","name":"poker-mcp","version":"1.11.0"}` |
+
+セッションを持たない方式（stateless）で、要求ごとに MCP の Server を作って捨てます。
+応答は SSE ではなく素の JSON です。`GET /mcp`・`DELETE /mcp` は 405（サーバからの通知の
+受け口はありません）、他のパスは 404、壊れた JSON は 400、本文 10 MB 超は 413 です。
+
+### 環境変数
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上（32 文字以上の乱数を推奨） |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名をカンマ区切りで追加（トンネルの公開名など）。ポートは無視して名前で比べる |
+
+`POKER_MCP_HOME`・`POKER_INSTALL_PATH`・`POKER_MCP_ASYNC`・`POKER_MCP_GUI` などは stdio 版と同じです。
+
+**起動を拒む条件**（終了コード 2、stderr に `[poker-mcp-http] 設定の誤り: …`）:
+
+- 外から届く設定（`POKER_MCP_HTTP_HOST` が loopback 以外、または `POKER_MCP_HTTP_ALLOWED_HOSTS`
+  に loopback 以外の名前）で、`POKER_MCP_HTTP_TOKEN` が無い
+- トークンが 16 文字未満
+- ポートが不正
+
+トークンなしで `POKER_MCP_HTTP_ALLOWED_HOSTS` に公開名を入れると起動しないのは、
+「トンネルで公開したのにトークンが無い」状態を防ぐためです。
+
+トークンは次のように作ります。
+
+```powershell
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
+```
+
+### 守り
+
+- **トークン**: 不一致・無しは 401 と `WWW-Authenticate: Bearer`。照合は SHA-256 同士の
+  `timingSafeEqual` です。トークンは 1 つで、使う人を区別しません
+- **Host ヘッダの検査（DNS rebinding 対策）**: `POKER_MCP_HTTP_ALLOWED_HOSTS` を設定すると
+  localhost / 127.0.0.1 / [::1] と指定した名前だけを受け付けます。未設定で loopback に
+  待ち受けるときは loopback の名前だけです。未設定で loopback 以外に待ち受けるときは検査せず、
+  警告を出してトークンで守ります。違反は 403 で、`/health` にも適用します
+- **ブラウザからの要求を受けない**: Origin ヘッダ付きの要求は 403。MCP クライアントは Origin を付けません
+- **TLS（https）は本サーバ自体は持ちません**。外に出すときは Cloudflare Tunnel などの前段で https にします
+
+> **注意:** トークンを持つ人は、サーバのプロセスが読み書きできるファイルに道具経由で
+> 触れられます（`yaml_file` などのパス）。次を勧めます。
+> - 専用のユーザーアカウントでサーバを動かす
+> - 作業フォルダ（`POKER_MCP_HOME`）を普段の作業と分ける
+> - トークンを共有しない
+
+### 推奨構成（Cloudflare Tunnel）
+
+`POKER_MCP_HTTP_HOST` は `127.0.0.1` のままにし、cloudflared が `localhost:3939` へ中継します。
+サーバ側でポートを外に開ける必要はありません。
+
+```
+POKER_MCP_HTTP_HOST=127.0.0.1
+POKER_MCP_HTTP_ALLOWED_HOSTS=<公開名>      # 例: poker.example.com
+POKER_MCP_HTTP_TOKEN=<乱数>
+POKER_MCP_ASYNC=1
+POKER_MCP_GUI=0
+POKER_MCP_HOME=C:\poker_mcp_workspace
+POKER_INSTALL_PATH=C:/Poker
+```
+
+- **`POKER_MCP_ASYNC=1`**: Node の `requestTimeout`（既定 300 秒）は無効にしてありますが、
+  中継（Cloudflare Tunnel は約 100 秒）やクライアントの待ち時間（MCP SDK の既定 60 秒）で
+  長い同期計算は切られることがあります。投入・確認・取得に分けます
 - **`POKER_MCP_GUI=0`**: サーバに POKER が入っていても、GUI はサーバの画面に開き、
   利用者からは見えません。ツール一覧から `poker_openGui` を外します
 - この設定でのツール数は 38 です（`npm run check:manifest` の 3 通り目に相当）
 - 終わったジョブの保存日数（`POKER_MCP_JOB_RETENTION_DAYS`）と `jobs/` の
   ディスク使用量を、利用状況に合わせて見直してください
+
+### 起動ログ
+
+stderr に次の形で出ます。
+
+```
+[poker-mcp-http] listening on http://127.0.0.1:3939/mcp  （トークン必須）
+[poker-mcp-http] 受け付ける Host: localhost, 127.0.0.1, ::1, [::1], poker.example.com
+```
+
+トークンなしなら `（トークンなし（この機械の中だけ））` になります。`POKER_MCP_HTTP_ALLOWED_HOSTS`
+未設定で loopback 以外に待ち受けると、`[poker-mcp-http] 注意: POKER_MCP_HTTP_ALLOWED_HOSTS が
+未設定のため Host ヘッダを検査しません（トークンで保護）` が出ます。認証失敗や拒否した Host・Origin は
+`logs/combined.log` に警告として記録されます。
+
+### Windows で常駐させる
+
+HTTP 版は Claude Desktop が起動するのではないので、自分で常駐させます。簡単なのは
+タスク スケジューラで「ログオン時」に起動する方法です。環境変数を設定して起動する
+バッチファイルを作り、それをタスクに登録します。
+
+```bat
+@echo off
+rem C:\poker_mcp\start-http.cmd
+set POKER_MCP_HOME=C:\poker_mcp_workspace
+set POKER_INSTALL_PATH=C:/Poker
+set POKER_MCP_HTTP_ALLOWED_HOSTS=poker.example.com
+set POKER_MCP_HTTP_TOKEN=<乱数>
+set POKER_MCP_ASYNC=1
+set POKER_MCP_GUI=0
+node C:\path\to\poker_mcp\src\mcp_server_http.js 2>> C:\poker_mcp_workspace\logs\http-stderr.log
+```
+
+タスク スケジューラで「タスクの作成」→ トリガー「ログオン時」→ 操作「プログラムの開始」に
+このバッチファイルを指定します。バッチファイルにはトークンが書かれるので、他の人が読めない
+場所に置いてください。ログオンせずに動かしたい場合は、nssm などのサービス化ツールを使う方法もあります。
+
+### 監視と試験
+
+```powershell
+curl.exe http://127.0.0.1:3939/health
+# {"status":"ok","name":"poker-mcp","version":"1.11.0"}
+```
+
+`/health` は認証なしで、版と状態だけを返します。Host ヘッダの検査は `/health` にも
+適用されるので、外から監視するときは許可した名前で接続してください。
+
+```powershell
+npm run test:http   # HTTP 版の試験（失敗があれば終了コード 1）
+```
+
+`test:http` は、ツール一覧と計算結果が stdio 版と同一であること、認証・Host・Origin の検査、
+外から届く設定でトークンが無いと起動しないこと、HTTP 越しの非同期ジョブを確かめます。
+POKER 本体が必要です。
 
 ---
 
@@ -508,7 +651,7 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 ### 更新時
 
 - [ ] `npm run check:manifest` が 3 通り（既定 / 非同期有効 / 非同期有効・GUI 無効）とも OK
-- [ ] `npm run test:jobs` と `npm run test:gui` が終了コード 0
+- [ ] `npm run test:jobs`・`npm run test:gui`・`npm run test:http` が終了コード 0
 - [ ] `node tools/test_daughter_reconcile.mjs` が全項目 PASS
 - [ ] `package.json` と `config/mcp-manifest.json` の版数が一致
 - [ ] CHANGELOG に変更内容を記載
@@ -525,4 +668,4 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 
 ---
 
-**Poker MCP Server v1.10.0** | 作者: Yoshihiro Hirao | ライセンス: MIT
+**Poker MCP Server v1.11.0** | 作者: Yoshihiro Hirao | ライセンス: MIT

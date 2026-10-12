@@ -2,8 +2,8 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.10.0  
-**🔧 バージョン**: 1.10.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.11.0  
+**🔧 バージョン**: 1.11.0 MCP Edition  
 **📅 最終更新**: 2026年10月
 
 ---
@@ -447,9 +447,9 @@ poker_getThinnedIndices()
 ```
 📱 Claude Desktop Client
     ↕ (MCP Protocol v1.0)
-🔧 JSON-RPC 2.0 over STDIO
+🔧 JSON-RPC 2.0 over STDIO（または Streamable HTTP、v1.11.0）
     ↕
-⚙️ Poker MCP Server v1.10.0
+⚙️ Poker MCP Server v1.11.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
@@ -472,6 +472,10 @@ poker_getThinnedIndices()
 | **POKER_MCP_JOB_RETENTION_DAYS** | 終わったジョブを残す日数 | 7 | オプション |
 | **POKER_MCP_JOB_TIMEOUT_MIN** | ジョブ 1 件の打ち切り時間（分） | 1440 | オプション |
 | **POKER_MCP_GUI** | `0` / `false` / `no` / `off` で `poker_openGui` を登録しない | 有効 | オプション |
+| **POKER_MCP_HTTP_HOST** | HTTP 版の待ち受けアドレス（v1.11.0） | 127.0.0.1 | オプション |
+| **POKER_MCP_HTTP_PORT** | HTTP 版のポート。0 で空きポート（v1.11.0） | 3939 | オプション |
+| **POKER_MCP_HTTP_TOKEN** | HTTP 版のトークン。`Authorization: Bearer <token>` で照合。16 文字以上（v1.11.0） | なし | 外から届く設定では必須 |
+| **POKER_MCP_HTTP_ALLOWED_HOSTS** | HTTP 版で受け付ける Host 名（カンマ区切り。ポートは無視）（v1.11.0） | なし | オプション |
 
 **リモート公開するサーバの設定例**（非同期ジョブを有効にし、GUI を外す）:
 ```json
@@ -511,7 +515,8 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 
 | **コンポーネント** | **役割** | **実装ファイル** | **依存関係** |
 |------------------|----------|----------------|-------------|
-| **MCP Server** | プロトコル処理 | `src/mcp_server_stdio_v4.js` | @modelcontextprotocol/sdk |
+| **MCP Server** | プロトコル処理 | `src/mcp_server_stdio_v4.js`（stdio）、`src/mcp_server_http.js`（HTTP、v1.11.0） | @modelcontextprotocol/sdk |
+| **HTTP の受け口** | 認証・Host / Origin の検査（v1.11.0） | `src/mcp/httpServer.js`、`src/utils/httpConfig.js` | @modelcontextprotocol/sdk |
 | **Task Manager** | データ管理 | `src/services/TaskManager.js` | js-yaml |
 | **Validator** | 入力検証 | `src/validators/*.js` | zod |
 | **Logger** | ログ管理 | `src/utils/logger.js` | winston |
@@ -579,6 +584,28 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 - v1.9.8 までは CAD 系・ThinnedIndices 系・`poker_resetYaml` の応答が二重に包まれ、
   失敗しても成功として伝わっていました。v1.9.9 で修正しています。
 - 実装は `src/mcp/middleware/errorHandler.js` の `toCallToolResult()` です。
+
+#### **HTTP のエンドポイント（v1.11.0）**
+
+HTTP 版（`src/mcp_server_http.js`、bin `poker-mcp-http`）は MCP の Streamable HTTP で受けます。
+セッションを持たない方式（stateless）で、応答は SSE ではなく素の JSON です。ツール一覧と
+`tools/call` の結果は stdio 版と同一です。
+
+| メソッド・パス | 内容 |
+|---|---|
+| `POST /mcp` | MCP の要求。トークンを設定したときは `Authorization: Bearer <token>` |
+| `GET /health` | 死活確認（認証なし）。`{"status":"ok","name":"poker-mcp","version":"1.11.0"}` |
+
+| 状態 | 起きる条件 | 本文 |
+|---|---|---|
+| 400 | 本文が JSON として読めない | JSON-RPC エラー `-32700` |
+| 401 | トークンが無い・一致しない（`WWW-Authenticate: Bearer` 付き） | JSON-RPC エラー `-32001` |
+| 403 | Host ヘッダが許可されていない（`/health` も対象）、または Origin ヘッダ付き（ブラウザから） | JSON-RPC エラー `-32000` |
+| 404 | `/mcp`・`/health` 以外のパス | `{"error":"not found"}` |
+| 405 | `/mcp` に POST 以外（`GET`・`DELETE` など。サーバからの通知の受け口は無い） | JSON-RPC エラー `-32000` |
+| 413 | 本文が 10 MB を超える | JSON-RPC エラー `-32000` |
+
+設定と運用は [ADMIN_GUIDE.md](ADMIN_GUIDE.md)、クライアントの接続は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) を参照してください。
 
 ---
 

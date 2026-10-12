@@ -1,8 +1,8 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.9.9)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.10.0)
 
-> npm に公開している最新版は **1.9.9** です。非同期ジョブ（`POKER_MCP_ASYNC`）と
-> `POKER_MCP_GUI` は v1.10.0 の機能で、npm にはまだ公開していません。
-> 公開前に試す場合は方法2（ローカルソース）で起動してください。
+> npm に公開している最新版は **1.10.0** です（非同期ジョブ `POKER_MCP_ASYNC` と
+> `POKER_MCP_GUI` を含む）。HTTP 版（`poker-mcp-http`）は v1.11.0 の機能で、npm には
+> まだ公開していません。試す場合は方法2（ローカルソース）で起動してください。
 
 ## 📦 起動方法
 
@@ -19,6 +19,7 @@ git clone https://github.com/Hirao-Y/poker_mcp.git
 cd poker_mcp
 npm install
 node src/mcp_server_stdio_v4.js
+# HTTP 版（v1.11.0）は node src/mcp_server_http.js（または npm run start:http）
 ```
 
 ### **方法3: グローバルインストール後に起動**
@@ -144,7 +145,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.9.9推奨）**
+## 🎯 **Claude Desktop での設定（v1.10.0推奨）**
 
 ### **推奨設定**
 ```json
@@ -152,7 +153,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.9.9"],
+      "args": ["-y", "poker-mcp@1.10.0"],
       "env": {
         "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -164,7 +165,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 `<username>` はご自身のWindowsユーザー名に置き換えてください。
 
 > **⚠️ 版数の固定を推奨**
-> `poker-mcp@latest` ではなく `poker-mcp@1.9.9` のように固定してください。
+> `poker-mcp@latest` ではなく `poker-mcp@1.10.0` のように固定してください。
 > 遮蔽計算では、いつサーバが入れ替わるか分からない状態は再現性の観点から
 > 望ましくありません。更新は設定を書き換える意図的な操作として行います。
 >
@@ -176,7 +177,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 > 既定値 `C:/Poker` と実際のインストール先が異なると、子孫核種の自動生成が
 > 動作しません。
 
-> **⚠️ 1.9.8 以前を固定している場合は 1.9.9 へ更新してください**
+> **⚠️ 1.9.8 以前を固定している場合は 1.9.9 以降へ更新してください**
 > 1.9.8 までの npm パッケージには `tools/gen_input.py` と `tools/scatter.py` が
 > 含まれておらず、npx で起動すると `poker_generateInput` が
 > `No module named 'gen_input'` で失敗していました（リポジトリから動かす場合は
@@ -194,7 +195,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.9.9"],
+      "args": ["-y", "poker-mcp@1.10.0"],
       "env": {
         "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
         "POKER_INSTALL_PATH": "/usr/local/share/poker"
@@ -207,10 +208,9 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 Windows 以外では POKER.exe（GUI）が使えないため、v1.10.0 以降は `poker_openGui` が
 ツール一覧に現れません。
 
-### **非同期ジョブを使う設定（v1.10.0 公開後）**
+### **非同期ジョブを使う設定（v1.10.0）**
 
-`env` に追加します。リモート公開するサーバで使う想定の場合は、GUI ツールも外します
-（現時点で本サーバは stdio のみで、HTTP の入口はまだありません）。
+`env` に追加します。リモート公開するサーバ（v1.11.0 の HTTP 版）で使う場合は、GUI ツールも外します。
 
 ```json
 "env": {
@@ -220,6 +220,20 @@ Windows 以外では POKER.exe（GUI）が使えないため、v1.10.0 以降は
   "POKER_MCP_GUI": "0"
 }
 ```
+
+### **HTTP 版の起動（v1.11.0）**
+
+別の機械から使うための HTTP 版（bin `poker-mcp-http`）は、v1.11.0 の npm 公開後は次で起動できます。
+
+```bash
+npx -y -p poker-mcp@1.11.0 poker-mcp-http
+```
+
+公開前はローカルソースから `node src/mcp_server_http.js`（または `npm run start:http`）で起動します。
+既定では `http://127.0.0.1:3939/mcp` で待ち受けます。トークンなどの設定（`POKER_MCP_HTTP_*`）と
+推奨構成は [ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)、クライアントからの接続は
+[INTEGRATION_GUIDE.md](manuals/INTEGRATION_GUIDE.md) を参照してください。
+Claude Desktop の設定（上記）で使う stdio 版は従来どおりです。
 
 ---
 
@@ -350,7 +364,7 @@ npm cache clean --force
 npx poker-mcp
 
 # 版数を指定して起動（Claude Desktop の設定では固定を推奨）
-npx -y poker-mcp@1.9.9
+npx -y poker-mcp@1.10.0
 
 # 最新版を明示して起動（動作確認用。常用は非推奨）
 npx -y poker-mcp@latest
@@ -362,13 +376,13 @@ npx -y poker-mcp@latest
 
 | 項目 | 内容 |
 |------|------|
-| 推奨起動コマンド | `npx poker-mcp`（Claude Desktop では `poker-mcp@1.9.9` のように版数を固定） |
+| 推奨起動コマンド | `npx poker-mcp`（Claude Desktop では `poker-mcp@1.10.0` のように版数を固定） |
 | ツール数 | 36（非同期ジョブ有効で 39、`poker_openGui` が外れる環境ではそれぞれ 1 減） |
 | 設定方法 | `claude_desktop_config.json` に `env.POKER_MCP_HOME` を追加 |
 | データ保存先 | `POKER_MCP_HOME`（未設定時: `~/.poker-mcp/`） |
 | ログ場所 | `POKER_MCP_HOME/logs/combined.log` |
 | Node.js 要件 | v18.0.0 以上 |
-| 通信方式 | STDIO（ポート開放不要） |
+| 通信方式 | STDIO（ポート開放不要）。HTTP 版 `poker-mcp-http` は v1.11.0（npm 未公開） |
 | 自動バックアップ | 有効（最大10世代） |
 
 ---
@@ -378,4 +392,4 @@ npx -y poker-mcp@latest
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.9.9（npm 公開版）** | 作者: Yoshihiro Hirao | ライセンス: MIT
+**Poker MCP Server v1.10.0（npm 公開版）** | 作者: Yoshihiro Hirao | ライセンス: MIT

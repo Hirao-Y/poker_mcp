@@ -17,7 +17,7 @@ import { readFileSync } from 'fs';
 // 表示するのはこの値なので、package.json から読んで実際の版と揃える。
 // 以前は '1.0.0' を直書きしていたため、どの版を入れても 1.0.0 と出ていた。
 // package.json は npm の tarball に必ず含まれるので、公開後も読める。
-const PKG_VERSION = (() => {
+export const PKG_VERSION = (() => {
   try {
     const pkg = JSON.parse(readFileSync(new URL('../../package.json', import.meta.url), 'utf8'));
     return pkg.version || '0.0.0';
@@ -28,21 +28,10 @@ const PKG_VERSION = (() => {
 
 export class PokerMcpServer {
   constructor(yamlFile = YAML_FILE, pendingFile = PENDING_FILE) {
-    this.server = new Server(
-      {
-        name: 'poker-mcp',
-        version: PKG_VERSION,
-      },
-      {
-        capabilities: {
-          tools: {},
-        },
-      }
-    );
-    
     this.taskManager = new TaskManager(yamlFile, pendingFile);
     this.handlers = null;
     this.jobManager = null;
+    this.server = null; // stdio 用（start() で作る）
   }
 
   async initialize() {
@@ -66,28 +55,6 @@ export class PokerMcpServer {
         guiEnabled: gui.enabled
       });
       
-      // ツール一覧ハンドラー
-      this.server.setRequestHandler(ListToolsRequestSchema, async () => {
-        return { tools: allTools };
-      });
-
-      // ツール実行ハンドラー
-      this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
-        const { name, arguments: args } = request.params;
-        
-        logger.info(`MCP Tool実行: ${name}`, { args });
-        
-        // ハンドラー名をツール名から生成（プレフィックス除去）
-        const handlerName = name.replace('poker_', '');
-        
-        const handler = this.handlers[handlerName];
-        if (!handler) {
-          throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
-        }
-        
-        return await safeExecute(async () => handler(args), { tool: name })();
-      });
-      
       logger.info('PokerMcpServer初期化完了');
     } catch (error) {
       logger.error('PokerMcpServer初期化エラー', { error: error.message });
@@ -95,8 +62,48 @@ export class PokerMcpServer {
     }
   }
 
+  /**
+   * MCP のプロトコル処理（Server）を 1 つ作る。
+   * 道具の処理（handlers）と TaskManager / JobManager は全体で 1 つを共有し、
+   * Server は通信路ごとに作る。stdio は 1 つ、HTTP はリクエストごとに 1 つ。
+   */
+  createProtocolServer() {
+    if (!this.handlers) {
+      throw new Error('initialize() の前に createProtocolServer() は呼べません');
+    }
+    const server = new Server(
+      { name: 'poker-mcp', version: PKG_VERSION },
+      { capabilities: { tools: {} } }
+    );
+
+    // ツール一覧ハンドラー
+    server.setRequestHandler(ListToolsRequestSchema, async () => {
+      return { tools: allTools };
+    });
+
+    // ツール実行ハンドラー
+    server.setRequestHandler(CallToolRequestSchema, async (request) => {
+      const { name, arguments: args } = request.params;
+
+      logger.info(`MCP Tool実行: ${name}`, { args });
+
+      // ハンドラー名をツール名から生成（プレフィックス除去）
+      const handlerName = name.replace('poker_', '');
+
+      const handler = this.handlers[handlerName];
+      if (!handler) {
+        throw new McpError(ErrorCode.MethodNotFound, `Unknown tool: ${name}`);
+      }
+
+      return await safeExecute(async () => handler(args), { tool: name })();
+    });
+
+    return server;
+  }
+
   async start() {
     try {
+      this.server = this.createProtocolServer();
       const transport = new StdioServerTransport();
       await this.server.connect(transport);
       logger.info('Poker MCP Server started on stdio');

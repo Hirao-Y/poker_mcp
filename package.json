@@ -1,19 +1,22 @@
 {
   "name": "poker-mcp",
-  "version": "1.10.0",
+  "version": "1.11.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
   "bin": {
-    "poker-mcp": "src/mcp_server_stdio_v4.js"
+    "poker-mcp": "src/mcp_server_stdio_v4.js",
+    "poker-mcp-http": "src/mcp_server_http.js"
   },
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
+    "start:http": "node src/mcp_server_http.js",
     "dev": "nodemon src/mcp_server_stdio_v4.js",
     "prepare": "echo 'NPX ready: npx poker-mcp'",
     "check:manifest": "node scripts/check-manifest-sync.mjs && node scripts/check-manifest-sync.mjs --async && node scripts/check-manifest-sync.mjs --async --no-gui",
     "test:jobs": "node tests/async-jobs.test.mjs",
     "test:gui": "node tests/gui-switch.test.mjs",
+    "test:http": "node tests/http-transport.test.mjs",
     "test:pending": "node tests/pending-view.test.mjs",
     "test:cad": "node tests/cad-e2e.test.mjs",
     "test:cad-full": "node tests/cad-full.test.mjs",

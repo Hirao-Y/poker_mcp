@@ -2,7 +2,7 @@
 
 **対象読者**: 放射線遮蔽研究者・実務者  
 **更新日**: 2026年10月  
-**バージョン**: 1.10.0 MCP Edition  
+**バージョン**: 1.11.0 MCP Edition  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -305,6 +305,34 @@ poker_mcp/
   "POKER_MCP_GUI": "0"
 }
 ```
+
+### HTTP 版の起動と環境変数（v1.11.0）
+
+別の機械から使うときの入口です。stdio 版（Claude Desktop のローカル利用）は従来どおりです。
+
+```bash
+npm run start:http                      # または node src/mcp_server_http.js
+# → http://127.0.0.1:3939/mcp で待ち受け。GET /health で死活確認
+npm run test:http                       # HTTP 版の試験
+node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"   # トークンを作る
+```
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>`。16 文字以上。外から届く設定では必須（無いと終了コード 2） |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名（カンマ区切り。トンネルの公開名など） |
+
+接続（`<token>` はサーバの `POKER_MCP_HTTP_TOKEN`）:
+
+```bash
+# Claude Code
+claude mcp add --transport http poker https://poker.example.com/mcp --header "Authorization: Bearer <token>"
+```
+
+Claude Desktop からは `mcp-remote`（`--transport http-only`）を介します。設定例は
+[INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md)、サーバ側の設定は [ADMIN_GUIDE.md](ADMIN_GUIDE.md) を参照してください。
 
 ### Claude Desktop設定例
 

@@ -1,4 +1,4 @@
-﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.10.0
+﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.11.0
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装。非同期ジョブ有効時は 39）
 
@@ -14,6 +14,14 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
+
+### 🆕 v1.11.0 新機能（HTTP の入口）
+- **HTTP 版 `poker-mcp-http`**: MCP の Streamable HTTP で受ける入口 `src/mcp_server_http.js`
+  （`npm run start:http`）。別の機械の Claude Code や、`mcp-remote` を介した Claude Desktop から使える。
+  道具の処理は stdio 版と共有し、ツール一覧と計算結果は stdio 版と同一。外から届く設定ではトークン
+  （`POKER_MCP_HTTP_TOKEN`）が必須。stdio 版（Claude Desktop のローカル利用）は従来どおり。
+  npm にはまだ公開していない。設定は [ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)、接続は
+  [INTEGRATION_GUIDE.md](manuals/INTEGRATION_GUIDE.md)
 
 ### 🆕 v1.10.0 新機能（リモート公開に向けて）
 - **計算の非同期実行（既定では無効）**: `POKER_MCP_ASYNC=1` のときだけ
@@ -96,7 +104,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### 🌍 環境変数設定
 
-Poker MCP Server は主に2つの環境変数を参照します。`POKER_INSTALL_PATH` は v1.4.0 以降、核種データベースと材料カタログの参照元となるため実質必須です。v1.10.0 で、非同期ジョブと GUI の登録を制御する変数が加わりました（後述）。
+Poker MCP Server は主に2つの環境変数を参照します。`POKER_INSTALL_PATH` は v1.4.0 以降、核種データベースと材料カタログの参照元となるため実質必須です。v1.10.0 で、非同期ジョブと GUI の登録を制御する変数が、v1.11.0 で HTTP 版の変数が加わりました（後述）。
 
 #### `POKER_MCP_HOME`（推奨）
 作業ファイル（YAML・バックアップ・ログ）の格納先ディレクトリです。
@@ -134,6 +142,15 @@ POKERのインストールディレクトリです。以下の用途で参照さ
 | `POKER_MCP_GUI` | （判定） | `0` で `poker_openGui` を登録しない（リモート公開するサーバ用）。未設定でも Windows 以外や POKER.exe が無ければ登録しない |
 
 いずれも設定しなければ、ツール一覧と動作は従来どおりです。
+
+#### HTTP 版の設定（HTTP 版だけ、v1.11.0）
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
+| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
+| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上。外から届く設定では必須 |
+| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名（カンマ区切り。トンネルの公開名など） |
 
 **設定例**:
 ```bash
@@ -319,7 +336,8 @@ total_doses = summary['result_total']
 - **CAD連携レイトレース**: [CAD_RAYTRACE.md](manuals/CAD_RAYTRACE.md) / [PATHS_FORMAT.md](manuals/PATHS_FORMAT.md)（v1.8.1）
 - **POKER の内部構造**: [POKER_INTERNALS.md](manuals/POKER_INTERNALS.md)（透視線の扱い、zones と ranges の関係）
 - **開発の引き継ぎ**: [HANDOVER_CAD_RAYTRACE.md](HANDOVER_CAD_RAYTRACE.md)
-- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（v1.4.0更新）
+- **HTTP 版のサーバ設定**: [ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)（v1.11.0）、クライアントの接続: [INTEGRATION_GUIDE.md](manuals/INTEGRATION_GUIDE.md)（v1.11.0）
+- **トラブル**: [TROUBLESHOOTING.md](manuals/TROUBLESHOOTING.md)参照（HTTP 版は第2.10章、v1.11.0）
 
 ---
 
@@ -359,6 +377,9 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 ## 🔄 更新履歴
 
 詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
+
+### v1.11.0
+- HTTP（MCP の Streamable HTTP）で受ける入口 `poker-mcp-http`。トークン認証、Host・Origin の検査
 
 ### v1.10.0
 - 計算の非同期実行（submitCalculation / getJobStatus / getJobResult、getDoseMap の job_id）。POKER_MCP_ASYNC=1 のときだけ有効

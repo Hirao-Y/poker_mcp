@@ -1,7 +1,7 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.10.0 MCP Edition  
+**バージョン**: 1.11.0 MCP Edition  
 **最終更新**: 2026年10月  
 **使用方法**: Claude Desktop + MCP通信 (既定 36メソッド。非同期ジョブ有効時 39、poker_openGui が外れる環境ではそれぞれ 1 減)
 
@@ -99,7 +99,7 @@ poker_updateBody で既存立体のパラメータを更新してください。
 **Step 1: バージョンを確認する**
 ```bash
 npm view poker-mcp version
-# 公開中の最新版が表示される（2026年10月時点では 1.9.9）
+# 公開中の最新版が表示される（2026年10月時点では 1.10.0）
 ```
 1.2.5 以前の場合は Step 2 へ。
 
@@ -777,6 +777,84 @@ FreeCAD を使う）には影響しません。形状や経路を確かめたい
 の数値や、検出器の `show_path_trace` を有効にして出力される `poker_cui` の経路トレースで
 代わりに確認できます。
 
+---
+
+## 🌐 第2.10章: HTTP 版（v1.11.0、`poker-mcp-http`）関連
+
+別の機械から使う HTTP 版（`src/mcp_server_http.js`）の問題です。stdio 版（Claude Desktop の
+ローカル利用）には関係しません。サーバの設定は [ADMIN_GUIDE.md](ADMIN_GUIDE.md)、
+クライアントの設定は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) を参照してください。
+
+まずサーバの機械で死活を確認します。
+
+```powershell
+curl.exe http://127.0.0.1:3939/health
+# {"status":"ok","name":"poker-mcp","version":"1.11.0"}
+```
+
+### 🔴 **問題H1: 起動しない（終了コード 2）**
+
+stderr に `[poker-mcp-http] 設定の誤り: …` が出て、終了コード 2 で終わります。
+
+| メッセージ | 原因と対処 |
+|---|---|
+| `外から接続できる設定（POKER_MCP_HTTP_HOST が 127.0.0.1 以外、または POKER_MCP_HTTP_ALLOWED_HOSTS に外の名前）では POKER_MCP_HTTP_TOKEN が必須です` | 外から届く設定でトークンが無い。`POKER_MCP_HTTP_TOKEN` を設定する。トンネルの公開名を `POKER_MCP_HTTP_ALLOWED_HOSTS` に入れた場合も同じ |
+| `POKER_MCP_HTTP_TOKEN が短すぎます（16 文字以上。32 文字以上の乱数を推奨）` | トークンを作り直す: `node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"` |
+| `POKER_MCP_HTTP_PORT が不正です: <値>` | 0〜65535 の整数にする |
+
+### 🔴 **問題H2: 401 Unauthorized**
+
+**原因**: `Authorization: Bearer <token>` が無い、またはサーバの `POKER_MCP_HTTP_TOKEN` と一致しない。
+
+**対処**:
+- Claude Code: `--header "Authorization: Bearer <token>"`（`.mcp.json` なら `headers`）を確認します
+- Claude Desktop + `mcp-remote`: `--header` は `Authorization:${AUTH_HEADER}` とし、`env` の
+  `AUTH_HEADER` に `Bearer <token>` を入れます。Windows の Claude Desktop は `args` 内の空白を
+  正しく渡さないため、`args` に `Bearer <token>` を直接書くと失敗することがあります
+- トークンの前後に余分な文字（引用符など）が入っていないか確認します
+
+### 🟠 **問題H3: 403（Host / Origin）**
+
+応答の `error.message` で原因が分かります。
+
+| メッセージ | 原因と対処 |
+|---|---|
+| `Host not allowed: <Host>` | Host ヘッダの名前が許可されていない。トンネル経由なら公開名を `POKER_MCP_HTTP_ALLOWED_HOSTS` に加える（ポートは無視して名前で比べる）。`/health` も対象 |
+| `Requests from browsers are not accepted` | Origin ヘッダ付きの要求（ブラウザから）。MCP クライアントから接続する |
+
+### 🟠 **問題H4: 405 Method not allowed（GET で繋ごうとしている）**
+
+**原因**: 本サーバはセッションを持たない方式で、`POST /mcp` だけを受けます。`GET /mcp`
+（サーバからの通知の受け口、SSE 方式）と `DELETE /mcp` は 405 です。
+
+**対処**: クライアントを Streamable HTTP（POST）で接続する設定にします。`mcp-remote` では
+`--transport http-only` を付けます。Claude Code では `--transport http` を使います。
+
+### 🟡 **問題H5: 長い計算が途中で切られる**
+
+**原因**: サーバ側では Node の `requestTimeout` を無効にしてありますが、中継
+（Cloudflare Tunnel は約 100 秒）やクライアントの待ち時間（MCP SDK の既定 60 秒）で切られます。
+
+**対処**: サーバで `POKER_MCP_ASYNC=1` を設定し、`poker_submitCalculation` →
+`poker_getJobStatus` → `poker_getJobResult` で計算します（第2.8章）。
+
+### 🟡 **問題H6: ポートが使用中（EADDRINUSE）**
+
+```
+[poker-mcp-http] Fatal: listen EADDRINUSE: address already in use 127.0.0.1:3939
+```
+
+**原因**: 同じポートで別のプロセス（前に起動した HTTP 版など）が待ち受けています。
+
+**対処**: 前のプロセスを止めるか、`POKER_MCP_HTTP_PORT` で別のポートにします。
+使っているプロセスは `netstat -ano | findstr :3939` で確認できます。
+
+### 🟢 **問題H7: Windows ファイアウォールの確認が出る**
+
+`POKER_MCP_HTTP_HOST=127.0.0.1`（既定）なら確認は出ません。`0.0.0.0` など外向きの
+アドレスで待ち受けると、Windows ファイアウォールの許可を求められます。Cloudflare Tunnel を
+使う推奨構成では 127.0.0.1 のままでよく、ポートを外に開ける必要はありません。
+
 
 ## 🔧 第3章: ログファイル活用
 
@@ -1028,5 +1106,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2026年10月  
-**バージョン**: 1.10.0 MCP Edition  
+**バージョン**: 1.11.0 MCP Edition  
 **サポート**: GitHub Issues
