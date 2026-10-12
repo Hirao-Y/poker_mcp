@@ -10,7 +10,9 @@ import { parseDoseMap } from '../../utils/doseMapParser.js';
 export function createCalculationHandlers(taskManager) {
   const calculationService = new CalculationService();
 
-  return {
+  // server.js はハンドラを handler(args) の形でオブジェクトから切り離して呼ぶため、
+  // 内部の補助関数は this ではなくこの変数経由で参照する。
+  const handlers = {
     async getDoseMap(args) {
       try {
         if (!args.detector_name) {
@@ -231,8 +233,8 @@ export function createCalculationHandlers(taskManager) {
             mcp_error_code: error.mcpErrorCode,
             details: {
               category: 'calculation_error',
-              recoverable: this._isRecoverableError(error.code),
-              suggestions: this._getErrorSuggestions(error.code, error.context)
+              recoverable: handlers._isRecoverableError(error.code),
+              suggestions: handlers._getErrorSuggestions(error.code, error.context)
             }
           };
         }
@@ -343,4 +345,6 @@ export function createCalculationHandlers(taskManager) {
       }
     }
   };
+
+  return handlers;
 }

@@ -37,11 +37,29 @@ export function handleMcpError(error, context = {}) {
   return new McpError(ErrorCode.InternalError, `内部エラー: ${error.message}`);
 }
 
+/**
+ * ハンドラの戻り値を MCP の CallToolResult に整える。
+ *  - すでに CallToolResult の形（content 配列を持つ）ならそのまま返す。
+ *    包み直すと isError が text の中に埋もれ、失敗が成功として伝わってしまう。
+ *  - { success: false, ... } を返すハンドラは失敗として isError: true を付ける。
+ *    AI クライアントは本文を読まずに isError で成否を判断することがあるため。
+ */
+export function toCallToolResult(result) {
+  if (result && typeof result === 'object' && Array.isArray(result.content)) {
+    return result;
+  }
+  const wrapped = { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+  if (result && typeof result === 'object' && result.success === false) {
+    wrapped.isError = true;
+  }
+  return wrapped;
+}
+
 export function safeExecute(fn, context = {}) {
   return async (request) => {
     try {
       const result = await fn(request);
-      return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
+      return toCallToolResult(result);
     } catch (error) {
       throw handleMcpError(error, context);
     }

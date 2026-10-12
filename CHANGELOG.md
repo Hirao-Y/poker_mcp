@@ -1,5 +1,51 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.9.9] - 2026-10-13
+
+npm パッケージから入れた環境でだけ現れる不具合と、ツールの失敗の伝え方を直した。
+まっさらな Windows（Windows サンドボックス）に、インストーラと `npm pack` で作った
+パッケージだけで環境を作り、参照体系 3 件・MCP 経由の計算・CAD 連携 2 件
+（フィレット付き遮蔽箱、S 字配管の汚染）の出力が、リポジトリ上の実行と全行一致する
+ことを確認した（生成日時と計算時間の行を除く）。
+
+### 修正: `poker_generateInput` が npm 版で動かなかった
+
+`tools/gen_input.py` と、それが `import` する `tools/scatter.py` が
+`package.json` の `files` に無かった。リポジトリ上では全ファイルが揃っているため
+テストでは現れず、npm から入れた環境でだけ `No module named 'gen_input'` で失敗
+していた。v1.8.2 の `gen_paths.py` と同じ型の漏れ。
+
+### 修正: ツールの失敗が成功として伝わっていた
+
+`safeExecute`（`src/mcp/middleware/errorHandler.js`）が、ハンドラの戻り値を常に
+`{ content: [{ type: 'text', text: JSON.stringify(result) }] }` で包んでいた。
+CAD 系・ThinnedIndices 系・resetYaml のハンドラはすでに MCP の応答形式
+（`content` 配列、失敗時は `isError: true` 付き）を返しているため二重に包まれ、
+`isError` が本文の中に埋もれて、MCP の上では成功になっていた。AI クライアントは失敗に気づかず、空の YAML のまま
+`generatePaths` へ進むといったことが起きる。
+
+`toCallToolResult()` を設け、次のように整えるようにした。
+
+- `content` 配列を持つ戻り値（すでに CallToolResult の形）はそのまま返す
+- `{ success: false, ... }` を返すハンドラには `isError: true` を付ける
+
+後者により、立体・ゾーン・線源・検出器などの検証エラーも MCP の上で失敗として
+伝わる。本文は従来どおりなので、本文を読んで判断しているクライアントへの影響は無い。
+
+### 修正: 計算エラーの処理そのものが落ちていた
+
+`server.js` はハンドラを `handler(args)` の形でオブジェクトから切り離して呼ぶ。
+`executeCalculation` の catch 節が `this._isRecoverableError()` を使っていたため
+`this` が未定義になり、`Cannot read properties of undefined` で落ちて本来の
+エラー内容が隠れていた。`createCalculationHandlers` でオブジェクトを変数に置き、
+その変数経由で参照するようにした。
+
+この修正で、`test:cad`（`tests/cad-e2e.test.mjs`）の `.paths` 経由の計算が
+以前から失敗していたことが見えるようになった。原因はテストの組み合わせで、
+キャスクの入力（`cask_full.yaml`）と別体系の CAD（`gi_test.FCStd`）を組んでおり、
+CAD にある材料 `Air` が YAML に無い。POKER_CUI は正しく計算を拒否している。
+このテストは失敗しても終了コード 0 で終わるため気づかれていなかった。別途直す。
+
 ## [1.9.8] - 2026-10-07
 
 ### poker_getSchema を追加

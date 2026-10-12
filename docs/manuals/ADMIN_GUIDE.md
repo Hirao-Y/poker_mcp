@@ -362,4 +362,4 @@ Copy-Item "$ws\backups\poker.yaml-<timestamp>" "$ws\tasks\poker.yaml" -Force
 
 ---
 
-**Poker MCP Server v1.9.8** | 作者: Yoshihiro Hirao | ライセンス: MIT
+**Poker MCP Server v1.9.9** | 作者: Yoshihiro Hirao | ライセンス: MIT

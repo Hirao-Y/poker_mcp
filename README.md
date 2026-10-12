@@ -4,13 +4,42 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.9.8
+- **バージョン**: 1.9.9
 - **ツール数**: 36メソッド
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🐛 バージョン1.9.9の修正
+
+npm で入れた環境（`npx poker-mcp`）でだけ現れる不具合と、失敗の伝え方の不具合を
+直しました。まっさらな Windows に npm パッケージから入れた環境で、CAD 連携を含む
+計算結果がリポジトリ上の実行と全行一致することを確認しています。
+
+### `poker_generateInput` が npm 版で動かなかった
+
+`tools/gen_input.py` と、それが読み込む `tools/scatter.py` が `package.json` の
+`files` から漏れていました。リポジトリから動かすと問題なく、npm から入れた環境で
+だけ `No module named 'gen_input'` で失敗していました。
+
+### 失敗が成功として返っていた
+
+CAD 系などのハンドラが返す `{ content, isError }` を、共通の処理がもう一度包んで
+いたため、`isError: true` が本文の中に埋もれ、MCP の上では成功として伝わって
+いました。AI クライアントは失敗に気づかないまま次の手順へ進みます。
+
+すでに MCP の応答形式になっている戻り値はそのまま返し、`{ success: false, ... }`
+を返すハンドラには `isError: true` を付けるようにしました。立体・ゾーン・線源など
+の検証エラーも、MCP の上で失敗として伝わります。
+
+### 計算エラーの処理そのものが落ちていた
+
+`poker_executeCalculation` が計算エラーを返す途中で
+`Cannot read properties of undefined (reading '_isRecoverableError')` になり、
+本来のエラー内容が隠れていました。ハンドラがオブジェクトから切り離して呼ばれる
+ため `this` が未定義になっていたのが原因です。
 
 ## 🆕 バージョン1.9.8の新機能
 
@@ -659,6 +688,11 @@ POKER_MCP_HOME/
 
 ## 📝 更新履歴
 
+### v1.9.9 (2026-10)
+- 🐛 `tools/gen_input.py` と `tools/scatter.py` を npm パッケージに同梱（`poker_generateInput` が npm 版で動かなかった）
+- 🐛 ツールの失敗が `isError: true` として伝わるよう修正（応答の二重包みを解消、`success: false` に `isError` を付与）
+- 🐛 `poker_executeCalculation` の計算エラー処理が `this` 未定義で落ちていた問題を修正
+
 ### v1.9.8 (2026-10)
 - ✨ `poker_getSchema`（入力YAML・`.paths`・`.summary`・`.dose` の書式を JSON Schema で取得）
 - 🐛 `poker_getDoseMap` が `.dose` の列構成を `information` から読むようになり、線量種別の増加に追随
@@ -749,6 +783,6 @@ obtained separately and licensed separately. poker-mcp は `poker_cui` を外部
 
 ---
 
-**🎯 Poker MCP Server v1.9.8**  
+**🎯 Poker MCP Server v1.9.9**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: MIT
