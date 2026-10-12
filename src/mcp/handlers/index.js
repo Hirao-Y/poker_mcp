@@ -20,8 +20,10 @@ import { createJobHandlers } from './jobHandlers.js';
  * @param {Object} [opts]
  * @param {import('../../services/JobManager.js').JobManager|null} [opts.jobManager]
  *   非同期ジョブが有効なときだけ渡される。null ならジョブ系のハンドラは登録しない。
+ * @param {boolean} [opts.guiEnabled=true]
+ *   false なら poker_openGui のハンドラを登録しない（ツール名で直接呼ばれても実行しない）。
  */
-export function createAllHandlers(taskManager, { jobManager = null } = {}) {
+export function createAllHandlers(taskManager, { jobManager = null, guiEnabled = true } = {}) {
   return {
     // 立体操作
     ...createBodyHandlers(taskManager),
@@ -58,8 +60,8 @@ export function createAllHandlers(taskManager, { jobManager = null } = {}) {
     // リセット操作
     resetYaml: resetHandlers.resetYaml(taskManager),
 
-    // GUI表示操作
-    ...createGuiHandlers(taskManager),
+    // GUI表示操作（Windows で POKER.exe があり、POKER_MCP_GUI=0 でないときだけ）
+    ...(guiEnabled ? createGuiHandlers(taskManager) : {}),
 
     // スキーマ取得（poker_cui --schema）
     ...createSchemaHandlers(),

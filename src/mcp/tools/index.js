@@ -16,6 +16,11 @@ import { guiTools } from './guiTools.js';
 import { schemaTools } from './schemaTools.js';
 import { jobTools, withJobIdParam } from './jobTools.js';
 import { isAsyncEnabled } from '../../utils/asyncConfig.js';
+import { isGuiEnabled } from '../../utils/guiConfig.js';
+
+// poker_openGui は、Windows で POKER.exe が見つかり、POKER_MCP_GUI=0 でないときだけ載せる
+// （utils/guiConfig.js）。手元の Windows で POKER を入れている普段の環境では従来どおり載る。
+const guiAvailable = isGuiEnabled();
 
 const baseTools = [
   ...bodyTools,
@@ -31,13 +36,13 @@ const baseTools = [
   ...calculationTools,
   ...resetTools,
   ...daughterNuclideTools,
-  ...guiTools,
+  ...(guiAvailable ? guiTools : []),
   ...schemaTools
 ];
 
 // 非同期ジョブ（POKER_MCP_ASYNC=1）が有効なときだけ、ジョブ系の 3 ツールを加え、
 // poker_getDoseMap に job_id 引数を足す。無効なときは baseTools をそのまま使い、
-// ツール一覧は非同期ジョブを持たない版と 1 文字も変わらない。
+// ツール一覧は非同期ジョブを持たない版と変わらない。
 export const allTools = isAsyncEnabled()
   ? [...baseTools.map((t) => (t.name === 'poker_getDoseMap' ? withJobIdParam(t) : t)), ...jobTools]
   : baseTools;

@@ -2,6 +2,9 @@
 
 ## [1.10.0] - 2026-10-13
 
+リモート公開に向けた 2 つの機能。どちらも、手元の Windows で Claude Desktop から使う
+普段の環境では何も変わらない（36 ツール、動作も同じ）。
+
 ### 計算の非同期実行を追加（既定では無効）
 
 長い計算を 1 回のツール呼び出しで待つと、MCP クライアント側の待ち時間の上限や、
@@ -41,12 +44,37 @@
 - 失敗したジョブは `getJobResult` が `isError: true` を返す。`getJobStatus` は問い合わせ
   自体は成功なので `isError` を付けない。
 
+### poker_openGui を GUI が使える環境でだけ登録
+
+`poker_openGui` は MCP サーバが動いている機械の画面に POKER.exe を開く。リモート公開した
+Windows サーバでは POKER が入っているため従来の判定では使えてしまうが、GUI はサーバの画面に
+開き、利用者からは見えず、POKER がサーバに起動したまま残る。
+
+`src/utils/guiConfig.js` の `getGuiStatus()` で、次のどれかに当たれば登録しない。
+
+- `POKER_MCP_GUI` が 0 / false / no / off（リモート公開するサーバで設定する）
+- Windows 以外
+- `POKER_INSTALL_PATH` に POKER.exe が無い
+
+一覧から外すだけでなくハンドラも登録しないので、名前で直接呼ばれても実行しない。判定は
+起動時に 1 回。結果と理由を起動ログに出す。手元の Windows に POKER を入れた環境では
+従来どおり 36 ツール。
+
+POKER.exe を扱うのは `guiHandlers.js`（= poker_openGui）だけで、計算・検証・CAD 連携・
+非同期ジョブは POKER_CUI.exe を使うため、GUI を外しても影響しない。`test:gui` で、
+`POKER_MCP_GUI=0` のときに一覧から外れ、直接呼んでも拒否され、計算は従来どおり動くことを
+確認している。
+
+マニフェストに `conditional_tools` を追加し、`check-manifest-sync.mjs` に `--no-gui` を追加。
+条件付きのツールが実行時に無いことはドリフトとしない。
+
 #### その他
 
-- `scripts/check-manifest-sync.mjs` に `--async` を追加。`npm run check:manifest` は
-  既定と非同期有効の両方を照合する。マニフェストに `optional_tools` / `optional_params`
-  を追加。
-- `npm run test:jobs` を追加。他のテストと違い、失敗があれば終了コード 1 で終わる。
+- `scripts/check-manifest-sync.mjs` に `--async` / `--no-gui` を追加。`npm run check:manifest`
+  は既定・非同期有効・非同期有効かつ GUI 無効の 3 通りを照合する。マニフェストに
+  `optional_tools` / `optional_params` / `conditional_tools` を追加。
+- `npm run test:jobs` と `npm run test:gui` を追加。他のテストと違い、失敗があれば終了コード 1
+  で終わる。ツール数の期待値は、その機械で GUI が登録されるかに合わせる。
 
 ## [1.9.9] - 2026-10-13
 

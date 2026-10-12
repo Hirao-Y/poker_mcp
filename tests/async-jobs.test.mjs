@@ -28,6 +28,13 @@ fs.copyFileSync(path.join(ROOT, 'tools/samples/grid_test.yaml'), path.join(TASKS
 fs.copyFileSync(path.join(ROOT, 'tools/samples/article_fillet/poker.yaml'), path.join(TASKS, 'fillet.yaml'));
 fs.copyFileSync(path.join(ROOT, 'tools/samples/article_pipe/poker.paths'), path.join(TASKS, 'wrong.paths'));
 
+// poker_openGui は Windows で POKER.exe があるときだけ登録される（tests/gui-switch.test.mjs）。
+// その有無でツール数が 1 変わるので、期待値を合わせる。
+const INSTALL = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+const guiExpected = process.platform === 'win32' &&
+  fs.existsSync(path.win32.join(INSTALL.replace(/\//g, '\\'), 'POKER.exe'));
+const BASE_COUNT = guiExpected ? 36 : 35;
+
 let failures = 0;
 const check = (label, ok, detail = '') => {
   console.log(`${ok ? '  OK ' : '  NG '} ${label}${detail ? '  ' + detail : ''}`);
@@ -37,6 +44,8 @@ const check = (label, ok, detail = '') => {
 async function start(asyncOn) {
   const env = { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: process.env.POKER_INSTALL_PATH || 'C:/Poker' };
   if (asyncOn) env.POKER_MCP_ASYNC = '1'; else delete env.POKER_MCP_ASYNC;
+  // ツール数を数えるので、GUI の有無は外の環境変数に左右されないよう固定する（GUI は既定の判定に任せる）
+  delete env.POKER_MCP_GUI;
   const transport = new StdioClientTransport({
     command: process.execPath, args: [path.join(ROOT, 'src/mcp_server_stdio_v4.js')], env, stderr: 'ignore'
   });
@@ -84,7 +93,7 @@ console.log('1. 既定（POKER_MCP_ASYNC なし）');
   const c = await start(false);
   const { tools } = await c.listTools();
   const names = tools.map((t) => t.name);
-  check('ツールは 36 個', tools.length === 36, `(${tools.length})`);
+  check(`ツールは ${BASE_COUNT} 個`, tools.length === BASE_COUNT, `(${tools.length})`);
   check('ジョブ系ツールが無い', !names.some((n) => /Job|submitCalculation/.test(n)));
   const dm = tools.find((t) => t.name === 'poker_getDoseMap');
   check('getDoseMap に job_id が無い', !('job_id' in dm.inputSchema.properties));
@@ -101,7 +110,7 @@ let c = await start(true);
 let jobA, jobC, jobFail;
 {
   const { tools } = await c.listTools();
-  check('ツールは 39 個', tools.length === 39, `(${tools.length})`);
+  check(`ツールは ${BASE_COUNT + 3} 個`, tools.length === BASE_COUNT + 3, `(${tools.length})`);
   const dm = tools.find((t) => t.name === 'poker_getDoseMap');
   check('getDoseMap に job_id がある', 'job_id' in dm.inputSchema.properties);
 

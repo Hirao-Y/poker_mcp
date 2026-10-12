@@ -10,6 +10,7 @@ import { logger } from '../utils/logger.js';
 import { YAML_FILE, PENDING_FILE } from '../utils/paths.js';
 import { isAsyncEnabled, getAsyncConfig } from '../utils/asyncConfig.js';
 import { JobManager } from '../services/JobManager.js';
+import { getGuiStatus } from '../utils/guiConfig.js';
 import { readFileSync } from 'fs';
 
 // initialize の serverInfo で返す版。クライアント（Claude Desktop 等）が
@@ -55,8 +56,15 @@ export class PokerMcpServer {
         await this.jobManager.init();
       }
 
+      // POKER の GUI（poker_openGui）を使えるか
+      const gui = getGuiStatus();
+      logger.info(`poker_openGui: ${gui.enabled ? '有効' : '無効'}（${gui.reason}）`);
+
       // ハンドラー作成
-      this.handlers = createAllHandlers(this.taskManager, { jobManager: this.jobManager });
+      this.handlers = createAllHandlers(this.taskManager, {
+        jobManager: this.jobManager,
+        guiEnabled: gui.enabled
+      });
       
       // ツール一覧ハンドラー
       this.server.setRequestHandler(ListToolsRequestSchema, async () => {

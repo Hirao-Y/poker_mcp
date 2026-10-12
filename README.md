@@ -5,7 +5,7 @@ YAML-based input file management tool for radiation-shielding calculation code P
 ## 📋 クイック情報
 
 - **バージョン**: 1.10.0
-- **ツール数**: 36メソッド（非同期ジョブを有効にすると 39）
+- **ツール数**: 36メソッド（非同期ジョブを有効にすると 39、GUI を外すと 1 減る）
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
@@ -60,6 +60,35 @@ v1.9.9 と同じです。主にリモート公開したサーバで使うこと�
 **サーバを再起動してもジョブは残ります。** 状態は `job.json` に保存しています。
 実行中に再起動した場合、その計算は失われているため `failed`（`INTERRUPTED_BY_RESTART`）
 になります。待機中だったジョブは再び並び、実行されます。
+
+### 🖥️ GUI（poker_openGui）を使える環境でだけ登録
+
+`poker_openGui` は、MCP サーバが動いている機械の画面に POKER.exe を開きます。次のどれかに
+当たるときは、ツール一覧から外し、処理も登録しません（名前で直接呼ばれても実行しません）。
+
+| 条件 | 想定する場面 |
+|---|---|
+| `POKER_MCP_GUI=0` | **リモート公開したサーバ。** サーバに POKER が入っていても、GUI は利用者の手元ではなくサーバの画面に開き、利用者からは見えないため |
+| Windows 以外 | POKER.exe は Windows 専用 |
+| `POKER_INSTALL_PATH` に POKER.exe が無い | POKER の GUI を入れていない環境 |
+
+手元の Windows に POKER を入れて Claude Desktop から使う普段の環境では、従来どおり
+36 ツールが登録されます。判定はサーバの起動時に 1 回だけ行い、結果は起動ログに
+`poker_openGui: 有効（…）` / `無効（…）` と理由付きで出ます。
+
+GUI を外しても、計算（POKER_CUI.exe）・検証・CAD 連携・非同期ジョブには影響しません。
+POKER.exe を使うのは `poker_openGui` だけです。
+
+リモート公開するサーバの設定例（非同期ジョブを有効にし、GUI を外す）:
+
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1",
+  "POKER_MCP_GUI": "0"
+}
+```
 
 ## 🐛 バージョン1.9.9の修正
 
@@ -739,8 +768,9 @@ POKER_MCP_HOME/
 
 ### v1.10.0 (2026-10)
 - ✨ 計算の非同期実行（`poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult`、`poker_getDoseMap` の `job_id`）。`POKER_MCP_ASYNC=1` のときだけ有効
-- ✅ `npm run test:jobs` を追加（同期との全行一致、入力のスナップショット、再起動後の復元）
-- 🔧 `npm run check:manifest` が非同期ジョブ有効時のツール定義も照合
+- ✨ `poker_openGui` を GUI が使える環境でだけ登録（`POKER_MCP_GUI=0`、Windows 以外、POKER.exe なしで外す）
+- ✅ `npm run test:jobs`（同期との全行一致、入力のスナップショット、再起動後の復元）と `npm run test:gui` を追加
+- 🔧 `npm run check:manifest` が非同期ジョブ有効時・GUI 無効時のツール定義も照合
 
 ### v1.9.9 (2026-10)
 - 🐛 `tools/gen_input.py` と `tools/scatter.py` を npm パッケージに同梱（`poker_generateInput` が npm 版で動かなかった）

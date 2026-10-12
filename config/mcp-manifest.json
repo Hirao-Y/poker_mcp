@@ -2740,6 +2740,9 @@
       }
     }
   },
+  "conditional_tools": {
+    "poker_openGui": "Windows で POKER_INSTALL_PATH に POKER.exe が見つかり、POKER_MCP_GUI が 0 でないときだけ登録する（src/utils/guiConfig.js）。リモート公開したサーバでは POKER_MCP_GUI=0 で外す。"
+  },
   "definitions": {
     "supported_material": {
       "type": "string",
