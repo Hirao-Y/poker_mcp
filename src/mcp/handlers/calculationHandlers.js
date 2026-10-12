@@ -7,7 +7,7 @@ import { TASKS_DIR } from '../../utils/paths.js';
 import { parseDoseSummary } from '../../utils/summaryParser.js';
 import { parseDoseMap } from '../../utils/doseMapParser.js';
 
-export function createCalculationHandlers(taskManager) {
+export function createCalculationHandlers(taskManager, { jobManager = null } = {}) {
   const calculationService = new CalculationService();
 
   // server.js はハンドラを handler(args) の形でオブジェクトから切り離して呼ぶため、
@@ -18,10 +18,26 @@ export function createCalculationHandlers(taskManager) {
         if (!args.detector_name) {
           throw new ValidationError('detector_name is required', 'detector_name', args.detector_name);
         }
-        const yamlFile = args.yaml_file || 'poker.yaml';
-        const absolutePathPattern = /^([a-zA-Z]:[\\\/]|\/)/;
-        const resolvedYamlFile = absolutePathPattern.test(yamlFile) ? yamlFile : path.join(TASKS_DIR, yamlFile);
-        const dosePath = resolvedYamlFile + '.dose';
+        let dosePath;
+        if (args.job_id) {
+          // 非同期ジョブの結果を読む（ジョブ専用フォルダの .dose）
+          if (!jobManager) {
+            return { success: false, error: 'job_id は非同期ジョブが有効なとき（POKER_MCP_ASYNC=1）だけ使えます' };
+          }
+          const job = jobManager.get(args.job_id);
+          if (!job) {
+            return { success: false, error: `ジョブが見つかりません: ${args.job_id}`, error_type: 'JOB_NOT_FOUND' };
+          }
+          if (job.status !== 'succeeded') {
+            return { success: false, error: `ジョブ ${args.job_id} は完了していません（status: ${job.status}）`, status: job.status };
+          }
+          dosePath = job.outputs.dose_file;
+        } else {
+          const yamlFile = args.yaml_file || 'poker.yaml';
+          const absolutePathPattern = /^([a-zA-Z]:[\\\/]|\/)/;
+          const resolvedYamlFile = absolutePathPattern.test(yamlFile) ? yamlFile : path.join(TASKS_DIR, yamlFile);
+          dosePath = resolvedYamlFile + '.dose';
+        }
         // .dose は poker_cui 完了直後に書き込まれるが、完了検知からディスク反映までに数秒の
         // ばらつきがある。実運用（executeCalculation とは別コール）では準備済みだが、直後呼び出しに
         // 備え、準備できるまで最大約10秒リトライする（未準備時のみ待機）。

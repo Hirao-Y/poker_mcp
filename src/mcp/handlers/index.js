@@ -13,8 +13,15 @@ import { resetHandlers } from './resetHandlers.js';
 import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
 import { createGuiHandlers } from './guiHandlers.js';
 import { createSchemaHandlers } from './schemaHandlers.js';
+import { createJobHandlers } from './jobHandlers.js';
 
-export function createAllHandlers(taskManager) {
+/**
+ * @param {Object} taskManager
+ * @param {Object} [opts]
+ * @param {import('../../services/JobManager.js').JobManager|null} [opts.jobManager]
+ *   非同期ジョブが有効なときだけ渡される。null ならジョブ系のハンドラは登録しない。
+ */
+export function createAllHandlers(taskManager, { jobManager = null } = {}) {
   return {
     // 立体操作
     ...createBodyHandlers(taskManager),
@@ -40,7 +47,10 @@ export function createAllHandlers(taskManager) {
     ...createCadHandlers(taskManager),
     
     // 計算操作
-    ...createCalculationHandlers(taskManager),
+    ...createCalculationHandlers(taskManager, { jobManager }),
+
+    // 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ）
+    ...(jobManager ? createJobHandlers(taskManager, jobManager) : {}),
 
     // 子孫核種確認操作
     confirmDaughterNuclides: createDaughterNuclideHandler(taskManager),

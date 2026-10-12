@@ -4,13 +4,62 @@ YAML-based input file management tool for radiation-shielding calculation code P
 
 ## 📋 クイック情報
 
-- **バージョン**: 1.9.9
-- **ツール数**: 36メソッド
+- **バージョン**: 1.10.0
+- **ツール数**: 36メソッド（非同期ジョブを有効にすると 39）
 - **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
 - **メインサーバー**: `src/mcp_server_stdio_v4.js`
 - **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
 - **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
 - **実行方式**: STDIO通信（MCPプロトコル標準）
+
+## 🆕 バージョン1.10.0の新機能
+
+### ⏳ 計算の非同期実行（既定では無効）
+
+時間のかかる計算を「投入して、あとで結果を取りに行く」形で扱えるようにしました。
+1 回のツール呼び出しは数秒で終わるので、MCP クライアントの待ち時間の上限や、
+リモート公開時の中継（Cloudflare Tunnel の約 100 秒など）に切られずに、
+何時間かかる計算でも扱えます。
+
+```javascript
+poker_submitCalculation({ yaml_file: "poker.yaml" })   // → { job_id: "20261013-053012-a1b2c3", status: "queued" }
+poker_getJobStatus({ job_id: "20261013-053012-a1b2c3" }) // → queued / running / succeeded / failed
+poker_getJobResult({ job_id: "20261013-053012-a1b2c3" }) // → executeCalculation と同じ形式の結果
+poker_getDoseMap({ detector_name: "D_map", job_id: "20261013-053012-a1b2c3" })
+```
+
+**既定では無効です。** 環境変数 `POKER_MCP_ASYNC=1` を設定したときだけ、上の 3 ツールが
+現れ、`poker_getDoseMap` に `job_id` 引数が付きます。設定しなければ、ツール一覧も動作も
+v1.9.9 と同じです。主にリモート公開したサーバで使うことを想定しています。
+
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1"
+}
+```
+
+| 環境変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1` で非同期ジョブを有効にする |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間 [分] |
+
+**計算の中身は同期と同じです。** ジョブも `poker_executeCalculation` と同じ処理で POKER を
+呼びます。`npm run test:jobs` で、同期と非同期の `.summary`・`.dose`・線量マップが
+全行一致することを確認しています（生成日時・計算時間・入力ファイルのパスの行を除く）。
+
+**投入した時点の入力で計算します。** YAML（と `.paths`）を
+`POKER_MCP_HOME/jobs/<ジョブID>/` にコピーしてから計算し、出力もそこに書きます。
+投入後に作業中の YAML を編集しても、投入済みのジョブには混ざらず、
+作業フォルダの `poker.yaml.summary` なども上書きしません。保留中の変更は含まれないので、
+必要なら先に `poker_applyChanges` で確定してください。
+
+**サーバを再起動してもジョブは残ります。** 状態は `job.json` に保存しています。
+実行中に再起動した場合、その計算は失われているため `failed`（`INTERRUPTED_BY_RESTART`）
+になります。待機中だったジョブは再び並び、実行されます。
 
 ## 🐛 バージョン1.9.9の修正
 
@@ -688,6 +737,11 @@ POKER_MCP_HOME/
 
 ## 📝 更新履歴
 
+### v1.10.0 (2026-10)
+- ✨ 計算の非同期実行（`poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult`、`poker_getDoseMap` の `job_id`）。`POKER_MCP_ASYNC=1` のときだけ有効
+- ✅ `npm run test:jobs` を追加（同期との全行一致、入力のスナップショット、再起動後の復元）
+- 🔧 `npm run check:manifest` が非同期ジョブ有効時のツール定義も照合
+
 ### v1.9.9 (2026-10)
 - 🐛 `tools/gen_input.py` と `tools/scatter.py` を npm パッケージに同梱（`poker_generateInput` が npm 版で動かなかった）
 - 🐛 ツールの失敗が `isError: true` として伝わるよう修正（応答の二重包みを解消、`success: false` に `isError` を付与）
@@ -783,6 +837,6 @@ obtained separately and licensed separately. poker-mcp は `poker_cui` を外部
 
 ---
 
-**🎯 Poker MCP Server v1.9.9**  
+**🎯 Poker MCP Server v1.10.0**  
 **プロトコル**: MCP 1.0.0 完全準拠  
 **作者**: Yoshihiro Hirao | **ライセンス**: MIT

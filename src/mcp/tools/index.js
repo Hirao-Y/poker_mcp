@@ -14,8 +14,10 @@ import { resetTools } from './resetTools.js';
 import { daughterNuclideTools } from './daughterNuclideTools.js';
 import { guiTools } from './guiTools.js';
 import { schemaTools } from './schemaTools.js';
+import { jobTools, withJobIdParam } from './jobTools.js';
+import { isAsyncEnabled } from '../../utils/asyncConfig.js';
 
-export const allTools = [
+const baseTools = [
   ...bodyTools,
   ...zoneTools,
   ...transformTools,
@@ -33,7 +35,15 @@ export const allTools = [
   ...schemaTools
 ];
 
+// 非同期ジョブ（POKER_MCP_ASYNC=1）が有効なときだけ、ジョブ系の 3 ツールを加え、
+// poker_getDoseMap に job_id 引数を足す。無効なときは baseTools をそのまま使い、
+// ツール一覧は非同期ジョブを持たない版と 1 文字も変わらない。
+export const allTools = isAsyncEnabled()
+  ? [...baseTools.map((t) => (t.name === 'poker_getDoseMap' ? withJobIdParam(t) : t)), ...jobTools]
+  : baseTools;
+
 export {
+  jobTools,
   bodyTools,
   zoneTools,
   transformTools,

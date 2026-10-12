@@ -1,4 +1,4 @@
-# Poker MCP Server - 放射線遮蔽計算支援ツール v1.9.9
+﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.10.0
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装）
 
@@ -329,6 +329,9 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 ## 🔄 更新履歴
 
 詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
+
+### v1.10.0
+- 計算の非同期実行（submitCalculation / getJobStatus / getJobResult、getDoseMap の job_id）。POKER_MCP_ASYNC=1 のときだけ有効
 
 ### v1.9.9
 - npm パッケージに gen_input.py と scatter.py を同梱（generateInput が npm 版で動かなかった）

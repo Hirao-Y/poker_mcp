@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.9.8",
+  "version": "1.10.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "author": "Yoshihiro Hirao <tora@pointkernel.com>",
   "license": "MIT",
@@ -2639,6 +2639,107 @@
       }
     }
   ],
+  "optional_tools_note": "optional_tools と optional_params は POKER_MCP_ASYNC=1 のときだけ有効になる。scripts/check-manifest-sync.mjs --async で照合する。",
+  "optional_tools": [
+    {
+      "name": "poker_submitCalculation",
+      "description": "時間のかかる遮蔽計算を非同期で投入し、すぐにジョブ ID を返します。数十秒で終わる計算は poker_executeCalculation を使ってください。投入した時点の YAML（と .paths）をジョブ専用のフォルダにコピーして計算するため、投入後に YAML を編集しても実行中の計算には影響しません。保留中の変更は含まれないので、必要なら先に poker_applyChanges で確定してください。進み具合は poker_getJobStatus、結果は poker_getJobResult で取得します。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "yaml_file": {
+            "type": "string",
+            "description": "計算に使う YAML ファイル名（例: poker.yaml）。ファイル名のみなら POKER_MCP_HOME/tasks/ 配下を参照。絶対パスも可。",
+            "pattern": "^([a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)|([a-zA-Z]:[\\\\/]|\\/)[^\\\\]+\\.(yaml|yml))$"
+          },
+          "path_input": {
+            "type": "string",
+            "description": "CAD から抽出した経路ファイル（.paths）。poker_executeCalculation の path_input と同じ。"
+          },
+          "summary_options": {
+            "type": "object",
+            "description": "サマリー出力オプション（poker_executeCalculation と同じ）",
+            "properties": {
+              "show_parameters": {
+                "type": "boolean",
+                "description": "入力パラメータをサマリーに表示（-p）",
+                "default": false
+              },
+              "show_source_data": {
+                "type": "boolean",
+                "description": "各線源による計算データ及び線量を表示（-s）",
+                "default": true
+              },
+              "show_total_dose": {
+                "type": "boolean",
+                "description": "各検出器に対する全線源からの総和線量を表示（-t）",
+                "default": true
+              }
+            },
+            "additionalProperties": false
+          },
+          "output_files": {
+            "type": "object",
+            "description": "出力ファイル名（ジョブ専用フォルダに置かれる）。省略時は <YAML名>.summary / <YAML名>.dose。",
+            "properties": {
+              "summary_file": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$"
+              },
+              "dose_file": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9_\\-\\.]+\\.(yaml|yml)$"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "yaml_file"
+        ],
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_getJobStatus",
+      "description": "非同期ジョブの状態を返します（queued: 待機中 / running: 実行中 / succeeded: 完了 / failed: 失敗）。job_id を省略すると最近のジョブの一覧を返します。終わっていなければ、数秒〜数十秒おいて再度確認してください。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "poker_submitCalculation が返したジョブ ID"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    {
+      "name": "poker_getJobResult",
+      "description": "終わったジョブの結果を返します。内容は poker_executeCalculation の応答と同じ形式です（検出器ごとの result_total、dose_columns、calculation_warnings など）。まだ終わっていなければ ready: false を返します。グリッド検出器の線量マップは poker_getDoseMap に job_id を指定して取得します。",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "job_id": {
+            "type": "string",
+            "description": "poker_submitCalculation が返したジョブ ID"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "additionalProperties": false
+      }
+    }
+  ],
+  "optional_params": {
+    "poker_getDoseMap": {
+      "job_id": {
+        "type": "string",
+        "description": "非同期ジョブ ID。指定するとそのジョブの .dose を読みます（yaml_file は無視）。"
+      }
+    }
+  },
   "definitions": {
     "supported_material": {
       "type": "string",

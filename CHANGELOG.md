@@ -1,5 +1,53 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.10.0] - 2026-10-13
+
+### 計算の非同期実行を追加（既定では無効）
+
+長い計算を 1 回のツール呼び出しで待つと、MCP クライアント側の待ち時間の上限や、
+リモート公開時の中継の上限（Cloudflare Tunnel は約 100 秒）で切られる。
+投入・状態確認・結果取得に分け、1 回の呼び出しが数秒で終わるようにした。
+
+| ツール | 内容 |
+|---|---|
+| `poker_submitCalculation` | 計算を投入し、すぐにジョブ ID を返す。引数は executeCalculation と同じ |
+| `poker_getJobStatus` | queued / running / succeeded / failed。job_id 省略で最近の一覧 |
+| `poker_getJobResult` | executeCalculation と同じ形式の結果。未完了なら ready: false |
+| `poker_getDoseMap` の `job_id` | ジョブの .dose から線量マップを取る |
+
+`POKER_MCP_ASYNC=1` のときだけ登録する。設定しなければツール一覧は 36 個のままで、
+`poker_getDoseMap` にも `job_id` は付かない（v1.9.9 と同一）。ローカルで Claude Desktop
+から使う分には何も変わらない。リモート公開したサーバで有効にする想定。
+
+#### 設計
+
+- **計算の中身を二通りに持たない。** ジョブも同期と同じ `CalculationService.executeCalculation`
+  を呼ぶ。`test:jobs` で、同期と非同期の `.summary`（1808 行）・`.dose`（215 行）・
+  線量マップ（3×3）が全行一致することを確認している。
+- **投入した時点の入力で計算する。** YAML と `.paths` を `POKER_MCP_HOME/jobs/<ID>/` に
+  コピーし、SHA-256 を記録する。出力もそこに書く。非同期では計算中も AI が YAML の編集を
+  続けられるため、作業中のファイルを直接読むと、どの入力の結果か分からなくなる。
+  作業フォルダの `poker.yaml.summary` 等を上書きしないのも同じ理由。
+- **事前検証は投入時に行う。** 同期の executeCalculation と同じ
+  `performPreCalculationValidation` を投入時に実行し、立体干渉以外の重大エラーがあれば
+  受け付けない。投入後に検証すると、AI が結果を取りに来るまで失敗に気づけない。
+- **同時実行数を制限する。** POKER_CUI は OpenMP で全スレッドを使うため、既定は 1 件。
+  `POKER_MCP_ASYNC_CONCURRENCY` で増やせる。POKER_CUI 自体は二重起動でき、
+  同時に 2 件走らせても結果が変わらないことは確認済み。
+- **状態をファイルに残す。** `job.json` を一時ファイル経由で書き換える。再起動時、
+  running のものは計算プロセスが失われているので failed（`INTERRUPTED_BY_RESTART`）、
+  queued のものは再び並べる（入力はコピー済みなのでそのまま実行できる）。
+- **終わったジョブは 7 日で削除。** `POKER_MCP_JOB_RETENTION_DAYS` で変えられる。
+- 失敗したジョブは `getJobResult` が `isError: true` を返す。`getJobStatus` は問い合わせ
+  自体は成功なので `isError` を付けない。
+
+#### その他
+
+- `scripts/check-manifest-sync.mjs` に `--async` を追加。`npm run check:manifest` は
+  既定と非同期有効の両方を照合する。マニフェストに `optional_tools` / `optional_params`
+  を追加。
+- `npm run test:jobs` を追加。他のテストと違い、失敗があれば終了コード 1 で終わる。
+
 ## [1.9.9] - 2026-10-13
 
 npm パッケージから入れた環境でだけ現れる不具合と、ツールの失敗の伝え方を直した。

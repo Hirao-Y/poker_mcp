@@ -8,6 +8,8 @@ import { createAllHandlers } from './handlers/index.js';
 import { safeExecute } from './middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
 import { YAML_FILE, PENDING_FILE } from '../utils/paths.js';
+import { isAsyncEnabled, getAsyncConfig } from '../utils/asyncConfig.js';
+import { JobManager } from '../services/JobManager.js';
 import { readFileSync } from 'fs';
 
 // initialize の serverInfo で返す版。クライアント（Claude Desktop 等）が
@@ -39,6 +41,7 @@ export class PokerMcpServer {
     
     this.taskManager = new TaskManager(yamlFile, pendingFile);
     this.handlers = null;
+    this.jobManager = null;
   }
 
   async initialize() {
@@ -46,8 +49,14 @@ export class PokerMcpServer {
       // TaskManager初期化
       await this.taskManager.initialize();
       
+      // 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ）
+      if (isAsyncEnabled()) {
+        this.jobManager = new JobManager(getAsyncConfig());
+        await this.jobManager.init();
+      }
+
       // ハンドラー作成
-      this.handlers = createAllHandlers(this.taskManager);
+      this.handlers = createAllHandlers(this.taskManager, { jobManager: this.jobManager });
       
       // ツール一覧ハンドラー
       this.server.setRequestHandler(ListToolsRequestSchema, async () => {
