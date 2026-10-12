@@ -484,9 +484,26 @@ npx poker-mcp
 POKERのインストールディレクトリを指定します。以下の2つの用途で参照されます。
 
 - **ICRP-07.NDX の参照先**: `{POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照（v1.4.0以降、コピーなし）
-- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）
+- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）。
+  POKER.exe が見つからなければ `poker_openGui` は登録されません（v1.10.0）
 
 **デフォルト値**: `C:/Poker`（未設定時は `C:/Poker` を使用）
+
+#### `POKER_MCP_ASYNC` ほか（オプション、v1.10.0）
+計算の非同期実行（`poker_submitCalculation` など）を有効にします。既定では無効で、設定しなければ
+ツール一覧も動作も変わりません。詳しくは「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」。
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1` で非同期ジョブを有効にする |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間 [分] |
+
+#### `POKER_MCP_GUI`（オプション、v1.10.0）
+`0` を設定すると `poker_openGui` を登録しません。リモート公開するサーバで使います
+（GUI がサーバの画面に開き、利用者からは見えないため）。Windows 以外の環境や、
+POKER.exe が見つからない環境では、設定しなくても登録されません。計算には影響しません。
 
 ```bash
 # Windows（コマンドプロンプト）
@@ -509,6 +526,7 @@ POKER_MCP_HOME/          # デフォルト: ~/.poker-mcp/
   ├── backups/           # 自動バックアップ（最大10世代）
   ├── data/              # ICRP-07.NDX 核種データベース
   ├── logs/              # error.log, combined.log
+  ├── jobs/              # 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ。既定 7 日で自動削除）
   └── config.json        # ユーザー設定（任意）
 ```
 
@@ -544,6 +562,13 @@ POKER_MCP_HOME/          # デフォルト: ~/.poker-mcp/
    > **⚠️ 注意:** `cwd`（作業ディレクトリ）の指定は不要です。`POKER_MCP_HOME`
    > 環境変数で管理するため、`cwd` を設定すると v1.2.5 以前の問題が再発します。
 
+   > **版の固定:** `npx` は一度取得した版を使い続けることがあります。確実に特定の版を
+   > 使うには `"args": ["poker-mcp@1.9.9"]` のように版を書きます。v1.9.8 以前の npm 版では
+   > `poker_generateInput` が動きません（v1.9.9 で修正）。
+
+   リモート公開するサーバ向けの設定（非同期ジョブを有効にし、GUI を外す）は
+   「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」を参照してください。
+
 3. **Claude Desktopを再起動** してMCPサーバーを有効化
 
 ### 4. 動作確認
@@ -563,7 +588,9 @@ Claude Desktopで以下のようにテストできます：
 ## 🏆 主要機能
 
 ### ✅ **MCP完全対応**
-- **36メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能
+- **36メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能（非同期ジョブ有効時は 39）
+- **失敗の通知**: ツールが処理の結果として失敗（`success: false`）を返すと、MCP の `isError: true` が付く（v1.9.9）
+- **計算の非同期実行**: 長い計算を投入して後から結果を取得（`POKER_MCP_ASYNC=1`、v1.10.0）
 - **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
 - **STDIO通信**: MCPクライアントとの標準通信方式
 - **自動バックアップ・ロールバック**: 企業品質のデータ保護
@@ -597,6 +624,10 @@ Claude Desktopで以下のようにテストできます：
 | **📐 CAD** | 2個 | CAD から入力と経路を生成 | generateInput・generatePaths |
 | **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・getDoseMap |
 | **📜 Schema** | 1個 | ファイル書式の取得 | getSchema |
+| **⏳ Job**（`POKER_MCP_ASYNC=1` のときだけ） | 3個 | 計算の非同期実行 | submitCalculation・getJobStatus・getJobResult |
+
+- `poker_openGui` は、Windows で POKER.exe が見つかり、`POKER_MCP_GUI=0` でないときだけ登録されます。
+- 非同期ジョブを有効にすると、`poker_getDoseMap` にジョブを指定する `job_id` 引数が付きます。
 
 ### 📋 **全36メソッド一覧**
 ```
@@ -615,6 +646,9 @@ CAD系 (2):           poker_generateInput, poker_generatePaths
 System系 (6):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
                      poker_confirmDaughterNuclides, poker_openGui, poker_getDoseMap
 Schema系 (1):        poker_getSchema
+
+（POKER_MCP_ASYNC=1 のとき追加）
+Job系 (3):           poker_submitCalculation, poker_getJobStatus, poker_getJobResult
 ```
 
 ## 📁 プロジェクト構造
@@ -649,6 +683,8 @@ POKER_MCP_HOME/
 ├── 📁 logs/                         # 📝 ログファイル
 │   ├── error.log
 │   └── combined.log
+├── 📁 jobs/                         # ⏳ 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ）
+│   └── <ジョブID>/                  # job.json・入力のコピー・.summary・.dose・stdout/stderr
 └── config.json                      # ユーザー設定（任意）
 ```
 
@@ -742,6 +778,22 @@ POKER_MCP_HOME/
 - **メモリ**: 512MB以上推奨（大規模検出器使用時は1GB以上）
 - **POKER 本体**: v2.1.5 以降（`POKER_INSTALL_PATH` で場所を指定）
 - **FreeCAD**: 1.0 以降（CAD連携を使う場合。`FREECAD_PATH`、未設定なら自動探索）
+- **POKER の GUI（POKER.exe）**: `poker_openGui` を使う場合のみ。Windows 専用
+
+## 🧪 開発者向けの確認
+
+リポジトリで次を実行します。`check:manifest` 以外は POKER 本体が必要です（`POKER_INSTALL_PATH` 既定 `C:/Poker`）。
+
+| コマンド | 内容 |
+|---|---|
+| `npm run check:manifest` | ツール定義とマニフェストの整合。既定・非同期有効・非同期有効かつ GUI 無効の 3 通り |
+| `npm run test:jobs` | 非同期ジョブ。同期との全行一致、投入後の編集が混ざらないこと、待ち行列、再起動後の復元 |
+| `npm run test:gui` | `poker_openGui` の登録条件（`POKER_MCP_GUI=0` で外れ、計算は従来どおり動く） |
+| `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
+| `npm run test:pending` | 保留中の変更の表示 |
+| `npm run test:cad-validate` など | CAD 連携（FreeCAD が必要） |
+
+`test:jobs` と `test:gui` は、失敗があれば終了コード 1 で終わります。
 
 ## 🎯 実際の使用ワークフロー
 

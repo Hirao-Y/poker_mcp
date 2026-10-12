@@ -124,6 +124,7 @@ freecad-mcp の `execute_code` で Part API により構築（`Part.makeCylinder
   - 「入力パラメータ」= 入力の確認、「intermediate」= 計算に使ったデータ（減衰係数・ビルドアップ等）、「result」= 各線源→各検出器、「**result_total**」= 各検出器の全線源総和線量。
 - 評価量: E(AP)実効線量[µSv/h]、DskinM(AP)[µGy/h]、H\*(10)[µSv/h]。規制の線量当量率比較には H\*(10) を用いる。
 - `executeCalculation` の応答には、`.summary`(YAML) から抽出した**構造化 `result_total`**（検出器ごとの座標＋E(AP)/DskinM(AP)/H\*(10) の線量内訳）、`dose_columns`、警告フッタ `calculation_warnings`、注記 `calculation_notes`（80mfp 保守側クランプ等）が含まれ、距離プロファイルや限度比較をプログラム的に扱える。
+- 線源分割を細かくして計算が長くなる場合（v1.10.0）: サーバを `POKER_MCP_ASYNC=1` で起動していれば、`poker_submitCalculation`（引数は executeCalculation と同じ）→ `poker_getJobStatus` → `poker_getJobResult` に分けて実行できる（結果の形式は executeCalculation と同じ）。投入時点の YAML で計算するので、先に `poker_applyChanges` を済ませておく。出力はジョブ専用フォルダ（`POKER_MCP_HOME/jobs/<ジョブID>/`）に書かれ、`poker.yaml.summary` は上書きされない。既定は従来どおり `executeCalculation`。
 
 ### 4.1 グリッド検出器の線量マップ（poker_getDoseMap）
 
@@ -132,6 +133,7 @@ freecad-mcp の `execute_code` で Part API により構築（`Part.makeCylinder
 - `poker_getDoseMap`（`detector_name` 必須、`yaml_file` 既定 poker.yaml、`dose_type`∈{E(AP),DskinM(AP),H\*(10)} 既定 E(AP)、`ray`∈{g1,n,g12,TOTAL} 既定 TOTAL）。
 - 戻り値: `points[]`（各点に i/j/k・座標・線量）＋入れ子 `grid`（1D→[i], 2D→[j][i], 3D→[k][j][i]）＋ `min/max/max_at`, `dims`, `unit`。
 - `.dose` は poker_cui 完了直後に揃うが、完了検知〜ディスク反映に数秒のばらつきがあるため、`getDoseMap` には準備待ちリトライ（最大約10秒、未準備時のみ）がある。実運用（`executeCalculation` とは別コール）では通常は即取得できる。
+- 非同期ジョブで計算した場合は `job_id` を渡すと、そのジョブの `.dose` から取得する（`yaml_file` は無視。ジョブが完了していなければエラー）。
 - 本デモの蓋上面 5×5 マップ（H\*(10)）: 中心（線源直上）最大 ~1.26 µSv/h、線源空洞（r<75cm）内で高く、キャスク外縁で急落する分布が得られる。
 
 ## 5. 結果評価

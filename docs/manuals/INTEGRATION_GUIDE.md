@@ -1,8 +1,8 @@
 # 🔗 システム統合ガイド - Poker MCP
 
 **対象読者**: システム統合エンジニア・上級ユーザー・研究者  
-.9.6 MCP Edition  
-**最終更新**: 2025年1月24日  
+**バージョン**: 1.10.0 MCP Edition  
+**最終更新**: 2026年10月  
 **統合方式**: Claude Desktop + MCP + 外部システム
 
 ---
@@ -17,13 +17,13 @@
 - **データ可視化**: 結果の効果的な可視化・解析
 
 ### 📊 **実装ベース実用性**
-現在のPoker MCP Server v1.8.3の実装機能をフル活用した、即座に利用可能な統合手法を提供。
+現在のPoker MCP Server v1.10.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
 
 ---
 
 ## 📋 36メソッド構成詳細
 
-### **メソッド内訳(合計36メソッド)**
+### **メソッド内訳(既定で合計36メソッド)**
 - **Body操作**: 3メソッド(propose, update, delete)
 - **Zone操作**: 3メソッド(propose, update, delete)
 - **Transform操作**: 3メソッド(propose, update, delete)
@@ -31,12 +31,18 @@
 - **Source操作**: 3メソッド(propose, update, delete)
 - **Detector操作**: 3メソッド(propose, update, delete)
 - **Unit操作**: 5メソッド(propose, get, update, validateIntegrity, analyzeConversion)
-- **Common操作**: 1メソッド(applyChanges)
-- **Calculation操作**: 1メソッド(executeCalculation)
-- **Reset操作**: 1メソッド（resetYaml）
-- **DaughterNuclide操作**: 1メソッド（confirmDaughterNuclides。生成自体は propose/updateSource 時に自動）
-- **GUI操作**: 1メソッド（openGui）
-- **DoseMap操作**: 1メソッド（getDoseMap）
+- **ThinnedIndices操作**: 3メソッド
+- **CAD連携**: 2メソッド
+- **System操作**: 6メソッド（applyChanges / executeCalculation / resetYaml / confirmDaughterNuclides / openGui / getDoseMap。子孫核種の生成自体は propose/updateSource 時に自動）
+- **Schema**: 1メソッド
+
+### **条件によって変わるメソッド（v1.10.0）**
+
+| 条件 | ツール数 | 変化 |
+|---|---|---|
+| 既定（Windows で POKER.exe あり） | 36 | — |
+| `POKER_MCP_ASYNC=1` | 39 | Job系 3（submitCalculation / getJobStatus / getJobResult）が加わり、getDoseMap に `job_id` 引数が付く |
+| GUI が使えない環境 | 35 / 38 | `poker_openGui` が外れる（下記 1.3 参照） |
 
 ### **10種類立体タイプ完全対応**
 - SPH（球体）
@@ -66,10 +72,46 @@
       "env": {
         "NODE_ENV": "production",
         "LOG_LEVEL": "info",
+        "POKER_MCP_HOME": "C:\\Users\\yoshi\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Program Files/POKER"
       }
     }
   }
+}
+```
+
+#### **非同期ジョブを有効にする設定（v1.10.0）**
+
+長い計算を扱う場合は `POKER_MCP_ASYNC` を追加します（既定は無効）。
+
+```json
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "node",
+      "args": ["C:\\Users\\yoshi\\Desktop\\poker_mcp\\src\\mcp_server_stdio_v4.js"],
+      "env": {
+        "POKER_MCP_HOME": "C:\\Users\\yoshi\\poker_mcp_workspace",
+        "POKER_INSTALL_PATH": "C:/Poker",
+        "POKER_MCP_ASYNC": "1"
+      }
+    }
+  }
+}
+```
+
+#### **リモート公開するサーバで使う想定の設定（v1.10.0）**
+
+現時点で本サーバは stdio でのみ通信し、HTTP の入口はまだありません。
+将来リモート公開したサーバで使うことを想定する場合は、非同期ジョブを有効にし、
+GUI ツールを外します（GUI はサーバの画面に開き、利用者からは見えないため）。
+
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1",
+  "POKER_MCP_GUI": "0"
 }
 ```
 
@@ -97,7 +139,8 @@
 #### **コアファイル構成**
 - **エントリポイント**: `src/mcp_server_stdio_v4.js`
 - **サーバークラス**: `src/mcp/server.js` (PokerMcpServer)
-- **ツール定義**: `src/mcp/tools/` (11ファイル)
+- **ツール定義**: `src/mcp/tools/` (16ファイル＋index.js)
+- **非同期ジョブ管理**: `src/services/JobManager.js`（`POKER_MCP_ASYNC=1` のときだけ使用）
 - **ハンドラ**: `src/mcp/handlers/`
 - **タスクマネージャー**: `src/services/TaskManager.js`
 
@@ -106,6 +149,7 @@
 - **保留変更**: `tasks/pending_changes.json`
 - **バックアップ**: `tasks/backups/`
 - **核種データベース**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` (直接参照・v1.4.0)
+- **非同期ジョブ**: `${POKER_MCP_HOME}/jobs/<ジョブID>/`（job.json、入力 YAML と .paths のコピー、.summary / .dose、stdout.txt、stderr.txt。終わったジョブは既定 7 日で自動削除）
 
 ### 1.3 環境変数設定
 
@@ -121,6 +165,27 @@ set POKER_INSTALL_PATH=C:/Poker
 # Linux/macOS設定例  
 export POKER_INSTALL_PATH="/usr/local/share/poker"
 ```
+
+#### **非同期ジョブ・GUI 関連の環境変数（v1.10.0）**
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1`（`true` / `yes` / `on` も可）で非同期ジョブを有効にする |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数（POKER_CUI は OpenMP で全スレッドを使うため既定 1） |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間（分） |
+| `POKER_MCP_GUI` | （判定） | `0` / `false` / `no` / `off` で `poker_openGui` を外す |
+
+`poker_openGui` は次のどれかに当たるとツール一覧から外れ、名前で直接呼んでも実行されません。
+
+- `POKER_MCP_GUI` が `0` / `false` / `no` / `off`
+- Windows 以外で動いている（POKER.exe は Windows 専用）
+- `POKER_INSTALL_PATH`（既定 `C:/Poker`）に `POKER.exe` が無い
+
+判定は起動時に 1 回だけで、結果は起動ログに `poker_openGui: 有効（理由）` /
+`無効（理由）` として残ります。後から POKER を入れた場合はサーバを再起動してください。
+上の Linux 設定例のように Windows 以外で動かす場合、`poker_openGui` は登録されません。
+GUI を外しても、計算（POKER_CUI.exe）を使うツールには影響しません。
 
 #### **統合環境での環境変数管理**
 ```python
@@ -285,6 +350,53 @@ poker_executeCalculation を使用して計算し、
 3. 遮蔽効果の評価」
 ```
 
+### 2.3 非同期ジョブによる計算（v1.10.0、`POKER_MCP_ASYNC=1` のとき）
+
+1 回のツール呼び出しで長い計算を待つと、MCP クライアントの待ち時間の上限や、
+リモート公開時の中継（Cloudflare Tunnel は約 100 秒）で切られることがあります。
+非同期ジョブでは「投入 → 状態確認 → 結果取得」に分け、各呼び出しが数秒で終わります。
+
+**使い分け**: 数十秒で終わる計算は、従来どおり `poker_executeCalculation`（同期）を
+使います。数分以上かかりそうな計算（線源分割数 × 検出器評価点数が大きい場合）に
+非同期ジョブを使います。計算の中身は同じ CalculationService で、結果も同じです。
+
+#### **AI が従う手順**
+
+1. **`poker_submitCalculation`** で投入する。引数は `poker_executeCalculation` と同じ
+   （`yaml_file` 必須、`path_input`、`summary_options`、`output_files`）。すぐに `job_id` が返る
+   - 投入した時点の YAML と `.paths` をジョブフォルダにコピーし、SHA-256 を記録する
+   - **保留中の変更は含まれない**。モデルを編集した直後なら、先に `poker_applyChanges` を実行する
+   - 事前検証は投入時に行い、立体干渉以外の重大エラーがあれば受け付けない（`isError: true`）
+2. **`poker_getJobStatus(job_id)`** で状態を確認する
+   - `status`: `queued` / `running` / `succeeded` / `failed`。`queue_position`、`running_seconds` なども返る
+   - `job_id` を省略すると最近 20 件の一覧と、実行中・待機中の数、同時実行数が返る
+   - ジョブが失敗していても、問い合わせ自体は成功（`isError` は付かない）
+3. **`poker_getJobResult(job_id)`** で結果を取得する
+   - 完了していれば `poker_executeCalculation` と同じ形式（`result_total`、`dose_columns`、
+     `calculation_warnings`、`calculation_notes`、`outputs.files`、`details.stdout/stderr`）に、
+     `ready: true`、ジョブ情報、`calculation.snapshot_file` / `yaml_sha256` が加わる
+   - 未完了なら `ready: false`（`isError` なし）。少し待って再度呼ぶ
+   - ジョブが失敗していれば `isError: true`
+4. 線量マップは **`poker_getDoseMap(job_id=...)`** でジョブの `.dose` から作る（`yaml_file` は無視される）。
+   完了していなければエラーになる
+
+```
+Claude Desktop 指示:
+「poker.yaml の計算を poker_submitCalculation で投入し、
+ poker_getJobStatus で完了を確認してから poker_getJobResult で結果を取得してください。
+ 終わったら poker_getDoseMap(job_id=...) で線量マップを表示してください。」
+```
+
+#### **注意点**
+
+- 出力はジョブ専用フォルダ（`POKER_MCP_HOME/jobs/<ジョブID>/`）に書かれ、
+  `tasks/` の `poker.yaml.summary` 等は上書きされない。出力名は既定で
+  `<YAML名>.summary` / `<YAML名>.dose`
+- 同時実行は既定 1 件。2 件目以降は待ち行列に並ぶ
+- 実行中にサーバが再起動するとそのジョブは `failed`（`INTERRUPTED_BY_RESTART`）になり、
+  投入し直す必要がある。待機中だったジョブは再び並んで実行される
+- 終わったジョブは既定 7 日で自動削除される
+
 ---
 
 ## 🐍 第3章: Python自動化システム（36メソッド対応）
@@ -295,7 +407,7 @@ poker_executeCalculation を使用して計算し、
 #!/usr/bin/env python3
 """
 Poker MCP 自動化システム
-バージョン: 1.9.7
+バージョン: 1.10.0
 """
 
 import json
@@ -624,6 +736,22 @@ class SummaryFileAnalyzer:
 
 ### 4.2 エラーハンドリング
 
+#### **ツールの成否の判定（v1.9.9 以降）**
+
+v1.9.9 以降、ツールが処理の結果として返した失敗（`success: false`）は、MCP の `isError: true` として
+クライアントに伝わります。クライアント側では、本文を解析する前にまず `isError` で成否を判断できます。
+引数の形式や必須項目の誤りなどで処理に入る前に例外になった場合は、`isError` の結果ではなく、従来どおり JSON-RPC のエラー（`-32xxx`）として返ります。
+たとえば `poker_submitCalculation` に存在しない YAML を指定した場合は、JSON-RPC エラーになります。
+
+- ハンドラが `{ success: false, ... }` を返した場合（立体・ゾーン・線源などの
+  検証エラーを含む）も `isError: true` が付きます。本文（JSON）は従来どおりです
+- v1.9.8 までは、CAD 系・ThinnedIndices 系・`resetYaml` の応答が二重に包まれ、
+  失敗しても成功扱いになっていました。古い版を相手にする場合は本文の `success` も確認してください
+- v1.9.8 までは `poker_executeCalculation` の計算エラー処理自体が落ち、本来のエラーが
+  `Cannot read properties of undefined (reading '_isRecoverableError')` に隠れることがありました
+- 非同期ジョブでは、`poker_getJobStatus` は失敗したジョブでも `isError` を付けず、
+  `poker_getJobResult` は未完了なら `ready: false`（`isError` なし）、失敗なら `isError: true` です
+
 #### **統合エラー処理**
 ```python
 class IntegrationErrorHandler:
@@ -753,6 +881,9 @@ class BatchProcessor:
 |------|------|--------|
 | MCP接続エラー | サーバー未起動 | Claude Desktop設定確認、node.js確認 |
 | メソッドが見つからない | メソッド名誤り | 36メソッドリスト確認 |
+| `poker_openGui` が無い | GUI が使えない環境と判定された | 起動ログの `poker_openGui: 無効（理由）` を確認 |
+| `poker_submitCalculation` 等が無い | 非同期ジョブが無効 | `POKER_MCP_ASYNC=1` を設定して再起動 |
+| 長い計算が途中で切れる | クライアント・中継の待ち時間の上限 | 非同期ジョブ（2.3 節）を使う |
 | YAMLエラー | フォーマット不正 | インデント・構文確認 |
 | 計算実行失敗 | poker_cui未インストール | パス設定・実行権限確認 |
 | メモリ不足 | 大規模モデル | 分割計算・メモリ増設 |
@@ -889,7 +1020,7 @@ class OptimizationEngine:
 3. 簡単なモデルから開始
 4. 段階的に複雑な統合へ
 
-**この統合ガイドにより、Poker MCP Server v1.8.3の36メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
+**この統合ガイドにより、Poker MCP Server v1.10.0の36メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
 
 ---
 

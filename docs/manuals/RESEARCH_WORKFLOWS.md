@@ -1,9 +1,9 @@
 # 🧬 研究ワークフロー - Poker MCP
 
 **対象読者**: 放射線遮蔽研究者・設計エンジニア・安全評価者  
-.9.6 MCP Edition  
-**最終更新**: 2025年1月24日  
-**使用方法**: Claude Desktop + MCP通信（36メソッド対応）
+**バージョン**: 1.10.0 MCP Edition  
+**最終更新**: 2026年10月  
+**使用方法**: Claude Desktop + MCP通信（既定 36メソッド対応。非同期ジョブ有効時 39）
 
 ---
 
@@ -846,6 +846,17 @@ Claude Desktop 指示:
 
 効率的な大規模計算を実現してください。」
 ```
+
+> **長い計算の非同期実行（v1.10.0）**: 既定では従来どおり `poker_executeCalculation` を使います。
+> 1 ケースに長くかかり、1 回の呼び出しで待つとクライアント側で切られる場合は、サーバを
+> `POKER_MCP_ASYNC=1` で起動しておくと、`poker_submitCalculation`（投入、すぐ job_id が返る）→
+> `poker_getJobStatus`（進み具合）→ `poker_getJobResult`（executeCalculation と同じ形式の結果）
+> に分けて実行できます。線量マップは `poker_getDoseMap` に `job_id` を渡して取得します。
+> - 投入した時点の YAML / `.paths` のコピーで計算します。保留中の変更は先に `poker_applyChanges` で確定し、
+>   投入後に入力を直した場合は投入し直してください。
+> - 同時実行は既定 1 件です。複数ケースを続けて投入すると待ち行列に並び、順に実行されます。
+> - 結果はジョブ専用フォルダ（`POKER_MCP_HOME/jobs/<ジョブID>/`）に出力され、作業フォルダの
+>   `poker.yaml.summary` などは上書きされません。
 
 ### 5.2 エラー時の対処
 

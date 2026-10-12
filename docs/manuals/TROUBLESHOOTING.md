@@ -1,9 +1,9 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-.9.6 MCP Edition  
-**最終更新**: 2026年5月16日  
-**使用方法**: Claude Desktop + MCP通信 (36メソッド対応)
+**バージョン**: 1.10.0 MCP Edition  
+**最終更新**: 2026年10月  
+**使用方法**: Claude Desktop + MCP通信 (既定 36メソッド。非同期ジョブ有効時 39、poker_openGui が外れる環境ではそれぞれ 1 減)
 
 ---
 
@@ -41,7 +41,7 @@
 | -32079 | 線源が存在しない | poker_proposeSourceを使用 |
 | -32031 | CMB参照立体が未定義 | 参照する立体を先に定義 |
 | -32600 | 不正なリクエスト | パラメータ形式確認 |
-| -32601 | メソッドが見つからない | メソッド名確認（36メソッドリスト参照） |
+| -32601 | メソッドが見つからない | メソッド名確認（36メソッドリスト参照。ジョブ系 3 メソッドは POKER_MCP_ASYNC=1 のときだけ、poker_openGui は GUI が使える環境でだけ登録 → 第2.8章・第2.9章） |
 
 ### 🗂️ データファイル関連エラー
 
@@ -99,7 +99,7 @@ poker_updateBody で既存立体のパラメータを更新してください。
 **Step 1: バージョンを確認する**
 ```bash
 npm view poker-mcp version
-# 1.4.0 と表示されれば最新版
+# 公開中の最新版が表示される（2026年10月時点では 1.9.9）
 ```
 1.2.5 以前の場合は Step 2 へ。
 
@@ -394,6 +394,11 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 実装してください。」
 ```
 
+> **v1.10.0**: 計算そのものは速くならなくても、1 回の呼び出しで長く待つことによる
+> タイムアウトは避けられます。サーバが `POKER_MCP_ASYNC=1` で起動していれば、
+> `poker_submitCalculation` → `poker_getJobStatus` → `poker_getJobResult` に分けて
+> 実行できます（各呼び出しは数秒で終わる）。詳しくは第2.8章。
+
 ---
 
 ## 🗂️ 第2.5章: 環境変数・データファイル関連問題
@@ -625,6 +630,153 @@ material 'Concrete' in the paths file is not defined in the input YAML
 ください。`poker_cui ... --path-input ... -p` の入力エコーで、`zone:` に反映された
 材質と密度が見えます。
 
+---
+
+## 🩹 第2.7章: v1.9.9 で修正された不具合
+
+v1.9.8 以前を使っていて次の症状が出る場合は、v1.9.9 以降に更新してください
+（`npm cache clean --force` の後に Claude Desktop を再起動）。
+
+### 🔴 **問題F1: generateInput が `No module named 'gen_input'` で失敗する**
+
+```
+ModuleNotFoundError: No module named 'gen_input'
+```
+
+**対象**: npm から入れた poker-mcp v1.9.8 以前（`npx poker-mcp` で起動している場合）。
+リポジトリを clone して動かしている場合は起きません。
+
+**原因**: `poker_generateInput` が使う `tools/gen_input.py`（と `tools/scatter.py`）が
+npm パッケージに含まれていませんでした。
+
+**対処**: v1.9.9 以降に更新します。v1.9.9 から両ファイルを同梱しています。
+
+### 🔴 **問題F2: ツールが成功と報告したのに実際は失敗していた／失敗後も AI が先へ進む**
+
+**症状**: CAD 系（`poker_generateInput` / `poker_generatePaths`）、ThinnedIndices 系、
+`poker_resetYaml` などで、応答の本文には失敗が書かれているのに、AI が成功として扱い、
+次の手順へ進んでしまう。
+
+**原因**: v1.9.8 以前は、これらのツールの応答が二重に包まれていたため、MCP の
+`isError` が本文の中に埋もれ、失敗が成功として伝わっていました。また、ハンドラが
+`{ success: false, ... }` を返した場合（立体・ゾーン・線源などの検証エラー）にも
+`isError` が付いていませんでした。
+
+**対処**: v1.9.9 以降に更新します。ツールが返した失敗（`success: false`）は MCP の `isError: true` として
+伝わります（本文の JSON は従来どおり。引数の誤りなどで処理前に例外になった場合は JSON-RPC エラー）。古い版を使い続ける場合は、各応答の `success` を確認し、
+`false` なら先へ進まないよう AI に指示してください。
+
+### 🟠 **問題F3: `Cannot read properties of undefined (reading '_isRecoverableError')`**
+
+**症状**: `poker_executeCalculation` が上記の内部エラーで終わり、計算が失敗した理由が分からない。
+
+**原因**: v1.9.8 以前では、計算エラーを処理する途中で内部の補助関数を呼び出せずに落ち、
+本来のエラー（YAML 不正、出力先へのアクセス拒否など）が隠れていました。
+
+**対処**: v1.9.9 以降に更新すると、本来のエラー内容（`error`、`error_type`、
+`details.suggestions`）が返ります。そのエラーに沿って対処してください。
+
+---
+
+## ⏳ 第2.8章: 非同期ジョブ（v1.10.0、`POKER_MCP_ASYNC=1`）関連
+
+非同期ジョブは既定では無効です。サーバの `env` に `POKER_MCP_ASYNC=1` を設定したときだけ
+`poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult` が登録され、
+`poker_getDoseMap` に `job_id` 引数が付きます。これらのツールが見当たらない場合は、
+まず設定と Claude Desktop の再起動を確認してください。
+
+ジョブは `POKER_MCP_HOME/jobs/<ジョブID>/` に置かれます（`job.json`、入力 YAML と
+`.paths` のコピー、`.summary` / `.dose`、`stdout.txt` / `stderr.txt`）。
+
+### 🟡 **問題J1: ジョブが queued のまま進まない**
+
+**原因**: 同時実行数は既定で 1 件です（POKER_CUI は OpenMP で全スレッドを使うため）。
+ほかのジョブが実行中なら、後から投入したジョブは待ち行列に並びます。
+
+**確認**: `poker_getJobStatus`（`job_id` を省略）で、`running` / `queued` / `concurrency`
+と最近 20 件の一覧を確認します。ジョブごとの `queue_position` で待ち順が分かります。
+
+**対処**: 前のジョブが終わるのを待ちます。同時に回したい場合は
+`POKER_MCP_ASYNC_CONCURRENCY` を増やせます（結果は変わりませんが、同じ CPU のスレッドを分け合います）。
+1 件が長すぎる場合の打ち切り時間は `POKER_MCP_JOB_TIMEOUT_MIN`（既定 1440 分）です。
+
+### 🟡 **問題J2: ジョブが failed で `INTERRUPTED_BY_RESTART`**
+
+**原因**: 計算の実行中に MCP サーバが再起動しました（Claude Desktop の再起動を含む）。
+実行中だったジョブは完了していないため failed になります。待ち行列にいた（queued の）
+ジョブは、再起動後に再び並んで実行されます。
+
+**対処**: `poker_submitCalculation` で投入し直してください。
+
+### 🟢 **問題J3: `job_id` を付けた getDoseMap が「完了していません」と返す**
+
+```
+ジョブ 20261013-053012-a1b2c3 は完了していません（status: running）
+```
+
+**原因**: `poker_getDoseMap` の `job_id` は、succeeded になったジョブの `.dose` だけを読みます。
+
+**対処**: `poker_getJobStatus` で `status: succeeded` になってから呼び直します。
+failed の場合は `poker_getJobResult` でエラー内容を確認します。なお `job_id` を付けた
+ときは `yaml_file` は無視されます。
+
+### 🟠 **問題J4: submitCalculation が受け付けられない（`PRE_VALIDATION_FAILED`）**
+
+**原因**: 投入時に、同期の `poker_executeCalculation` と同じ事前検証を行います。
+立体干渉以外の重大エラーがあると、ジョブは作られずに失敗（`isError`）として返ります。
+
+**対処**: 応答の `critical_errors` を見て入力を直し、投入し直します。
+
+### 🟢 **問題J5: 投入後に入力を直したのに、結果に反映されない**
+
+**仕様です。** 投入した時点の YAML と `.paths` をジョブフォルダにコピーし、その
+コピーで計算します（`poker_getJobResult` の `calculation.snapshot_file` / `yaml_sha256`
+で、どの入力で計算したかを確認できます）。投入後の編集は反映されません。
+
+**対処**: 編集を反映させたい場合は、もう一度 `poker_submitCalculation` で投入します。
+
+### 🟢 **問題J6: 保留中の変更（pending）が計算に含まれない**
+
+**原因**: 投入時にコピーされるのはディスク上の YAML です。`propose*` / `update*` で
+保留中の変更は含まれません。
+
+**対処**: 先に `poker_applyChanges` で確定してから投入します。
+
+> 作業フォルダの `poker.yaml.summary` などは非同期ジョブでは上書きされません。
+> 結果は `poker_getJobResult`（またはジョブフォルダ）から取得してください。
+> 終わったジョブは既定 7 日（`POKER_MCP_JOB_RETENTION_DAYS`）で自動削除されます。
+
+---
+
+## 🖥️ 第2.9章: poker_openGui がツール一覧にない（v1.10.0）
+
+v1.10.0 から、`poker_openGui` は GUI が使える環境でだけ登録されます。次のどれかに
+当たる場合はツール一覧から外れ、名前で直接呼んでも実行されません。
+
+| 条件 | 説明 |
+|---|---|
+| `POKER_MCP_GUI` が `0` / `false` / `no` / `off` | リモート公開するサーバ向けの設定。GUI はサーバの画面に開き、利用者から見えないため |
+| Windows 以外で動いている | POKER.exe は Windows 専用 |
+| `POKER_INSTALL_PATH`（既定 `C:/Poker`）に `POKER.exe` が無い | パスの誤り、または POKER 未インストール |
+
+**確認**: 判定は起動時に 1 回だけ行われ、起動ログ（`combined.log`、第3章）に
+理由付きで出ます。
+
+```
+poker_openGui: 無効（POKER.exe が見つからないため無効: C:\Poker\POKER.exe）
+poker_openGui: 有効（POKER.exe: C:\Poker\POKER.exe）
+```
+
+**対処**:
+- 手元の Windows で使う場合は、`POKER_MCP_GUI` を設定していないこと、
+  `POKER_INSTALL_PATH` が POKER.exe のあるフォルダを指していることを確認します。
+- サーバ起動後に POKER を入れた場合は、Claude Desktop（MCP サーバ）を再起動します。
+
+GUI が外れても、計算・検証・スキーマ・CAD 連携・非同期ジョブ（POKER_CUI.exe と
+FreeCAD を使う）には影響しません。形状や経路を確かめたいときは、`poker_getDoseMap`
+の数値や、検出器の `show_path_trace` を有効にして出力される `poker_cui` の経路トレースで
+代わりに確認できます。
+
 
 ## 🔧 第3章: ログファイル活用
 
@@ -837,6 +989,9 @@ if __name__ == "__main__":
 [MCPメソッド使用不可？]  
     Yes → 問題A1（MCPサーバー接続）
     No  ↓
+[特定のツールだけ無い？（ジョブ系・poker_openGui）]
+    Yes → 第2.8章・第2.9章
+    No  ↓
 [計算実行エラー？]
     Yes → 問題A2（poker_cui）
     No  ↓
@@ -872,6 +1027,6 @@ if __name__ == "__main__":
 
 ---
 
-**最終更新**: 2026年5月  
-.9.6 MCP Edition  
+**最終更新**: 2026年10月  
+**バージョン**: 1.10.0 MCP Edition  
 **サポート**: GitHub Issues

@@ -10,7 +10,7 @@
 ## 🏆 マニュアル体系
 
 ### ✨ **完全実装機能**
-- **36メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・ThinnedIndices系3・CAD系2（generateInput/generatePaths）・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）・Schema系1（getSchema）
+- **36メソッド完全実装**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・ThinnedIndices系3・CAD系2（generateInput/generatePaths）・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）・Schema系1（getSchema）。`POKER_MCP_ASYNC=1` で Job系3（submitCalculation/getJobStatus/getJobResult）が加わる。openGui は Windows で POKER.exe があり `POKER_MCP_GUI=0` でないときだけ登録
 - **10種類立体完全対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED全立体タイプ詳細解説
 - **14種類材料完全対応**: コンクリート、鉛、鉄、VOID等標準遮蔽材料
 - **5メソッドUnit操作**: proposeUnit, getUnit, updateUnit, validateUnitIntegrity, analyzeUnitConversion
@@ -18,6 +18,9 @@
 - **サマリー5セクション**: 入力パラメータ・intermediate・result・result_total完全解析
 
 ### 🔬 **新機能ハイライト**
+- **計算の非同期実行（v1.10.0、既定では無効）**: `POKER_MCP_ASYNC=1` で、長い計算を投入して後から結果を取得。同期の計算と全行一致（API_COMPLETE・ADMIN_GUIDE・INTEGRATION_GUIDE）
+- **GUI の登録条件（v1.10.0）**: リモート公開したサーバでは `POKER_MCP_GUI=0` で poker_openGui を外す
+- **失敗の通知（v1.9.9）**: ツールが返した失敗（`success: false`）が MCP の `isError: true` で伝わる。npm 版の generateInput も動作（TROUBLESHOOTING 第2.7章）
 - **環境変数サポート**: POKER_INSTALL_PATH対応で核種データベースの柔軟な配置
 - **Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系の完全性検証と変換係数分析機能
 - **子孫核種自動確認**: 放射平衡を考慮した自動核種追加システム
@@ -96,14 +99,15 @@
 
 #### 🔧 [ADMIN_GUIDE.md](ADMIN_GUIDE.md) - 管理者ガイド
 - **🏗️ セットアップ**: Claude Desktop への登録（npx / ローカル両対応）
-- **🌍 環境変数**: POKER_MCP_HOME・POKER_INSTALL_PATH の役割と確認方法
+- **🌍 環境変数**: POKER_MCP_HOME・POKER_INSTALL_PATH の役割と確認方法。非同期ジョブ（POKER_MCP_ASYNC ほか）と POKER_MCP_GUI
+- **🌐 リモート公開するサーバの設定**: 非同期ジョブを有効にし、GUI を外す構成
 - **🔍 動作確認**: 起動ログ・マニフェスト整合検証・子孫核種の疎通確認
 - **💾 バックアップ運用**: 自動10世代管理・手動退避・ログ管理
 - **🛡️ 障害切り分け**: 起動失敗・計算失敗・入力ファイル復旧
 - **🎯 対象**: システム管理者・導入担当者
 
 #### 📋 [API_COMPLETE.md](API_COMPLETE.md) - 全API仕様
-- **🔌 36メソッド詳細仕様**: 全メソッドの詳細仕様・パラメータ・レスポンス
+- **🔌 36メソッド詳細仕様**: 全メソッドの詳細仕様・パラメータ・レスポンス（非同期ジョブの 3 メソッドと isError の扱いを含む）
 - **🔷 10立体タイプ完全仕様**: 各立体の完全パラメータセット・制約・例
 - **⚙️ Unit操作5メソッド・ThinnedIndices操作3メソッドAPI**: 単位系管理の完全API仕様
 - **📊 サマリーファイル仕様**: 5セクションの詳細構造定義
@@ -243,12 +247,18 @@ System系 (6メソッド):
 - poker_executeCalculation: 計算実行・サマリーファイル生成
 - poker_resetYaml: 初期化・クリーンアップ
 - poker_confirmDaughterNuclides: 子孫核種自動確認
-- poker_openGui: POKER GUI 起動（Windows専用）
+- poker_openGui: POKER GUI 起動（Windows専用。POKER.exe が無い環境と POKER_MCP_GUI=0 では登録されない）
 - poker_getDoseMap: グリッド検出器の線量マップ取得
 
 Schema系 (1メソッド): ★v1.9.8新機能★
 - poker_getSchema: ファイル書式を JSON Schema で取得
                    （kind = input / paths / summary / dose）
+
+Job系 (3メソッド): ★v1.10.0新機能★（POKER_MCP_ASYNC=1 のときだけ）
+- poker_submitCalculation: 計算を非同期で投入し、ジョブ ID を返す
+- poker_getJobStatus: ジョブの状態（queued / running / succeeded / failed）
+- poker_getJobResult: 終わったジョブの結果（executeCalculation と同じ形式）
+  ※ poker_getDoseMap に job_id を指定するとジョブの線量マップを取得
 ```
 
 ### 📈 **サマリー5セクション完全解析**
@@ -301,7 +311,7 @@ result_totalセクション:
 
 システム系エラー:
 - -32600: 不正リクエスト → パラメータ形式確認
-- -32601: メソッド不在 → 36メソッド名確認
+- -32601: メソッド不在 → メソッド名確認（Job系は POKER_MCP_ASYNC=1、openGui は GUI が使える環境でだけ登録）
 ```
 
 ---

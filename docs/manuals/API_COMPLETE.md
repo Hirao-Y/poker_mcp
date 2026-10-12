@@ -2,15 +2,20 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-.9.6  
-.9.6 MCP Edition  
-**📅 最終更新**: 2025年1月24日
+**🔧 対応システム**: Poker MCP Server v1.10.0  
+**🔧 バージョン**: 1.10.0 MCP Edition  
+**📅 最終更新**: 2026年10月
 
 ---
 
 ## 📖 本書の位置づけ
 
 この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した36メソッドの詳細仕様を提供します。
+
+> **ツール数は環境によって変わります。** 既定（Windows で POKER.exe あり）は 36。
+> 環境変数 `POKER_MCP_ASYNC=1` で非同期ジョブを有効にすると Job 系 3 メソッドが加わり 39 になります。
+> GUI が使えない環境では `poker_openGui` が外れ、それぞれ 1 減ります（35 / 38）。
+> 条件は下記の「Job操作系」と「poker_openGui」の項を参照してください。
 
 ### 🎯 対象読者
 - **システム統合エンジニア**: 外部システムとの連携
@@ -272,8 +277,20 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | **poker_executeCalculation** | POKER計算実行 | 出力オプション・統計情報・環境変数依存 |
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動。除外は線源ごと |
-| **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存 |
-| **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避 |
+| **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存。GUI が使える環境でだけ登録（v1.10.0） |
+| **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避。非同期有効時は `job_id` 指定可 |
+
+### ⏳ **Job操作系(3メソッド) - 計算の非同期実行（POKER_MCP_ASYNC=1 のときだけ）**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_submitCalculation** | 計算を投入し、すぐにジョブ ID を返す | 投入時点の YAML（と .paths）をジョブ専用フォルダにコピーして計算 |
+| **poker_getJobStatus** | ジョブの状態を取得 | queued / running / succeeded / failed。job_id 省略で最近 20 件の一覧 |
+| **poker_getJobResult** | 終わったジョブの結果を取得 | `poker_executeCalculation` と同じ形式。未完了なら `ready: false` |
+
+この 3 メソッドは環境変数 `POKER_MCP_ASYNC=1`（`1` / `true` / `yes` / `on`）のときだけ
+登録され、同時に `poker_getDoseMap` に `job_id` 引数が付きます。設定しなければツール一覧も
+動作も v1.9.9 と同じです。詳細は後述の「Job系メソッド」を参照してください。
 
 ### 📜 **Schema操作系 (1メソッド) - ファイル書式の機械可読な取得**
 
@@ -432,7 +449,7 @@ poker_getThinnedIndices()
     ↕ (MCP Protocol v1.0)
 🔧 JSON-RPC 2.0 over STDIO
     ↕
-⚙️ Poker MCP Server v1.8.3
+⚙️ Poker MCP Server v1.10.0
     ↕ (Internal API)
 📊 Task Manager (YAML処理)
     ↕
@@ -450,6 +467,21 @@ poker_getThinnedIndices()
 | **POKER_INSTALL_PATH** | 核種データベース参照 | なし | 推奨 |
 | **NODE_ENV** | 動作モード | "production" | オプション |
 | **LOG_LEVEL** | ログレベル | "info" | オプション |
+| **POKER_MCP_ASYNC** | 非同期ジョブ（Job系 3 メソッド）の有効化。`1` / `true` / `yes` / `on` で有効 | 無効 | オプション |
+| **POKER_MCP_ASYNC_CONCURRENCY** | 非同期ジョブの同時実行数 | 1 | オプション |
+| **POKER_MCP_JOB_RETENTION_DAYS** | 終わったジョブを残す日数 | 7 | オプション |
+| **POKER_MCP_JOB_TIMEOUT_MIN** | ジョブ 1 件の打ち切り時間（分） | 1440 | オプション |
+| **POKER_MCP_GUI** | `0` / `false` / `no` / `off` で `poker_openGui` を登録しない | 有効 | オプション |
+
+**リモート公開するサーバの設定例**（非同期ジョブを有効にし、GUI を外す）:
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1",
+  "POKER_MCP_GUI": "0"
+}
+```
 
 **POKER_INSTALL_PATH設定例**:
 ```bash
@@ -529,9 +561,30 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 }
 ```
 
+#### **ツールの失敗と `isError`（v1.9.9）**
+
+ツールが処理の結果として失敗（`success: false`）を返した場合は、MCP の `tools/call` 結果に
+`isError: true` が付きます。本文（`content` の JSON テキスト）は従来どおりで、`success: false` と
+`error` などが入ります。引数の形式や必須項目の誤りなどで処理に入る前に例外になった場合は、`isError` の結果ではなく、従来どおり JSON-RPC のエラー（`-32xxx`）として返ります。
+
+```json
+{
+  "content": [{ "type": "text", "text": "{\n  \"success\": false,\n  \"error\": \"...\"\n}" }],
+  "isError": true
+}
+```
+
+- ハンドラが `{ success: false, ... }` を返した場合も `isError: true` になります
+  （立体・ゾーン・線源などの検証エラーを含む）。
+- v1.9.8 までは CAD 系・ThinnedIndices 系・`poker_resetYaml` の応答が二重に包まれ、
+  失敗しても成功として伝わっていました。v1.9.9 で修正しています。
+- 実装は `src/mcp/middleware/errorHandler.js` の `toCallToolResult()` です。
+
 ---
 
 ## 📊 36メソッド完全仕様
+
+> 非同期ジョブ有効時（`POKER_MCP_ASYNC=1`）は Job 系 3 メソッドを加えた 39 メソッドになります。
 
 ### 📐 **Body系メソッド（立体管理）**
 
@@ -745,6 +798,11 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 結果は線量分布データと統計サマリーで出力してください。」
 ```
 
+**長い計算**: 1 回の呼び出しで計算の終了まで待つため、MCP クライアントの待ち時間の上限や
+中継の上限で切られることがあります。時間のかかる計算は、非同期ジョブ
+（`poker_submitCalculation`、`POKER_MCP_ASYNC=1` のとき）を使ってください。
+数十秒で終わる計算は従来どおりこのメソッドを使います。
+
 ---
 
 #### **poker_openGui** - POKER GUI 起動（v1.2.8新設）
@@ -770,12 +828,239 @@ export POKER_INSTALL_PATH="/usr/local/share/poker"
 **🔴 制限・依存性**:
 - **Windows 専用**（POKER.exe は Windows アプリケーション）
 - **POKER_INSTALL_PATH**: POKER インストールディレクトリ（デフォルト: `C:/Poker`）
-- `POKER.exe` が存在しない場合はエラーを返し、起動しない
+- 起動時に `POKER.exe` が無ければツール自体が登録されない（下記）。起動後に `POKER.exe` が無くなった場合は `POKER_EXE_NOT_FOUND` のエラーを返し、起動しない
+
+**📋 登録される条件（v1.10.0）**:
+
+次のどれかに当たると、`poker_openGui` はツール一覧から外れ、ハンドラも登録されません
+（ツール名で直接呼ばれても実行しません）。
+
+| 条件 | 理由 |
+|---|---|
+| `POKER_MCP_GUI` が `0` / `false` / `no` / `off` | リモート公開するサーバで設定する。サーバに POKER が入っていても、GUI はサーバの画面に開き、利用者からは見えないため |
+| Windows 以外で動いている | POKER.exe は Windows 専用 |
+| `POKER_INSTALL_PATH`（既定 `C:/Poker`）に `POKER.exe` が無い | 起動できないため |
+
+- 判定はサーバの起動時に 1 回だけ行います。起動ログに
+  `poker_openGui: 有効（理由）` または `poker_openGui: 無効（理由）` が出ます。
+  後から POKER を入れた場合はサーバを再起動してください。
+- 手元の Windows に POKER を入れた普段の環境では、従来どおり登録されます。
+- POKER.exe を使うのは `poker_openGui` だけです。計算・検証・スキーマ・CAD 連携・非同期ジョブは
+  `POKER_CUI.exe`（と FreeCAD）を使うため、GUI が外れても影響しません。
+- 実装: `src/utils/guiConfig.js`
 
 **Claude Desktop使用例**:
 ```
 「現在の入力設定をGUIで確認してください」
 「作成したモデルをPOKERで開いて確認してください」
+```
+
+---
+
+### ⏳ **Job系メソッド（計算の非同期実行、v1.10.0）**
+
+> **この 3 メソッドは `POKER_MCP_ASYNC=1`（`1` / `true` / `yes` / `on`）のときだけ登録されます。**
+> 設定しなければツール一覧にも現れず、動作は v1.9.9 と同じです。
+
+1 回のツール呼び出しで長い計算を待つと、MCP クライアントの待ち時間の上限や、リモート公開した
+サーバでの中継（Cloudflare Tunnel は約 100 秒）で切られます。投入・状態確認・結果取得に分けると、
+各呼び出しは数秒で終わります。
+
+```
+poker_submitCalculation → job_id
+poker_getJobStatus(job_id)   … succeeded / failed になるまで間をおいて確認
+poker_getJobResult(job_id)   → executeCalculation と同じ形式の結果
+poker_getDoseMap(job_id, detector_name)  … グリッド検出器の線量マップ（必要なら）
+```
+
+**共通の仕組み**:
+- 計算そのものは同期の `poker_executeCalculation` と同じ処理（`CalculationService.executeCalculation`）です。
+  `.summary`・`.dose`・線量マップが同期実行と全行一致すること（生成日時・計算時間・`input_file` 行を除く）を
+  `npm run test:jobs` で確認しています。
+- ジョブは `POKER_MCP_HOME/jobs/<ジョブID>/` に置かれます。ジョブ ID は `20261013-053012-a1b2c3`
+  のような形（UTC の投入日時＋乱数）で、並べると投入順になります。
+- ジョブフォルダの中身: `job.json`（状態）、入力 YAML のコピー、`.paths` のコピー（指定時）、
+  出力 2 つ（`.summary` / `.dose`）、`stdout.txt`、`stderr.txt`。
+- 出力はジョブフォルダに書きます。作業フォルダ（`tasks/`）の `poker.yaml.summary` などは上書きしません。
+- 同時実行は既定 1 件です（POKER_CUI は OpenMP で全スレッドを使うため）。超えた分は待ち行列に並びます。
+  `POKER_MCP_ASYNC_CONCURRENCY` で変更できます。
+- 状態は `job.json` に保存されます。サーバを再起動すると、`running` だったジョブは
+  `INTERRUPTED_BY_RESTART` で `failed` になり、`queued` だったジョブは再び並んで実行されます。
+- 終わったジョブは既定 7 日で自動削除されます（`POKER_MCP_JOB_RETENTION_DAYS`）。
+- 1 件の打ち切り時間は既定 1440 分です（`POKER_MCP_JOB_TIMEOUT_MIN`）。
+
+#### **poker_submitCalculation** - 計算の投入
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "poker_submitCalculation",
+  "params": {
+    "yaml_file": "poker.yaml",
+    "path_input": "poker.paths",
+    "summary_options": {
+      "show_source_data": true,
+      "show_total_dose": true,
+      "show_parameters": false
+    }
+  },
+  "id": 16
+}
+```
+
+**パラメータ**（`poker_executeCalculation` と同じ）:
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `yaml_file` | string | **必須**。ファイル名のみなら `POKER_MCP_HOME/tasks/` 配下。絶対パスも可 |
+| `path_input` | string | 任意。CAD から抽出した経路ファイル（`.paths`） |
+| `summary_options` | object | 任意。`show_parameters`（既定 false）/ `show_source_data`（既定 true）/ `show_total_dose`（既定 true） |
+| `output_files` | object | 任意。`summary_file` / `dose_file`（ファイル名のみ、`.yaml` / `.yml`）。ジョブフォルダに置かれる。省略時は `<YAML名>.summary` / `<YAML名>.dose` |
+
+**動作**:
+1. 計算前の事前検証（同期の `poker_executeCalculation` と同じ `performPreCalculationValidation`）を投入時に行う。
+   立体干渉以外の重大エラーがあれば受け付けない
+2. 投入した時点の YAML（と `.paths`）をジョブフォルダにコピーし、SHA-256 を記録する
+3. 待ち行列に並べ、すぐに `job_id` を返す
+
+- **保留中の変更は含まれません。** 必要なら先に `poker_applyChanges` で確定してください。
+- 投入後に YAML を編集しても、そのジョブの計算には影響しません。
+
+**応答**:
+```json
+{
+  "success": true,
+  "message": "計算を受け付けました。poker_getJobStatus で進み具合を確認し、…",
+  "job_id": "20261013-053012-a1b2c3",
+  "status": "queued",
+  "queue_position": 1,
+  "input": {
+    "yaml_file": "C:\\poker_mcp_workspace\\tasks\\poker.yaml",
+    "yaml_sha256": "…",
+    "path_input": "C:\\poker_mcp_workspace\\tasks\\poker.paths"
+  }
+}
+```
+
+`queue_position` は待機中のときの順番（1 始まり）で、空きがありすぐに実行が始まった場合は `null` です。
+
+**失敗の返り方**:
+- 事前検証で重大エラーがあった場合（`error: "CRITICAL_VALIDATION_ERRORS"`、
+  `error_type: "PRE_VALIDATION_FAILED"`、`critical_errors` に一覧）は受け付けず、`isError: true` になります。
+- `yaml_file` の指定漏れ・拡張子の誤り、YAML や `.paths` が見つからない、`output_files` の名前が不正、
+  といった引数の誤りは、JSON-RPC のエラー（入力検証エラー）として返ります。
+  `poker_executeCalculation` はこれらを `success: false`（`isError: true`）で返すので、返り方が異なります。
+
+#### **poker_getJobStatus** - ジョブの状態
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "poker_getJobStatus",
+  "params": { "job_id": "20261013-053012-a1b2c3" },
+  "id": 17
+}
+```
+
+**パラメータ**:
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `job_id` | string | 任意。省略すると最近 20 件の一覧を返す |
+
+**status の値**:
+
+| status | 意味 |
+|---|---|
+| `queued` | 待機中（`queue_position` に順番） |
+| `running` | 実行中 |
+| `succeeded` | 完了 |
+| `failed` | 失敗（`error` に内容） |
+
+**応答（job_id 指定時）**:
+```json
+{
+  "success": true,
+  "job_id": "20261013-053012-a1b2c3",
+  "status": "running",
+  "submitted_at": "2026-10-13T05:30:12.345Z",
+  "started_at": "2026-10-13T05:30:12.400Z",
+  "finished_at": null,
+  "queue_position": null,
+  "running_seconds": 42,
+  "input_file": "C:\\poker_mcp_workspace\\tasks\\poker.yaml",
+  "path_input": null
+}
+```
+
+**応答（job_id 省略時）**: `running`（実行中の件数）、`queued`（待機中の件数）、
+`concurrency`（同時実行数）、`jobs`（最近 20 件、各要素は上と同じ項目）。
+
+**isError**: ジョブが失敗していても、問い合わせ自体は成功なので `isError` は付きません
+（`status: "failed"` と `error` で示します）。存在しない `job_id` を指定した場合は
+`error_type: "JOB_NOT_FOUND"` で `isError: true` になります。
+
+#### **poker_getJobResult** - ジョブの結果
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "poker_getJobResult",
+  "params": { "job_id": "20261013-053012-a1b2c3" },
+  "id": 18
+}
+```
+
+**パラメータ**:
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `job_id` | string | **必須**。`poker_submitCalculation` が返したジョブ ID |
+
+**応答（完了時）**: `poker_executeCalculation` と同じ形式に、ジョブの情報が加わります。
+
+| 項目 | 内容 |
+|---|---|
+| `ready` | `true` |
+| `job_id`, `status`, `submitted_at`, `started_at`, `finished_at`, `running_seconds` など | ジョブ情報（`poker_getJobStatus` と同じ） |
+| `result_total` | 検出器ごとの座標と線量内訳（`.summary` から構造化） |
+| `dose_columns` | 線量列の一覧 |
+| `calculation_warnings` / `calculation_notes` | 警告フッタ・注記（ある場合） |
+| `calculation.input_file` | 投入元の YAML |
+| `calculation.snapshot_file` | ジョブフォルダにコピーした YAML（実際に計算した入力） |
+| `calculation.yaml_sha256` | コピーした YAML の SHA-256 |
+| `calculation.execution_time_ms` / `options` | 実行時間・サマリーオプション |
+| `outputs.files` | `summary_file` / `dose_file` の有無・サイズ・パス |
+| `details.stdout` / `details.stderr` | POKER_CUI の出力 |
+
+**応答（未完了時）**: `ready: false` とジョブ情報を返します。`isError` は付きません。
+間をおいて `poker_getJobStatus` で確認してください。
+
+**isError**: ジョブが失敗していれば `isError: true` になり、`ready: true`、`error`（内容）、
+`error_type`（例: `INTERRUPTED_BY_RESTART`、無ければ `JOB_FAILED`）、`details`（終了コード・stdout・stderr）
+を返します。存在しない `job_id` は `JOB_NOT_FOUND` で `isError: true` です。
+
+#### **poker_getDoseMap の `job_id` 引数**
+
+非同期有効時は `poker_getDoseMap` に `job_id` 引数が付きます。指定すると、そのジョブの
+ジョブフォルダにある `.dose` から線量マップを返します（`yaml_file` は無視）。
+
+```json
+{
+  "jsonrpc": "2.0",
+  "method": "poker_getDoseMap",
+  "params": {
+    "job_id": "20261013-053012-a1b2c3",
+    "detector_name": "ceiling_area"
+  },
+  "id": 19
+}
+```
+
+ジョブが `succeeded` でなければ `isError: true`（`status` に現在の状態）、存在しなければ
+`JOB_NOT_FOUND` で `isError: true` になります。
+
+**Claude Desktop使用例**:
+```
+「poker.yaml の計算を非同期で投入して、終わったら結果を見せてください」
+「さっき投入したジョブの状態を確認してください」
 ```
 
 ---

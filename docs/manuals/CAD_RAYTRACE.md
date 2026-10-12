@@ -198,6 +198,11 @@ POKER の CSG（Constructive Solid Geometry、構成立体幾何）は円筒や�
 | POKER 本体 | 別途入手 | `POKER_INSTALL_PATH` |
 | FreeCAD | [freecad.org](https://www.freecad.org/)（無償） | `FREECAD_PATH` |
 
+CAD から YAML を生成する `poker_generateInput`（`tools/gen_input.py` / `tools/scatter.py`
+を使う）は、npm から入れた環境では **v1.9.9 以降**で動作します。v1.9.8 以前は
+両ファイルが npm パッケージに含まれておらず、`No module named 'gen_input'` で失敗していました
+（リポジトリから動かす場合は問題ありません）。
+
 numpy はレイトレーサが使いますが、FreeCAD に同梱（1.26.4 を確認）されているので
 追加のインストールは不要です。
 
@@ -234,6 +239,12 @@ poker_executeCalculation({
   path_input: "poker.paths"
 })
 ```
+
+計算が長くなる場合、サーバを `POKER_MCP_ASYNC=1` で起動していれば、同じ引数で
+`poker_submitCalculation` に投入し、`poker_getJobStatus` → `poker_getJobResult` で
+結果を受け取れます（v1.10.0）。投入時点の YAML と `.paths` をコピーして計算するので、
+投入後に `.paths` を再生成した場合は投入し直してください。既定は従来どおり
+`executeCalculation` です。
 
 コマンドラインから実行する場合は次のとおりです。
 

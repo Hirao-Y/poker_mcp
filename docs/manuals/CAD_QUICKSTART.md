@@ -8,7 +8,7 @@ CAD モデルから直接、遮蔽計算をするための最短手順です。�
 
 | | 入手先 | 備考 |
 |---|---|---|
-| poker-mcp | `npm install poker-mcp` | v1.8.3 以降 |
+| poker-mcp | `npm install poker-mcp` | v1.9.9 以降（npm 版の `poker_generateInput` は v1.9.9 から動作。`poker_generatePaths` のみなら v1.8.3 以降） |
 | POKER 本体 | 別途入手 | v2.1.5 以降 |
 | FreeCAD | [freecad.org](https://www.freecad.org/) | 無償。1.0 以降 |
 
@@ -326,11 +326,12 @@ AP214 形式で、材質エンティティを含みません。残るのはソ�
 ## 困ったときは
 
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) の第 2.6 章に、よくある 6 件をまとめて
-あります。
+あります（v1.9.8 以前の既知の不具合は第 2.7 章）。
 
 | 症状 | 対処 |
 |---|---|
 | FreeCAD が見つかりません | `FREECAD_PATH` を設定 |
+| `No module named 'gen_input'` | npm 版 v1.9.8 以前の不具合。v1.9.9 以降に更新 |
 | count / position mismatch | 入力を変えたら `.paths` を再生成 |
 | 評価点が間引かれています | `poker_generatePaths` が自動で合わせます。直接 `poker_cui` を使う場合は `poker_updateThinnedIndices({ fit_for_paths: true })` |
 | CSG 経由と差が出る | まずテッセレーション偏差を疑う |

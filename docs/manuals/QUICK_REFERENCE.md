@@ -1,8 +1,8 @@
 # 🚀 QUICK_REFERENCE.md - 放射線遮蔽計算クイックリファレンス
 
 **対象読者**: 放射線遮蔽研究者・実務者  
-**更新日**: 2025年1月24日  
-.9.6 MCP Edition  
+**更新日**: 2026年10月  
+**バージョン**: 1.10.0 MCP Edition  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -31,6 +31,9 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 第2.6章。
 
 ## 📖 第1章: 36メソッド早見表
+
+> 既定（Windows で POKER.exe あり）は 36。`POKER_MCP_ASYNC=1` で Job 系 3 が加わり 39。
+> GUI が使えない環境では `poker_openGui` が外れて 1 減る（35 / 38）。
 
 ### 🔷 Body操作系(3メソッド) - 10種類立体完全対応
 
@@ -97,10 +100,49 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 |---------|------|----------|
 | **poker_applyChanges** | 変更適用 | 自動バックアップ付き保存 |
 | **poker_executeCalculation** | 計算実行 | poker_cui実行・構造化result_total取得 |
-| **poker_getDoseMap** | 線量マップ取得 | グリッド検出器の全評価点（1D/2D/3D） |
+| **poker_getDoseMap** | 線量マップ取得 | グリッド検出器の全評価点（1D/2D/3D）。非同期有効時は `job_id` 指定可 |
 | **poker_resetYaml** | 初期化 | 3段階リセット・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動 |
-| **poker_openGui** | GUI表示 | POKER.exe起動・Windows専用 |
+| **poker_openGui** | GUI表示 | POKER.exe起動・Windows専用。GUI が使える環境でだけ登録 |
+
+**poker_openGui が一覧に無いとき**（判定は起動時に 1 回。起動ログに `poker_openGui: 有効／無効（理由）`）
+
+| 条件 | 対処 |
+|---|---|
+| `POKER_MCP_GUI=0`（false / no / off） | リモート公開するサーバ向けの設定。手元で使うなら外す |
+| Windows 以外 | POKER.exe は Windows 専用 |
+| `POKER_INSTALL_PATH`（既定 `C:/Poker`）に POKER.exe が無い | パスを確認し、POKER を入れたらサーバを再起動 |
+
+GUI が外れても、計算・検証・スキーマ・CAD 連携・非同期ジョブ（POKER_CUI.exe を使う）には影響しません。
+
+### ⏳ Job操作系（3メソッド）- 計算の非同期実行（`POKER_MCP_ASYNC=1` のときだけ）
+
+| メソッド | 機能 | 主要機能 |
+|---------|------|----------|
+| **poker_submitCalculation** | 計算を投入 | 引数は executeCalculation と同じ。すぐに `job_id` を返す |
+| **poker_getJobStatus** | 状態確認 | queued / running / succeeded / failed。`job_id` 省略で最近 20 件 |
+| **poker_getJobResult** | 結果取得 | executeCalculation と同じ形式。未完了なら `ready: false` |
+
+```
+poker_submitCalculation(yaml_file="poker.yaml")        # → job_id
+poker_getJobStatus(job_id="20261013-053012-a1b2c3")    # 間をおいて確認
+poker_getJobResult(job_id="20261013-053012-a1b2c3")    # 結果
+poker_getDoseMap(job_id="...", detector_name="ceiling_area")  # 線量マップ（yaml_file は無視）
+```
+
+- 数十秒で終わる計算は従来どおり `poker_executeCalculation`。長い計算（クライアントや中継の待ち時間の上限で切られるもの）に使う
+- 投入時点の YAML（と .paths）をコピーして計算。**保留中の変更は含まれない**ので先に `poker_applyChanges`
+- 事前検証は投入時に実施。重大エラー（立体干渉以外）があれば受け付けない
+- 出力は `POKER_MCP_HOME/jobs/<ジョブID>/` に書く（`tasks/` の `.summary` 等は上書きしない）
+- 同時実行は既定 1 件、超えた分は待ち行列。終わったジョブは既定 7 日で自動削除
+- 再起動すると running だったジョブは `INTERRUPTED_BY_RESTART` で failed、queued だったジョブは再実行
+
+| 応答 | isError |
+|---|---|
+| getJobStatus（ジョブが failed でも） | なし |
+| getJobResult 未完了（`ready: false`） | なし |
+| getJobResult 失敗したジョブ | あり |
+| 存在しない `job_id`（`JOB_NOT_FOUND`） | あり |
 
 ### 📜 Schema操作系（1メソッド）- ファイル書式の取得
 
@@ -239,7 +281,29 @@ poker_mcp/
 │   └── ICRP-07.NDX    # ${POKER_INSTALL_PATH}/lib/からコピー
 ├── tasks/             # 作業ファイル（自動作成）
 ├── backups/           # バックアップ（自動作成）
+├── jobs/              # 非同期ジョブ（POKER_MCP_ASYNC=1 のとき自動作成）
+│   └── <ジョブID>/    # job.json・入力コピー・.summary/.dose・stdout.txt/stderr.txt
 └── logs/              # ログファイル（自動作成）
+```
+
+### 非同期ジョブ・GUI の環境変数（v1.10.0）
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1`（true / yes / on）で Job 系 3 メソッドを登録 |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時実行数 |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の打ち切り時間（分） |
+| `POKER_MCP_GUI` | （判定） | `0`（false / no / off）で `poker_openGui` を登録しない。未設定でも Windows 以外や POKER.exe 無しなら登録しない |
+
+リモート公開するサーバの設定例:
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1",
+  "POKER_MCP_GUI": "0"
+}
 ```
 
 ### Claude Desktop設定例
@@ -449,6 +513,9 @@ units:
 8. poker_executeCalculation → 計算実行
 ```
 
+長い計算は 8 の代わりに `poker_submitCalculation` → `poker_getJobStatus` → `poker_getJobResult`
+（`POKER_MCP_ASYNC=1` のとき）。
+
 ### 医療施設CT室例
 ```
 Claude Desktop指示:
@@ -483,7 +550,13 @@ Claude Desktop指示:
 | **-32079** | 線源が存在しない | poker_proposeSourceを使用 |
 | **-32031** | CMB参照立体未定義 | 参照立体を先に作成 |
 | **-32600** | 不正リクエスト | パラメータ形式確認 |
-| **-32601** | メソッド不在 | 36メソッド名確認 |
+| **-32601** | メソッド不在 | 36メソッド名確認（Job 系は `POKER_MCP_ASYNC=1`、openGui は GUI が使える環境でだけ存在） |
+
+### ツールの失敗と isError（v1.9.9）
+- ツールが `success: false` を返した失敗は MCP の `isError: true` で伝わる。本文（JSON の `success: false`, `error` 等）は従来どおり
+- 引数の形式などで処理前に例外になった場合は、従来どおり JSON-RPC エラー（-32xxx）
+- ハンドラが `{ success: false }` を返した場合（立体・ゾーン・線源などの検証エラー）も `isError: true`
+- v1.9.8 までは CAD 系・ThinnedIndices 系・resetYaml の失敗が成功扱いになっていた
 
 ### エラー対処の原則
 - propose ↔ update の使い分け

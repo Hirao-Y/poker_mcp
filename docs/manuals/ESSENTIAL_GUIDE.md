@@ -1,8 +1,8 @@
 # 📘 Poker MCP エッセンシャルガイド
 
 **対象読者**: 放射線遮蔽研究者・技術者  
-.9.6 MCP Edition  
-**最終更新**: 2025年1月24日  
+**バージョン**: 1.10.0 MCP Edition  
+**最終更新**: 2026年10月  
 **推奨学習時間**: 1-2時間(Claude Desktop使用)
 
 ---
@@ -571,6 +571,13 @@ Claude指示例:
 - 核種データベース（ICRP-07.NDX）の利用可能性
 - poker_cui実行可能ファイルのアクセス可能性
 
+> **長い計算（v1.10.0）**: 通常は `poker_executeCalculation` で計算します（既定）。
+> 1 回の呼び出しで長く待つと、MCP クライアントの待ち時間の上限などで切られることがあります。
+> サーバが `POKER_MCP_ASYNC=1` で起動していれば、`poker_submitCalculation` で投入 →
+> `poker_getJobStatus` で確認 → `poker_getJobResult` で結果取得、と分けて実行できます。
+> 投入時点の YAML で計算するので、保留中の変更は先に `poker_applyChanges` で確定してください。
+> 詳しくは [TROUBLESHOOTING.md](TROUBLESHOOTING.md) の第2.8章を参照。
+
 #### **実行パラメータの最適化**
 ```
 「計算精度を向上させるため、以下を調整してください：
@@ -851,7 +858,7 @@ Claude指示例:
 ---
 
 **📚 関連マニュアル**
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・36メソッド完全対応
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・36メソッド完全対応（既定。非同期ジョブ有効時は 39）
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決・環境変数設定・エラー対処
 - **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細・計算品質保証
 - **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー・実践例

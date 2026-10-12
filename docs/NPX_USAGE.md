@@ -1,4 +1,8 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.8.3)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.9.9)
+
+> npm に公開している最新版は **1.9.9** です。非同期ジョブ（`POKER_MCP_ASYNC`）と
+> `POKER_MCP_GUI` は v1.10.0 の機能で、npm にはまだ公開していません。
+> 公開前に試す場合は方法2（ローカルソース）で起動してください。
 
 ## 📦 起動方法
 
@@ -93,12 +97,40 @@ export FREECAD_PATH="/usr/lib/freecad"
 レイトレーサは numpy を使いますが、FreeCAD に同梱されているので追加の
 インストールは不要です。
 
+### 非同期ジョブ: `POKER_MCP_ASYNC` ほか（v1.10.0）
+
+長い計算を「投入 → 状態確認 → 結果取得」に分けて実行する機能です。**既定では無効**で、
+設定しなければツール一覧も動作も v1.9.9 と同じです。
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1`（`true` / `yes` / `on` も可）で有効 |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間（分） |
+
+有効にすると `poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult` が
+加わり（ツール数 36 → 39）、`poker_getDoseMap` に `job_id` 引数が付きます。
+数十秒で終わる計算は従来どおり `poker_executeCalculation` で構いません。
+
+### `POKER_MCP_GUI`（v1.10.0）
+
+`poker_openGui` は、次のどれかに当たるとツール一覧から外れます（ツール数が 1 減ります）。
+
+- `POKER_MCP_GUI` が `0` / `false` / `no` / `off`（リモート公開するサーバで使う想定）
+- Windows 以外で動いている
+- `POKER_INSTALL_PATH` に `POKER.exe` が無い
+
+判定は起動時に 1 回だけです。後から POKER を入れた場合は Claude Desktop を再起動してください。
+計算（`POKER_CUI.exe`）を使うツールには影響しません。
+
 ### データ格納先の構造
 ```
 POKER_MCP_HOME/             # デフォルト: ~/.poker-mcp/
   ├── tasks/                # poker.yaml, pending_changes.json
   ├── backups/              # 自動バックアップ（最大10世代）
   ├── logs/                 # error.log, combined.log
+  ├── jobs/                 # 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ。既定 7 日で自動削除）
   └── config.json           # ユーザー設定（任意）
 
 POKER_INSTALL_PATH/         # デフォルト: C:/Poker
@@ -112,7 +144,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.8.1推奨）**
+## 🎯 **Claude Desktop での設定（v1.9.9推奨）**
 
 ### **推奨設定**
 ```json
@@ -120,7 +152,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.6.0"],
+      "args": ["-y", "poker-mcp@1.9.9"],
       "env": {
         "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -132,7 +164,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 `<username>` はご自身のWindowsユーザー名に置き換えてください。
 
 > **⚠️ 版数の固定を推奨**
-> `poker-mcp@latest` ではなく `poker-mcp@1.6.0` のように固定してください。
+> `poker-mcp@latest` ではなく `poker-mcp@1.9.9` のように固定してください。
 > 遮蔽計算では、いつサーバが入れ替わるか分からない状態は再現性の観点から
 > 望ましくありません。更新は設定を書き換える意図的な操作として行います。
 >
@@ -143,6 +175,13 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 > v1.4.0 以降、核種データベースと材料カタログの参照元になりました。
 > 既定値 `C:/Poker` と実際のインストール先が異なると、子孫核種の自動生成が
 > 動作しません。
+
+> **⚠️ 1.9.8 以前を固定している場合は 1.9.9 へ更新してください**
+> 1.9.8 までの npm パッケージには `tools/gen_input.py` と `tools/scatter.py` が
+> 含まれておらず、npx で起動すると `poker_generateInput` が
+> `No module named 'gen_input'` で失敗していました（リポジトリから動かす場合は
+> 問題ありません）。1.9.9 で同梱し、修正しました。
+> 1.9.9 では、ツールが返した失敗（`success: false`）が MCP の `isError: true` として伝わるようにもなっています。
 
 > **⚠️ `cwd` の指定は不要・非推奨**  
 > v1.2.5 以前のドキュメントでは `"cwd": "C:\\..."` の指定を案内していましたが、
@@ -155,13 +194,30 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.6.0"],
+      "args": ["-y", "poker-mcp@1.9.9"],
       "env": {
         "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
         "POKER_INSTALL_PATH": "/usr/local/share/poker"
       }
     }
   }
+}
+```
+
+Windows 以外では POKER.exe（GUI）が使えないため、v1.10.0 以降は `poker_openGui` が
+ツール一覧に現れません。
+
+### **非同期ジョブを使う設定（v1.10.0 公開後）**
+
+`env` に追加します。リモート公開するサーバで使う想定の場合は、GUI ツールも外します
+（現時点で本サーバは stdio のみで、HTTP の入口はまだありません）。
+
+```json
+"env": {
+  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
+  "POKER_INSTALL_PATH": "C:/Poker",
+  "POKER_MCP_ASYNC": "1",
+  "POKER_MCP_GUI": "0"
 }
 ```
 
@@ -188,9 +244,13 @@ cat ~/.poker-mcp/logs/combined.log
 ```
 {"message":"データマネージャーを初期化しました",...}
 {"message":"TaskManagerを初期化しました",...}
+{"message":"poker_openGui: 有効（POKER.exe: C:\\Poker\\POKER.exe）",...}
 {"message":"PokerMcpServer初期化完了",...}
 {"message":"Poker MCP Server started on stdio",...}
 ```
+
+`poker_openGui:` の行は v1.10.0 以降に出ます。`無効（理由）` となっている場合は、
+その理由（`POKER_MCP_GUI=0`、Windows 以外、POKER.exe が見つからない）を確認してください。
 
 ### Claude Desktopでの動作確認
 ```
@@ -255,6 +315,16 @@ Node.js 18未満の場合は https://nodejs.org/ から最新版をインスト�
 1. Claude Desktop を完全終了して再起動する
 2. `claude_desktop_config.json` の JSON 構文を確認する（カンマ・括弧の過不足）
 3. ログファイルで起動エラーを確認する
+4. `poker_openGui` だけが無い場合は、GUI が使えない環境と判定されています
+   （v1.10.0 以降。起動ログの `poker_openGui: 無効（理由）` を参照）
+5. `poker_submitCalculation` などのジョブ系が無い場合は、`POKER_MCP_ASYNC=1` が
+   設定されていないか、v1.10.0 より前の版です
+
+### **問題5: `poker_generateInput` が `No module named 'gen_input'` で失敗する**
+
+npm パッケージ 1.9.8 以前の不具合です（必要な Python ファイルが同梱されていませんでした）。
+`args` の版数を `poker-mcp@1.9.9` 以降に変更し、Claude Desktop を再起動してください。
+キャッシュが残る場合は `npm cache clean --force` を実行します。
 
 ---
 
@@ -264,7 +334,7 @@ Node.js 18未満の場合は https://nodejs.org/ から最新版をインスト�
 |------|---|
 | メモリ使用 | 40〜200MB |
 | 起動時間 | 1〜3秒（核種DB読み込み含む） |
-| 応答時間 | <50ms（全36メソッド） |
+| 応答時間 | <50ms（全36メソッド。計算実行を除く） |
 | バックアップ世代 | 最大10世代（自動管理） |
 
 ---
@@ -278,6 +348,12 @@ npx --yes poker-mcp
 # キャッシュを強制クリアして最新版を取得
 npm cache clean --force
 npx poker-mcp
+
+# 版数を指定して起動（Claude Desktop の設定では固定を推奨）
+npx -y poker-mcp@1.9.9
+
+# 最新版を明示して起動（動作確認用。常用は非推奨）
+npx -y poker-mcp@latest
 ```
 
 ---
@@ -286,7 +362,8 @@ npx poker-mcp
 
 | 項目 | 内容 |
 |------|------|
-| 推奨起動コマンド | `npx poker-mcp` |
+| 推奨起動コマンド | `npx poker-mcp`（Claude Desktop では `poker-mcp@1.9.9` のように版数を固定） |
+| ツール数 | 36（非同期ジョブ有効で 39、`poker_openGui` が外れる環境ではそれぞれ 1 減） |
 | 設定方法 | `claude_desktop_config.json` に `env.POKER_MCP_HOME` を追加 |
 | データ保存先 | `POKER_MCP_HOME`（未設定時: `~/.poker-mcp/`） |
 | ログ場所 | `POKER_MCP_HOME/logs/combined.log` |
@@ -301,4 +378,4 @@ npx poker-mcp
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.8.3** | 作者: Yoshihiro Hirao | ライセンス: ISC
+**Poker MCP Server v1.9.9（npm 公開版）** | 作者: Yoshihiro Hirao | ライセンス: MIT

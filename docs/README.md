@@ -1,6 +1,6 @@
 ﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.10.0
 
-**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装）
+**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装。非同期ジョブ有効時は 39）
 
 ## 🔬 概要
 
@@ -14,6 +14,23 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
+
+### 🆕 v1.10.0 新機能（リモート公開に向けて）
+- **計算の非同期実行（既定では無効）**: `POKER_MCP_ASYNC=1` のときだけ
+  `poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult` が加わり、
+  `poker_getDoseMap` に `job_id` が付く。長い計算を投入して後から結果を取るので、
+  MCP クライアントや中継の待ち時間の上限に切られない。投入時点の入力をジョブ専用
+  フォルダにコピーして計算し、結果は同期の executeCalculation と全行一致する
+- **poker_openGui の登録条件**: Windows で POKER.exe が見つかり、`POKER_MCP_GUI=0` で
+  ないときだけ登録。リモート公開したサーバでは `POKER_MCP_GUI=0` で外す
+  （GUI がサーバの画面に開き、利用者から見えないため）
+
+### 🆕 v1.9.9 修正
+- **npm 版の generateInput**: `gen_input.py`・`scatter.py` の同梱漏れで
+  `No module named 'gen_input'` になっていた問題を修正
+- **失敗の通知**: ツールが `success: false` を返した失敗が、MCP の `isError: true` で伝わるように修正
+  （以前は一部の応答が二重に包まれ、失敗が成功扱いだった）
+- **計算エラー処理**: `_isRecoverableError` の内部エラーで本来のエラーが隠れていた問題を修正
 
 ### 🆕 v1.9.8 新機能
 - **poker_getSchema**: POKER が扱う4種類のファイル（入力YAML・`.paths`・
@@ -79,7 +96,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 
 ### 🌍 環境変数設定
 
-Poker MCP Server は2つの環境変数を参照します。`POKER_INSTALL_PATH` は v1.4.0 以降、核種データベースと材料カタログの参照元となるため実質必須です。
+Poker MCP Server は主に2つの環境変数を参照します。`POKER_INSTALL_PATH` は v1.4.0 以降、核種データベースと材料カタログの参照元となるため実質必須です。v1.10.0 で、非同期ジョブと GUI の登録を制御する変数が加わりました（後述）。
 
 #### `POKER_MCP_HOME`（推奨）
 作業ファイル（YAML・バックアップ・ログ）の格納先ディレクトリです。
@@ -92,6 +109,7 @@ Poker MCP Server は2つの環境変数を参照します。`POKER_INSTALL_PATH`
     tasks/      # poker.yaml, pending_changes.json
     backups/    # 自動バックアップ（最大10世代）
     logs/       # error.log, combined.log
+    jobs/       # 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ。既定 7 日で自動削除）
     config.json # ユーザー設定（任意）
   ```
 
@@ -101,9 +119,21 @@ POKERのインストールディレクトリです。以下の用途で参照さ
 - **核種データベース**: `{POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照（v1.4.0以降。コピーは行わない）
 - **材料カタログ**: `{POKER_INSTALL_PATH}/LIB/lib_material.dat` を直接参照
 - **POKER_CUI.exe の場所**: 線量計算の実行
-- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）
+- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時。見つからなければ `poker_openGui` は登録されない）
 
 - **デフォルト値**: `C:/Poker`（未設定時は `C:/Poker` を使用）
+
+#### 非同期ジョブと GUI の制御（オプション、v1.10.0）
+
+| 変数 | 既定 | 内容 |
+|---|---|---|
+| `POKER_MCP_ASYNC` | 無効 | `1` で非同期ジョブ（submitCalculation など 3 ツール）を有効にする |
+| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
+| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
+| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間 [分] |
+| `POKER_MCP_GUI` | （判定） | `0` で `poker_openGui` を登録しない（リモート公開するサーバ用）。未設定でも Windows 以外や POKER.exe が無ければ登録しない |
+
+いずれも設定しなければ、ツール一覧と動作は従来どおりです。
 
 **設定例**:
 ```bash
@@ -203,7 +233,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 - **OS**: Windows, macOS, Linux（poker_openGui は Windows 専用）
 
 ### ⚡ パフォーマンス
-- **メソッド応答**: <50ms（36メソッド全対応）
+- **メソッド応答**: <50ms（計算実行を除く。36メソッド全対応）
 - **データ保存**: <200ms
 - **メモリ使用**: 40-200MB（データサイズ依存）
 - **自動修復**: <1秒（YAMLファイル破損時）
@@ -222,7 +252,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 ### 📊 POKER計算コード連携
 - YAML入力ファイル生成（36メソッド対応）
 - poker_cui 実行サポート（poker_executeCalculation）
-- POKER.exe GUI 起動（poker_openGui、Windows専用）
+- POKER.exe GUI 起動（poker_openGui、Windows専用。POKER.exe が無い環境と `POKER_MCP_GUI=0` では登録されない）
 - サマリーファイル（5セクション）取得と解析
 - 子孫核種の自動考慮
 - ファイル書式の取得（poker_getSchema、`poker_cui --schema` を利用）
@@ -254,7 +284,7 @@ total_doses = summary['result_total']
 ### 🔧 システム制限
 - YAMLファイルサイズ: 推奨10MB以下
 - 立体数: 推奨1000個以下
-- 同時実行: 単一MCPセッションのみ
+- 同時実行: 単一MCPセッションのみ（非同期ジョブの計算は既定で同時 1 件、`POKER_MCP_ASYNC_CONCURRENCY` で変更可）
 - エラーコード: 13種類に自動対応
 
 ### 📋 データ形式
