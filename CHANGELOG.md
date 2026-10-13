@@ -72,15 +72,25 @@ Claude Desktop から使う普段の環境では何も変わらない。
 
 #### 確認した試験
 
-- `npm run test:http`: 36 項目すべて合格。設定の判定、`/health`、ツール一覧と計算結果
+- `npm run test:http`: 37 項目すべて合格。設定の判定、`/health`、ツール一覧と計算結果
   （`result_total`）が stdio 版と同一、2 クライアントの同時利用、403（Host・Origin）・405・400・404、
   401（トークンなし・誤り）、トークンなしの外向き設定が終了コード 2 で起動しないこと、
   HTTP 越しの非同期ジョブの結果が同期の計算と同じこと。
 - 既存の `test:jobs` 32 項目・`test:gui` 16 項目・`schema-dose` 27 項目すべて合格。
 - `npm run check:manifest` の 3 モードすべて OK。
-- PC で、トークン付きの HTTP 版に `mcp-remote`（0.14.3）経由で接続し（Claude Desktop と同じく
-  stdio で mcp-remote を起動する MCP クライアントから）、36 ツールが見えることを確認した。
-  Claude Desktop 本体からの接続は未確認。
+- PC の Claude Desktop 本体から、`mcp-remote`（0.14.3）経由でトークン付きの HTTP 版に接続し、
+  非同期ジョブ（投入 → 状態 → 結果）で fillet の計算が最後まで通ることを確認した。
+
+### 修正: 空白を含むパスの YAML が計算できなかった
+
+POKER_CUI を `shell: true` で起動していたため、引数が空白でつながれるだけで引用されず、
+`C:\Users\Taro Yamada\...` のような空白を含むパスが途中で切れて
+`POKER_CUI: unrecognized argument` で失敗していた。既定の `POKER_MCP_HOME`（`~/.poker-mcp`）も
+ユーザー名に空白があれば該当する。また `&` や `|` を含むファイル名がシェル（cmd.exe）に
+解釈されうる。リモート公開ではこれが外から届くので、`shell: false` に改めた。
+`poker_cui` は shell が無くても PATH から見つかる。Node 24 の警告
+`[DEP0190] DeprecationWarning: Passing args to a child process with shell option true` も出なくなる。
+`test:http` に空白を含むパスの計算（結果が通常のパスと同一）を加えた。
 
 ## [1.10.0] - 2026-10-13
 

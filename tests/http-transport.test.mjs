@@ -1,7 +1,8 @@
 // tests/http-transport.test.mjs - HTTP の入口（mcp_server_http.js）の検証
 //
 //   1. 設定の判定 resolveHttpConfig: 外から届く設定でトークンが無ければ起動しない、など
-//   2. トークンなし（127.0.0.1 だけ）: ツール一覧が stdio 版と同じ、計算結果も stdio 版と同じ
+//   2. トークンなし（127.0.0.1 だけ）: ツール一覧が stdio 版と同じ、計算結果も stdio 版と同じ。
+//      空白を含むパスの YAML も計算できる
 //   3. 守り: 知らない Host、ブラウザ（Origin 付き）、GET、壊れた JSON を拒否する
 //   4. トークンあり: 無し・誤りは 401、正しければ通る。許可した外の Host 名も通る
 //   5. 外から届く設定でトークンが無いと、起動せずに終わる（終了コード 2）
@@ -145,6 +146,15 @@ if (srv.port) {
   const bad = await hc.callTool({ name: 'poker_executeCalculation', arguments: { yaml_file: 'no_such.yaml' } })
     .then((r) => ({ isError: !!r.isError })).catch((e) => ({ thrown: e.message }));
   check('誤りも stdio 版と同じ形で返る', bad.isError === true || !!bad.thrown, JSON.stringify(bad).slice(0, 80));
+
+  // 空白を含むパス（v1.11.0 で POKER_CUI の起動から shell を外した。以前は計算できなかった）
+  const spaceDir = path.join(T, 'dir with space');
+  fs.mkdirSync(spaceDir, { recursive: true });
+  const spaceYaml = path.join(spaceDir, 'fillet.yaml').replace(/\\/g, '/');
+  fs.copyFileSync(path.join(T, 'tasks', 'fillet.yaml'), spaceYaml);
+  const rsp = await call(hc, 'poker_executeCalculation', { yaml_file: spaceYaml, summary_options: OPTS });
+  check('空白を含むパスの YAML も計算できる', !rsp.isError && rsp.j.success === true &&
+    JSON.stringify(rsp.j.result_total) === JSON.stringify(rs.j.result_total), rsp.isError ? rsp.j.error?.message || '' : '');
 
   // 同時に 2 つのクライアント
   const hc2 = await httpClient(srv.port);

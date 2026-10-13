@@ -154,7 +154,7 @@ Claude Desktop は `args` 内の空白を正しく渡さない不具合がある
 
 - `--transport http-only` を付けます。本サーバは SSE 方式の接続（`GET /mcp`）には 405 を返します
 - http（非 TLS）の URL に繋ぐときだけ `--allow-http` が要ります（同じ機械や信頼できる LAN での試験用）
-- トークン付きの HTTP 版に mcp-remote 経由で接続し（試験用の MCP クライアントから）、36 ツールが見えることを確認しています。Claude Desktop 本体からの接続はまだ確かめていません
+- Windows の Claude Desktop から、この設定でトークン付きの HTTP 版に接続し、非同期ジョブの計算が最後まで通ることを確認しています
 
 **claude.ai / Claude Desktop の「カスタムコネクタ」**（URL を登録する方式）
 

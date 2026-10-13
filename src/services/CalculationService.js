@@ -22,9 +22,9 @@ export class CalculationService {
    */
   async checkPokerCuiAvailability() {
     return new Promise((resolve) => {
-      const child = spawn(this.pokercuiCommand, ['--version'], { 
+      const child = spawn(this.pokercuiCommand, ['--version'], {
         stdio: 'pipe',
-        shell: true 
+        shell: false
       });
       
       let hasOutput = false;
@@ -356,9 +356,13 @@ export class CalculationService {
       let isTimedOut = false;
       let isCompleted = false;
       
+      // shell は使わない。shell: true だと引数が空白でつながれるだけで引用されず、
+      // 空白を含むパス（C:\Users\Taro Yamada\... など）が途中で切れて計算できない。
+      // また & や | を含むファイル名がシェルに解釈される。poker_cui（POKER_CUI.exe）は
+      // shell が無くても PATH から見つかる。
       const child = spawn(this.pokercuiCommand, args, {
         stdio: 'pipe',
-        shell: true,
+        shell: false,
         env: { ...process.env }
       });
 
