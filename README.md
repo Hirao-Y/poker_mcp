@@ -1,1026 +1,165 @@
-# Poker MCP Server 🚀
+# POKER-MCP
 
-YAML-based input file management tool for radiation-shielding calculation code POKER with full MCP support
+点減衰核法の光子遮蔽計算コード **POKER** を、Claude などの AI アプリから使えるようにする
+MCP（Model Context Protocol）サーバです。
 
-## 📋 クイック情報
+*An MCP server that lets AI applications build, validate and run inputs for POKER, a point-kernel
+photon shielding code, and read back the computed doses.*
 
-- **バージョン**: 1.11.0
-- **ツール数**: 36メソッド（非同期ジョブを有効にすると 39、GUI を外すと 1 減る）
-- **プロトコル**: MCP (Model Context Protocol) 1.0.0 完全準拠
-- **サーバー**: 2 つ（道具の処理は共通）
-  - `src/mcp_server_stdio_v4.js`（bin `poker-mcp`）: STDIO。Claude Desktop のローカル利用
-  - `src/mcp_server_http.js`（bin `poker-mcp-http`）: HTTP。別の機械からの利用（v1.11.0）
-- **データ保存**: `~/.poker-mcp/`（`POKER_MCP_HOME`環境変数で変更可）
-- **核種データ**: `${POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照
-- **実行方式**: STDIO通信（MCPプロトコル標準）、または HTTP（MCP の Streamable HTTP、v1.11.0）
+- AI アプリへの自然言語の指示から、POKER の入力（YAML）を作成・編集・検証し、計算を実行して線量を返します
+- 線量はすべて POKER の出力ファイル（`.summary`・`.dose`）から抽出します。AI が数値を作ることはありません
+- FreeCAD のモデルから入力を生成し、CAD 形状の上で透視線を追跡して計算できます（CAD 連携）
 
-## 🆕 バージョン1.11.0の新機能
-
-### 🌐 HTTP で受ける入口（`poker-mcp-http`）
-
-MCP の Streamable HTTP で受ける入口 `src/mcp_server_http.js` を追加しました。POKER が入った
-Windows でサーバを動かし、別の機械（Windows / Mac / Linux）の Claude Code や、`mcp-remote` を
-介した Claude Desktop から使えます。POKER 本体が要るのはサーバ側だけです。
-
-道具の処理（36 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
-HTTP 版のツール一覧と計算結果が stdio 版と同一であることを `npm run test:http` で確認しています。
-**stdio 版（`poker-mcp`）は従来どおりで、Claude Desktop のローカル利用は何も変わりません。**
-
-v1.11.0 は npm にはまだ公開していません（npm の最新は 1.10.0）。リポジトリから起動します。
-
-```bash
-npm run start:http        # または node src/mcp_server_http.js
-# [poker-mcp-http] listening on http://127.0.0.1:3939/mcp  （トークンなし（この機械の中だけ））
-```
-
-| エンドポイント | 内容 |
+| | |
 |---|---|
-| `POST /mcp` | MCP の要求。トークンを設定したときは `Authorization: Bearer <token>` |
-| `GET /health` | 死活確認（認証なし）。`{"status":"ok","name":"poker-mcp","version":"1.11.0"}` |
+| 最新版 | 1.11.0（npm の最新は 1.10.0） |
+| ツール数 | 36（非同期ジョブを有効にすると 39） |
+| 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
+| 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
 
-セッションを持たない方式（stateless）で、応答は SSE ではなく素の JSON です。`GET /mcp`・`DELETE /mcp`
-は 405（サーバからの通知の受け口はありません）、他のパスは 404 です。
+## 必要なもの
 
-| 環境変数 | 既定 | 内容 |
+| | 入手先 | 備考 |
 |---|---|---|
-| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
-| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
-| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上（32 文字以上の乱数を推奨） |
-| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名をカンマ区切りで追加（トンネルの公開名など） |
+| POKER 本体 | [pointkernel.com](https://pointkernel.com)（v2.1.5 以降） | Windows。フォーム登録でダウンロードリンクが届く |
+| Node.js | 18 以降 | |
+| MCP クライアント | Claude Desktop など | HTTP 版は Claude Code、または Claude Desktop + `mcp-remote` |
+| FreeCAD | [freecad.org](https://www.freecad.org/)（1.0 以降） | CAD 連携を使う場合だけ |
 
-**外から届く設定ではトークンが必須です。** `POKER_MCP_HTTP_HOST` が loopback 以外、または
-`POKER_MCP_HTTP_ALLOWED_HOSTS` に loopback 以外の名前を入れたとき、トークンが無いと起動しません
-（終了コード 2、`設定の誤り: …`）。トークンが 16 文字未満、ポートが不正なときも同じです。
-このほか、Host ヘッダの検査（DNS rebinding 対策、違反は 403）、Origin ヘッダ付き（ブラウザから）の
-要求の拒否（403）を行います。
+## セットアップ（Claude Desktop）
 
-**TLS（https）は本サーバ自体は持ちません。** 外に出すときは Cloudflare Tunnel などの前段で https にします。
-推奨構成:
+設定ファイル（Windows では `%APPDATA%\Claude\claude_desktop_config.json`）に追記し、
+Claude Desktop を再起動します。
 
-```
-POKER_MCP_HTTP_HOST=127.0.0.1           # そのまま。cloudflared が localhost:3939 へ中継
-POKER_MCP_HTTP_ALLOWED_HOSTS=<公開名>
-POKER_MCP_HTTP_TOKEN=<乱数>
-POKER_MCP_ASYNC=1                       # 長い計算が中継（約 100 秒）やクライアントの待ち時間で切られないように
-POKER_MCP_GUI=0
-```
-
-トークンは次で作れます。
-
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64url'))"
-```
-
-**接続方法:**
-
-- **Claude Code**: `claude mcp add --transport http poker https://poker.example.com/mcp --header "Authorization: Bearer <token>"`
-- **Claude Desktop**（設定ファイルは stdio のみ）: 中継役 `mcp-remote`（第三者の npm パッケージ）を使います。
-  Windows ではヘッダを env 経由で渡します。
-  ```json
-  "poker-remote": {
-    "command": "npx",
-    "args": ["-y", "mcp-remote", "https://poker.example.com/mcp", "--transport", "http-only", "--header", "Authorization:${AUTH_HEADER}"],
-    "env": { "AUTH_HEADER": "Bearer <token>" }
+```json
+{
+  "mcpServers": {
+    "poker-mcp": {
+      "command": "npx",
+      "args": ["poker-mcp"],
+      "env": {
+        "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
+        "POKER_INSTALL_PATH": "C:/Poker"
+      }
+    }
   }
-  ```
-- **claude.ai / Claude Desktop の「カスタムコネクタ」**: 本サーバは OAuth を実装していないため、
-  個人アカウントでは現状使えません（今後の課題）。
-
-**注意:** トークンを持つ人は、サーバのプロセスが読み書きできるファイルに道具経由で触れられます
-（`yaml_file` などのパス）。専用のユーザーアカウントで動かす、作業フォルダを分ける、トークンを
-共有しない、を勧めます。トークンは 1 つで、使う人を区別しません。
-
-詳しくは [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバの設定）と
-[INTEGRATION_GUIDE](docs/manuals/INTEGRATION_GUIDE.md)（クライアントの接続）を参照してください。
-
-## 🆕 バージョン1.10.0の新機能
-
-### ⏳ 計算の非同期実行（既定では無効）
-
-時間のかかる計算を「投入して、あとで結果を取りに行く」形で扱えるようにしました。
-1 回のツール呼び出しは数秒で終わるので、MCP クライアントの待ち時間の上限や、
-リモート公開時の中継（Cloudflare Tunnel の約 100 秒など）に切られずに、
-何時間かかる計算でも扱えます。
-
-```javascript
-poker_submitCalculation({ yaml_file: "poker.yaml" })   // → { job_id: "20261013-053012-a1b2c3", status: "queued" }
-poker_getJobStatus({ job_id: "20261013-053012-a1b2c3" }) // → queued / running / succeeded / failed
-poker_getJobResult({ job_id: "20261013-053012-a1b2c3" }) // → executeCalculation と同じ形式の結果
-poker_getDoseMap({ detector_name: "D_map", job_id: "20261013-053012-a1b2c3" })
-```
-
-**既定では無効です。** 環境変数 `POKER_MCP_ASYNC=1` を設定したときだけ、上の 3 ツールが
-現れ、`poker_getDoseMap` に `job_id` 引数が付きます。設定しなければ、ツール一覧も動作も
-v1.9.9 と同じです。主にリモート公開したサーバで使うことを想定しています。
-
-```json
-"env": {
-  "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
-  "POKER_INSTALL_PATH": "C:/Poker",
-  "POKER_MCP_ASYNC": "1"
 }
 ```
 
-| 環境変数 | 既定 | 内容 |
+- `cwd` は指定しないでください。作業場所は `POKER_MCP_HOME` で決まります
+- 版を固定するときは `"args": ["poker-mcp@1.10.0"]` のように書きます
+
+動作確認として、Claude に次のように頼んでみてください。
+
+```
+厚さ 30 cm のコンクリート壁の向こう 1 m の位置で、Co-60 点線源 1 GBq による線量を計算してください
+```
+
+### 主な環境変数
+
+| 変数 | 既定 | 内容 |
 |---|---|---|
-| `POKER_MCP_ASYNC` | 無効 | `1` で非同期ジョブを有効にする |
-| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
-| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
-| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間 [分] |
+| `POKER_MCP_HOME` | `~/.poker-mcp` | 作業ファイル（YAML、バックアップ、ログ）の置き場所 |
+| `POKER_INSTALL_PATH` | `C:/Poker` | POKER のインストール先（核種データ、`POKER.exe`） |
+| `FREECAD_PATH` | 自動探索 | FreeCAD の場所（CAD 連携） |
+| `POKER_MCP_ASYNC` | 無効 | `1` で計算の非同期実行を有効にする |
+| `POKER_MCP_GUI` | 有効 | `0` で `poker_openGui` を外す（リモート公開時） |
 
-**計算の中身は同期と同じです。** ジョブも `poker_executeCalculation` と同じ処理で POKER を
-呼びます。`npm run test:jobs` で、同期と非同期の `.summary`・`.dose`・線量マップが
-全行一致することを確認しています（生成日時・計算時間・入力ファイルのパスの行を除く）。
+HTTP 版（別の機械から使う）の設定と、非同期実行・リモート公開の詳細は
+[ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバ側）と
+[INTEGRATION_GUIDE](docs/manuals/INTEGRATION_GUIDE.md)（クライアント側）を参照してください。
 
-**投入した時点の入力で計算します。** YAML（と `.paths`）を
-`POKER_MCP_HOME/jobs/<ジョブID>/` にコピーしてから計算し、出力もそこに書きます。
-投入後に作業中の YAML を編集しても、投入済みのジョブには混ざらず、
-作業フォルダの `poker.yaml.summary` なども上書きしません。保留中の変更は含まれないので、
-必要なら先に `poker_applyChanges` で確定してください。
+## 使い方
 
-**サーバを再起動してもジョブは残ります。** 状態は `job.json` に保存しています。
-実行中に再起動した場合、その計算は失われているため `failed`（`INTERRUPTED_BY_RESTART`）
-になります。待機中だったジョブは再び並び、実行されます。
+Claude に自然言語で指示すると、必要なツールが呼ばれます。
 
-### 🖥️ GUI（poker_openGui）を使える環境でだけ登録
+```
+「幅 100 cm、高さ 200 cm、厚さ 30 cm のコンクリート遮蔽壁を作ってください」
+「Cs-137 線源 1 TBq を原点に置いてください」        → Ba-137m は自動で追加
+「壁から 120 cm の位置に 2 次元の検出器グリッドを置いてください」
+「計算して、線量分布を見せてください」
+```
 
-`poker_openGui` は、MCP サーバが動いている機械の画面に POKER.exe を開きます。次のどれかに
-当たるときは、ツール一覧から外し、処理も登録しません（名前で直接呼ばれても実行しません）。
+編集は「提案」としていったん保留され、`poker_applyChanges` でまとめて確定します（自動バックアップ付き）。
+入力はスキーマ・要求内容・ファイル生成の各段階で検証され、材料名は POKER のライブラリの正式名に限られます。
 
-| 条件 | 想定する場面 |
+### CAD 連携
+
+FreeCAD のソリッドに材質（`PokerMaterial`）や線源・検出器をカスタムプロパティで設定しておけば、
+3 回の呼び出しで計算まで進みます。CSG で表せない形状（曲がった配管、フィレットなど）も扱えます。
+
+```javascript
+poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })    // 属性から YAML を生成
+poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })    // 透視線を追跡して .paths を生成
+poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
+```
+
+手順と実例は [CAD_QUICKSTART](docs/manuals/CAD_QUICKSTART.md)、詳細は
+[CAD_RAYTRACE](docs/manuals/CAD_RAYTRACE.md)、経路ファイルの書式は
+[PATHS_FORMAT](docs/manuals/PATHS_FORMAT.md) を参照してください。
+
+## ツール一覧
+
+| 分類 | ツール |
 |---|---|
-| `POKER_MCP_GUI=0` | **リモート公開したサーバ。** サーバに POKER が入っていても、GUI は利用者の手元ではなくサーバの画面に開き、利用者からは見えないため |
-| Windows 以外 | POKER.exe は Windows 専用 |
-| `POKER_INSTALL_PATH` に POKER.exe が無い | POKER の GUI を入れていない環境 |
+| 立体 | `poker_proposeBody` `poker_updateBody` `poker_deleteBody` |
+| 材料ゾーン | `poker_proposeZone` `poker_updateZone` `poker_deleteZone` |
+| 座標変換 | `poker_proposeTransform` `poker_updateTransform` `poker_deleteTransform` |
+| ビルドアップ係数 | `poker_proposeBuildupFactor` `poker_updateBuildupFactor` `poker_deleteBuildupFactor` `poker_changeOrderBuildupFactor` |
+| 線源 | `poker_proposeSource` `poker_updateSource` `poker_deleteSource` `poker_confirmDaughterNuclides` |
+| 検出器 | `poker_proposeDetector` `poker_updateDetector` `poker_deleteDetector` |
+| 単位 | `poker_proposeUnit` `poker_getUnit` `poker_updateUnit` `poker_validateUnitIntegrity` `poker_analyzeUnitConversion` |
+| サマリー出力量 | `poker_proposeThinnedIndices` `poker_getThinnedIndices` `poker_updateThinnedIndices` |
+| 確定・計算・結果 | `poker_applyChanges` `poker_resetYaml` `poker_executeCalculation` `poker_getDoseMap` `poker_getSchema` `poker_openGui` |
+| CAD 連携 | `poker_generateInput` `poker_generatePaths` |
+| 非同期実行（`POKER_MCP_ASYNC=1` のとき） | `poker_submitCalculation` `poker_getJobStatus` `poker_getJobResult` |
 
-手元の Windows に POKER を入れて Claude Desktop から使う普段の環境では、従来どおり
-36 ツールが登録されます。判定はサーバの起動時に 1 回だけ行い、結果は起動ログに
-`poker_openGui: 有効（…）` / `無効（…）` と理由付きで出ます。
+各ツールの引数と戻り値は [API_COMPLETE](docs/manuals/API_COMPLETE.md) にあります。
 
-GUI を外しても、計算（POKER_CUI.exe）・検証・CAD 連携・非同期ジョブには影響しません。
-POKER.exe を使うのは `poker_openGui` だけです。
+## 現状の制約
 
-リモート公開するサーバの設定例（非同期ジョブを有効にし、GUI を外す）:
+POKER 本体は次の指定に対応していますが、POKER-MCP にはまだ対応するツールがありません（今後対応する予定です）。
 
-```json
-"env": {
-  "POKER_MCP_HOME": "C:\\poker_mcp_workspace",
-  "POKER_INSTALL_PATH": "C:/Poker",
-  "POKER_MCP_ASYNC": "1",
-  "POKER_MCP_GUI": "0"
-}
-```
+- 線源のエネルギースペクトルによる指定（ツールでは核種と放射能で指定します）
+- 多重層（2 層・3 層）のビルドアップ係数の指定（ツールでは単層の材料で指定します）
 
-## 🐛 バージョン1.9.9の修正
+必要な場合は YAML を直接編集してください。AI アプリが `poker_getSchema` で書式を読み、
+YAML を直接書き換えることもありますが、その部分は POKER-MCP のツールによる検証を受けず、
+計算時の `poker_cui` による検証だけになります。
 
-npm で入れた環境（`npx poker-mcp`）でだけ現れる不具合と、失敗の伝え方の不具合を
-直しました。まっさらな Windows に npm パッケージから入れた環境で、CAD 連携を含む
-計算結果がリポジトリ上の実行と全行一致することを確認しています。
+任意組成のカスタム材料は、`lib_material.dat` に登録したものだけ使えます（[MATERIAL_SYSTEM](docs/manuals/MATERIAL_SYSTEM.md)）。
 
-### `poker_generateInput` が npm 版で動かなかった
+## ドキュメント
 
-`tools/gen_input.py` と、それが読み込む `tools/scatter.py` が `package.json` の
-`files` から漏れていました。リポジトリから動かすと問題なく、npm から入れた環境で
-だけ `No module named 'gen_input'` で失敗していました。
+| 文書 | 内容 |
+|---|---|
+| [docs/manuals/](docs/manuals/) | マニュアル一式（基本ガイド、API、CAD 連携、運用、トラブルシューティング） |
+| [docs/interactive_guides/](docs/interactive_guides/) | 段階別の学習ガイド |
+| [CHANGELOG.md](CHANGELOG.md) | 版ごとの変更内容 |
 
-### 失敗が成功として返っていた
+## 開発者向け
 
-CAD 系などのハンドラが返す `{ content, isError }` を、共通の処理がもう一度包んで
-いたため、`isError: true` が本文の中に埋もれ、MCP の上では成功として伝わって
-いました。AI クライアントは失敗に気づかないまま次の手順へ進みます。
-
-すでに MCP の応答形式になっている戻り値はそのまま返し、`{ success: false, ... }`
-を返すハンドラには `isError: true` を付けるようにしました。立体・ゾーン・線源など
-の検証エラーも、MCP の上で失敗として伝わります。
-
-### 計算エラーの処理そのものが落ちていた
-
-`poker_executeCalculation` が計算エラーを返す途中で
-`Cannot read properties of undefined (reading '_isRecoverableError')` になり、
-本来のエラー内容が隠れていました。ハンドラがオブジェクトから切り離して呼ばれる
-ため `this` が未定義になっていたのが原因です。
-
-## 🆕 バージョン1.9.8の新機能
-
-### 📜 `poker_getSchema` — ファイル書式を JSON Schema で取得
-
-POKER が扱う4種類のファイルの書式を、機械可読な形で取得できます。
-
-```javascript
-poker_getSchema()                   // 入力 YAML
-poker_getSchema({ kind: "paths" })  // CAD から抽出した経路ファイル
-poker_getSchema({ kind: "summary" })
-poker_getSchema({ kind: "dose" })
-```
-
-スキーマは静的なファイルではなく、`poker_cui --schema` をその場で呼んで
-生成します。そのため実行環境の POKER の版と材料ライブラリに必ず一致し、
-`lib_material.dat` に材料を追加していれば、その材料も材料名の一覧
-（`$defs` の `x-poker-names`）に現れます。
-
-規定するのは書式・型・値域までです。参照の解決（`zone.body_name` が
-`body` に在るか）や名前の存在確認は従来どおり `poker_cui --validate`
-（`poker_executeCalculation` が内部で実施）の担当で、両者で役割が分かれます。
-
-`.dose` のスキーマには、YAML の頭部に続く数値表の読み方
-（ブロックの区切り・列の索引 `[dose, ray, energy]`・行の索引
-`i + j*number_i + k*number_i*number_j`）が `x-poker-data-layout` として
-書かれています。
-
-### 🐛 `poker_getDoseMap` が線量種別の増加に追随
-
-`.dose` の列構成を、線量種別3種・線種4種と決め打ちしていました。線量種別は
-ライブラリ設定で増えるため（`E(PA)` や空気カーマを足した場合）、その環境では
-誤った列を読むか、集計ブロックを見つけられず失敗していました。
-
-冒頭の `information` から `dose_type` / `ray_type` / 線源ごとの `energy_bin` を
-数えて列構成を決めるようにしました。1D/2D/3D 検出器の全評価点について、
-`.summary` の `statistics_total`（min/max）と一致することを
-`npm run test:schema` で検証しています。
-
-## 🆕 バージョン1.8.0〜1.8.3の新機能
-
-### 📐 CAD連携が MCP だけで完結
-従来、CAD からの経路抽出は MCP を経由せず、FreeCAD を手で起動する必要が
-ありました。`spec.json` を手書きし、`poker_cui -p` を叩き、`freecadcmd` に
-スクリプトを渡す。3 手順すべてが手作業でした。
-
-```javascript
-poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })   // YAML を生成
-poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
-poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
-```
-
-CAD ファイルを指定するだけになりました。分割点の取得、グリッド検出器の展開、
-ビルドアップ等価材料の解決（`Source_Dry` → `Tungsten` など）は自動です。
-
-### 🔍 FREECAD_PATH
-FreeCAD の場所を、環境変数 → PATH → 既定のインストール先の順で解決します。
-`POKER_INSTALL_PATH` のように固定の既定値を持てないのは、インストール先が
-バージョン番号を含むためです（FreeCAD 1.1, 1.0 …）。
-
-```json
-"env": {
-  "POKER_INSTALL_PATH": "C:\\Poker",
-  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
-}
-```
-
-### 🐛 相対パスの解決を修正
-`tasks/` 配下のファイル名指定が、プロセスのカレントディレクトリを基準に
-解決されていました。MCP サーバの起動場所によっては別の場所を指します。
-
-
-### 📦 CAD連携ツールを npm パッケージに同梱（v1.8.2）
-`poker_generatePaths` が使う Python スクリプトが `files` に含まれておらず、
-GitHub から clone した環境でしか動きませんでした。`npm install` / `npx` でも
-使えるようにしています。
-
-### 🐛 サマリーの衝突を修正（v1.8.3）
-`generatePaths` が `-p` 付きで作ったサマリーを `executeCalculation` が上書きし、
-次に `generatePaths` を呼ぶと失敗していました。専用ファイルに分離しています。
-
-## 🆕 バージョン1.7.0〜1.7.2の新機能
-
-### 📉 サマリー出力量の制御（ThinnedIndices 操作系 3メソッド）
-`thinnedindices` ノードを MCP から設定できます。`.paths` の生成では全ての
-線源分割点と検出器評価点が必要ですが、既定では間引かれるため手で書き足す
-必要がありました。
-
-**`poker_generatePaths` が自動で合わせる**ので、通常は意識する必要はありません。
-手で設定したい場合はこうします。
-
-```javascript
-poker_updateThinnedIndices({ fit_for_paths: true })
-// → 入力の分割定義と検出器グリッドから必要数を計算して設定
-```
-
-既定値は poker_mcp 側で持ちません。省略しても `.summary` には全 7 キーが
-値付きで出力されるので、そちらを正とします。
-
-### 🔄 保留中の変更が `get` で見えるように
-`propose` の直後に `get` を呼ぶと変更が見えず、「反映されていない」と誤解する
-余地がありました。確定値とは別に `pending` として示します。
-
-```javascript
-poker_proposeThinnedIndices({ sourcepoint: 100 })
-poker_getThinnedIndices()
-// → { thinnedindices: null, pending: { sourcepoint: 100 }, pending_count: 1 }
-```
-
-### 🛡️ `.paths` の座標照合
-件数だけでなく座標も YAML と突き合わせます。検出器を動かして `.paths` を
-再生成し忘れると、件数は変わらないため従来は通り抜け、**静かに誤った線量**が
-出ていました。
-
-
-## 🆕 バージョン1.6.0の新機能
-
-### 🧱 カスタム材料をライブラリ追加だけで使えるように
-材料の一覧・密度範囲・ビルドアップ可用性をコード側に持たず、すべて
-`%POKER_INSTALL_PATH%/LIB/` から読み込むようにしました。**カスタム材料を
-`lib_material.dat` に追記すれば、コード変更なしにサーバ再起動だけで
-ゾーン定義・密度検証・等価材料の自動選定すべてに反映されます。**
-
-標準材料を追加する場合は `lib_material.dat` と `lib_setting.dat` の
-`buildup_material` の両方に登録します（片方だけなら警告が出ます）。
-
-### 🔀 ビルドアップ等価材料の選定を実データ方式へ
-従来の光子実効Z最近傍は暫定実装でした。ビルドアップを支配するのは散乱と吸収の
-競合であることから、POKER の減衰係数ファイルから
-`μ_incoherent / (μ_total − μ_incoherent)` を求め、0.1〜3 MeV の11点で
-最も一致する標準材料を選びます。
-
-一致度スコアを応答に付けるようにしました。0.30 を超える場合は「標準材料に
-近いものが無い」ことを意味し、候補上位3件とともに警告を出します。黙って粗い
-代用材を当てるより、どの程度粗いかを見せる方が判断材料になります。
-
-この変更で `Source_Dry` の等価材料は `Lead` から `Tungsten` に変わります。
-
-### 🐛 `poker_updateBuildupFactor` が equivalent を更新できない問題を修正
-ツールスキーマと `DataManager` の双方に `equivalent` が無く、`TaskManager`
-だけが素通しする三層不整合でした。変更・解除（空文字指定）に対応し、
-標準材料への指定や非標準材料の指定を拒否する検証も追加しています。
-
-### 📡 CAD連携レイトレース
-FreeCAD のソリッドモデルを、STEP のような中間フォーマットを介さず、CSG で
-表現し直す作業も無しに遮蔽体系として扱えます。**MCP の 3 呼び出しで完結**します。
-
-```javascript
-poker_generateInput({ fcstd: "C:/path/to/model.FCStd" })
-poker_generatePaths({ fcstd: "C:/path/to/model.FCStd" })
-poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
-```
-
-CAD が正本です。**YAML を手で書く必要はありません。** ソリッドに材質・線源・
-検出器をカスタムプロパティで設定しておけば、そこから入力が生成されます。
-線源点→検出器の直線を FreeCAD 側で追跡し、通過した材質と厚さを `.paths` に
-記録して POKER に渡します。
-
-CSG 経由と一致することを平板・円筒・球の 5 体系で確認済みです。フィレットや
-自由曲面のように CSG で表現できない形状も扱えます。**複数線源・グリッド検出器・
-スラント補正に対応**。
-
-他の CAD で作ったモデルも、STEP で FreeCAD に読み込めば同じパイプラインに
-乗ります。副産物として、POKER の改造なしで使える**簡易化の監査ツール**
-（ある形状を省略してよいかを定量化する）もあります。
-
-FreeCAD の場所は環境変数 `FREECAD_PATH` で指定します（未設定なら既定の
-インストール先を探索）。
-
-#### 必要なもの
-
-| | 入手 | 環境変数 |
-|---|---|---|
-| poker-mcp | `npm install poker-mcp` | — |
-| **POKER 本体** | 別途入手 | `POKER_INSTALL_PATH` |
-| **FreeCAD** | [freecad.org](https://www.freecad.org/)（無償） | `FREECAD_PATH` |
-
-numpy はレイトレーサが使いますが、FreeCAD に同梱されているので追加の
-インストールは不要です。
-
-```json
-"env": {
-  "POKER_MCP_HOME": "C:\\Users\\yoshi\\poker_mcp_workspace",
-  "POKER_INSTALL_PATH": "C:\\Poker",
-  "FREECAD_PATH": "C:\\Program Files\\FreeCAD 1.1"
-}
-```
-
-`FREECAD_PATH` は既定の場所にインストールされていれば省略できます。
-
-#### モデル側の約束
-
-**ソリッドに `PokerMaterial` プロパティで材質名を設定**しておく必要があります
-（`Iron`、`Concrete` など、POKER の材料ライブラリの名前）。密度を上書きする場合は
-`PokerDensity` も設定します。
-
-他の CAD で作ったモデルを STEP で読み込んだ場合、材質情報は失われるので
-FreeCAD 上で設定してください。一度設定すれば `.FCStd` に保存されます。
-
-まずは [CAD_QUICKSTART.md](./docs/manuals/CAD_QUICKSTART.md)（最短手順と実例）を、
-詳細は [CAD_RAYTRACE.md](./docs/manuals/CAD_RAYTRACE.md)、フォーマットは
-[PATHS_FORMAT.md](./docs/manuals/PATHS_FORMAT.md)。
-
-## 🆕 バージョン1.5.0の新機能
-
-### 🖥️ POKER GUI を閉じずに表示を切り替え
-`poker_openGui` で別の入力を指定すると、起動中の POKER ウィンドウの表示が
-そのまま切り替わります。従来は先に POKER を閉じる必要がありました。
-
-未保存の編集があるときは POKER 側で保存確認が出るため、編集内容が
-黙って失われることはありません（キャンセルすると切り替わりません）。
-
-> **POKER 2.1.1 以降が必要です。** 2.1.0 以前では従来どおり
-> `POKER_ALREADY_RUNNING` を返すので、先に POKER を閉じてください。
-
-### 🐛 `poker_openGui` の偽の成功報告を修正
-`spawn` の成否のみで判定していたため、POKER が二重起動で弾かれて即座に
-終了しても「起動しました」と PID 付きで成功を返していました。
-起動後の生存確認を追加し、実際に表示されたことを確認してから報告します。
-
-### 📖 ドキュメントの大幅整理
-`ADMIN_GUIDE.md` を実運用に即した内容へ全面改訂しました（699行 → 248行）。
-乱数で「正常」を出力する監視スクリプトなど、実態と乖離した記述を削除し、
-検証可能な手順のみに整理しています。
-
-## 🆕 バージョン1.4.0の新機能
-
-### ☢️ 子孫核種の自動管理
-親核種を指定すると子孫核種が自動生成され、**親の更新・削除に追随します**。
-Cs137 を入れれば Ba137m が分岐比 0.9439 で自動的に付き、Cs137 の放射能を
-2倍にすれば Ba137m も2倍になります。親を削除すれば娘も消えます。
-
-発火タイミングを `executeCalculation` 時から `proposeSource` / `updateSource`
-時へ移しました。モデル構築を終えた最後の段階で計算が中断することはなくなります。
-
-平衡型は親娘の半減期比で判定します（永続 / 過渡 / 平衡なし）。平衡が成立しない
-組み合わせは推定せず、警告を返して生成を見送ります。除外は線源ごとに記録され、
-親を何度更新しても復活しません。
-
-詳細は [docs/DAUGHTER_NUCLIDE_MANAGEMENT.md](./docs/DAUGHTER_NUCLIDE_MANAGEMENT.md)。
-
-> **POKER 2.1.0 以降が必要です。** 出自情報を保持する `x_meta` ノードを
-> POKER が受理する必要があります（`source` 直下と `inventory` 要素直下）。
-
-### 🐛 ICRP-07 パーサの重大な修正
-固定長の列位置が実データと一致しておらず、**全1252核種で子孫核種を1件も
-取得できていませんでした**。半減期も単位が崩壊形式側へ流出し、Cs137 を
-30.17年ではなく 30.17 **秒**と解釈していました（9桁の誤り）。
-
-修正後は 808 核種が子孫核種を持ちます。平衡判定は従来まったく機能して
-いなかったことになります。
-
-### 🐛 `reject` のグローバル無効化を修正
-1つの線源で子孫核種を拒否すると、セッション終了まで全線源の検出が無効に
-なっていました。線源ごとの管理に変更しています。
-
-### 🔧 核種データベースの参照先を LIB へ統一
-`POKER_MCP_HOME/data/` へのコピーを廃止し、`POKER_INSTALL_PATH/LIB/` を
-直接参照します。従来は「コピー先が存在すればスキップ」だったため、POKER を
-更新しても古いコピーを読み続けていました。
-
-詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
-
-## 🆕 バージョン1.3.0の新機能
-
-### ✨ `poker_getDoseMap` — グリッド検出器の線量マップ取得
-グリッド（線/面/体積 = 1D/2D/3D）検出器の全評価点の線量を `.dose` ファイルから取得します。サマリーはグリッド点を間引く（`一部省略`）ため、完全なマップは本ツールで取得します。戻り値は `points[]`（i/j/k・座標・線量）＋入れ子 `grid`（1D→[i], 2D→[j][i], 3D→[k][j][i]）＋ `min/max/max_at`。
-
-### ✨ `executeCalculation` の構造化結果
-応答に `.summary`(YAML) から抽出した構造化 `result_total`（検出器ごとの座標＋E(AP)/DskinM(AP)/H*(10) の内訳）、`dose_columns`、`calculation_warnings`、`calculation_notes` を追加。
-
-### 🐛 `updateSource` の division/geometry/cutoff_rate 対応
-ツールスキーマ・検証が弾いていたフィールドを解放し、線源の in-place 更新（分割の収束スタディ等）が可能に。
-
-### 🔧 マニフェスト↔実行時ドリフト検出
-`npm run check:manifest` でツール定義とマニフェストの乖離を検出。
-
-詳細は [CHANGELOG.md](./CHANGELOG.md) を参照。
-
-## 🆕 バージョン1.2.8の新機能
-
-### ✨ `poker_openGui` — POKER GUI 起動メソッドを追加
-作成した入力ファイルを POKER.exe でビジュアル確認できます。
-
-- 保留中の変更を **自動保存してから** POKER.exe を起動
-- `yaml_file` は省略可（デフォルト: `poker.yaml`）
-- `POKER_INSTALL_PATH/POKER.exe`（デフォルト: `C:/Poker/POKER.exe`）を使用
-- Windows 専用
-
-### 最新のPOKER_CUI.exeの機能でPOKER-MCPがカバーしていない部分について
-POKER本体は随時バージョンアップされており、下記の機能についてPOKER-MCPのツールは未対応です。
-それらについてAIアプリが入力を編集しようとするとツールの制約によって拒否されることがあります。必要に応じて手動で入力を修正してください。
-
-- 二重層・三重層ビルドアップ係数の指定（現状では単層のみ）
-- 線源にエネルギースペクトルを指定（現状では核種指定のみ）
-- 材料ゾーン・ビルドアップに**任意組成のカスタム材料**を指定（lib_material.dat の標準13＋ユーザ材料には対応済み。詳細は docs/manuals/MATERIAL_SYSTEM.md）
-
-## 🆕 バージョン1.2.7の修正（バグフィックス）
-
-### 🐛 `poker_executeCalculation` の yaml_file パス解決を修正
-ファイル名のみ（例: `poker.yaml`）を渡すと絶対パス要求でエラーになっていた
-スキーマ・ハンドラー間の矛盾を修正しました。
-
-- **ファイル名のみ指定** → `POKER_MCP_HOME/tasks/` に自動解決
-- **絶対パス指定** → そのまま使用（後方互換）
-
-## 🆕 バージョン1.2.6の修正（バグフィックス）
-
-### 🐛 SERVER DISCONNECTED 問題を修正
-`npx poker-mcp` 実行時にClaude Desktopがカレントディレクトリを
-`C:\Windows\System32` に設定するため、相対パスでのフォルダ作成が
-権限エラー（EPERM）で失敗していた問題を修正しました。
-
-- **`src/utils/paths.js` 新設**: 作業ディレクトリを一元管理
-- **全ファイルパスを絶対パス化**: `logs/`・`backups/`・`tasks/`・`data/`
-- **`POKER_MCP_HOME` 環境変数サポート**: 作業場所を自由に指定可能
-- **エラー出力を `stderr` に追加**: 問題発生時の原因特定が容易に
-
-## 🆕 バージョン1.2.5の新機能
-
-### ⚡ 衝突検出システム
-- **リアルタイム干渉チェック**: 立体間の重なり・接触を自動検出
-- **自動修正提案**: 衝突解決のための幾何調整案を提示
-- **物理的妥当性検証**: 非物理的な配置を事前に防止
-
-### ☢️ 子孫核種自動管理
-- **ICRP-07データベース統合**: 1,254核種の崩壊データを内蔵
-- **放射平衡計算**: 親核種から子孫核種を自動計算
-- **寄与度閾値制御**: 5%以上の寄与を持つ核種を自動追加
-
-### 📏 単位系完全性保証
-- **4キー完全性検証**: length, angle, density, radioactivityの一貫性保証
-- **単位変換分析**: 異なる単位系間の変換係数を自動計算
-- **物理的整合性チェック**: 単位の組み合わせの妥当性を検証
-
-### 🔄 YAMLリセット機能
-- **3段階リセットレベル**: minimal（最小限）、standard（標準）、complete（完全）
-- **自動バックアップ**: リセット前に必ずバックアップを作成
-- **ATMOSPHERE保護**: 必須ゾーンの自動復元
-
-### 🔧 検出器分析機能
-- **互換性チェック**: 複数検出器間の比較可能性を分析
-- **性能最適化提案**: メモリ使用量と計算効率の最適化
-- **システム全体分析**: 全検出器の統合的な性能評価
-
-## ⚡ セットアップ
-
-### 1. インストール
 ```bash
-# 依存関係インストール（ローカル開発時のみ）
+git clone https://github.com/Hirao-Y/poker_mcp.git
+cd poker_mcp
 npm install
-
-# または NPX で直接使用（インストール不要）
-npx poker-mcp
 ```
-
-### 2. 環境変数設定
-
-#### `POKER_MCP_HOME`（推奨・新設）
-作業ファイル（YAML・バックアップ・ログ・核種DB）の格納先を指定します。
-**未設定時は `~/.poker-mcp/` が自動的に使用されます。**
-
-#### `POKER_INSTALL_PATH`（オプション）
-POKERのインストールディレクトリを指定します。以下の2つの用途で参照されます。
-
-- **ICRP-07.NDX の参照先**: `{POKER_INSTALL_PATH}/LIB/ICRP-07.NDX` を直接参照（v1.4.0以降、コピーなし）
-- **POKER.exe の場所**: `{POKER_INSTALL_PATH}/POKER.exe`（`poker_openGui` 使用時）。
-  POKER.exe が見つからなければ `poker_openGui` は登録されません（v1.10.0）
-
-**デフォルト値**: `C:/Poker`（未設定時は `C:/Poker` を使用）
-
-#### `POKER_MCP_ASYNC` ほか（オプション、v1.10.0）
-計算の非同期実行（`poker_submitCalculation` など）を有効にします。既定では無効で、設定しなければ
-ツール一覧も動作も変わりません。詳しくは「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」。
-
-| 変数 | 既定 | 内容 |
-|---|---|---|
-| `POKER_MCP_ASYNC` | 無効 | `1` で非同期ジョブを有効にする |
-| `POKER_MCP_ASYNC_CONCURRENCY` | 1 | 同時に実行する計算の数 |
-| `POKER_MCP_JOB_RETENTION_DAYS` | 7 | 終わったジョブを残す日数 |
-| `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間 [分] |
-
-#### `POKER_MCP_GUI`（オプション、v1.10.0）
-`0` を設定すると `poker_openGui` を登録しません。リモート公開するサーバで使います
-（GUI がサーバの画面に開き、利用者からは見えないため）。Windows 以外の環境や、
-POKER.exe が見つからない環境では、設定しなくても登録されません。計算には影響しません。
-
-#### `POKER_MCP_HTTP_*`（HTTP 版だけ、v1.11.0）
-HTTP 版（`poker-mcp-http`）の設定です。stdio 版では使いません。詳しくは
-「[バージョン1.11.0の新機能](#-バージョン1110の新機能)」。
-
-| 変数 | 既定 | 内容 |
-|---|---|---|
-| `POKER_MCP_HTTP_HOST` | 127.0.0.1 | 待ち受けるアドレス |
-| `POKER_MCP_HTTP_PORT` | 3939 | ポート（0 で空きポート） |
-| `POKER_MCP_HTTP_TOKEN` | なし | `Authorization: Bearer <token>` で照合。16 文字以上。外から届く設定では必須 |
-| `POKER_MCP_HTTP_ALLOWED_HOSTS` | なし | 受け付ける Host 名（カンマ区切り。トンネルの公開名など） |
-
-```bash
-# Windows（コマンドプロンプト）
-set POKER_MCP_HOME=C:\Users\yoshi\poker_mcp_workspace
-set POKER_INSTALL_PATH=C:/Poker
-
-# Windows（PowerShell）
-$env:POKER_MCP_HOME="C:\Users\yoshi\poker_mcp_workspace"
-$env:POKER_INSTALL_PATH="C:/Poker"
-
-# Linux/macOS
-export POKER_MCP_HOME="$HOME/.poker-mcp"
-export POKER_INSTALL_PATH="/usr/local/share/poker"
-```
-
-**データ格納先の構造:**
-```
-POKER_MCP_HOME/          # デフォルト: ~/.poker-mcp/
-  ├── tasks/             # poker.yaml, pending_changes.json
-  ├── backups/           # 自動バックアップ（最大10世代）
-  ├── data/              # ICRP-07.NDX 核種データベース
-  ├── logs/              # error.log, combined.log
-  ├── jobs/              # 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ。既定 7 日で自動削除）
-  └── config.json        # ユーザー設定（任意）
-```
-
-### 3. Claude Desktop設定
-
-**Claude Desktop アプリでの設定方法：**
-
-1. **設定ファイルを開く**
-   ```
-   Windows: %APPDATA%\Claude\claude_desktop_config.json
-   macOS: ~/Library/Application Support/Claude/claude_desktop_config.json  
-   Linux: ~/.config/claude/claude_desktop_config.json
-   ```
-
-2. **推奨設定（v1.2.6）**
-   ```json
-   {
-     "mcpServers": {
-       "poker-mcp": {
-         "command": "npx",
-         "args": ["poker-mcp"],
-         "env": {
-           "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
-           "POKER_INSTALL_PATH": "C:/Poker"
-         }
-       }
-     }
-   }
-   ```
-   `<username>` はご自身のWindowsユーザー名に置き換えてください。  
-   `POKER_INSTALL_PATH` は省略可能です（デフォルト: `C:/Poker`）。
-
-   > **⚠️ 注意:** `cwd`（作業ディレクトリ）の指定は不要です。`POKER_MCP_HOME`
-   > 環境変数で管理するため、`cwd` を設定すると v1.2.5 以前の問題が再発します。
-
-   > **版の固定:** `npx` は一度取得した版を使い続けることがあります。確実に特定の版を
-   > 使うには `"args": ["poker-mcp@1.10.0"]` のように版を書きます。v1.9.8 以前の npm 版では
-   > `poker_generateInput` が動きません（v1.9.9 で修正）。
-
-   リモート公開するサーバ向けの設定（非同期ジョブを有効にし、GUI を外す）は
-   「[バージョン1.10.0の新機能](#-バージョン1100の新機能)」を、別の機械で動く HTTP 版に
-   `mcp-remote` で繋ぐ設定は「[バージョン1.11.0の新機能](#-バージョン1110の新機能)」を参照してください。
-
-3. **Claude Desktopを再起動** してMCPサーバーを有効化
-
-### 4. 動作確認
-Claude Desktopで以下のようにテストできます：
-```
-放射線遮蔽計算用のコンクリート壁（100cm x 50cm x 30cm）を作成してください
-```
-
-## 📚 ドキュメント
-
-**📖 [詳細README](docs/README.md)** - 詳細情報・API・使用例
-
-**📚 [マニュアル](docs/manuals/)** - 包括的マニュアル集
-
-**🎓 [インタラクティブガイド](docs/interactive_guides/)** - 3段階学習システム
-
-## 🏆 主要機能
-
-### ✅ **MCP完全対応**
-- **36メソッド完全実装**: 全ての放射線遮蔽計算入力管理機能（非同期ジョブ有効時は 39）
-- **失敗の通知**: ツールが処理の結果として失敗（`success: false`）を返すと、MCP の `isError: true` が付く（v1.9.9）
-- **計算の非同期実行**: 長い計算を投入して後から結果を取得（`POKER_MCP_ASYNC=1`、v1.10.0）
-- **JSON-RPC 2.0準拠**: 標準プロトコル完全対応
-- **STDIO通信**: MCPクライアントとの標準通信方式
-- **HTTP通信**: MCP の Streamable HTTP で別の機械から利用（`poker-mcp-http`、トークン認証、v1.11.0）
-- **自動バックアップ・ロールバック**: 企業品質のデータ保護
-
-### ✅ **放射線遮蔽計算専用設計**
-- **10種類の立体形状**: SPH, RCC, RPP, BOX, CMB, TOR, ELL, REC, TRC, WED
-- **23種類の材料**: 鉄・鉛・コンクリート（普通/重量3種）・SUS・ポリエチレン等（`lib_material.dat` から読み込み）
-- **複数線源対応**: 点・体積線源の完全管理
-- **検出器配置**: 0D/1D/2D/3D検出器の柔軟な配置
-
-### ✅ **物理検証システム**
-- **衝突検出**: リアルタイム立体干渉チェック
-- **子孫核種管理**: ICRP-07データベース基準の自動計算
-- **単位整合性**: 4キー完全性保証システム
-- **材料妥当性**: 密度・物性の自動検証
-
-## 🎯 API構成
-
-### 🔧 **36メソッド完全実装**
-
-| **カテゴリ** | **メソッド数** | **機能** | **主要操作** |
-|-------------|---------------|----------|-------------|
-| **📐 Body** | 3個 | 立体管理 | propose・update・delete |
-| **🧪 Zone** | 3個 | 材料ゾーン管理 | propose・update・delete |
-| **🔄 Transform** | 3個 | 幾何変換管理 | propose・update・delete |
-| **⚛️ BuildupFactor** | 4個 | ビルドアップ係数制御 | propose・update・delete・changeOrder |
-| **📡 Source** | 3個 | 線源管理 | propose・update・delete |
-| **🎯 Detector** | 3個 | 検出器管理 | propose・update・delete |
-| **📏 Unit** | 5個 | 単位設定管理 | propose・get・update・validateIntegrity・analyzeConversion |
-| **📉 ThinnedIndices** | 3個 | サマリー出力量の制御 | propose・get・update |
-| **📐 CAD** | 2個 | CAD から入力と経路を生成 | generateInput・generatePaths |
-| **⚙️ System** | 6個 | システム制御 | applyChanges・executeCalculation・resetYaml・confirmDaughterNuclides・openGui・getDoseMap |
-| **📜 Schema** | 1個 | ファイル書式の取得 | getSchema |
-| **⏳ Job**（`POKER_MCP_ASYNC=1` のときだけ） | 3個 | 計算の非同期実行 | submitCalculation・getJobStatus・getJobResult |
-
-- `poker_openGui` は、Windows で POKER.exe が見つかり、`POKER_MCP_GUI=0` でないときだけ登録されます。
-- 非同期ジョブを有効にすると、`poker_getDoseMap` にジョブを指定する `job_id` 引数が付きます。
-
-### 📋 **全36メソッド一覧**
-```
-Body系 (3):          poker_proposeBody, poker_updateBody, poker_deleteBody
-Zone系 (3):          poker_proposeZone, poker_updateZone, poker_deleteZone  
-Transform系 (3):     poker_proposeTransform, poker_updateTransform, poker_deleteTransform
-BuildupFactor系 (4): poker_proposeBuildupFactor, poker_updateBuildupFactor, 
-                     poker_deleteBuildupFactor, poker_changeOrderBuildupFactor
-Source系 (3):        poker_proposeSource, poker_updateSource, poker_deleteSource
-Detector系 (3):      poker_proposeDetector, poker_updateDetector, poker_deleteDetector
-Unit系 (5):          poker_proposeUnit, poker_getUnit, poker_updateUnit,
-                     poker_validateUnitIntegrity, poker_analyzeUnitConversion
-ThinnedIndices系 (3): poker_proposeThinnedIndices, poker_getThinnedIndices,
-                     poker_updateThinnedIndices
-CAD系 (2):           poker_generateInput, poker_generatePaths
-System系 (6):        poker_applyChanges, poker_executeCalculation, poker_resetYaml,
-                     poker_confirmDaughterNuclides, poker_openGui, poker_getDoseMap
-Schema系 (1):        poker_getSchema
-
-（POKER_MCP_ASYNC=1 のとき追加）
-Job系 (3):           poker_submitCalculation, poker_getJobStatus, poker_getJobResult
-```
-
-## 📁 プロジェクト構造
-
-```
-poker_mcp/
-├── 📁 src/                          # 🚀 ソースコード
-│   ├── mcp_server_stdio_v4.js       # メインサーバー (STDIO のエントリポイント)
-│   ├── mcp_server_http.js           # HTTP のエントリポイント（v1.11.0）
-│   ├── 📁 mcp/                      # MCP実装（httpServer.js = HTTP の受け口）
-│   ├── 📁 services/                 # ビジネスロジック
-│   ├── 📁 validators/               # データ検証（物理・単位・衝突）
-│   ├── 📁 utils/                    # ユーティリティ
-│   │   ├── paths.js                 # ★ パス管理（POKER_MCP_HOME起点）
-│   │   ├── logger.js                # ログ出力（絶対パス）
-│   │   └── ...
-│   └── 📁 config/                   # 設定管理
-├── 📁 tools/                        # 🔧 CAD連携（レイトレーサ・経路生成）
-├── 📁 docs/                         # 📚 完全ドキュメント
-├── .mcp.json                        # MCPクライアント接続設定
-├── package.json                     # パッケージ定義
-└── README.md                        # このファイル
-
-# 実行時に自動作成されるディレクトリ（POKER_MCP_HOME配下）
-# デフォルト: C:\Users\<username>\.poker-mcp\  または  ~/.poker-mcp/
-POKER_MCP_HOME/
-├── 📁 tasks/                        # 📊 作業ディレクトリ
-│   ├── poker.yaml                   # メインYAMLファイル
-│   └── pending_changes.json         # 保留中の変更
-├── 📁 backups/                      # 💾 自動バックアップ（最大10世代）
-├── 📁 data/                         # 🧪 核種データベース
-│   └── ICRP-07.NDX                  # ICRP-07核種データ（1,254核種）
-├── 📁 logs/                         # 📝 ログファイル
-│   ├── error.log
-│   └── combined.log
-├── 📁 jobs/                         # ⏳ 非同期ジョブ（POKER_MCP_ASYNC=1 のときだけ）
-│   └── <ジョブID>/                  # job.json・入力のコピー・.summary・.dose・stdout/stderr
-└── config.json                      # ユーザー設定（任意）
-```
-
-## 🔧 Claude経由での使用例
-
-### 立体作成と衝突検出
-```
-「医療施設用のコンクリート遮蔽壁を作成してください。サイズは幅100cm、高さ200cm、厚さ30cmです」
-```
-→ `poker_proposeBody`メソッドが自動実行 + 衝突検出
-
-### 材料ゾーン設定
-```
-「作成した遮蔽壁にコンクリート材料（密度2.3g/cm³）を割り当ててください」
-```
-→ `poker_proposeZone`メソッドが自動実行
-
-### 線源配置（子孫核種自動追加）
-```
-「Cs-137線源（放射能1TBq）を原点に配置してください」
-```
-→ `poker_proposeSource`メソッド実行 + Ba-137m自動追加提案
-
-### 検出器設置と最適化
-```
-「遮蔽壁から120cm離れた位置に2D検出器グリッドを設置してください」
-```
-→ `poker_proposeDetector`メソッド実行 + 性能最適化提案
-
-### 単位系検証
-```
-「現在の単位設定の物理的整合性を確認してください」
-```
-→ `poker_validateUnitIntegrity`メソッドが自動実行
-
-### YAMLリセット
-```
-「立体構造だけクリアして、単位設定は保持したままリセットしてください」
-```
-→ `poker_resetYaml`メソッド（minimal level）実行
-
-### POKER計算実行
-```
-「遮蔽計算を実行して、線量分布結果を取得してください」
-```
-→ `poker_executeCalculation`メソッドが自動実行
-
-### 変更保存
-```
-「作成したモデルを保存してください」
-```
-→ `poker_applyChanges`メソッドが自動実行
-
-## 🌟 品質ステートメント
-
-### **✅ MCPプロトコル完全準拠**
-- **JSON-RPC 2.0**: 完全実装・エラーハンドリング完備
-- **STDIO通信**: 標準入出力による高速通信
-- **HTTP通信**: Streamable HTTP（stateless・JSON 応答）。トークン・Host・Origin を検査（v1.11.0）
-- **型安全性**: Zod Schema厳密検証
-- **エンタープライズ品質**: 99.97%可用性実績
-
-### **✅ 放射線遮蔽計算特化**
-- **物理的妥当性**: 全パラメータの物理検証
-- **材料データベース**: 標準遮蔽材料23種（lib_material.dat 準拠）
-- **単位系管理**: 4キー完全性保証（長さ・角度・密度・放射能）
-- **計算品質保証**: 自動整合性チェック
-
-### **✅ 実用性重視設計**
-- **自動バックアップ**: 全操作で自動データ保護（最大10世代）
-- **依存関係チェック**: 安全な削除・更新処理
-- **エラー回復**: ロールバック機能付き
-- **レスポンス速度**: <50ms応答時間
-
-### **✅ エラーハンドリング強化（v1.2.5）**
-- **propose/update自動判別**: エラーメッセージによる適切なメソッド案内
-- **専用エラーコード**: 各操作に固有のエラーコード体系
-- **材料名サジェスト**: 類似材料名の自動提案機能
-- **Transform参照検証**: 依存関係の事前チェック
-
-## 📊 対応する計算コード
-
-- **POKER**: 放射線遮蔽計算メインコード
-- **poker_cui**: コマンドライン実行インターフェース
-- **FreeCAD**: CAD連携レイトレース（`poker_generatePaths` を使う場合のみ）
-
-## 🔗 システム要件
-
-- **Node.js**: ≥18.0.0
-- **OS**: Windows, macOS, Linux
-- **MCP Client**: Claude Desktop (推奨)、その他MCPクライアント。HTTP 版には Claude Code、または Claude Desktop + `mcp-remote`
-- **メモリ**: 512MB以上推奨（大規模検出器使用時は1GB以上）
-- **POKER 本体**: v2.1.5 以降（`POKER_INSTALL_PATH` で場所を指定）
-- **FreeCAD**: 1.0 以降（CAD連携を使う場合。`FREECAD_PATH`、未設定なら自動探索）
-- **POKER の GUI（POKER.exe）**: `poker_openGui` を使う場合のみ。Windows 専用
-
-## 🧪 開発者向けの確認
-
-リポジトリで次を実行します。`check:manifest` 以外は POKER 本体が必要です（`POKER_INSTALL_PATH` 既定 `C:/Poker`）。
 
 | コマンド | 内容 |
 |---|---|
-| `npm run check:manifest` | ツール定義とマニフェストの整合。既定・非同期有効・非同期有効かつ GUI 無効の 3 通り |
-| `npm run test:jobs` | 非同期ジョブ。同期との全行一致、投入後の編集が混ざらないこと、待ち行列、再起動後の復元 |
-| `npm run test:gui` | `poker_openGui` の登録条件（`POKER_MCP_GUI=0` で外れ、計算は従来どおり動く） |
-| `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一、認証・Host・Origin の検査、起動を拒む設定 |
+| `npm run check:manifest` | ツール定義とマニフェストの整合（POKER 本体は不要） |
+| `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一であること |
+| `npm run test:jobs` | 非同期ジョブ。同期実行との全行一致 |
 | `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
-| `npm run test:pending` | 保留中の変更の表示 |
-| `npm run test:cad-validate` など | CAD 連携（FreeCAD が必要） |
+| `npm run test:cad-full` など | CAD 連携（FreeCAD が必要） |
 
-`test:jobs`・`test:gui`・`test:http` は、失敗があれば終了コード 1 で終わります。
+`check:manifest` 以外は POKER 本体が必要です。不具合の報告は
+[GitHub Issues](https://github.com/Hirao-Y/poker_mcp/issues) へお願いします。
 
-## 🎯 実際の使用ワークフロー
+## ライセンス
 
-### **典型的な研究ワークフロー**
-1. **Claude Desktopで自然言語指示**
-   ```
-   「医療施設のCT室遮蔽設計をしたいので、2m×3m×30cmのコンクリート壁を作成してください」
-   ```
+MIT License（[LICENSE](LICENSE)）。対象は本リポジトリの内容だけです。POKER 本体と FreeCAD は
+別途入手し、それぞれの利用条件に従ってください。poker-mcp は `poker_cui` を外部プロセスとして
+起動するだけなので、POKER 本体の利用条件には影響しません。
 
-2. **自動的なMCPメソッド実行**
-   - 立体作成 → 衝突検出 → 材料設定 → 線源配置 → 子孫核種確認 → 検出器設定
-
-3. **計算実行と結果取得**
-   ```
-   「遮蔽効果を計算して、規制値との比較結果を教えてください」
-   ```
-
-4. **結果の物理的解釈**
-   - 線量分布の解析
-   - 遮蔽効果の定量評価
-   - 法規制適合性の確認
-
-## 📝 更新履歴
-
-### v1.11.0 (2026-10)
-- ✨ HTTP（MCP の Streamable HTTP）で受ける入口 `src/mcp_server_http.js`（bin `poker-mcp-http`、`npm run start:http`）。道具の処理は stdio 版と共有
-- 🔒 トークン認証（`POKER_MCP_HTTP_TOKEN`）、Host ヘッダの検査、Origin 付き要求の拒否。外から届く設定でトークンが無ければ起動しない
-- ✅ `npm run test:http` を追加（ツール一覧・計算結果が stdio 版と同一）
-
-### v1.10.0 (2026-10)
-- ✨ 計算の非同期実行（`poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult`、`poker_getDoseMap` の `job_id`）。`POKER_MCP_ASYNC=1` のときだけ有効
-- ✨ `poker_openGui` を GUI が使える環境でだけ登録（`POKER_MCP_GUI=0`、Windows 以外、POKER.exe なしで外す）
-- ✅ `npm run test:jobs`（同期との全行一致、入力のスナップショット、再起動後の復元）と `npm run test:gui` を追加
-- 🔧 `npm run check:manifest` が非同期ジョブ有効時・GUI 無効時のツール定義も照合
-
-### v1.9.9 (2026-10)
-- 🐛 `tools/gen_input.py` と `tools/scatter.py` を npm パッケージに同梱（`poker_generateInput` が npm 版で動かなかった）
-- 🐛 ツールの失敗が `isError: true` として伝わるよう修正（応答の二重包みを解消、`success: false` に `isError` を付与）
-- 🐛 `poker_executeCalculation` の計算エラー処理が `this` 未定義で落ちていた問題を修正
-
-### v1.9.8 (2026-10)
-- ✨ `poker_getSchema`（入力YAML・`.paths`・`.summary`・`.dose` の書式を JSON Schema で取得）
-- 🐛 `poker_getDoseMap` が `.dose` の列構成を `information` から読むようになり、線量種別の増加に追随
-- ✅ `npm run test:schema` を追加
-
-### v1.9.0〜v1.9.7 (2026-09)
-- ✨ `poker_generateInput`（CAD から入力 YAML を生成）
-- ✨ `generatePaths` が `thinnedindices` を `.paths` 生成に必要な値へ自動調整
-- ✨ `.paths` の座標・個数照合を強化
-
-### v1.8.0〜v1.8.3 (2026-09)
-- ✨ CAD連携が MCP だけで完結（`poker_generatePaths` と `path_input`）
-- ✨ `FREECAD_PATH` 環境変数（未設定なら PATH と既定の場所を自動探索）
-- 🐛 相対パスの解決をプロセスのカレントから `TASKS_DIR` 基準に修正
-- 🐛 `generatePaths` と `executeCalculation` のサマリー衝突を修正
-
-### v1.7.0〜v1.7.2 (2026-09)
-- ✨ ThinnedIndices 操作系 3メソッド（サマリー出力量の制御）
-- ✨ `get` 系が保留中の変更を `pending` として併記
-- ✨ `.paths` の座標照合（検出器を動かして再生成し忘れた場合を検出）
-
-### v1.6.0 (2026-09)
-- ✨ CAD連携レイトレースのツール群と `.paths` フォーマット
-- ✨ 材料システムを `lib_material.dat` 準拠に
-
-### v1.5.0 (2026-08)
-- ✨ `poker_openGui` で POKER を閉じずに表示を切り替え（POKER 2.1.1 以降）
-- 🐛 起動失敗時の偽の成功報告を修正
-
-### v1.4.0 (2026-07)
-- ✨ 子孫核種の自動管理（ICRP-07 準拠）
-
-### v1.3.0 (2026-06)
-- ✨ `poker_getDoseMap`（グリッド検出器の線量マップ取得）
-
-### v1.2.8 (2026-05-16)
-- ✨ `poker_openGui` メソッドを新設（POKER.exe でGUI確認）
-- ✨ 起動前に `applyChanges` を自動実行
-- ✨ `yaml_file` 省略可（デフォルト: `poker.yaml`）、`POKER_INSTALL_PATH` 環境変数使用
-
-### v1.2.7 (2026-05-16)
-- 🐛 `poker_executeCalculation` の `yaml_file` パス解決バグを修正（スキーマ・ハンドラー間の矛盾）
-- ✨ ファイル名のみの指定で `POKER_MCP_HOME/tasks/` 配下を自動参照
-- 📝 `API_COMPLETE.md`・`INTEGRATION_GUIDE.md`・`RESEARCH_WORKFLOWS.md` 更新
-
-### v1.2.6 (2026-05-16)
-- 🐛 `npx` 実行時のSERVER DISCONNECTED問題を修正（EPERM: C:\Windows\System32\logs）
-- ✨ `src/utils/paths.js` 新設（`POKER_MCP_HOME`環境変数によるパス一元管理）
-- ✨ `POKER_MCP_HOME`環境変数サポート（未設定時は`~/.poker-mcp/`をデフォルト使用）
-- 🐛 全ファイルパスを絶対パスに変更（logger, DataManager, ConfigManager, server）
-- ✨ 致命的エラーを`stderr`にも出力（Claude Desktopログから原因確認可能に）
-
-### v1.2.5 (2025-01-24)
-- ✨ 衝突検出システム実装
-- ✨ 子孫核種自動補完機能追加（ICRP-07統合）
-- ✨ 単位系完全性検証強化（4キー保証）
-- ✨ YAMLリセット機能実装（3段階レベル）
-- ✨ 検出器分析機能追加
-- 🐛 NuclideManagerデフォルトパス統一
-- 📝 材料数13→14（VOID追加明記）
-
-### v1.1.0 (Previous)
-- 基本24メソッド実装
-- MCP 1.0.0準拠
-- 自動バックアップ機能
-
-### v1.0.0 (Initial Release)
-- 初期リリース
-- YAML管理基本機能
-
-## 📜 ライセンス
-
-**MIT License** — 著作権 (c) 2025-2026 Yoshihiro Hirao。全文は
-[LICENSE](LICENSE) を参照してください。
-
-このライセンスが及ぶのは本リポジトリの内容（poker-mcp）だけです。POKER itself is
-obtained separately and licensed separately. poker-mcp は `poker_cui` を外部
-プロセスとして起動するだけなので、POKER 本体の許諾には影響しません。FreeCAD も
-別途入手が必要で、それぞれのライセンスに従います。
-
-## 📞 サポート・詳細情報
-
-- **📖 詳細README**: [docs/README.md](docs/README.md)
-- **📚 完全マニュアル**: [docs/manuals/](docs/manuals/)
-- **🎓 インタラクティブガイド**: [docs/interactive_guides/](docs/interactive_guides/)
-- **📋 変更履歴**: [CHANGELOG.md](CHANGELOG.md)
-- **🐛 Issues**: [GitHub Issues](https://github.com/Hirao-Y/poker_mcp/issues)
-
----
-
-**🎯 Poker MCP Server v1.11.0**  
-**プロトコル**: MCP 1.0.0 完全準拠  
-**作者**: Yoshihiro Hirao | **ライセンス**: MIT
+Copyright (c) 2025-2026 Yoshihiro Hirao
