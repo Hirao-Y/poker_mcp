@@ -71,6 +71,36 @@ export class NuclideValidator {
         );
       }
       
+      // 中性子の行（POKER 2.3.0、particle: neutron）: emission [n/s] で書く。核種名の書式（光子の核種表）は
+      // 当てはまらない（AmBe-Sources4C など）。目録との照合は POKER（--validate）が行う。
+      if (item.emission !== undefined) {
+        if (item.radioactivity !== undefined) {
+          throw PokerMcpError.validationError(
+            `inventory[${i}] has both emission and radioactivity (a neutron line takes emission [n/s] only)`,
+            `inventory[${i}]`, item);
+        }
+        if (typeof item.emission !== 'number' || !(item.emission > 0)) {
+          throw PokerMcpError.validationError(
+            `inventory[${i}].emission must be a positive number (n/s)`, `inventory[${i}].emission`, item.emission);
+        }
+        if (item.nuclide !== undefined) {
+          if (typeof item.nuclide !== 'string' || !item.nuclide.trim() || item.energy !== undefined || item.spectrum !== undefined) {
+            throw PokerMcpError.validationError(
+              `inventory[${i}]: a neutron nuclide line is { nuclide, emission } (no energy / spectrum)`, `inventory[${i}]`, item);
+          }
+        } else {
+          if (typeof item.energy !== 'number' || !(item.energy > 0)) {
+            throw PokerMcpError.validationError(
+              `inventory[${i}]: a neutron line needs nuclide, or energy > 0 (MeV)`, `inventory[${i}].energy`, item.energy);
+          }
+          if (item.spectrum !== undefined && (typeof item.spectrum !== 'number' || item.spectrum < 0)) {
+            throw PokerMcpError.validationError(
+              `inventory[${i}].spectrum must be a number >= 0`, `inventory[${i}].spectrum`, item.spectrum);
+          }
+        }
+        continue;
+      }
+
       // 必須フィールドの存在チェック
       if (!item.nuclide) {
         throw PokerMcpError.validationError(

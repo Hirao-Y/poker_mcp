@@ -15,6 +15,7 @@ import { daughterNuclideTools } from './daughterNuclideTools.js';
 import { guiTools } from './guiTools.js';
 import { schemaTools } from './schemaTools.js';
 import { equilTools } from './equilTools.js';
+import { particleTools } from './particleTools.js';
 import { jobTools, withJobIdParam } from './jobTools.js';
 import { isAsyncEnabled } from '../../utils/asyncConfig.js';
 import { isGuiEnabled } from '../../utils/guiConfig.js';
@@ -39,7 +40,8 @@ const baseTools = [
   ...daughterNuclideTools,
   ...(guiAvailable ? guiTools : []),
   ...schemaTools,
-  ...equilTools
+  ...equilTools,
+  ...particleTools
 ];
 
 // 非同期ジョブ（POKER_MCP_ASYNC=1）が有効なときだけ、ジョブ系の 3 ツールを加え、

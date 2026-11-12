@@ -657,6 +657,14 @@ export class SafeDataManager {
         await this.applyProposeThinnedIndices(data);
         break;
 
+      // particle（POKER 2.3.0）: neutron は先頭に particle を置く、photon は消す
+      case 'setParticle': {
+        const { particle: _old, ...rest } = this.data;
+        this.data = data.particle === 'neutron' ? { particle: 'neutron', ...rest } : rest;
+        logger.info('particle を設定しました', { particle: data.particle });
+        break;
+      }
+
       case 'updateThinnedIndices':
         await this.applyUpdateThinnedIndices(data);
         break;
@@ -1048,6 +1056,10 @@ export class SafeDataManager {
       // 各線源の inventory をチェック
       for (const source of sourcesToCheck) {
         if (!source.inventory || source.inventory.length === 0) {
+          continue;
+        }
+        // 中性子線源（emission）には子孫核種が無い（POKER 2.3.0）
+        if (source.inventory.some(it => it && it.emission !== undefined)) {
           continue;
         }
 

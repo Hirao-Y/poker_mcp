@@ -24,24 +24,42 @@ export const sourceTools = [
         },
         inventory: {
           type: 'array',
-          description: '核種と放射能の組の配列',
+          description: '核種と強さの組の配列。光子: { nuclide, radioactivity [Bq] }。中性子（particle: neutron のとき）: { nuclide, emission [n/s] } または { energy [MeV], spectrum（省略時 1）, emission [n/s] }（その行の強さは spectrum × emission）。',
           minItems: 1,
           items: {
             type: 'object',
             properties: {
               nuclide: {
                 type: 'string',
-                description: '核種名（元素記号と質量数の連結形式、例: Cs137, Co60）',
-                pattern: '^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$'
+                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Sources4C / PuBe'
               },
               radioactivity: {
                 type: 'number',
-                description: '放射能（単位Bq）',
+                description: '放射能（単位Bq）。光子のときだけ使う',
                 minimum: 0.001,
                 maximum: 1e18
+              },
+              emission: {
+                type: 'number',
+                description: '中性子の放出率 (n/s)。particle: neutron のときだけ使う（radioactivity の代わり）',
+                exclusiveMinimum: 0
+              },
+              energy: {
+                type: 'number',
+                description: '中性子のエネルギ (MeV)。particle: neutron のエネルギ線指定で使う（nuclide の代わり）',
+                exclusiveMinimum: 0
+              },
+              spectrum: {
+                type: 'number',
+                description: 'エネルギ線の割合（省略時 1）。その行の強さは spectrum × emission',
+                minimum: 0
               }
             },
-            required: ['nuclide', 'radioactivity'],
+            anyOf: [
+              { required: ['nuclide', 'radioactivity'] },
+              { required: ['nuclide', 'emission'] },
+              { required: ['energy', 'emission'] }
+            ],
             additionalProperties: false
           }
         },
@@ -717,23 +735,41 @@ export const sourceTools = [
         },
         inventory: {
           type: 'array',
-          description: '新しい核種インベントリ',
+          description: '新しい核種インベントリ。光子: { nuclide, radioactivity [Bq] }。中性子（particle: neutron のとき）: { nuclide, emission [n/s] } または { energy [MeV], spectrum（省略時 1）, emission [n/s] }（その行の強さは spectrum × emission）。',
           items: {
             type: 'object',
             properties: {
               nuclide: {
                 type: 'string',
-                description: '核種名（連結形式、例: Cs137, Co60）',
-                pattern: '^[A-Z][a-z]{0,2}[0-9]{1,3}[a-z]?$'
+                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Sources4C / PuBe'
               },
               radioactivity: {
                 type: 'number',
-                description: '放射能 (Bq)',
+                description: '放射能 (Bq)。光子のときだけ使う',
                 minimum: 0.001,
                 maximum: 1e18
+              },
+              emission: {
+                type: 'number',
+                description: '中性子の放出率 (n/s)。particle: neutron のときだけ使う（radioactivity の代わり）',
+                exclusiveMinimum: 0
+              },
+              energy: {
+                type: 'number',
+                description: '中性子のエネルギ (MeV)。particle: neutron のエネルギ線指定で使う（nuclide の代わり）',
+                exclusiveMinimum: 0
+              },
+              spectrum: {
+                type: 'number',
+                description: 'エネルギ線の割合（省略時 1）。その行の強さは spectrum × emission',
+                minimum: 0
               }
             },
-            required: ['nuclide', 'radioactivity']
+            anyOf: [
+              { required: ['nuclide', 'radioactivity'] },
+              { required: ['nuclide', 'emission'] },
+              { required: ['energy', 'emission'] }
+            ]
           },
           minItems: 1
         },

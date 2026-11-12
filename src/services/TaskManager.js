@@ -1552,6 +1552,10 @@ export class TaskManager {
     if (!sourceData || !sourceData.inventory) {
       return { source: sourceData, added: [], skipped: [], warnings: [] };
     }
+    // 中性子線源（emission）には子孫核種の概念が無い
+    if (isNeutronInventory(sourceData.inventory)) {
+      return { source: sourceData, added: [], skipped: [], warnings: [] };
+    }
 
     try {
       const result = await reconcileInventory(sourceData.inventory, {
@@ -1582,6 +1586,68 @@ export class TaskManager {
     }
   }
 
+  //|
+  //| particle（photon / neutron。POKER 2.3.0 から）
+  //|   neutron: particle ノードを書く。photon: particle ノードを消す（書かなければ光子）。
+  //|
+  effectiveParticle() {
+    let p = (this.data && this.data.particle) || 'photon';
+    for (const c of this.pendingChanges || []) {
+      if (c.action === 'setParticle' && c.data) p = c.data.particle;
+    }
+    return String(p).toLowerCase() === 'neutron' ? 'neutron' : 'photon';
+  }
+
+  async setParticle(particle) {
+    if (particle !== 'photon' && particle !== 'neutron') {
+      throw PokerMcpError.validationError("particle は 'photon' か 'neutron' です", 'particle', particle);
+    }
+    // 既にある線源と食い違うなら止める（光子と中性子は 1 つのデッキに混ぜない）
+    const sources = (this.data && this.data.source) || [];
+    const wrong = sources.filter(s => s.inventory && isNeutronInventory(s.inventory) !== (particle === 'neutron'))
+                         .map(s => s.name);
+    if (wrong.length > 0) {
+      throw PokerMcpError.validationError(
+        `particle を ${particle} にすると、線源 ${wrong.join(', ')} の inventory と合いません` +
+        `（${particle === 'neutron' ? '中性子は emission [n/s]' : '光子は radioactivity [Bq]'} で書きます）。` +
+        '先に線源を直すか削除してください', 'particle', particle);
+    }
+    await this.dataManager.addPendingChange({ action: 'setParticle', data: { particle } });
+    const msg = particle === 'neutron'
+      ? '提案: particle: neutron（中性子の計算。inventory は emission [n/s]、材料・核種は poker_getSchema の properties.particle を参照）'
+      : '提案: particle を外す（光子の計算）';
+    return { message: msg, particle };
+  }
+
+  async getParticle() {
+    const current = ((this.data && this.data.particle) || 'photon').toLowerCase();
+    return {
+      particle: current,
+      ...(pendingInfo(this.pendingChanges, ['setParticle'], { merge: true }) || {})
+    };
+  }
+
+  // 線源の inventory が particle と合うか（中性子は emission、光子は radioactivity）
+  checkInventoryParticle(inventory, name) {
+    if (!Array.isArray(inventory) || inventory.length === 0) return;
+    const neutronItems = inventory.filter(it => it && it.emission !== undefined).length;
+    if (neutronItems > 0 && neutronItems < inventory.length) {
+      throw PokerMcpError.validationError(
+        `線源 ${name}: emission（中性子）と radioactivity（光子）の行が混ざっています`, 'inventory', inventory);
+    }
+    const particle = this.effectiveParticle();
+    if (neutronItems > 0 && particle !== 'neutron') {
+      throw PokerMcpError.validationError(
+        `線源 ${name}: emission [n/s] は中性子の線源です。先に poker_setParticle で particle: neutron にしてください`,
+        'inventory', inventory);
+    }
+    if (neutronItems === 0 && particle === 'neutron') {
+      throw PokerMcpError.validationError(
+        `線源 ${name}: particle: neutron のデッキでは inventory を emission [n/s] で書きます（radioactivity は使えません）`,
+        'inventory', inventory);
+    }
+  }
+
   // Source操作
   async proposeSource(params) {
     try {
@@ -1606,6 +1672,7 @@ export class TaskManager {
       
       if (!type) throw PokerMcpError.validationError('線源のtypeは必須です', 'type', type);
       if (!inventory) throw PokerMcpError.validationError('線源のinventoryは必須です', 'inventory', inventory);
+      this.checkInventoryParticle(inventory, name);
       
       // Source構造の包括的検証（SourceValidatorを使用）
       const validationResult = SourceValidator.validateCompleteSourceStructure(params);
@@ -1693,6 +1760,7 @@ export class TaskManager {
   async updateSource(name, updates) {
     try {
       if (!name) throw new ValidationError('線源のnameは必須です', 'name', name);
+      if (updates && updates.inventory) this.checkInventoryParticle(updates.inventory, name);
       
       // 既存更新専用チェック - マニフェスト仕様準拠
       this.validateUpdatePrerequisites('source', name, (n) => this.findSourceByName(n));
@@ -2235,4 +2303,9 @@ export class TaskManager {
       return [];
     }
   }
+}
+
+// 中性子線源の inventory か（emission [n/s] の行がある）。POKER 2.3.0 から。
+function isNeutronInventory(inventory) {
+  return Array.isArray(inventory) && inventory.some(it => it && it.emission !== undefined);
 }

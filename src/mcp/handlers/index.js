@@ -15,6 +15,7 @@ import { createGuiHandlers } from './guiHandlers.js';
 import { createSchemaHandlers } from './schemaHandlers.js';
 import { createJobHandlers } from './jobHandlers.js';
 import { createEquilHandlers } from './equilHandlers.js';
+import { createParticleHandlers } from './particleHandlers.js';
 
 /**
  * @param {Object} taskManager
@@ -47,6 +48,9 @@ export function createAllHandlers(taskManager, { jobManager = null, guiEnabled =
     // 単位操作
     ...createUnitHandlers(taskManager),
     ...createThinnedIndicesHandlers(taskManager),
+
+    // particle（photon / neutron。POKER 2.3.0 から）
+    ...createParticleHandlers(taskManager),
     ...createCadHandlers(taskManager),
     
     // 計算操作
