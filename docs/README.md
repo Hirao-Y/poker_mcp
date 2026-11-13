@@ -1,6 +1,6 @@
-﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.11.0
+﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.13.0
 
-**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（36メソッド完全実装。非同期ジョブ有効時は 39）
+**Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（43 ツール。非同期ジョブ有効時は 46）
 
 ## 🔬 概要
 
@@ -15,12 +15,21 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 ### ⚛️ 物理的背景
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
 
+### 🆕 v1.13.0 新機能（中性子線源）
+- **`poker_setParticle` / `poker_getParticle`**: `particle: neutron` にすると、POKER 2.3.0 の中性子計算（部品 poker_neutron、点減衰核法で中性子と 2 次γ線）を使える。線源の inventory は `{ nuclide, emission [n/s] }`（Cf252・AmBe・AmBe-Sources4C・PuBe）または `{ energy [MeV], spectrum, emission }`。POKER 2.2.x では設定の時点で止める
+- **修正: `poker_getDoseMap` の線量の種類**: 出力される線量の種類と並びは POKER の `lib/lib_setting.dat` で決まる。以前は E(AP)・DskinM(AP)・H*(10) の並びを決め打ちし、設定によっては別の線量の列を返していた。今は .summary の `result_total.columns` で対応づけ、無い種類には使える種類を返す
+- npm で公開（`npm install -g poker-mcp`）
+
+### 🆕 v1.12.0 新機能（崩壊系列・放射平衡）
+- **`equil_*` の 5 ツール**: POKER の付属ツール EquilibriumSheet のコマンドライン版を呼び、核種の一覧・崩壊系列と放射平衡の表・Bateman 式による経過時間後の量と時間変化・放出データを返す
+- 暗号化された ICRP-07.NDX からも子孫核種の自動補完の核種データベースを読む
+
 ### 🆕 v1.11.0 新機能（HTTP の入口）
 - **HTTP 版 `poker-mcp-http`**: MCP の Streamable HTTP で受ける入口 `src/mcp_server_http.js`
   （`npm run start:http`）。別の機械の Claude Code や、`mcp-remote` を介した Claude Desktop から使える。
   道具の処理は stdio 版と共有し、ツール一覧と計算結果は stdio 版と同一。外から届く設定ではトークン
   （`POKER_MCP_HTTP_TOKEN`）が必須。stdio 版（Claude Desktop のローカル利用）は従来どおり。
-  npm にはまだ公開していない。設定は [ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)、接続は
+  設定は [ADMIN_GUIDE.md](manuals/ADMIN_GUIDE.md)、接続は
   [INTEGRATION_GUIDE.md](manuals/INTEGRATION_GUIDE.md)
 
 ### 🆕 v1.10.0 新機能（リモート公開に向けて）
@@ -250,7 +259,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 - **OS**: Windows, macOS, Linux（poker_openGui は Windows 専用）
 
 ### ⚡ パフォーマンス
-- **メソッド応答**: <50ms（計算実行を除く。36メソッド全対応）
+- **メソッド応答**: <50ms（計算実行を除く。全ツール）
 - **データ保存**: <200ms
 - **メモリ使用**: 40-200MB（データサイズ依存）
 - **自動修復**: <1秒（YAMLファイル破損時）
@@ -267,7 +276,7 @@ Cs137を指定すれば娘核種Ba137mは自動生成されます。」
 ## 🔗 外部連携
 
 ### 📊 POKER計算コード連携
-- YAML入力ファイル生成（36メソッド対応）
+- YAML入力ファイル生成（全ツール対応）
 - poker_cui 実行サポート（poker_executeCalculation）
 - POKER.exe GUI 起動（poker_openGui、Windows専用。POKER.exe が無い環境と `POKER_MCP_GUI=0` では登録されない）
 - サマリーファイル（5セクション）取得と解析
@@ -328,7 +337,7 @@ total_doses = summary['result_total']
 
 ### 📧 技術サポート
 - **基本操作**: [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md)参照
-- **36メソッド詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
+- **ツール詳細**: [API_COMPLETE.md](manuals/API_COMPLETE.md)参照
 - **子孫核種の自動管理**: [DAUGHTER_NUCLIDE_MANAGEMENT.md](DAUGHTER_NUCLIDE_MANAGEMENT.md)参照（v1.4.0）
 - **物理的背景**: [PHYSICS_REFERENCE.md](manuals/PHYSICS_REFERENCE.md)参照（v1.4.0更新）
 - **材料システム**: [MATERIAL_SYSTEM.md](manuals/MATERIAL_SYSTEM.md)参照（v1.8.1更新）
@@ -344,13 +353,13 @@ total_doses = summary['result_total']
 ## 🌟 プロジェクトの価値
 
 ### ✨ 研究者への価値
-- **効率化**: 36メソッドによる入力ファイル作成時間80%短縮
+- **効率化**: MCP ツールによる入力ファイル作成時間80%短縮
 - **品質向上**: Unit操作5メソッド・ThinnedIndices操作3メソッドによる設定ミスゼロ化
 - **精度向上**: 子孫核種自動考慮による物理的完全性
 - **検証強化**: サマリー5セクション解析
 
 ### 🏢 組織への価値
-- **標準化**: 36メソッドによる手法統一
+- **標準化**: MCP ツールによる手法統一
 - **エラー削減**: 13種エラーコード自動対処
 - **知識共有**: サマリーファイル解析の形式知化
 - **品質保証**: Unit操作による国際標準準拠
@@ -359,7 +368,7 @@ total_doses = summary['result_total']
 - **安全性向上**: 子孫核種考慮による精密計算
 - **医療安全**: Unit操作による単位ミス防止
 - **研究促進**: サマリーファイル解析効率化
-- **教育支援**: 36メソッドによる体系的学習
+- **教育支援**: MCP ツールによる体系的学習
 
 ---
 
@@ -377,6 +386,13 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 ## 🔄 更新履歴
 
 詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
+
+### v1.13.0
+- 中性子線源（poker_setParticle / poker_getParticle、inventory の emission・エネルギ線）。POKER 2.3.0 以降
+- getDoseMap の dose_type を lib_setting.dat の設定どおりに対応づける修正
+
+### v1.12.0
+- 崩壊系列・放射平衡の equil_* 5 ツール（EquilibriumSheet_CUI）
 
 ### v1.11.0
 - HTTP（MCP の Streamable HTTP）で受ける入口 `poker-mcp-http`。トークン認証、Host・Origin の検査
@@ -425,5 +441,5 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 
 **🚀 今すぐ始める**: Claude Desktopで「poker_getUnitで単位系を確認して」と入力
 **📚 詳細学習**: [manuals/](manuals/)フォルダの各マニュアル参照
-**⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で全36メソッド確認
+**⚡ 素早く参照**: [QUICK_REFERENCE.md](manuals/QUICK_REFERENCE.md)で全ツール確認
 **💡 NPX使用**: [NPX_USAGE.md](NPX_USAGE.md)でNPXインストール方法を確認

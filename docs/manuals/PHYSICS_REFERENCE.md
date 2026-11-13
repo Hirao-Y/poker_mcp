@@ -2,8 +2,8 @@
 
 **⚛️ 対象**: 放射線遮蔽計算の物理的背景を理解したい研究者  
 **📚 マニュアル階層**: エッセンシャル層  
-**🔧 対応システム**: Poker MCP Server v1.10.0 MCP Edition  
-**🔧 バージョン**: 1.10.0 MCP Edition  
+**🔧 対応システム**: Poker MCP Server v1.13.0 MCP Edition  
+**🔧 バージョン**: 1.13.0 MCP Edition  
 **📅 最終更新**: 2026年10月
 
 ---

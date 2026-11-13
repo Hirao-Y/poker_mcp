@@ -1,8 +1,8 @@
 # 🔗 システム統合ガイド - Poker MCP
 
 **対象読者**: システム統合エンジニア・上級ユーザー・研究者  
-**バージョン**: 1.11.0 MCP Edition  
-**最終更新**: 2026年10月  
+**バージョン**: 1.13.0 MCP Edition  
+**最終更新**: 2026年11月  
 **統合方式**: Claude Desktop + MCP + 外部システム（別の機械からは HTTP 版、v1.11.0）
 
 ---
@@ -11,19 +11,19 @@
 
 ### 🌐 **最新MCP統合設計**
 - **Claude Desktop中心**: MCP v1.0準拠の自然言語ベース統合
-- **36メソッド完全活用**: 全機能を活用した統合設計
+- **全ツール（既定 43）の活用**: 全機能を活用した統合設計
 - **外部計算コード**: poker_cui実行・結果解析統合
-- **Python自動化**: 36メソッドAPI活用による高度な自動化
+- **Python自動化**: MCP ツールの API 活用による高度な自動化
 - **データ可視化**: 結果の効果的な可視化・解析
 
 ### 📊 **実装ベース実用性**
-現在のPoker MCP Server v1.11.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
+現在のPoker MCP Server v1.13.0の実装機能をフル活用した、即座に利用可能な統合手法を提供。
 
 ---
 
-## 📋 36メソッド構成詳細
+## 📋 ツール構成詳細
 
-### **メソッド内訳(既定で合計36メソッド)**
+### **メソッド内訳(既定で合計43メソッド)**
 - **Body操作**: 3メソッド(propose, update, delete)
 - **Zone操作**: 3メソッド(propose, update, delete)
 - **Transform操作**: 3メソッド(propose, update, delete)
@@ -35,14 +35,16 @@
 - **CAD連携**: 2メソッド
 - **System操作**: 6メソッド（applyChanges / executeCalculation / resetYaml / confirmDaughterNuclides / openGui / getDoseMap。子孫核種の生成自体は propose/updateSource 時に自動）
 - **Schema**: 1メソッド
+- **粒子**: 2メソッド（setParticle / getParticle。中性子は POKER 2.3.0 以降、v1.13.0）
+- **崩壊系列・放射平衡**: 5メソッド（equil_listNuclides / equil_getChain / equil_calculateDecay / equil_getSeries / equil_getEmissions、v1.12.0）
 
 ### **条件によって変わるメソッド（v1.10.0）**
 
 | 条件 | ツール数 | 変化 |
 |---|---|---|
-| 既定（Windows で POKER.exe あり） | 36 | — |
-| `POKER_MCP_ASYNC=1` | 39 | Job系 3（submitCalculation / getJobStatus / getJobResult）が加わり、getDoseMap に `job_id` 引数が付く |
-| GUI が使えない環境 | 35 / 38 | `poker_openGui` が外れる（下記 1.3 参照） |
+| 既定（Windows で POKER.exe あり） | 43 | — |
+| `POKER_MCP_ASYNC=1` | 46 | Job系 3（submitCalculation / getJobStatus / getJobResult）が加わり、getDoseMap に `job_id` 引数が付く |
+| GUI が使えない環境 | 42 / 45 | `poker_openGui` が外れる（下記 1.3 参照） |
 
 ### **10種類立体タイプ完全対応**
 - SPH（球体）
@@ -464,7 +466,7 @@ Claude Desktop 指示:
 
 ---
 
-## 🐍 第3章: Python自動化システム（36メソッド対応）
+## 🐍 第3章: Python自動化システム（全ツール対応）
 
 ### 3.1 完全自動化フレームワーク
 
@@ -945,7 +947,7 @@ class BatchProcessor:
 | 問題 | 原因 | 対処法 |
 |------|------|--------|
 | MCP接続エラー | サーバー未起動 | Claude Desktop設定確認、node.js確認 |
-| メソッドが見つからない | メソッド名誤り | 36メソッドリスト確認 |
+| メソッドが見つからない | メソッド名誤り | ツール一覧（API_COMPLETE）確認 |
 | `poker_openGui` が無い | GUI が使えない環境と判定された | 起動ログの `poker_openGui: 無効（理由）` を確認 |
 | `poker_submitCalculation` 等が無い | 非同期ジョブが無効 | `POKER_MCP_ASYNC=1` を設定して再起動 |
 | 長い計算が途中で切れる | クライアント・中継の待ち時間の上限 | 非同期ジョブ（2.3 節）を使う |
@@ -1064,11 +1066,11 @@ class OptimizationEngine:
 
 ## 📋 まとめ: 統合システムの価値
 
-### ✨ **36メソッド完全活用による価値**
+### ✨ **全ツール活用による価値**
 
 1. **設計自由度**: 10種類立体による複雑形状対応
 2. **計算精度**: 5つのUnit操作による単位系完全管理
-3. **作業効率**: 36メソッド統合による完全自動化
+3. **作業効率**: ツール統合による完全自動化
 4. **品質保証**: 自動バックアップ・検証機能
 
 ### 🌟 **統合のベストプラクティス**
@@ -1085,7 +1087,7 @@ class OptimizationEngine:
 3. 簡単なモデルから開始
 4. 段階的に複雑な統合へ
 
-**この統合ガイドにより、Poker MCP Server v1.11.0の36メソッド機能を最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
+**この統合ガイドにより、Poker MCP Server v1.13.0の全ツールを最大限活用し、実用的な放射線遮蔽計算統合環境を実現できます。**
 
 ---
 

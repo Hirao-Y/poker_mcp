@@ -2,7 +2,7 @@
 
 **対象読者**: 放射線遮蔽研究者・実務者  
 **更新日**: 2026年10月  
-**バージョン**: 1.11.0 MCP Edition  
+**バージョン**: 1.13.0 MCP Edition  
 **目的**: 日常業務での迅速な参照と効率的な作業支援
 
 ---
@@ -30,10 +30,10 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 詳細は [CAD_RAYTRACE.md](CAD_RAYTRACE.md)、トラブル対応は
 [TROUBLESHOOTING.md](TROUBLESHOOTING.md) 第2.6章。
 
-## 📖 第1章: 36メソッド早見表
+## 📖 第1章: ツール早見表
 
-> 既定（Windows で POKER.exe あり）は 36。`POKER_MCP_ASYNC=1` で Job 系 3 が加わり 39。
-> GUI が使えない環境では `poker_openGui` が外れて 1 減る（35 / 38）。
+> 既定（Windows で POKER.exe あり）は 43。`POKER_MCP_ASYNC=1` で Job 系 3 が加わり 46。
+> GUI が使えない環境では `poker_openGui` が外れて 1 減る（42 / 45）。
 
 ### 🔷 Body操作系(3メソッド) - 10種類立体完全対応
 
@@ -100,7 +100,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 |---------|------|----------|
 | **poker_applyChanges** | 変更適用 | 自動バックアップ付き保存 |
 | **poker_executeCalculation** | 計算実行 | poker_cui実行・構造化result_total取得 |
-| **poker_getDoseMap** | 線量マップ取得 | グリッド検出器の全評価点（1D/2D/3D）。非同期有効時は `job_id` 指定可 |
+| **poker_getDoseMap** | 線量マップ取得 | グリッド検出器の全評価点（1D/2D/3D）。`dose_type` は `dose_columns` の name（lib_setting.dat の設定で決まる。例 E(AP)・Kair・H*(10)）。非同期有効時は `job_id` 指定可 |
 | **poker_resetYaml** | 初期化 | 3段階リセット・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動 |
 | **poker_openGui** | GUI表示 | POKER.exe起動・Windows専用。GUI が使える環境でだけ登録 |
@@ -159,6 +159,42 @@ poker_getSchema(kind="dose")       # .dose の読み方（数値表の索引は 
 材料名・核種名の一覧は実行環境の材料ライブラリから埋められます。
 参照の解決や名前の存在確認は `poker_executeCalculation`（内部で
 `poker_cui --validate`）の担当で、スキーマは書式・型・値域までを規定します。
+
+### ⚛️ 粒子操作系（2メソッド）- 光子・中性子（v1.13.0）
+
+| メソッド | 機能 | 主要機能 |
+|---------|------|----------|
+| **poker_setParticle** | 粒子の設定 | `photon`（既定）/ `neutron`。applyChanges で確定。neutron は POKER 2.3.0 以降（古い POKER では止める） |
+| **poker_getParticle** | 粒子の確認 | 保留中の変更も示す |
+
+```
+poker_setParticle(particle="neutron")
+poker_proposeSource(name="Cf", type="POINT", position="0 0 0",
+                    inventory=[{nuclide:"Cf252", emission:2.3e9}])      # 核種と放出率 [n/s]
+poker_proposeSource(name="Line", type="POINT", position="0 0 0",
+                    inventory=[{energy:2.5, spectrum:1, emission:1e9}])  # エネルギ線 [MeV]
+```
+
+- 中性子の核種は Cf252・AmBe・AmBe-Sources4C・PuBe。材料は VOID・Air・Water・Polyethylene・Concrete・Soil・Iron・Lead（密度は目録の値と 1% 以内）
+- `radioactivity` は使えない。子孫核種の自動補完はしない。`buildup_factor` は無視される
+- 多層（空気・VOID を除く 2 種類以上の遮蔽材を通る経路）は計算されるが、summary に警告 `NEUTRON_MULTILAYER`
+
+### 🧬 崩壊系列・放射平衡（5メソッド）- EquilibriumSheet（v1.12.0）
+
+| メソッド | 機能 | 主要機能 |
+|---------|------|----------|
+| **equil_listNuclides** | 核種の一覧 | ICRP Publ.107、1,252 核種。`filter` で絞る |
+| **equil_getChain** | 崩壊系列と平衡の表 | 永続・過渡・非平衡の判定。`detail="full"` でツリー |
+| **equil_calculateDecay** | 経過時間後の量 | 原子数・質量・放射能（Bateman 式）、親との比、tmax |
+| **equil_getSeries** | 時間変化 | 原子数または放射能。EquilibriumSheet のグラフと同じ点 |
+| **equil_getEmissions** | 放出データ | 1 壊変あたりの光子の数（POKER の線源と同じ値）とベータスペクトル |
+
+```
+equil_getChain(nuclide="Cs-137")
+equil_calculateDecay(nuclide="Mo-99", time="2d", initial={activity_Bq:1e10})
+```
+
+EquilibriumSheet_CUI.exe（POKER のインストール先）が無い環境では `EQUIL_CUI_NOT_AVAILABLE` を返します。
 
 ---
 
@@ -578,7 +614,7 @@ Claude Desktop指示:
 | **-32079** | 線源が存在しない | poker_proposeSourceを使用 |
 | **-32031** | CMB参照立体未定義 | 参照立体を先に作成 |
 | **-32600** | 不正リクエスト | パラメータ形式確認 |
-| **-32601** | メソッド不在 | 36メソッド名確認（Job 系は `POKER_MCP_ASYNC=1`、openGui は GUI が使える環境でだけ存在） |
+| **-32601** | メソッド不在 | ツール名確認（Job 系は `POKER_MCP_ASYNC=1`、openGui は GUI が使える環境でだけ存在） |
 
 ### ツールの失敗と isError（v1.9.9）
 - ツールが `success: false` を返した失敗は MCP の `isError: true` で伝わる。本文（JSON の `success: false`, `error` 等）は従来どおり
@@ -664,7 +700,7 @@ divisions:
 ## 💡 まとめ: クイックリファレンス活用法
 
 ### ✨ **日常使用パターン**
-1. **36メソッド早見表**で適切なメソッド選択
+1. **ツール早見表**で適切なメソッド選択
 2. **立体タイプ表**で形状パラメータ確認
 3. **エラーコード表**で迅速トラブル解決
 4. **標準ワークフロー**で効率的作業実行
@@ -681,7 +717,7 @@ divisions:
 - 分割数の最適化
 - 物理的妥当性の系統的確認
 
-**このクイックリファレンスで、36メソッド・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
+**このクイックリファレンスで、43 ツール・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
 
 ---
 

@@ -2,19 +2,19 @@
 
 **🎯 対象**: システム管理者・上級ユーザー・開発者  
 **📚 マニュアル階層**: テクニカル層  
-**🔧 対応システム**: Poker MCP Server v1.11.0  
-**🔧 バージョン**: 1.11.0 MCP Edition  
-**📅 最終更新**: 2026年10月
+**🔧 対応システム**: Poker MCP Server v1.13.0  
+**🔧 バージョン**: 1.13.0 MCP Edition  
+**📅 最終更新**: 2026年11月
 
 ---
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠した36メソッドの詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠したツール（既定 43）の詳細仕様を提供します。
 
-> **ツール数は環境によって変わります。** 既定（Windows で POKER.exe あり）は 36。
-> 環境変数 `POKER_MCP_ASYNC=1` で非同期ジョブを有効にすると Job 系 3 メソッドが加わり 39 になります。
-> GUI が使えない環境では `poker_openGui` が外れ、それぞれ 1 減ります（35 / 38）。
+> **ツール数は環境によって変わります。** 既定（Windows で POKER.exe あり）は 43（v1.12.0 で崩壊系列の 5、
+> v1.13.0 で粒子の 2 を追加）。環境変数 `POKER_MCP_ASYNC=1` で非同期ジョブを有効にすると Job 系 3 メソッドが加わり 46 になります。
+> GUI が使えない環境では `poker_openGui` が外れ、それぞれ 1 減ります（42 / 45）。
 > 条件は下記の「Job操作系」と「poker_openGui」の項を参照してください。
 
 ### 🎯 対象読者
@@ -30,7 +30,7 @@
 
 ---
 
-## 📚 36メソッド完全実装一覧
+## 📚 ツール一覧（既定 43）
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -84,7 +84,7 @@
 
 | **メソッド名** | **機能** | **線源タイプ** |
 |---------------|----------|---------------|
-| **poker_proposeSource** | 放射線源作成 | POINT, SPH, RCC, RPP, BOX |
+| **poker_proposeSource** | 放射線源作成（光子は核種と放射能、中性子は放出率。下記「粒子操作系」） | POINT, SPH, RCC, RPP, BOX |
 | **poker_updateSource** | 線源パラメータ更新 | inventory, geometry, division対応 |
 | **poker_deleteSource** | 線源削除 | 計算影響確認付き |
 
@@ -278,7 +278,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | **poker_resetYaml** | YAMLファイルリセット | 3段階リセットレベル・ATMOSPHERE保護 |
 | **poker_confirmDaughterNuclides** | 子孫核種の除外・復活・手動指定 | 生成は propose/updateSource 時に自動。除外は線源ごと |
 | **poker_openGui** | POKER GUI 起動 | applyChanges自動実行・Windows専用・POKER_INSTALL_PATH依存。GUI が使える環境でだけ登録（v1.10.0） |
-| **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避。非同期有効時は `job_id` 指定可 |
+| **poker_getDoseMap** | グリッド検出器の線量マップ取得 | `.dose` から全評価点を取得（1D/2D/3D）・サマリーの間引きを回避。`dose_type` は lib_setting.dat の設定で出力される線量（後述）。非同期有効時は `job_id` 指定可 |
 
 ### ⏳ **Job操作系(3メソッド) - 計算の非同期実行（POKER_MCP_ASYNC=1 のときだけ）**
 
@@ -320,7 +320,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 
 | kind | 対象 | 備考 |
 |---|---|---|
-| `input` | 入力 YAML | `unit` / `body` / `zone` / `transform` / `buildup_factor` / `source` / `detector` / `thinnedindices`。材料名・核種名・ビルドアップ材料名は `$defs` の `x-poker-names` に実在する名前が列挙される |
+| `input` | 入力 YAML | `particle`（POKER 2.3.0 以降）/ `unit` / `body` / `zone` / `transform` / `buildup_factor` / `source` / `detector` / `thinnedindices`。中性子の核種・材料は `properties.particle` の `x-poker-neutron-*`。材料名・核種名・ビルドアップ材料名は `$defs` の `x-poker-names` に実在する名前が列挙される |
 | `paths` | `.paths`（CAD から抽出した経路） | `paths` ノードは1行1レコードの平文。書式はその `description` に記載 |
 | `summary` | `.summary` | `information` / `sources` / `result_total` / `warnings`。`-l` の旧形式 `result_total` も `oneOf` で許容 |
 | `dose` | `.dose` | YAML の頭部のみを規定。数値表の読み方（ブロック・列・行の索引）は `x-poker-data-layout` に記載 |
@@ -344,6 +344,82 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 材料名・核種名の照合は**大文字小文字を区別しない**ため、`x-poker-names` は
 `enum` ではなく参考値として置かれています。`Iron` と書いても `iron` と書いても
 POKER は受け付けます。
+
+### ⚛️ **粒子操作系 (2メソッド) - 光子・中性子（v1.13.0）**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_setParticle** | 計算する粒子（`photon` / `neutron`）を設定 | `poker_applyChanges` で確定。neutron は POKER 2.3.0 以降 |
+| **poker_getParticle** | 現在の粒子を取得 | 保留中の変更があれば `pending` に示す |
+
+**引数**（`poker_setParticle`）
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `particle` | string | `photon`（既定）または `neutron` |
+
+**動作**
+
+- `neutron` にすると、入力 YAML の最上位に `particle: neutron` を書きます。計算は POKER の部品
+  poker_neutron（点減衰核法、中性子と 2 次γ線）が行います。`photon` にすると `particle` の行を消し、
+  従来の光子の計算に戻ります（POKER の既定）。
+- `neutron` にする前に、計算に使う poker_cui（PATH 上）の `--schema` に `properties.particle` があるかを
+  確かめます。古い POKER（2.2.x）なら「POKER 2.3.0 以降が必要」と止めます（`-32007`）。poker_cui を呼べず
+  確かめられないときは止めずに、応答に `note` を付けます。
+- 既にある線源の inventory と粒子が食い違う場合（中性子にするのに `radioactivity` の線源がある、など）は
+  止めます。光子と中性子の線源を 1 つの入力に混ぜることはできません。
+
+**中性子の線源の inventory**（`poker_proposeSource` / `poker_updateSource`）
+
+| 書き方 | 内容 |
+|---|---|
+| `{ nuclide, emission }` | 核種名と放出率 [n/s]。核種は `Cf252`・`AmBe`（ISO 8529）・`AmBe-Sources4C`・`PuBe` |
+| `{ energy, spectrum, emission }` | エネルギ線 [MeV]。その行の強さは `spectrum`（省略時 1）× `emission` [n/s] |
+
+- `radioactivity` は使えません（光子だけ）。逆に光子の入力で `emission` を使うと止めます。
+- 中性子の線源では子孫核種の自動補完をしません。
+- 材料は中性子の目録にあるもの（VOID・Air・Water・Polyethylene・Concrete・Soil・Iron・Lead）だけで、
+  密度は目録の値と 1% 以内であること。`buildup_factor` は無視されます。
+- 使える核種・材料・密度は `poker_getSchema` の `properties.particle` の `x-poker-neutron-nuclides` /
+  `x-poker-neutron-materials` にあります。
+- 2 種類以上の遮蔽材を通る経路（多層。空気・VOID は数えない）は計算されますが、適用範囲外として
+  summary の警告 `NEUTRON_MULTILAYER` が付きます。
+
+```
+poker_setParticle(particle="neutron")
+poker_proposeSource(name="Cf", type="POINT", position="0 0 0",
+                    inventory=[{nuclide:"Cf252", emission:2.3e9}])
+poker_applyChanges()
+```
+
+### 🧬 **崩壊系列・放射平衡 (5メソッド) - EquilibriumSheet（v1.12.0）**
+
+POKER の付属ツール EquilibriumSheet のコマンドライン版 `EquilibriumSheet_CUI.exe` を呼びます。
+計算は EquilibriumSheet と同じコードで、結果も同じです。実行ファイルは `EQUIL_CUI_PATH`、
+`POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe`、PATH の順に探し、無い環境では呼んだときに
+`EQUIL_CUI_NOT_AVAILABLE` を返します。核種名は `Cs-137` の形（`cs137` も可）、時間は数値＋単位
+（`s` / `m` / `h` / `d` / `y`、y = 365 日。例: `10y`、`30d`）です。
+
+| **メソッド名** | **機能** | **主な引数** |
+|---------------|----------|-------------|
+| **equil_listNuclides** | 核種の一覧（ICRP Publ.107、1,252 核種）。半減期・崩壊様式・娘と分岐比 | `filter`（名前の一部） |
+| **equil_getChain** | 崩壊系列と放射平衡の表（永続・過渡・非平衡の判定） | `nuclide`、`detail`（`table` / `full`） |
+| **equil_calculateDecay** | 経過時間後の原子数・質量・放射能（Bateman 式）、親との比、tmax | `nuclide`、`time`、`initial` |
+| **equil_getSeries** | 原子数または放射能の時間変化（EquilibriumSheet のグラフと同じ点） | `nuclide`、`time`、`points`、`quantity` |
+| **equil_getEmissions** | 光子の放出（1 壊変あたりの数 `per_decay`。POKER の線源と同じ値）とベータスペクトル | `nuclide`、`kind`、`min_yield`、`types` |
+
+**共通の引数**（`equil_getChain` / `equil_calculateDecay` / `equil_getSeries`）
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `parent_halflife` | boolean | 半減期を直上の親と比べる（既定 false：頂点の親と比べる） |
+| `keep_nonequilibrium` | boolean | 非平衡の核種も表に残す（既定 false） |
+| `threshold_transient` | number | 半減期の比（親／自分）がこれ未満なら非平衡（既定 10） |
+| `threshold_secular` | number | 半減期の比がこれ以上なら永続平衡、間は過渡平衡（既定 1000） |
+| `initial` | object | 頂点の親の初期量。`activity_Bq`・`atoms`・`mass_g` のどれか 1 つ（省略時 1E10 個） |
+| `daughters_initial` | array | 娘の初期量 `{ nuclide, value }`（省略時 0）。単位は `daughters_initial_unit`（`Bq` / `atoms` / `g`） |
+
+`equil_getEmissions` は娘核種の放出を含みません。平衡の娘は核種ごとに取得してください。
 
 ### ☢️ **子孫核種の自動管理（v1.4.0）**
 
@@ -609,9 +685,9 @@ HTTP 版（`src/mcp_server_http.js`、bin `poker-mcp-http`）は MCP の Streama
 
 ---
 
-## 📊 36メソッド完全仕様
+## 📊 主なメソッドの詳細仕様
 
-> 非同期ジョブ有効時（`POKER_MCP_ASYNC=1`）は Job 系 3 メソッドを加えた 39 メソッドになります。
+> 非同期ジョブ有効時（`POKER_MCP_ASYNC=1`）は Job 系 3 メソッドを加えた 46 メソッドになります。
 
 ### 📐 **Body系メソッド（立体管理）**
 
@@ -1063,6 +1139,20 @@ poker_getDoseMap(job_id, detector_name)  … グリッド検出器の線量マ�
 **isError**: ジョブが失敗していれば `isError: true` になり、`ready: true`、`error`（内容）、
 `error_type`（例: `INTERRUPTED_BY_RESTART`、無ければ `JOB_FAILED`）、`details`（終了コード・stdout・stderr）
 を返します。存在しない `job_id` は `JOB_NOT_FOUND` で `isError: true` です。
+
+#### **poker_getDoseMap の `dose_type`（v1.13.0）**
+
+出力される線量の種類と並びは POKER の `lib/lib_setting.dat`（利用者が手で編集する）で決まります。
+`dose_type` には、`poker_executeCalculation` の応答の `dose_columns` の `name`（lib_setting.dat の
+`summary_name`。例: `E(AP)`・`Kair`・`H*(10)`・`DskinM(AP)`）を指定します。省略時は `E(AP)`（無ければ最初の線量）。
+
+- 同じ計算の `.summary` の `result_total.columns` で `.dose` の列に名前と単位を付けます。`.summary` が
+  読めないときは `.dose` の表示名を lib_setting.dat の既知の名前に当てます。
+- その計算に無い種類を指定すると、`success: false` と使える種類 `available_dose_types` を返します。
+- 応答の `unit` は lib_setting.dat の単位（例: Kair は µGy/h）、`dose_display` は表示名です。
+
+v1.12.0 までは E(AP)・DskinM(AP)・H*(10) の並びを決め打ちしていたため、設定によっては別の線量の列を
+返していました（2 番目が空気カーマの設定で `DskinM(AP)` を求めると Kair の値）。
 
 #### **poker_getDoseMap の `job_id` 引数**
 

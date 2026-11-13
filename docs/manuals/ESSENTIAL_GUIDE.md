@@ -1,8 +1,8 @@
 # 📘 Poker MCP エッセンシャルガイド
 
 **対象読者**: 放射線遮蔽研究者・技術者  
-**バージョン**: 1.10.0 MCP Edition  
-**最終更新**: 2026年10月  
+**バージョン**: 1.13.0 MCP Edition  
+**最終更新**: 2026年11月  
 **推奨学習時間**: 1-2時間(Claude Desktop使用)
 
 ---
@@ -858,7 +858,7 @@ Claude指示例:
 ---
 
 **📚 関連マニュアル**
-- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・36メソッド完全対応（既定。非同期ジョブ有効時は 39）
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)**: 日常操作早見表・全ツール（既定 43。非同期ジョブ有効時は 46）
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)**: 問題解決・環境変数設定・エラー対処
 - **[PHYSICS_REFERENCE.md](PHYSICS_REFERENCE.md)**: 物理的背景詳細・計算品質保証
 - **[RESEARCH_WORKFLOWS.md](RESEARCH_WORKFLOWS.md)**: 分野別業務フロー・実践例

@@ -1,9 +1,9 @@
 # ⚠️ トラブルシューティング - Poker MCP
 
 **対象**: 全ユーザー（問題解決時）  
-**バージョン**: 1.11.0 MCP Edition  
+**バージョン**: 1.13.0 MCP Edition  
 **最終更新**: 2026年10月  
-**使用方法**: Claude Desktop + MCP通信 (既定 36メソッド。非同期ジョブ有効時 39、poker_openGui が外れる環境ではそれぞれ 1 減)
+**使用方法**: Claude Desktop + MCP通信 (既定 43 ツール。非同期ジョブ有効時 46、poker_openGui が外れる環境ではそれぞれ 1 減)
 
 ---
 
@@ -41,7 +41,20 @@
 | -32079 | 線源が存在しない | poker_proposeSourceを使用 |
 | -32031 | CMB参照立体が未定義 | 参照する立体を先に定義 |
 | -32600 | 不正なリクエスト | パラメータ形式確認 |
-| -32601 | メソッドが見つからない | メソッド名確認（36メソッドリスト参照。ジョブ系 3 メソッドは POKER_MCP_ASYNC=1 のときだけ、poker_openGui は GUI が使える環境でだけ登録 → 第2.8章・第2.9章） |
+| -32601 | メソッドが見つからない | メソッド名確認（ツール一覧（API_COMPLETE）参照。ジョブ系 3 メソッドは POKER_MCP_ASYNC=1 のときだけ、poker_openGui は GUI が使える環境でだけ登録 → 第2.8章・第2.9章） |
+
+### ⚛️ 中性子線源・線量の種類（v1.13.0）
+
+| エラーメッセージ | 原因 | 対処法 |
+|------------------|------|--------|
+| この POKER（版 2.2.x）は中性子線源（particle: neutron）に対応していません。POKER 2.3.0 以降が必要です | PATH 上の poker_cui が古い | POKER 2.3.0 以降を入れ、PATH と POKER_INSTALL_PATH をその版に向けてサーバを再起動。光子の計算なら `poker_setParticle(particle="photon")` |
+| emission [n/s] は中性子の線源です。先に poker_setParticle で particle: neutron にしてください | 光子の入力で `emission` を使った | 中性子なら先に setParticle。光子なら `radioactivity` [Bq] で書く |
+| particle: neutron のデッキでは inventory を emission [n/s] で書きます（radioactivity は使えません） | 中性子の入力で `radioactivity` を使った | `emission` [n/s] で書く |
+| emission（中性子）と radioactivity（光子）の行が混ざっています | 1 つの線源に両方の書き方がある | どちらかにそろえる（光子と中性子は 1 つの入力に混ぜられない） |
+| 中性子の材料・核種・密度のエラー（計算時に POKER が出す） | 中性子の目録に無い材料・核種、または密度が目録と 1% 以上違う | `poker_getSchema` の `properties.particle` の `x-poker-neutron-materials` / `x-poker-neutron-nuclides` を確認 |
+| getDoseMap: dose_type '…' はこの計算の .dose にありません | 出力される線量は POKER の `lib/lib_setting.dat` の設定で決まり、その種類が出力されていない | 応答の `available_dose_types` から選ぶ。別の線量が必要なら lib_setting.dat を編集して計算し直す |
+
+summary の警告 `NEUTRON_MULTILAYER` は、2 種類以上の遮蔽材（空気・VOID を除く）を通る経路があり、中性子の計算の適用範囲外であることを示します。計算結果は出ますが、多層の経路から来る線量の割合（評価点ごと）を確かめ、大きい場合は別の手段（モンテカルロ計算など）で確認してください。
 
 ### 🗂️ データファイル関連エラー
 
@@ -329,7 +342,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 修正を実施してください。」
 ```
 
-#### **問題B3: 36メソッドの使い分け迷い**
+#### **問題B3: ツールの使い分け迷い**
 ```
 症状:
 - proposeとupdateの使い分けが不明
@@ -337,7 +350,7 @@ type C:\Users\<username>\poker_mcp_workspace\logs\combined.log
 - エラーコードが頻発
 
 判断基準:
-「36メソッド適切使用ガイド:
+「ツールの適切な使い分けガイド:
 
 【propose vs update vs delete】
 新規作成 → propose
@@ -1106,5 +1119,5 @@ if __name__ == "__main__":
 ---
 
 **最終更新**: 2026年10月  
-**バージョン**: 1.11.0 MCP Edition  
+**バージョン**: 1.13.0 MCP Edition  
 **サポート**: GitHub Issues
