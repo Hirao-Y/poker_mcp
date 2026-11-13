@@ -6,6 +6,8 @@
 //         サマリーの statistics_total（min/max）と一致するか。
 //         列の索引（dose, ray, energy）と行の索引（i + j*ni + k*ni*nj）が
 //         両方正しくないと一致しない。
+//         線量の種類と並びは POKER の lib/lib_setting.dat の設定で決まる（利用者が手で変える）ので、
+//         決め打ちせず、同じ計算の .summary の result_total.columns から取る。
 //
 //   C:\Poker が無い環境では該当部分をスキップする。
 import { spawn } from 'child_process';
@@ -13,7 +15,7 @@ import fs from 'fs';
 import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
-import { parseDoseMap } from '../src/utils/doseMapParser.js';
+import { parseDoseMap, readSummaryColumns } from '../src/utils/doseMapParser.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.join(__dirname, '..');
@@ -131,6 +133,10 @@ if (!fs.existsSync(pokerCui)) {
   const dosePath = path.join(T, 'dosemap.yaml.dose');
   // 改行は CRLF なので、以降の検索を楽にするため LF に揃える
   const summary = fs.readFileSync(path.join(T, 'dosemap.yaml.summary'), 'utf8').replace(/\r/g, '');
+  // この PC の lib_setting.dat で出力される線量（name / display / unit、.dose と同じ並び）
+  const columns = readSummaryColumns(path.join(T, 'dosemap.yaml.summary')) || [];
+  const DOSES_RUN = columns.map(c => c.name);
+  ok(DOSES_RUN.length >= 1, '.summary の result_total.columns', DOSES_RUN.join(', '));
 
   // サマリーの statistics_total から min/max を拾う（比較の基準）
   const stats = (det, doseType) => {
@@ -155,18 +161,19 @@ if (!fs.existsSync(pokerCui)) {
     ['D_3d', 3, { i: 3, j: 2, k: 2 }]
   ];
   for (const [det, dim, dims] of cases) {
-    for (const doseType of ['E(AP)', 'DskinM(AP)', 'H*(10)']) {
-      const m = parseDoseMap(dosePath, det, { doseType, ray: 'TOTAL' });
-      if (!m) { ok(false, det + ' / ' + doseType, '解析に失敗'); continue; }
+    for (const [ci, doseType] of DOSES_RUN.entries()) {
+      const m = parseDoseMap(dosePath, det, { doseType, ray: 'TOTAL', columns });
+      if (!m || m.error) { ok(false, det + ' / ' + doseType, '解析に失敗 ' + (m ? m.error : '')); continue; }
       const st = stats(det, doseType);
       const shapeOk = m.dimensionality === dim &&
         JSON.stringify(m.dims) === JSON.stringify(dims) &&
         m.total_points === Object.values(dims).reduce((a, b) => a * b, 1);
       const valOk = st && near(m.min, st.min) && near(m.max, st.max);
-      ok(shapeOk && valOk, det + ' / ' + doseType,
+      const unitOk = m.unit === columns[ci].unit;
+      ok(shapeOk && valOk && unitOk, det + ' / ' + doseType,
          'dims=' + JSON.stringify(m.dims) +
          ' min=' + m.min.toExponential(4) + '(' + (st ? st.min.toExponential(4) : '?') + ')' +
-         ' max=' + m.max.toExponential(4) + '(' + (st ? st.max.toExponential(4) : '?') + ')');
+         ' max=' + m.max.toExponential(4) + '(' + (st ? st.max.toExponential(4) : '?') + ') ' + m.unit);
     }
   }
 
@@ -176,11 +183,27 @@ if (!fs.existsSync(pokerCui)) {
   ok(neu && tot && neu.max === 0 && tot.max > 0, 'ray の指定で列が変わる',
      'n=' + (neu && neu.max) + ' TOTAL=' + (tot && tot.max.toExponential(4)));
 
-  // dose_type の指定で読む列が変わること。E(AP) と DskinM(AP) は別の量。
-  const e = parseDoseMap(dosePath, 'D_1d', { doseType: 'E(AP)', ray: 'TOTAL' });
-  const d = parseDoseMap(dosePath, 'D_1d', { doseType: 'DskinM(AP)', ray: 'TOTAL' });
-  ok(e && d && e.max !== d.max, 'dose_type の指定で列が変わる',
-     'E(AP)=' + (e && e.max.toExponential(4)) + ' DskinM(AP)=' + (d && d.max.toExponential(4)));
+  // dose_type の指定で読む列が変わること（1 番目と 2 番目の線量は別の量）
+  if (DOSES_RUN.length >= 2) {
+    const e = parseDoseMap(dosePath, 'D_1d', { doseType: DOSES_RUN[0], ray: 'TOTAL', columns });
+    const d = parseDoseMap(dosePath, 'D_1d', { doseType: DOSES_RUN[1], ray: 'TOTAL', columns });
+    ok(e && d && !e.error && !d.error && e.max !== d.max, 'dose_type の指定で列が変わる',
+       DOSES_RUN[0] + '=' + (e && e.max) + ' ' + DOSES_RUN[1] + '=' + (d && d.max));
+  }
+
+  // .summary が無くても、.dose の表示名（lib_setting.dat の full_name）から同じ名前になること
+  const noCols = parseDoseMap(dosePath, 'D_1d', { doseType: DOSES_RUN[0], ray: 'TOTAL' });
+  ok(noCols && !noCols.error && JSON.stringify(noCols.available_dose_types) === JSON.stringify(DOSES_RUN),
+     '.summary 無しでも表示名から同じ名前', noCols ? String(noCols.available_dose_types || noCols.error) : 'null');
+
+  // 出力に無い線量を求めたら、別の列を返さずに使える種類を示すこと（v1.13.0 より前は
+  // E(AP)・DskinM(AP)・H*(10) の並びを決め打ちし、2 番目が空気カーマでも DskinM(AP) として返していた）
+  const absent = ['E(AP)', 'DskinM(AP)', 'H*(10)', 'Kair', 'E(PA)'].find(n => !DOSES_RUN.includes(n));
+  if (absent) {
+    const a = parseDoseMap(dosePath, 'D_1d', { doseType: absent, ray: 'TOTAL', columns });
+    ok(a && a.error && Array.isArray(a.available_dose_types) && a.available_dose_types.length === DOSES_RUN.length,
+       '出力に無い線量（' + absent + '）は使える種類を返す', a ? (a.error || 'error なし').slice(0, 60) : 'null');
+  }
 
   // 点検出器はマップ無し
   const pt = parseDoseMap(dosePath, 'D_pt', {});
@@ -189,7 +212,8 @@ if (!fs.existsSync(pokerCui)) {
   // 異常系
   ok(parseDoseMap(dosePath, 'NOSUCH', {}) === null, '未知の検出器は null');
   ok(parseDoseMap(path.join(T, 'nosuch.dose'), 'D_1d', {}) === null, '存在しないファイルは null');
-  ok(parseDoseMap(dosePath, 'D_1d', { doseType: 'NOSUCH' }) === null, '未知の dose_type は null');
+  const unk = parseDoseMap(dosePath, 'D_1d', { doseType: 'NOSUCH', columns });
+  ok(unk && unk.error && unk.available_dose_types, '未知の dose_type は error と使える種類', unk ? String(unk.available_dose_types) : 'null');
 
   // --------------------------------------------------- 線種別線量と斜め補正
   // 斜め補正を立てると result_total から g1 の行が落ちる（斜め補正は全光子に
@@ -197,10 +221,10 @@ if (!fs.existsSync(pokerCui)) {
   // 値の対応が崩れたことがあるので、.dose を基準に突き合わせる。
   console.log('=== result_total の線種別線量 ===');
 
-  const DOSES = ['E(AP)', 'DskinM(AP)', 'H*(10)'];
+  const DOSES = DOSES_RUN;   // lib_setting.dat の設定で出力される線量（.dose と同じ並び）
   const RAYS = ['g1', 'n', 'g12', 'TOTAL'];
 
-  // .dose の TOTAL 線源は energy_bin が 1 本なので 12 列 = 3 線量 x 4 線種。
+  // .dose の TOTAL 線源は energy_bin が 1 本なので 線量の数 x 4 線種 の列。
   // 検出器ごとに 1 点目（1 行目）を取る。
   const doseRef = (file) => {
     const L = fs.readFileSync(file, 'utf8').split(/\r?\n/);
@@ -215,7 +239,7 @@ if (!fs.existsSync(pokerCui)) {
       if (det && t && !t.startsWith('#')) {
         const c = t.split(/\s+/).map(Number);
         const o = {};
-        DOSES.forEach((d, di) => { o[d] = {}; RAYS.forEach((r, ri) => { o[d][r] = c[di * 4 + ri]; }); });
+        DOSES.forEach((d, di) => { o[d] = {}; RAYS.forEach((r, ri) => { o[d][r] = c[di * RAYS.length + ri]; }); });
         out[det] = o; det = null;
       }
     }

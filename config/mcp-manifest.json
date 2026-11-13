@@ -2267,7 +2267,7 @@
     },
     {
       "name": "poker_executeCalculation",
-      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。",
+      "description": "作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と線量の内訳。線量の種類と並びは POKER の lib_setting.dat の設定で決まる。例: E(AP)/Kair/H*(10)）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。",
       "inputSchema": {
         "type": "object",
         "properties": {
@@ -2469,12 +2469,7 @@
           },
           "dose_type": {
             "type": "string",
-            "enum": [
-              "E(AP)",
-              "DskinM(AP)",
-              "H*(10)"
-            ],
-            "description": "線量種別（既定 E(AP)）"
+            "description": "線量種別。executeCalculation の dose_columns の name（POKER の lib/lib_setting.dat の summary_name。例: E(AP)、H*(10)、Kair、DskinM(AP)）。出力される線量の種類と並びは lib_setting.dat の設定で決まり、無い種類を指定すると使える種類の一覧を返す。省略時は E(AP)（無ければ最初の線量）"
           },
           "ray": {
             "type": "string",
@@ -2502,37 +2497,37 @@
           "sourcepoint": {
             "type": "integer",
             "minimum": 1,
-            "description": "入力パラメータに書き出す線源分割点の数"
+            "description": "入力パラメータのうち、体積線源を分割して得られる点線源の出力数（既定 10）"
           },
           "pseudosourcepoint": {
             "type": "integer",
             "minimum": 1,
-            "description": "入力パラメータに書き出す仮想点線源の数"
+            "description": "入力パラメータのうち、体積線源の仮想点線源の出力数（既定 10）"
           },
           "detectorgrid": {
             "type": "integer",
             "minimum": 1,
-            "description": "入力パラメータに書き出す検出器評価点の数"
+            "description": "入力パラメータのうち、1〜3次元検出器を分割したグリッド点の出力数（既定 10）"
           },
           "detectorevaluation": {
             "type": "integer",
             "minimum": 1,
-            "description": "計算結果に書き出すグリッド検出器の評価点数"
+            "description": "計算出力のうち、1〜3次元検出器を分割したグリッド点の出力数（既定 5）。次の3箇所すべてに同じ値が適用されます: (1) 検出器のグリッド点 (2) show_path_trace が true のときの path_trace の to: (3) 全線源からの総和線量"
           },
           "pathtrace": {
             "type": "integer",
             "minimum": 1,
-            "description": "path_trace に書き出す仮想点線源の数"
+            "description": "show_path_trace が true のとき、path_trace の from:（仮想点線源）の出力数（既定 5）"
           },
           "buildupenergy": {
             "type": "integer",
             "minimum": 1,
-            "description": "多層ビルドアップ係数のエネルギー数"
+            "description": "計算で用いた多重層ビルドアップ係数を表示するときのエネルギー数（既定 3）"
           },
           "buildupmfp": {
             "type": "integer",
             "minimum": 1,
-            "description": "各エネルギーに対する mfp 数"
+            "description": "各エネルギーに対する mfp 数（既定 3）。既定では 3×3=9 個が線量出力ごとに表示されます"
           }
         },
         "required": [],
@@ -2560,37 +2555,37 @@
           "sourcepoint": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい入力パラメータに書き出す線源分割点の数"
+            "description": "新しい入力パラメータのうち、体積線源を分割して得られる点線源の出力数（既定 10）"
           },
           "pseudosourcepoint": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい入力パラメータに書き出す仮想点線源の数"
+            "description": "新しい入力パラメータのうち、体積線源の仮想点線源の出力数（既定 10）"
           },
           "detectorgrid": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい入力パラメータに書き出す検出器評価点の数"
+            "description": "新しい入力パラメータのうち、1〜3次元検出器を分割したグリッド点の出力数（既定 10）"
           },
           "detectorevaluation": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい計算結果に書き出すグリッド検出器の評価点数"
+            "description": "新しい計算出力のうち、1〜3次元検出器を分割したグリッド点の出力数（既定 5）。次の3箇所すべてに同じ値が適用されます: (1) 検出器のグリッド点 (2) show_path_trace が true のときの path_trace の to: (3) 全線源からの総和線量"
           },
           "pathtrace": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しいpath_trace に書き出す仮想点線源の数"
+            "description": "新しいshow_path_trace が true のとき、path_trace の from:（仮想点線源）の出力数（既定 5）"
           },
           "buildupenergy": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい多層ビルドアップ係数のエネルギー数"
+            "description": "新しい計算で用いた多重層ビルドアップ係数を表示するときのエネルギー数（既定 3）"
           },
           "buildupmfp": {
             "type": "integer",
             "minimum": 1,
-            "description": "新しい各エネルギーに対する mfp 数"
+            "description": "新しい各エネルギーに対する mfp 数（既定 3）。既定では 3×3=9 個が線量出力ごとに表示されます"
           },
           "fit_for_paths": {
             "type": "boolean",

@@ -19,9 +19,74 @@ import { logger } from './logger.js';
 const NUM_RE = /-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?/g;
 const nums = (s) => (s.match(NUM_RE) || []).map(Number);
 
-// 既定の並び順。information から数が読めなかった場合にだけ使う。
+// 【線量の種類と列の対応（v1.13.0）】
+//   出力される線量の種類と並びは POKER の lib/lib_setting.dat（利用者が手で編集する）で決まる。
+//   以前は E(AP)・DskinM(AP)・H*(10) の並びを決め打ちしていたため、設定が違うと別の線量の列を
+//   黙って返していた（例: 2 番目が空気カーマの設定で DskinM(AP) を求めると Kair の列）。
+//   今は .dose の dose_type（表示名と単位）を、同じ計算の .summary の result_total.columns
+//   （name = lib_setting.dat の summary_name、display、unit。.dose と同じ並び）で名前に直す。
+//   .summary が読めないときは、lib_setting.dat の既知の表示名（KNOWN_DOSE）で直す。
+
+// .dose に dose_type の見出しが無い古い形式のときだけ使う並び
 const FALLBACK_DOSE = ['E(AP)', 'DskinM(AP)', 'H*(10)'];
+// ray の並びは POKER が決める（lib_setting.dat では変わらない）
 const FALLBACK_RAY  = ['g1', 'n', 'g12', 'TOTAL'];
+
+// lib_setting.dat の full_name（表示名の先頭）→ summary_name。.summary が読めないときの予備
+const KNOWN_DOSE = [
+  ['実効線量(AP)', 'E(AP)'], ['実効線量(PA)', 'E(PA)'], ['実効線量(LLAT)', 'E(LLAT)'],
+  ['実効線量(RLAT)', 'E(RLAT)'], ['実効線量(ROT)', 'E(ROT)'], ['実効線量(ISO)', 'E(ISO)'],
+  ['水晶体(AP)', 'Dlens(AP)'], ['皮膚男性(AP)', 'DskinM(AP)'], ['皮膚女性(AP)', 'DskinF(AP)'],
+  ['空気カーマ', 'Kair'], ['水の吸収線量', 'Dwater'], ['1cm線量当量', 'H*(10)'], ['3mm線量当量', 'Hp(3)']
+];
+const squash = (s) => String(s || '').replace(/\s+/g, '');
+
+/**
+ * .summary の result_total.columns（name / display / unit）を読む。読めなければ null。
+ * summary 全体を YAML として読むと大きな計算で重いので、columns の節だけを行で拾う。
+ */
+export function readSummaryColumns(summaryPath) {
+  let raw;
+  try { raw = fs.readFileSync(summaryPath, 'utf8'); } catch (e) { return null; }
+  const lines = raw.split(/\r?\n/);
+  const rt = lines.findIndex(l => /^result_total\s*:/.test(l));
+  if (rt < 0) return null;
+  let k = -1;
+  for (let i = rt + 1; i < lines.length && !/^\S/.test(lines[i]); i++) {
+    if (/^\s+columns\s*:/.test(lines[i])) { k = i; break; }
+  }
+  if (k < 0) return null;
+  const indent = lines[k].match(/^(\s*)/)[1].length;
+  const cols = [];
+  let cur = null;
+  const val = (s) => s.replace(/\s+#.*$/, '').trim().replace(/^["']|["']$/g, '');
+  for (let i = k + 1; i < lines.length; i++) {
+    const l = lines[i];
+    if (!l.trim()) continue;
+    if (l.match(/^(\s*)/)[1].length <= indent && !/^\s*-/.test(l)) break;
+    let m;
+    if ((m = l.match(/^\s*-\s*name\s*:\s*(.+)$/))) { cur = { name: val(m[1]) }; cols.push(cur); }
+    else if (cur && (m = l.match(/^\s+display\s*:\s*(.+)$/))) cur.display = val(m[1]);
+    else if (cur && (m = l.match(/^\s+unit\s*:\s*(.+)$/))) cur.unit = val(m[1]);
+    else if (/^\s*-/.test(l) || !/^\s+(display|unit)\s*:/.test(l)) break;
+  }
+  return cols.length ? cols : null;
+}
+
+/**
+ * .dose の dose_type の見出し（表示名・単位）を名前に直す。
+ * @returns {Array<{name: string|null, display: string, unit: string|null, from: string}>}
+ */
+function resolveDoses(labels, columns) {
+  if (Array.isArray(columns) && columns.length === labels.length && columns.every(c => c && c.name)) {
+    return labels.map((l, i) => ({ name: columns[i].name, display: columns[i].display || l.label,
+      unit: columns[i].unit || l.unit, from: 'summary' }));
+  }
+  return labels.map(l => {
+    const hit = KNOWN_DOSE.find(([full]) => squash(l.label).startsWith(squash(full)));
+    return { name: hit ? hit[1] : null, display: l.label, unit: l.unit, from: hit ? 'lib_setting' : 'unknown' };
+  });
+}
 
 //|
 //| 冒頭の YAML（information）から、列の構成を決める数を読む。
@@ -35,7 +100,12 @@ function readInformation(lines) {
   }
   const head = lines.slice(0, end);
 
-  const nDose = head.filter(l => /^\s+dose\[\d+\]\s*:/.test(l)).length;
+  const doseLabels = [];
+  for (const l of head) {
+    const m = l.match(/^\s+dose\[\d+\]\s*:\s*(.*?)\s*(?:\[([^\]]*)\])?\s*$/);
+    if (m) doseLabels.push({ label: m[1], unit: m[2] || null });
+  }
+  const nDose = doseLabels.length;
   const nRay  = head.filter(l => /^\s+ray\[\d+\]\s*:/.test(l)).length;
 
   // 線源ごとの energy_bin の数。source ノードの name: の出現順に数える。
@@ -47,11 +117,19 @@ function readInformation(lines) {
     if (m && !/検出器|detector/i.test(l)) { cur = { name: m[1], energies: 0 }; sources.push(cur); continue; }
     if (cur && /^\s+energy\[\d+\]\s*:/.test(l)) cur.energies++;
   }
-  return { nDose, nRay, sources };
+  return { nDose, nRay, sources, doseLabels };
 }
 
+/**
+ * @param {string} dosePath
+ * @param {string} detectorName
+ * @param {{doseType?: string, ray?: string, columns?: Array}} opts
+ *   columns: 同じ計算の .summary の result_total.columns（readSummaryColumns）。線量の名前と単位に使う。
+ * @returns {null | {error, available_dose_types} | map}
+ *   null は .dose がまだ読めない・検出器が無いなど（呼び出し側で待って読み直す）。
+ *   error は求めた dose_type / ray がこの計算に無いとき（読み直しても変わらない）。
+ */
 export function parseDoseMap(dosePath, detectorName, opts = {}) {
-  const doseType = opts.doseType || 'E(AP)';
   const ray = opts.ray || 'TOTAL';
 
   let raw;
@@ -63,11 +141,25 @@ export function parseDoseMap(dosePath, detectorName, opts = {}) {
   const info = readInformation(lines);
   const nDose = info.nDose || FALLBACK_DOSE.length;
   const nRay  = info.nRay  || FALLBACK_RAY.length;
-  const doseIdx = FALLBACK_DOSE.indexOf(doseType);
+  const doses = info.nDose
+    ? resolveDoses(info.doseLabels, opts.columns)
+    : FALLBACK_DOSE.map(n => ({ name: n, display: n, unit: n === 'DskinM(AP)' ? 'µGy/h' : 'µSv/h', from: 'fallback' }));
+  const available = doses.map(d => d.name).filter(Boolean);
+  const doseType = opts.doseType || (available.includes('E(AP)') ? 'E(AP)' : available[0]);
+  const doseIdx = doses.findIndex(d => d.name === doseType);
   const rayIdx  = FALLBACK_RAY.indexOf(ray);
-  if (doseIdx < 0 || rayIdx < 0 || doseIdx >= nDose || rayIdx >= nRay) {
-    logger.warn('getDoseMap: 不明な dose_type/ray', { doseType, ray, nDose, nRay });
-    return null;
+  if (doseIdx < 0 || doseIdx >= nDose) {
+    logger.warn('getDoseMap: この計算に無い dose_type', { doseType, available });
+    return {
+      error: `dose_type '${doseType}' はこの計算の .dose にありません。出力される線量の種類と並びは ` +
+        `POKER の lib/lib_setting.dat の設定で決まります。使える dose_type: ${available.join(', ') || '（名前を特定できませんでした）'}`,
+      available_dose_types: available,
+      dose_labels: doses.map(d => d.display)
+    };
+  }
+  if (rayIdx < 0 || rayIdx >= nRay) {
+    return { error: `ray '${ray}' は不明です。使える ray: ${FALLBACK_RAY.slice(0, nRay).join(', ')}`,
+      available_dose_types: available };
   }
 
   // TOTAL 線源（最後の線源）の energy_bin 数。読めなければ 1 とみなす。
@@ -162,7 +254,9 @@ export function parseDoseMap(dosePath, detectorName, opts = {}) {
   return {
     detector: detectorName, dimensionality: meta.edges.length,
     dims: { i: ni, j: nj, ...(nk > 1 ? { k: nk } : {}) },
-    dose_type: doseType, ray, unit: doseType === 'DskinM(AP)' ? 'µGy/h' : 'µSv/h',
+    dose_type: doseType, dose_display: doses[doseIdx].display, ray,
+    unit: doses[doseIdx].unit || (doseType === 'DskinM(AP)' ? 'µGy/h' : 'µSv/h'),
+    available_dose_types: available,
     total_points: nTotal, min, max, max_at: maxAt, grid, points
   };
 }

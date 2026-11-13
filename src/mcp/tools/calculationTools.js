@@ -8,7 +8,7 @@ export const calculationTools = [
       properties: {
         detector_name: { type: 'string', description: 'グリッド検出器名' },
         yaml_file: { type: 'string', description: '入力YAMLファイル名（.dose はこの名前に .dose を付したもの）。省略時は poker.yaml。' },
-        dose_type: { type: 'string', enum: ['E(AP)', 'DskinM(AP)', 'H*(10)'], description: '線量種別（既定 E(AP)）' },
+        dose_type: { type: 'string', description: '線量種別。executeCalculation の dose_columns の name（POKER の lib/lib_setting.dat の summary_name。例: E(AP)、H*(10)、Kair、DskinM(AP)）。出力される線量の種類と並びは lib_setting.dat の設定で決まり、無い種類を指定すると使える種類の一覧を返す。省略時は E(AP)（無ければ最初の線量）' },
         ray: { type: 'string', enum: ['g1', 'n', 'g12', 'TOTAL'], description: '線種（既定 TOTAL）' }
       },
       required: ['detector_name'],
@@ -17,7 +17,7 @@ export const calculationTools = [
   },
   {
     name: 'poker_executeCalculation',
-    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と E(AP)/DskinM(AP)/H*(10) の線量内訳）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
+    description: '作成したYAMLファイルを使用してpoker_cuiで放射線遮蔽計算を実行します。path_input に .paths を指定すると、CAD から抽出した経路を幾何として使います。応答には .summary(YAML) から抽出した構造化 result_total（検出器ごとの座標と線量の内訳。線量の種類と並びは POKER の lib_setting.dat の設定で決まる。例: E(AP)/Kair/H*(10)）、dose_columns、警告フッタ calculation_warnings、注記 calculation_notes を含みます。',
     inputSchema: {
       type: 'object',
       properties: {

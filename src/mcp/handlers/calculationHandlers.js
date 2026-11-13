@@ -5,7 +5,7 @@ import { logger } from '../../utils/logger.js';
 import path from 'path';
 import { TASKS_DIR } from '../../utils/paths.js';
 import { parseDoseSummary } from '../../utils/summaryParser.js';
-import { parseDoseMap } from '../../utils/doseMapParser.js';
+import { parseDoseMap, readSummaryColumns } from '../../utils/doseMapParser.js';
 
 export function createCalculationHandlers(taskManager, { jobManager = null } = {}) {
   const calculationService = new CalculationService();
@@ -18,7 +18,7 @@ export function createCalculationHandlers(taskManager, { jobManager = null } = {
         if (!args.detector_name) {
           throw new ValidationError('detector_name is required', 'detector_name', args.detector_name);
         }
-        let dosePath;
+        let dosePath, summaryPath;
         if (args.job_id) {
           // 非同期ジョブの結果を読む（ジョブ専用フォルダの .dose）
           if (!jobManager) {
@@ -32,19 +32,28 @@ export function createCalculationHandlers(taskManager, { jobManager = null } = {
             return { success: false, error: `ジョブ ${args.job_id} は完了していません（status: ${job.status}）`, status: job.status };
           }
           dosePath = job.outputs.dose_file;
+          summaryPath = job.outputs.summary_file;
         } else {
           const yamlFile = args.yaml_file || 'poker.yaml';
           const absolutePathPattern = /^([a-zA-Z]:[\\\/]|\/)/;
           const resolvedYamlFile = absolutePathPattern.test(yamlFile) ? yamlFile : path.join(TASKS_DIR, yamlFile);
           dosePath = resolvedYamlFile + '.dose';
+          summaryPath = resolvedYamlFile + '.summary';
         }
+        // 線量の種類と並びは POKER の lib_setting.dat で決まるので、同じ計算の .summary の
+        // result_total.columns（name / display / unit）で .dose の列に名前を付ける。
+        const opts = () => ({ doseType: args.dose_type, ray: args.ray,
+          columns: summaryPath ? readSummaryColumns(summaryPath) : null });
         // .dose は poker_cui 完了直後に書き込まれるが、完了検知からディスク反映までに数秒の
         // ばらつきがある。実運用（executeCalculation とは別コール）では準備済みだが、直後呼び出しに
         // 備え、準備できるまで最大約10秒リトライする（未準備時のみ待機）。
-        let map = parseDoseMap(dosePath, args.detector_name, { doseType: args.dose_type, ray: args.ray });
+        let map = parseDoseMap(dosePath, args.detector_name, opts());
         for (let attempt = 0; attempt < 20 && !map; attempt++) {
           await new Promise(r => setTimeout(r, 500));
-          map = parseDoseMap(dosePath, args.detector_name, { doseType: args.dose_type, ray: args.ray });
+          map = parseDoseMap(dosePath, args.detector_name, opts());
+        }
+        if (map && map.error) {
+          return { success: false, ...map, dose_file: dosePath };
         }
         if (!map) {
           return { success: false, error: `.dose の解析に失敗、または検出器 '${args.detector_name}' が見つかりません`, dose_file: dosePath };
