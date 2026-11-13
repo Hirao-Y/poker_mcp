@@ -1,5 +1,38 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.12.0] - 2026-11-04
+
+POKER の付属ツール EquilibriumSheet（崩壊系列・放射平衡）の計算を、MCP から使えるようにした。
+EquilibriumSheet のコマンドライン版 `EquilibriumSheet_CUI.exe`（POKER のインストール先に置く）を呼ぶ。
+計算は EquilibriumSheet と同じコード（EquilibriumCore）で、結果も同じになる。
+
+### `equil_*` ツールを追加（5 つ）
+
+| ツール | 内容 |
+|---|---|
+| `equil_listNuclides` | 核種の一覧（ICRP Publ.107、1,252 核種）。半減期・崩壊様式・娘と分岐比 |
+| `equil_getChain` | 崩壊系列と放射平衡の表（永続・過渡・非平衡の判定）。`detail="full"` でツリーと全子孫の表 |
+| `equil_calculateDecay` | 経過時間後の原子数・質量・放射能（Bateman 式）、親との比、tmax |
+| `equil_getSeries` | 原子数または放射能の時間変化（EquilibriumSheet のグラフと同じ点） |
+| `equil_getEmissions` | REV_IC38.YLD の光子（1 壊変あたりの放出数 `per_decay`、POKER の線源と同じ値）と ICRP-07.BET のベータスペクトル |
+
+実行ファイルは `EQUIL_CUI_PATH`、`POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe`、PATH の順に探す（`src/utils/equilCui.js`）。
+
+### 暗号化した ICRP-07.NDX に対応
+
+POKER の配布物では、核データ（ICRP-07.NDX・ICRP-07.BET・REV_IC38.YLD）を暗号化する。
+子孫核種の自動補完が使う核種データベース（`NuclideManager`）は、NDX が暗号化されていれば
+`EquilibriumSheet_CUI nuclides` の JSON から読み込む（平文の NDX は従来どおり直接読む）。
+
+- 平文を直接読んだ場合と全 1,252 核種で比べ、違いは Ra-219・Rn-215 の 2 核種だけ。
+  平文の直接解析は半減期の単位 ms・us を読み違えていた（Ra-219 の 10 ms を 10 分、Rn-215 の 2.30 µs を
+  単位なし、崩壊様式を "sA"）。EquilibriumSheet_CUI 経由では正しく 10 ms・2.3 µs・"A" になる。
+
+### 試験
+
+`npm run test:equil`（`tests/equil.test.mjs`）を追加。EquilibriumSheet_CUI.exe が無い環境ではスキップ。
+`EQUIL_PLAIN_NDX` に平文の NDX を指定すると、上記の全核種比較もする。
+
 ## [1.11.0] - 2026-10-13
 
 MCP を HTTP（Streamable HTTP）で受ける入口を追加した。別の機械の Claude Code や、

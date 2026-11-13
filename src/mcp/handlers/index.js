@@ -14,6 +14,7 @@ import { createDaughterNuclideHandler } from './daughterNuclideHandler.js';
 import { createGuiHandlers } from './guiHandlers.js';
 import { createSchemaHandlers } from './schemaHandlers.js';
 import { createJobHandlers } from './jobHandlers.js';
+import { createEquilHandlers } from './equilHandlers.js';
 
 /**
  * @param {Object} taskManager
@@ -65,6 +66,9 @@ export function createAllHandlers(taskManager, { jobManager = null, guiEnabled =
 
     // スキーマ取得（poker_cui --schema）
     ...createSchemaHandlers(),
+
+    // EquilibriumSheet の計算（EquilibriumSheet_CUI）
+    ...createEquilHandlers(),
     
     // 共通操作
     async applyChanges(args) {

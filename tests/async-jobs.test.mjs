@@ -33,7 +33,7 @@ fs.copyFileSync(path.join(ROOT, 'tools/samples/article_pipe/poker.paths'), path.
 const INSTALL = process.env.POKER_INSTALL_PATH || 'C:/Poker';
 const guiExpected = process.platform === 'win32' &&
   fs.existsSync(path.win32.join(INSTALL.replace(/\//g, '\\'), 'POKER.exe'));
-const BASE_COUNT = guiExpected ? 36 : 35;
+const BASE_COUNT = guiExpected ? 41 : 40;   // v1.12.0 で equil_* の 5 つを追加
 
 let failures = 0;
 const check = (label, ok, detail = '') => {

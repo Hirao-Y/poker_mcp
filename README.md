@@ -64,6 +64,7 @@ Claude Desktop を再起動します。
 | `FREECAD_PATH` | 自動探索 | FreeCAD の場所（CAD 連携） |
 | `POKER_MCP_ASYNC` | 無効 | `1` で計算の非同期実行を有効にする |
 | `POKER_MCP_GUI` | 有効 | `0` で `poker_openGui` を外す（リモート公開時） |
+| `EQUIL_CUI_PATH` | `POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe` | `equil_*` ツールが使う EquilibriumSheet のコマンドライン版 |
 
 HTTP 版（別の機械から使う）の設定と、非同期実行・リモート公開の詳細は
 [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバ側）と
@@ -112,6 +113,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | サマリー出力量 | `poker_proposeThinnedIndices` `poker_getThinnedIndices` `poker_updateThinnedIndices` |
 | 確定・計算・結果 | `poker_applyChanges` `poker_resetYaml` `poker_executeCalculation` `poker_getDoseMap` `poker_getSchema` `poker_openGui` |
 | CAD 連携 | `poker_generateInput` `poker_generatePaths` |
+| 崩壊系列・放射平衡（EquilibriumSheet） | `equil_listNuclides` `equil_getChain` `equil_calculateDecay` `equil_getSeries` `equil_getEmissions` |
 | 非同期実行（`POKER_MCP_ASYNC=1` のとき） | `poker_submitCalculation` `poker_getJobStatus` `poker_getJobResult` |
 
 各ツールの引数と戻り値は [API_COMPLETE](docs/manuals/API_COMPLETE.md) にあります。
@@ -151,6 +153,7 @@ npm install
 | `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一であること |
 | `npm run test:jobs` | 非同期ジョブ。同期実行との全行一致 |
 | `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
+| `npm run test:equil` | `equil_*` ツールと、暗号化した ICRP-07.NDX からの核種データベースの読み込み |
 | `npm run test:cad-full` など | CAD 連携（FreeCAD が必要） |
 
 `check:manifest` 以外は POKER 本体が必要です。不具合の報告は

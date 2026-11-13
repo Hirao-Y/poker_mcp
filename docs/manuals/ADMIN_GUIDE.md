@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**バージョン**: 1.11.0（ツール数は既定 36。条件により 35〜39。「ツール数」の節を参照）
+**バージョン**: 1.12.0（ツール数は既定 41。条件により 40〜44。「ツール数」の節を参照）
 **想定環境**: Windows + Claude Desktop（stdio 通信）。別の機械から使う HTTP 版は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」
 **最終更新**: 2026年10月
 
@@ -14,7 +14,7 @@ Poker MCP Server の**導入・設定・保守**に必要な実務情報をま�
 
 ### 動作形態の理解
 
-入口は 2 つあり、道具の処理（36 ツール）は共通です。
+入口は 2 つあり、道具の処理（41 ツール）は共通です。
 
 | 入口 | 通信 | 用途 |
 |---|---|---|
@@ -218,10 +218,12 @@ CAD 連携・非同期ジョブは `POKER_CUI.exe`（と FreeCAD）を使うた�
 
 | 条件 | ツール数 |
 |---|---|
-| 既定（Windows で POKER.exe あり） | 36 |
-| 既定で GUI が外れる場合 | 35 |
-| 非同期ジョブ有効 | 39 |
-| 非同期ジョブ有効・GUI が外れる場合 | 38 |
+| 既定（Windows で POKER.exe あり） | 41 |
+| 既定で GUI が外れる場合 | 40 |
+| 非同期ジョブ有効 | 44 |
+| 非同期ジョブ有効・GUI が外れる場合 | 43 |
+
+`equil_*` の 5 ツール（v1.12.0）は常に載ります。EquilibriumSheet_CUI.exe が無い環境では、呼んだときに `EQUIL_CUI_NOT_AVAILABLE` を返します。
 
 ### 設定確認
 
@@ -294,7 +296,7 @@ node src/mcp_server_stdio_v4.js
 ```powershell
 npm run check:manifest
 # → 既定 / 非同期ジョブ有効 / 非同期ジョブ有効・GUI 無効 の 3 通りを照合
-# OK: マニフェストと実行時ツール定義は同期しています (36 tools, 既定)
+# OK: マニフェストと実行時ツール定義は同期しています (41 tools, 既定)
 # OK: マニフェストと実行時ツール定義は同期しています (39 tools, 非同期ジョブ有効)
 # [INFO] 条件付きのため未登録: poker_openGui
 # OK: マニフェストと実行時ツール定義は同期しています (38 tools, 非同期ジョブ有効・GUI 無効)
@@ -498,7 +500,7 @@ v1.11.0 で、MCP を HTTP（Streamable HTTP）で受ける入口 `src/mcp_serve
 別の機械の Claude Code や、`mcp-remote` を介した Claude Desktop から使います。
 クライアント側の設定は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) を参照してください。
 
-道具の処理（36 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
+道具の処理（41 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
 HTTP 版のツール一覧と計算結果は stdio 版と同一です（`npm run test:http` で確認）。
 stdio 版は従来どおりで、Claude Desktop のローカル利用は何も変わりません。
 
@@ -586,7 +588,7 @@ POKER_INSTALL_PATH=C:/Poker
   長い同期計算は切られることがあります。投入・確認・取得に分けます
 - **`POKER_MCP_GUI=0`**: サーバに POKER が入っていても、GUI はサーバの画面に開き、
   利用者からは見えません。ツール一覧から `poker_openGui` を外します
-- この設定でのツール数は 38 です（`npm run check:manifest` の 3 通り目に相当）
+- この設定でのツール数は 43 です（`npm run check:manifest` の 3 通り目に相当）
 - 終わったジョブの保存日数（`POKER_MCP_JOB_RETENTION_DAYS`）と `jobs/` の
   ディスク使用量を、利用状況に合わせて見直してください
 
@@ -656,7 +658,7 @@ POKER 本体が必要です。
 - [ ] `package.json` と `config/mcp-manifest.json` の版数が一致
 - [ ] CHANGELOG に変更内容を記載
 - [ ] Claude Desktop を再起動し、ツール一覧の数が条件どおりか確認
-      （既定 36、非同期有効 39、`poker_openGui` が外れる環境ではそれぞれ 35 / 38）
+      （既定 41、非同期有効 44、`poker_openGui` が外れる環境ではそれぞれ 40 / 43）
 - [ ] 起動ログの `poker_openGui: 有効／無効（理由）` が意図どおりか確認
 
 ### 定期（月次程度）
@@ -668,4 +670,4 @@ POKER 本体が必要です。
 
 ---
 
-**Poker MCP Server v1.11.0** | 作者: Yoshihiro Hirao | ライセンス: MIT
+**Poker MCP Server v1.12.0** | 作者: Yoshihiro Hirao | ライセンス: MIT

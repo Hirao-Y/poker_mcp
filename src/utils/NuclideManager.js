@@ -7,6 +7,7 @@ import fs from 'fs/promises';
 import path from 'path';
 import { logger } from './logger.js';
 import { NDX_FILE } from './paths.js';
+import { runEquilCui, isEncryptedLibFile } from './equilCui.js';
 
 class NuclideManager {
     constructor(options = {}) {
@@ -35,13 +36,20 @@ class NuclideManager {
             // ファイル存在確認
             await fs.access(dataPath);
             
-            const content = await fs.readFile(dataPath, 'utf8');
-            logger.info('ファイル読み込み完了', { 
-                fileSize: content.length,
-                lineCount: content.split('\n').length 
-            });
-            
-            this.parseICRPData(content);
+            const raw = await fs.readFile(dataPath);
+            if (isEncryptedLibFile(raw)) {
+                // POKER の配布物では ICRP-07.NDX は暗号化されている（2026-11）。
+                // 中身は EquilibriumSheet_CUI（復号は pklibio.dll）から構造化して受け取る。
+                logger.info('核種データベースは暗号化されています。EquilibriumSheet_CUI から読み込みます', { dataPath });
+                await this.loadFromEquilCui(path.dirname(dataPath));
+            } else {
+                const content = raw.toString('utf8');
+                logger.info('ファイル読み込み完了', { 
+                    fileSize: content.length,
+                    lineCount: content.split('\n').length 
+                });
+                this.parseICRPData(content);
+            }
             
             logger.info(`核種データベース読み込み完了`, {
                 totalNuclides: this.nuclideData.size,
@@ -58,6 +66,31 @@ class NuclideManager {
             });
             throw new Error(`核種データベース読み込み失敗: ${error.message}`);
         }
+    }
+
+    /**
+     * 暗号化された NDX を EquilibriumSheet_CUI の nuclides（JSON）から読み込む。
+     * parseNuclideLine と同じ形（name・halfLife・decayMode・daughters は第 1〜3 子孫で分岐比 > 0）に揃える。
+     * @param {string} libDir - NDX のあるフォルダ
+     */
+    async loadFromEquilCui(libDir) {
+        const { result } = await runEquilCui(['nuclides'], { libDir });
+        let parsedCount = 0;
+        for (const n of result.nuclides) {
+            const name = String(n.nuclide).trim().replace('-', '');
+            if (!name) continue;
+            const daughters = [];
+            for (const d of (n.daughters || []).slice(0, 3)) {
+                const dName = String(d.nuclide || '').trim().replace('-', '');
+                const dRatio = typeof d.branching_value === 'number' ? d.branching_value : this.parseScientificNumber(d.branching);
+                if (dName && dRatio > 0) daughters.push({ name: dName, branchingRatio: dRatio, index: d.index || 0 });
+            }
+            const nuclide = { name, halfLife: n.halflife, decayMode: n.decay_mode, daughters, line: null };
+            this.nuclideData.set(name, nuclide);
+            parsedCount++;
+            if (daughters.length > 0) this.decayChains.set(name, daughters);
+        }
+        logger.info(`核種データ解析完了（EquilibriumSheet_CUI）: ${parsedCount}個の核種を読み込み`);
     }
 
     /**
