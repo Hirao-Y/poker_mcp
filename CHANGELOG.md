@@ -23,9 +23,39 @@ POKER 2.3.0 の中性子線源（入力の最上位に `particle: neutron`）を
 粒子と書き方が食い違う線源（中性子で `radioactivity`、光子で `emission`）は拒否する。
 中性子の線源では子孫核種の自動補完をしない。
 
+`poker_setParticle` で neutron にするときは、計算に使う poker_cui（PATH 上）が中性子線源に対応しているかを
+`poker_cui --schema` の `properties.particle` で確かめる。古い POKER（2.2.x）なら版を添えて
+「POKER 2.3.0 以降が必要」と止める（以前は計算の段階で「知らない項目 particle」として止まっていた）。
+poker_cui を呼べず確かめられないときは止めずに `note` を付ける。
+
+### 修正: `poker_getDoseMap` が別の線量の列を返すことがあった
+
+出力される線量の種類と並びは POKER の `lib/lib_setting.dat`（利用者が手で編集する）で決まるが、
+.dose の列を E(AP)・DskinM(AP)・H*(10) の並びと決め打ちしていた。設定が違うと、求めた線量とは
+別の線量の列を、エラーなしで返していた（例: 2 番目が空気カーマ Kair の設定で `DskinM(AP)` を求めると
+Kair の値を µGy/h で返す。並びが違う設定では `E(AP)` も別の列になりうる）。
+
+- 同じ計算の .summary の `result_total.columns`（name・display・unit）で .dose の列に名前を付ける。
+  .summary が読めないときは、.dose の表示名を lib_setting.dat の既知の名前（13 種）に当てる。
+- `dose_type` は lib_setting.dat の summary_name（例: `E(AP)`・`Kair`・`H*(10)`・`DskinM(AP)`）を受け付ける
+  （以前は 3 種の enum）。この計算に無い種類を求めると、別の列を返さずに `available_dose_types` を返す。
+- 単位は決め打ちせず、.summary（または .dose の見出し）の単位を返す。応答に `dose_display`・`available_dose_types` を加えた。
+- `npm run test:schema` の 5 件の不一致はこれが原因だった（テストも並びを決め打ちしていた）。今はすべて一致する。
+
+### その他
+
+- 古い説明用の `.mcp.json`（v1.2.0 当時の内容。ライセンス表記も ISC のままだった）を削除し、npm パッケージからも外した。
+  プログラムからは読まれていない。Claude Code の設定ファイルと同じ名前で、誤って読まれるおそれもあった。
+- manifest の `poker_proposeThinnedIndices` / `poker_updateThinnedIndices` の引数の説明を、実行時の定義（v1.9.2 で
+  マニュアルに合わせたもの）に合わせた。manifest の全 43 項目が実行時の定義と一致する。
+- `prepublishOnly` で `check:manifest` と `tests/particle-check.test.mjs` を流し、manifest がずれたまま公開できないようにした。
+- README の説明（光子だけの記述、npm の版）と PHYSICS_REFERENCE の「36メソッド」の節を現状に合わせた。
+- `src/mcp/tools/index.js` に紛れていた単独の CR を除き、改行を LF にそろえた（git がテキストでないと判定していた）。
+
 ### 試験
 
-`npm run test:neutron`（`tests/neutron-source.test.mjs`）を追加。ツール数は既定 43（条件により 42〜46）。
+`npm run test:neutron`（`tests/neutron-source.test.mjs` と、POKER 本体の要らない `tests/particle-check.test.mjs`）を追加。
+ツール数は既定 43（条件により 42〜46）。
 
 `npm run test:cad`（`tests/cad-e2e.test.mjs`）を直した。経路を gi_test.FCStd から、入力を別のモデルの
 cask_full.yaml から取っていたため、経路の材料 Air が入力に無く、.paths 経由の計算が止まっていた。

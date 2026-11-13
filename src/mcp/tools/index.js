@@ -66,7 +66,7 @@ export {
   calculationTools,
   resetTools,
   daughterNuclideTools,
-  guiTools,
+  guiTools,
   schemaTools,
   equilTools
 };

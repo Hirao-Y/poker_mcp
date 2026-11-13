@@ -25,7 +25,8 @@
     "test:cad-thinned": "node tests/cad-thinned-fit.test.mjs",
     "test:schema": "node tests/schema-dose.test.mjs",
     "test:equil": "node tests/equil.test.mjs",
-    "test:neutron": "node tests/neutron-source.test.mjs"
+    "test:neutron": "node tests/neutron-source.test.mjs && node tests/particle-check.test.mjs",
+    "prepublishOnly": "npm run check:manifest && node tests/particle-check.test.mjs"
   },
   "keywords": [
     "mcp",
@@ -71,7 +72,6 @@
     "tools/audit_mfp.py",
     "tools/compare_poker_trace.py",
     "README.md",
-    "LICENSE",
-    ".mcp.json"
+    "LICENSE"
   ]
 }

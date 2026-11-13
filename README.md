@@ -1,10 +1,10 @@
 # POKER-MCP
 
-点減衰核法の光子遮蔽計算コード **POKER** を、Claude などの AI アプリから使えるようにする
-MCP（Model Context Protocol）サーバです。
+点減衰核法の遮蔽計算コード **POKER**（光子。POKER 2.3.0 からは中性子も）を、Claude などの AI アプリから
+使えるようにする MCP（Model Context Protocol）サーバです。
 
 *An MCP server that lets AI applications build, validate and run inputs for POKER, a point-kernel
-photon shielding code, and read back the computed doses.*
+shielding code for gamma rays (and, from POKER 2.3.0, neutrons), and read back the computed doses.*
 
 - AI アプリへの自然言語の指示から、POKER の入力（YAML）を作成・編集・検証し、計算を実行して線量を返します
 - 線量はすべて POKER の出力ファイル（`.summary`・`.dose`）から抽出します。AI が数値を作ることはありません
@@ -12,7 +12,7 @@ photon shielding code, and read back the computed doses.*
 
 | | |
 |---|---|
-| 最新版 | 1.13.0（npm の最新は 1.10.0） |
+| 最新版 | 1.13.0 |
 | ツール数 | 43（非同期ジョブを有効にすると 46） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
 | 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
@@ -21,7 +21,7 @@ photon shielding code, and read back the computed doses.*
 
 | | 入手先 | 備考 |
 |---|---|---|
-| POKER 本体 | [pointkernel.com](https://pointkernel.com)（v2.1.5 以降） | Windows。フォーム登録でダウンロードリンクが届く |
+| POKER 本体 | [pointkernel.com](https://pointkernel.com)（v2.1.5 以降。中性子線源は v2.3.0 以降） | Windows。フォーム登録でダウンロードリンクが届く |
 | Node.js | 18 以降 | |
 | MCP クライアント | Claude Desktop など | HTTP 版は Claude Code、または Claude Desktop + `mcp-remote` |
 | FreeCAD | [freecad.org](https://www.freecad.org/)（1.0 以降） | CAD 連携を使う場合だけ |
@@ -123,7 +123,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 
 POKER 本体は次の指定に対応していますが、POKER-MCP にはまだ対応するツールがありません（今後対応する予定です）。
 
-- 線源のエネルギースペクトルによる指定（ツールでは核種と放射能で指定します）
+- 光子の線源のエネルギースペクトルによる指定（光子はツールでは核種と放射能で指定します。中性子はエネルギ線でも指定できます）
 - 多重層（2 層・3 層）のビルドアップ係数の指定（ツールでは単層の材料で指定します）
 
 必要な場合は YAML を直接編集してください。AI アプリが `poker_getSchema` で書式を読み、
@@ -154,7 +154,7 @@ npm install
 | `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一であること |
 | `npm run test:jobs` | 非同期ジョブ。同期実行との全行一致 |
 | `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
-| `npm run test:neutron` | 中性子線源（`particle: neutron`、`emission`・エネルギ線の指定、光子との取り違えの拒否） |
+| `npm run test:neutron` | 中性子線源（`particle: neutron`、`emission`・エネルギ線の指定、光子との取り違えの拒否、古い POKER での停止） |
 | `npm run test:equil` | `equil_*` ツールと、暗号化した ICRP-07.NDX からの核種データベースの読み込み |
 | `npm run test:cad-full` など | CAD 連携（FreeCAD が必要） |
 

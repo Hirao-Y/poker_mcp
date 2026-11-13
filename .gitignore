@@ -8,3 +8,5 @@ _tmp_*.mjs
 # Python (tools/)
 __pycache__/
 *.pyc
+# 開発用の手元の実行スクリプト（個人のパスを含む）
+tests/*_local.bat
