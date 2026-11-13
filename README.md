@@ -137,7 +137,6 @@ YAML を直接書き換えることもありますが、その部分は POKER-MC
 | 文書 | 内容 |
 |---|---|
 | [docs/manuals/](docs/manuals/) | マニュアル一式（基本ガイド、API、CAD 連携、運用、トラブルシューティング） |
-| [docs/interactive_guides/](docs/interactive_guides/) | 段階別の学習ガイド |
 | [CHANGELOG.md](CHANGELOG.md) | 版ごとの変更内容 |
 
 ## 開発者向け
