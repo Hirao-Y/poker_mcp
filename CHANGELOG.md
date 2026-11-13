@@ -27,6 +27,13 @@ POKER 2.3.0 の中性子線源（入力の最上位に `particle: neutron`）を
 
 `npm run test:neutron`（`tests/neutron-source.test.mjs`）を追加。ツール数は既定 43（条件により 42〜46）。
 
+`npm run test:cad`（`tests/cad-e2e.test.mjs`）を直した。経路を gi_test.FCStd から、入力を別のモデルの
+cask_full.yaml から取っていたため、経路の材料 Air が入力に無く、.paths 経由の計算が止まっていた。
+既定では同じモデルから入力（`poker_generateInput`）と経路を作る。手で作った入力と組み合わせるときは
+`POKER_TEST_FCSTD` と `POKER_TEST_YAML` を両方指定し、そのときだけ .paths 経由と CSG 経由の線量を比べる
+（生成した入力の立体はダミーなので、CSG 経由は遮蔽体の無い計算になる）。計算の後にもう一度
+`poker_generatePaths` を呼んで v1.8.3 のサマリー衝突の再発も見る。NG があれば終了コード 1 で終わる。
+
 ## [1.12.0] - 2026-11-04
 
 POKER の付属ツール EquilibriumSheet（崩壊系列・放射平衡）の計算を、MCP から使えるようにした。
