@@ -23,7 +23,8 @@
     "test:cad-validate": "node tests/cad-validate.test.mjs",
     "test:cad-pipe": "node tests/cad-pipe.test.mjs",
     "test:cad-thinned": "node tests/cad-thinned-fit.test.mjs",
-    "test:schema": "node tests/schema-dose.test.mjs"
+    "test:schema": "node tests/schema-dose.test.mjs",
+    "test:equil": "node tests/equil.test.mjs"
   },
   "keywords": [
     "mcp",

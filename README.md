@@ -12,8 +12,8 @@ photon shielding code, and read back the computed doses.*
 
 | | |
 |---|---|
-| 最新版 | 1.11.0（npm の最新は 1.10.0） |
-| ツール数 | 36（非同期ジョブを有効にすると 39） |
+| 最新版 | 1.12.0（npm の最新は 1.10.0） |
+| ツール数 | 41（非同期ジョブを有効にすると 44） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
 | 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
 
