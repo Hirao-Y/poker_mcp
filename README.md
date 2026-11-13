@@ -12,8 +12,8 @@ photon shielding code, and read back the computed doses.*
 
 | | |
 |---|---|
-| 最新版 | 1.12.0（npm の最新は 1.10.0） |
-| ツール数 | 41（非同期ジョブを有効にすると 44） |
+| 最新版 | 1.13.0（npm の最新は 1.10.0） |
+| ツール数 | 43（非同期ジョブを有効にすると 46） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
 | 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
 
@@ -113,6 +113,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | サマリー出力量 | `poker_proposeThinnedIndices` `poker_getThinnedIndices` `poker_updateThinnedIndices` |
 | 確定・計算・結果 | `poker_applyChanges` `poker_resetYaml` `poker_executeCalculation` `poker_getDoseMap` `poker_getSchema` `poker_openGui` |
 | CAD 連携 | `poker_generateInput` `poker_generatePaths` |
+| 粒子（光子・中性子。中性子は POKER 2.3.0 から） | `poker_setParticle` `poker_getParticle` |
 | 崩壊系列・放射平衡（EquilibriumSheet） | `equil_listNuclides` `equil_getChain` `equil_calculateDecay` `equil_getSeries` `equil_getEmissions` |
 | 非同期実行（`POKER_MCP_ASYNC=1` のとき） | `poker_submitCalculation` `poker_getJobStatus` `poker_getJobResult` |
 
@@ -153,6 +154,7 @@ npm install
 | `npm run test:http` | HTTP 版。ツール一覧・計算結果が stdio 版と同一であること |
 | `npm run test:jobs` | 非同期ジョブ。同期実行との全行一致 |
 | `npm run test:schema` | `poker_getSchema` と `.dose` の読み取り |
+| `npm run test:neutron` | 中性子線源（`particle: neutron`、`emission`・エネルギ線の指定、光子との取り違えの拒否） |
 | `npm run test:equil` | `equil_*` ツールと、暗号化した ICRP-07.NDX からの核種データベースの読み込み |
 | `npm run test:cad-full` など | CAD 連携（FreeCAD が必要） |
 

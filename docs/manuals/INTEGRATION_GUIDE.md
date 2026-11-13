@@ -110,7 +110,7 @@ v1.11.0 で、MCP を HTTP（Streamable HTTP）で受ける入口 `src/mcp_serve
 
 ツール一覧と計算結果は stdio 版と同一です。リモートのサーバでは非同期ジョブを有効にし
 （`POKER_MCP_ASYNC=1`）、GUI ツールを外します（`POKER_MCP_GUI=0`。GUI はサーバの画面に開き、
-利用者からは見えないため）。この場合のツール数は 43 です。
+利用者からは見えないため）。この場合のツール数は 45 です。
 
 以下、URL は `https://poker.example.com/mcp`、`<token>` はサーバの `POKER_MCP_HTTP_TOKEN` とします。
 

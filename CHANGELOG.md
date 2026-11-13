@@ -1,5 +1,32 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.13.0] - 2026-11-13
+
+POKER 2.3.0 の中性子線源（入力の最上位に `particle: neutron`）を MCP から扱えるようにした。
+計算は POKER の poker_neutron（点減衰核法、中性子と 2 次γ）が行う。
+
+### `poker_setParticle` / `poker_getParticle` を追加（2 つ）
+
+| ツール | 内容 |
+|---|---|
+| `poker_setParticle` | 計算する粒子（`photon` / `neutron`）を設定する（`poker_applyChanges` で確定）。既存の線源と食い違う場合は拒否する。`photon` にすると `particle` の行を消す（POKER の既定） |
+| `poker_getParticle` | 現在の粒子（保留中の変更を含む） |
+
+### 線源ツールの inventory
+
+`poker_proposeSource` / `poker_updateSource` の inventory は、粒子に応じて次のどれかで書く。
+
+- 光子: `{ nuclide, radioactivity [Bq] }`（従来どおり）
+- 中性子: `{ nuclide, emission [n/s] }`（Cf252・AmBe・AmBe-Sources4C・PuBe）
+- 中性子のエネルギ線: `{ energy [MeV], spectrum（省略時 1）, emission [n/s] }`
+
+粒子と書き方が食い違う線源（中性子で `radioactivity`、光子で `emission`）は拒否する。
+中性子の線源では子孫核種の自動補完をしない。
+
+### 試験
+
+`npm run test:neutron`（`tests/neutron-source.test.mjs`）を追加。ツール数は既定 43（条件により 42〜46）。
+
 ## [1.12.0] - 2026-11-04
 
 POKER の付属ツール EquilibriumSheet（崩壊系列・放射平衡）の計算を、MCP から使えるようにした。

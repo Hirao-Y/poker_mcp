@@ -1,6 +1,6 @@
 {
   "name": "poker-mcp",
-  "version": "1.12.0",
+  "version": "1.13.0",
   "description": "YAML-based input file management tool for radiation shielding calculation code POKER with MCP support - Enhanced with collision detection, daughter nuclide auto-completion, and environment variable support",
   "main": "src/mcp_server_stdio_v4.js",
   "type": "module",
@@ -24,7 +24,8 @@
     "test:cad-pipe": "node tests/cad-pipe.test.mjs",
     "test:cad-thinned": "node tests/cad-thinned-fit.test.mjs",
     "test:schema": "node tests/schema-dose.test.mjs",
-    "test:equil": "node tests/equil.test.mjs"
+    "test:equil": "node tests/equil.test.mjs",
+    "test:neutron": "node tests/neutron-source.test.mjs"
   },
   "keywords": [
     "mcp",

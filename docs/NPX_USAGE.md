@@ -111,7 +111,7 @@ export FREECAD_PATH="/usr/lib/freecad"
 | `POKER_MCP_JOB_TIMEOUT_MIN` | 1440 | 1 件の計算の打ち切り時間（分） |
 
 有効にすると `poker_submitCalculation` / `poker_getJobStatus` / `poker_getJobResult` が
-加わり（ツール数 41 → 44）、`poker_getDoseMap` に `job_id` 引数が付きます。
+加わり（ツール数 43 → 46）、`poker_getDoseMap` に `job_id` 引数が付きます。
 数十秒で終わる計算は従来どおり `poker_executeCalculation` で構いません。
 
 ### `POKER_MCP_GUI`（v1.10.0）
