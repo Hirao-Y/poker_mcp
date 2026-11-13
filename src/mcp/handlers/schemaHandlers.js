@@ -14,7 +14,7 @@ const TIMEOUT_MS = 30000;
 //|
 //| POKER_CUI --schema を実行し、標準出力を文字列で返す。
 //|
-function runSchema(kind) {
+export function runSchema(kind) {
   return new Promise((resolve, reject) => {
     const args = ['--schema'];
     if (kind && kind !== 'input') args.push('--kind=' + kind);
