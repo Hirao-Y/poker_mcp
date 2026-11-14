@@ -93,7 +93,13 @@ def _parse_setting(path):
 
 class PokerLib(object):
     def __init__(self, install_dir, setting="lib_setting.dat"):
+        # Windows does not care about the case of "LIB"; Linux / macOS do, and the Linux
+        # package ships "lib".  Use whichever exists (v1.14.0).
         lib = os.path.join(install_dir, "LIB")
+        for name in ("LIB", "lib", "Lib"):
+            if os.path.isdir(os.path.join(install_dir, name)):
+                lib = os.path.join(install_dir, name)
+                break
         self.dir = lib
         cfg = _parse_setting(os.path.join(lib, setting))
         txt = open(os.path.join(lib, setting), encoding="utf-8",

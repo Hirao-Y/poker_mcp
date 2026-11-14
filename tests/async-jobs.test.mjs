@@ -18,6 +18,7 @@ import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js'
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
 const ROOT = process.cwd();
 const T = path.join(os.tmpdir(), 'poker_test_async_ws');
@@ -30,7 +31,7 @@ fs.copyFileSync(path.join(ROOT, 'tools/samples/article_pipe/poker.paths'), path.
 
 // poker_openGui は Windows で POKER.exe があるときだけ登録される（tests/gui-switch.test.mjs）。
 // その有無でツール数が 1 変わるので、期待値を合わせる。
-const INSTALL = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+const INSTALL = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
 const guiExpected = process.platform === 'win32' &&
   fs.existsSync(path.win32.join(INSTALL.replace(/\//g, '\\'), 'POKER.exe'));
 const BASE_COUNT = guiExpected ? 43 : 42;   // v1.12.0 で equil_* の 5 つ、v1.13.0 で particle の 2 つを追加
@@ -42,7 +43,7 @@ const check = (label, ok, detail = '') => {
 };
 
 async function start(asyncOn) {
-  const env = { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: process.env.POKER_INSTALL_PATH || 'C:/Poker' };
+  const env = { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR };
   if (asyncOn) env.POKER_MCP_ASYNC = '1'; else delete env.POKER_MCP_ASYNC;
   // ツール数を数えるので、GUI の有無は外の環境変数に左右されないよう固定する（GUI は既定の判定に任せる）
   delete env.POKER_MCP_GUI;

@@ -16,11 +16,12 @@ import path from 'path';
 import os from 'os';
 import { fileURLToPath } from 'url';
 import { parseDoseMap, readSummaryColumns } from '../src/utils/doseMapParser.js';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR, POKER_CUI_NAME } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repo = path.join(__dirname, '..');
-const pokerDir = process.env.POKER_INSTALL_PATH || 'C:/Poker';
-const pokerCui = path.join(pokerDir, 'poker_cui.exe');
+const pokerDir = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
+const pokerCui = path.join(pokerDir, POKER_CUI_NAME);
 
 let ng = 0;
 const ok = (cond, label, detail) => {

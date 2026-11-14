@@ -21,6 +21,7 @@ import http from 'http';
 import os from 'os';
 import path from 'path';
 import { pathToFileURL } from 'url';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
 const ROOT = process.cwd();
 const PKG = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
@@ -28,7 +29,7 @@ const T = path.join(os.tmpdir(), 'poker_test_http_ws');
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(path.join(T, 'tasks'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'tools/samples/article_fillet/poker.yaml'), path.join(T, 'tasks', 'fillet.yaml'));
-const INSTALL = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+const INSTALL = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
 const TOKEN = 'test-token-0123456789abcdef0123456789';
 const OPTS = { show_total_dose: true, show_source_data: false };
 

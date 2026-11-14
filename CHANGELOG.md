@@ -1,5 +1,23 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.14.0] - 2026-11-14
+
+Windows 依存をなくし、Linux（と macOS）でも動くようにした。POKER 2.3.0 の計算部（`poker_cui`）の Linux 版と組み合わせて使う。
+
+### 変更
+
+| 箇所 | 変更 |
+|---|---|
+| `utils/paths.js` | `POKER_INSTALL_PATH` の既定値を OS で切り替える（Windows は従来どおり `C:/Poker`、Linux・macOS は PATH 上の `poker_cui` があるフォルダ、無ければ `/opt/poker`）。`lib` / `LIB` は実在するほうを使う（Linux・macOS は大文字小文字を区別する）。計算部の実行ファイル名を OS で切り替える（`POKER_CUI.exe` / `poker_cui`）。環境変数 `POKER_CUI_PATH` で実行ファイルを直接指定できる。`CAD_TOOLS_DIR` を `fileURLToPath` で求める。macOS の FreeCAD の既定の場所を追加 |
+| CAD 連携（`poker_generatePaths`） | `poker_cui.EXE` の決め打ちをやめ、OS に合った名前で探す。FreeCAD の案内を OS に合わせる |
+| 計算・スキーマ取得 | 呼ぶコマンドを `POKER_CUI_PATH` で変えられるようにした（既定は従来どおり PATH 上の `poker_cui`） |
+| 材料カタログ | `C:\Poker\LIB` の決め打ちをやめ、`utils/paths.js` で解決する |
+| `equil_*` | EquilibriumSheet_CUI が無いときの案内を OS に合わせる（Windows 以外には付属しない） |
+| CAD のツール（`tools/poker_lib.py`） | `LIB` / `lib` の実在するほうを読む |
+| テスト | `C:/Poker` と `poker_cui.exe` の決め打ちを `utils/paths.js` の既定値に置き換えた |
+
+Windows での動作は変わらない（既定値・探す場所・呼ぶコマンドは従来と同じ）。`poker_openGui` は従来どおり Windows だけで載る。
+
 ## [1.13.0] - 2026-11-13
 
 POKER 2.3.0 の中性子線源（入力の最上位に `particle: neutron`）を MCP から扱えるようにした。

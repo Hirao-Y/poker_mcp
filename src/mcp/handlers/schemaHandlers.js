@@ -6,9 +6,10 @@
 import { spawn } from 'child_process';
 import { ValidationError } from '../../utils/errors.js';
 import { logger } from '../../utils/logger.js';
+import { POKER_CUI_CMD } from '../../utils/paths.js';
 
 const KINDS = ['input', 'paths', 'summary', 'dose'];
-const POKER_CUI = 'poker_cui';
+const POKER_CUI = POKER_CUI_CMD;   // 既定は PATH 上の poker_cui。POKER_CUI_PATH で直接指定できる（v1.14.0）
 const TIMEOUT_MS = 30000;
 
 //|

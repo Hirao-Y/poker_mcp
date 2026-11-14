@@ -13,7 +13,9 @@
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
-import { POKER_LIB_DIR } from './paths.js';
+import { POKER_LIB_DIR, pokerInstallDir } from './paths.js';
+// EquilibriumSheet_CUI は .NET Framework のプログラムで、POKER の Windows 版にだけ付属する。
+// Linux・macOS では EQUIL_CUI_PATH で別に用意したものを指定しない限り使えない（v1.14.0 で案内を明記）。
 
 const TIMEOUT_MS = 60000;
 // ChaCha20 で暗号化した lib ファイルの先頭（POKER の Obfuscator と同じ）
@@ -21,8 +23,7 @@ const CHACHA_MAGIC = Buffer.from([0x89, 0x50, 0x4B, 0x58, 0x0D, 0x0A, 0x1A, 0x0A
 
 export function resolveEquilCui() {
   if (process.env.EQUIL_CUI_PATH) return process.env.EQUIL_CUI_PATH;
-  const installPath = process.env.POKER_INSTALL_PATH || 'C:/Poker';
-  const exe = path.join(installPath, 'EquilibriumSheet_CUI.exe');
+  const exe = path.join(pokerInstallDir(), 'EquilibriumSheet_CUI.exe');
   if (fs.existsSync(exe)) return exe;
   return 'EquilibriumSheet_CUI';
 }
@@ -72,7 +73,10 @@ export function runEquilCui(args, { libDir = POKER_LIB_DIR, timeoutMs = TIMEOUT_
       clearTimeout(timer);
       reject(new EquilCuiError(`EquilibriumSheet_CUI を起動できません（${exe}）: ${e.message}`, {
         code: 'EQUIL_CUI_NOT_AVAILABLE',
-        hint: 'POKER_INSTALL_PATH に EquilibriumSheet_CUI.exe があるか、環境変数 EQUIL_CUI_PATH を確認してください'
+        hint: process.platform === 'win32'
+          ? 'POKER_INSTALL_PATH に EquilibriumSheet_CUI.exe があるか、環境変数 EQUIL_CUI_PATH を確認してください'
+          : 'EquilibriumSheet_CUI は POKER の Windows 版の付属ツールで、この OS には付属しません。'
+            + '使う場合は環境変数 EQUIL_CUI_PATH に実行ファイルを指定してください'
       }));
     });
     child.on('close', (code) => {

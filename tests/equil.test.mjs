@@ -5,8 +5,9 @@
 //   暗号化 NDX を EquilibriumSheet_CUI 経由で読んだ結果を全核種で比べる。
 import fs from 'fs';
 import path from 'path';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
-const pokerDir = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+const pokerDir = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
 const cui = process.env.EQUIL_CUI_PATH || path.join(pokerDir, 'EquilibriumSheet_CUI.exe');
 
 let ng = 0;

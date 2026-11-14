@@ -10,7 +10,8 @@ import { spawn } from 'child_process';
 import fs from 'fs/promises';
 import fssync from 'fs';
 import path from 'path';
-import { FREECAD_CMD, CAD_TOOLS_DIR, POKER_INSTALL_DIR, TASKS_DIR, YAML_FILE }
+import { FREECAD_CMD, CAD_TOOLS_DIR, POKER_INSTALL_DIR, TASKS_DIR, YAML_FILE,
+         POKER_CUI_NAME, pokerCuiInInstallDir }
   from '../../utils/paths.js';
 import { logger } from '../../utils/logger.js';
 import { reconcileInventory } from '../../utils/DaughterReconciler.js';
@@ -43,9 +44,11 @@ export function createCadHandlers(taskManager) {
         return fail(
           'FreeCAD が見つかりません',
           '環境変数 FREECAD_PATH に freecadcmd の場所を設定してください。' +
-          '実行ファイル（C:/Program Files/FreeCAD 1.1/bin/freecadcmd.exe）でも、' +
-          'インストールフォルダ（C:/Program Files/FreeCAD 1.1）でも指定できます。' +
-          'claude_desktop_config.json の env に追加します。');
+          (process.platform === 'win32'
+            ? '実行ファイル（C:/Program Files/FreeCAD 1.1/bin/freecadcmd.exe）でも、' +
+              'インストールフォルダ（C:/Program Files/FreeCAD 1.1）でも指定できます。'
+            : '実行ファイル（例: /usr/bin/freecadcmd）でも、インストールフォルダでも指定できます。') +
+          'MCP クライアントの設定の env に追加します。');
       }
       if (!args || !args.fcstd) return fail('fcstd を指定してください');
       if (!fssync.existsSync(args.fcstd))
@@ -82,10 +85,11 @@ export function createCadHandlers(taskManager) {
 
       // --- 1. poker_cui -p で分割点と評価点を出す ---
       // .paths には全点が必要。間引かれていると gen_paths.py がエラーにする。
-      const exe = path.join(POKER_INSTALL_DIR, 'poker_cui.EXE');
-      if (!fssync.existsSync(exe))
-        return fail('poker_cui が見つかりません: ' + exe,
-          '環境変数 POKER_INSTALL_PATH を確認してください。');
+      // v1.14.0: 実行ファイル名を OS で切り替える（Windows は POKER_CUI.exe、Linux・macOS は poker_cui）。
+      const exe = pokerCuiInInstallDir();
+      if (!exe)
+        return fail('poker_cui が見つかりません: ' + path.join(POKER_INSTALL_DIR, POKER_CUI_NAME),
+          '環境変数 POKER_INSTALL_PATH（又は実行ファイルを直接指す POKER_CUI_PATH）を確認してください。');
 
       // 専用のサマリーに出す。
       //   既定の <yaml>.summary を使うと executeCalculation と衝突する。
@@ -346,8 +350,8 @@ export function createCadHandlers(taskManager) {
       //   利用者が計算まで進んでから気づくより早い。
       let validation = null;
       {
-        const exe2 = path.join(POKER_INSTALL_DIR, 'poker_cui.EXE');
-        if (fssync.existsSync(exe2)) {
+        const exe2 = pokerCuiInInstallDir();
+        if (exe2 && fssync.existsSync(exe2)) {
           const rv = await run(exe2, [out, '-c'], { cwd: TASKS_DIR });
           if (rv.code === 0) {
             validation = { ok: true, message: 'poker_cui -c で検証を通過しました' };

@@ -12,7 +12,8 @@ shielding code for gamma rays (and, from POKER 2.3.0, neutrons), and read back t
 
 | | |
 |---|---|
-| 最新版 | 1.13.0 |
+| 最新版 | 1.14.0 |
+| 動作環境 | Windows、Linux（macOS も同じ作りで動く見込み。未確認） |
 | ツール数 | 43（非同期ジョブを有効にすると 46） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
 | 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
@@ -21,7 +22,7 @@ shielding code for gamma rays (and, from POKER 2.3.0, neutrons), and read back t
 
 | | 入手先 | 備考 |
 |---|---|---|
-| POKER 本体 | [pointkernel.com](https://pointkernel.com)（v2.1.5 以降。中性子線源は v2.3.0 以降） | Windows。フォーム登録でダウンロードリンクが届く |
+| POKER 本体 | [pointkernel.com](https://pointkernel.com)（v2.1.5 以降。中性子線源は v2.3.0 以降） | Windows 版（GUI 付き）と、v2.3.0 からは計算部（`poker_cui`）の Linux 版。フォーム登録でダウンロードリンクが届く |
 | Node.js | 18 以降 | |
 | MCP クライアント | Claude Desktop など | HTTP 版は Claude Code、または Claude Desktop + `mcp-remote` |
 | FreeCAD | [freecad.org](https://www.freecad.org/)（1.0 以降） | CAD 連携を使う場合だけ |
@@ -60,11 +61,40 @@ Claude Desktop を再起動します。
 | 変数 | 既定 | 内容 |
 |---|---|---|
 | `POKER_MCP_HOME` | `~/.poker-mcp` | 作業ファイル（YAML、バックアップ、ログ）の置き場所 |
-| `POKER_INSTALL_PATH` | `C:/Poker` | POKER のインストール先（核種データ、`POKER.exe`） |
+| `POKER_INSTALL_PATH` | Windows: `C:/Poker`、Linux・macOS: PATH 上の `poker_cui` があるフォルダ | POKER のインストール先（`lib` の核種データ、`POKER.exe`） |
+| `POKER_CUI_PATH` | PATH 上の `poker_cui` | 計算部の実行ファイルを直接指定する |
 | `FREECAD_PATH` | 自動探索 | FreeCAD の場所（CAD 連携） |
 | `POKER_MCP_ASYNC` | 無効 | `1` で計算の非同期実行を有効にする |
 | `POKER_MCP_GUI` | 有効 | `0` で `poker_openGui` を外す（リモート公開時） |
 | `EQUIL_CUI_PATH` | `POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe` | `equil_*` ツールが使う EquilibriumSheet のコマンドライン版 |
+
+### Linux で使う（v1.14.0）
+
+POKER 2.3.0 の計算部の Linux 版（`poker230_linux_x86_64.tar.gz`）を展開し、そのフォルダを PATH に加えます。
+`POKER_INSTALL_PATH` を書かなければ、PATH 上の `poker_cui` があるフォルダ（`lib` を含む）を使います。
+
+```bash
+tar -xzf poker230_linux_x86_64.tar.gz -C ~/
+export PATH=$PATH:~/poker230_linux_x86_64
+```
+
+Claude Code では次のように登録します（Claude Desktop の Linux 版はありません）。
+
+```bash
+claude mcp add --transport stdio --env POKER_MCP_HOME=$HOME/poker_mcp_workspace poker-mcp -- npx -y poker-mcp
+```
+
+OpenAI Codex では `~/.codex/config.toml` に書きます。
+
+```toml
+[mcp_servers.poker-mcp]
+command = "npx"
+args = ["-y", "poker-mcp"]
+env = { POKER_MCP_HOME = "/home/<username>/poker_mcp_workspace" }
+```
+
+Linux で使えないもの: `poker_openGui`（POKER.exe は Windows 専用。自動的に外れます）と、
+`equil_*`（EquilibriumSheet は Windows 版にだけ付属。`EQUIL_CUI_PATH` で別に用意したものを指定すれば使えます）。
 
 HTTP 版（別の機械から使う）の設定と、非同期実行・リモート公開の詳細は
 [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバ側）と

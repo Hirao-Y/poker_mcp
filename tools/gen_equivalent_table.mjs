@@ -14,7 +14,8 @@ import fs from 'fs';
 import path from 'path';
 import { MaterialCatalog, BUILDUP_MATCH_WARN } from '../src/utils/MaterialCatalog.js';
 
-const LIB = path.join(process.env.POKER_INSTALL_PATH || 'C:\\Poker', 'LIB');
+import { pokerLibDir } from '../src/utils/paths.js';
+const LIB = pokerLibDir();   // v1.14.0: OS ごとの既定値と lib / LIB の解決
 const OUT = process.argv[2] || path.join(LIB, 'lib_equivalent.dat');
 
 function stamp(p) {

@@ -2,7 +2,7 @@
 import { spawn } from 'child_process';
 import { promises as fs } from 'fs';
 import path from 'path';
-import { TASKS_DIR } from '../utils/paths.js';
+import { TASKS_DIR, POKER_CUI_CMD } from '../utils/paths.js';
 import { logger } from '../utils/logger.js';
 import { CalculationError } from '../utils/errors.js';
 
@@ -12,7 +12,7 @@ import { CalculationError } from '../utils/errors.js';
  */
 export class CalculationService {
   constructor() {
-    this.pokercuiCommand = 'poker_cui';
+    this.pokercuiCommand = POKER_CUI_CMD;   // 既定は PATH 上の poker_cui。POKER_CUI_PATH で直接指定できる（v1.14.0）
     this.defaultTimeout = 300000; // 5分
   }
 

@@ -3,6 +3,7 @@ import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
 const T = path.join(os.tmpdir(), 'poker_val_test').replace(/\\/g, '/');
 fs.rmSync(T, { recursive: true, force: true });
@@ -13,7 +14,7 @@ fs.writeFileSync(T + '/tasks/poker.yaml',
   'transform: []\nbuildup_factor: []\nsource: []\ndetector: []\n', 'utf8');
 
 const proc = spawn(process.execPath, ['src/mcp_server_stdio_v4.js'], {
-  env: { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: 'C:/Poker' },
+  env: { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: DEFAULT_POKER_DIR },
   stdio: ['pipe', 'pipe', 'ignore']
 });
 let buf = ''; const pending = new Map();

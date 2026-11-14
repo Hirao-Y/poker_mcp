@@ -15,6 +15,7 @@ import fs from 'fs';
 import os from 'os';
 import path from 'path';
 import { pathToFileURL } from 'url';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
 
 const ROOT = process.cwd();
 const T = path.join(os.tmpdir(), 'poker_test_gui_ws');
@@ -22,7 +23,7 @@ fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(path.join(T, 'tasks'), { recursive: true });
 fs.copyFileSync(path.join(ROOT, 'tools/samples/article_fillet/poker.yaml'), path.join(T, 'tasks', 'fillet.yaml'));
 
-const INSTALL = process.env.POKER_INSTALL_PATH || 'C:/Poker';
+const INSTALL = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
 const pokerExe = path.win32.join(INSTALL.replace(/\//g, '\\'), 'POKER.exe');
 const guiExpected = process.platform === 'win32' && fs.existsSync(pokerExe);
 

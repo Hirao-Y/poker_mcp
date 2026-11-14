@@ -13,6 +13,7 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { fileURLToPath } from 'url';
 
 export const BASE_DIR = process.env.POKER_MCP_HOME
   ?? path.join(os.homedir(), '.poker-mcp');
@@ -21,9 +22,67 @@ export const LOGS_DIR   = path.join(BASE_DIR, 'logs');
 export const TASKS_DIR  = path.join(BASE_DIR, 'tasks');
 export const BACKUPS_DIR = path.join(BASE_DIR, 'backups');
 
-// POKER 本体のインストール先。核データ・材料カタログの正本はここの LIB 配下にある。
-export const POKER_INSTALL_DIR = process.env.POKER_INSTALL_PATH ?? 'C:/Poker';
-export const POKER_LIB_DIR = path.join(POKER_INSTALL_DIR, 'LIB');
+const IS_WINDOWS = process.platform === 'win32';
+
+// POKER の計算部の実行ファイル名。Windows は POKER_CUI.exe、Linux / macOS は poker_cui（v1.14.0）。
+export const POKER_CUI_NAME = IS_WINDOWS ? 'POKER_CUI.exe' : 'poker_cui';
+
+// 計算・スキーマ取得で呼ぶコマンド。既定は PATH 上の poker_cui（Windows では POKER_CUI.exe が見つかる）。
+// 環境変数 POKER_CUI_PATH で実行ファイルを直接指定できる。
+export const POKER_CUI_CMD = process.env.POKER_CUI_PATH || 'poker_cui';
+
+// PATH から実行ファイルを探す（見つからなければ null）
+export function findOnPath(name) {
+  const sep = IS_WINDOWS ? ';' : ':';
+  const exts = IS_WINDOWS ? (process.env.PATHEXT || '.EXE').split(';') : [''];
+  for (const d of (process.env.PATH || '').split(sep)) {
+    if (!d) continue;
+    for (const e of exts) {
+      const c = path.join(d, name + (name.toLowerCase().endsWith(e.toLowerCase()) ? '' : e));
+      try { if (fs.existsSync(c) && fs.statSync(c).isFile()) return c; } catch { /* 権限などは無視 */ }
+    }
+  }
+  return null;
+}
+
+// POKER 本体のインストール先の既定値。
+//   Windows: C:/Poker（従来どおり）
+//   Linux / macOS: PATH 上の poker_cui があるフォルダ（配布の tar.gz は poker_cui と lib を同じフォルダに置く）、
+//                  無ければ /opt/poker
+function defaultInstallDir() {
+  if (IS_WINDOWS) return 'C:/Poker';
+  const hit = findOnPath('poker_cui');
+  if (hit) {
+    try { return path.dirname(fs.realpathSync(hit)); } catch { return path.dirname(hit); }
+  }
+  return '/opt/poker';
+}
+
+// lib フォルダ。Windows の配布は LIB / lib のどちらでも読める（大文字小文字を区別しない）が、
+// Linux / macOS は区別するので、実在するほうを使う。
+function libDirOf(base) {
+  const names = IS_WINDOWS ? ['LIB', 'lib'] : ['lib', 'LIB', 'Lib'];
+  for (const n of names) {
+    const c = path.join(base, n);
+    try { if (fs.existsSync(c)) return c; } catch { /* 無視 */ }
+  }
+  return path.join(base, names[0]);
+}
+
+// POKER 本体のインストール先。核データ・材料カタログの正本はここの lib 配下にある。
+export const POKER_INSTALL_DIR = process.env.POKER_INSTALL_PATH ?? defaultInstallDir();
+export const POKER_LIB_DIR = libDirOf(POKER_INSTALL_DIR);
+
+// 呼んだ時点の環境変数で解決する版（MaterialCatalog など、従来から呼ぶたびに環境変数を読んでいた所で使う）
+export function pokerInstallDir() { return process.env.POKER_INSTALL_PATH ?? defaultInstallDir(); }
+export function pokerLibDir() { return libDirOf(pokerInstallDir()); }
+
+// インストール先にある計算部の実行ファイル（CAD 連携で使う）。POKER_CUI_PATH があればそれ。無ければ null。
+export function pokerCuiInInstallDir() {
+  if (process.env.POKER_CUI_PATH) return process.env.POKER_CUI_PATH;
+  const c = path.join(pokerInstallDir(), POKER_CUI_NAME);
+  return fs.existsSync(c) ? c : null;
+}
 
 // FreeCAD のコマンドライン版（freecadcmd）。CAD 連携レイトレースで使う。
 //
@@ -81,8 +140,10 @@ function scanRoots() {
       if (hit) return hit;
     }
   }
-  // Linux の標準的な配置
-  for (const c of ['/usr/bin/freecadcmd', '/usr/local/bin/freecadcmd']) {
+  // Linux・macOS の標準的な配置
+  for (const c of ['/usr/bin/freecadcmd', '/usr/local/bin/freecadcmd', '/usr/bin/FreeCADCmd',
+                   '/Applications/FreeCAD.app/Contents/Resources/bin/freecadcmd',
+                   '/Applications/FreeCAD.app/Contents/MacOS/FreeCADCmd']) {
     if (fs.existsSync(c)) return c;
   }
   return null;
@@ -103,9 +164,8 @@ export const FREECAD_CMD = resolveFreeCad();
 
 // CAD 連携ツール（tools/ 配下の Python）の場所。
 // npm パッケージにも同梱するので、このファイルからの相対で解決する。
-export const CAD_TOOLS_DIR = path.resolve(
-  path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, '$1')),
-  '..', '..', 'tools');
+// fileURLToPath は Windows（C:\...）でも Linux・macOS でも、空白などの %xx も正しく戻す。
+export const CAD_TOOLS_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..', 'tools');
 
 export const YAML_FILE    = path.join(TASKS_DIR,  'poker.yaml');
 export const PENDING_FILE = path.join(TASKS_DIR,  'pending_changes.json');

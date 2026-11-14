@@ -2,6 +2,7 @@
 import fs from 'fs';
 import path from 'path';
 import { logger } from './logger.js';
+import { pokerLibDir } from './paths.js';
 
 // ビルドアップデータを持つ標準材料の既定値（綴りは Aluminium に統一）。
 // 実際の一覧は lib_setting.dat の buildup_material から読み込み、
@@ -33,13 +34,13 @@ export class MaterialCatalog {
   static _canon = null;     // { lowercaseName: CanonicalName }
 
   static _libPath() {
-    const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
-    return path.join(base, 'LIB', 'lib_material.dat');
+    const base = pokerLibDir();   // v1.14.0: OS に合わせた既定値と lib / LIB の解決（utils/paths.js）
+    return path.join(base, 'lib_material.dat');
   }
 
   static _settingPath() {
-    const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
-    return path.join(base, 'LIB', 'lib_setting.dat');
+    const base = pokerLibDir();   // v1.14.0: OS に合わせた既定値と lib / LIB の解決（utils/paths.js）
+    return path.join(base, 'lib_setting.dat');
   }
 
   // 単層ビルドアップデータを持つ標準材料。lib_setting.dat が正。
@@ -214,14 +215,14 @@ export class MaterialCatalog {
     [0.1, 0.15, 0.2, 0.3, 0.5, 0.662, 1.0, 1.25, 1.5, 2.0, 3.0];
 
   static _attenPath() {
-    const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
+    const base = pokerLibDir();   // v1.14.0: OS に合わせた既定値と lib / LIB の解決（utils/paths.js）
     let file = 'atten2_xcom2.dat';
     try {
-      const s = fs.readFileSync(path.join(base, 'LIB', 'lib_setting.dat'), 'utf-8');
+      const s = fs.readFileSync(path.join(base, 'lib_setting.dat'), 'utf-8');
       const m = s.match(/file_attenuation\s*:\s*(\S+)/);
       if (m) file = m[1];
     } catch (e) { /* 既定名を使う */ }
-    return path.join(base, 'LIB', file);
+    return path.join(base, file);
   }
 
   static _loadAtten() {
@@ -298,8 +299,8 @@ export class MaterialCatalog {
   static equivalentTable() {
     if (this._eqTable) return this._eqTable;
     this._eqTable = {};
-    const base = process.env.POKER_INSTALL_PATH || 'C:\\Poker';
-    const p = path.join(base, 'LIB', 'lib_equivalent.dat');
+    const base = pokerLibDir();   // v1.14.0: OS に合わせた既定値と lib / LIB の解決（utils/paths.js）
+    const p = path.join(base, 'lib_equivalent.dat');
     try {
       const txt = fs.readFileSync(p, 'utf-8');
       const cat = this.load();
