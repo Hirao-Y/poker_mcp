@@ -15,7 +15,13 @@ import path from 'path';
 import os from 'os';
 import { spawn } from 'child_process';
 
-const POKER_DIR = process.argv[2] || 'C:/Users/yoshi/Desktop/poker177E/src230/GUI/bin/x64/Release';
+import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
+
+const IS_WINDOWS = process.platform === 'win32';
+// Windows は従来どおり開発フォルダ（POKER 2.3.0 の Release）、それ以外は POKER_INSTALL_PATH か utils/paths.js の既定値
+const POKER_DIR = process.argv[2]
+  || (IS_WINDOWS ? 'C:/Users/yoshi/Desktop/poker177E/src230/GUI/bin/x64/Release'
+                 : (process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR));
 const T = path.join(os.tmpdir(), 'poker_test_neutron_tmp').replace(/\\/g, '/');
 fs.rmSync(T, { recursive: true, force: true });
 fs.mkdirSync(T + '/tasks', { recursive: true });
@@ -69,7 +75,7 @@ calls.forEach(([, name, args], i) => msgs.push(JSON.stringify({ jsonrpc: '2.0', 
 
 // poker_cui は PATH で探すので、POKER 2.3.0 のフォルダを先頭に置く
 const env = { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: POKER_DIR,
-  PATH: POKER_DIR.replace(/\//g, '\\') + ';' + process.env.PATH };
+  PATH: (IS_WINDOWS ? POKER_DIR.replace(/\//g, '\\') : POKER_DIR) + path.delimiter + process.env.PATH };
 const proc = spawn(process.execPath, ['src/mcp_server_stdio_v4.js'], { env, stdio: ['pipe', 'pipe', 'ignore'] });
 let buf = '';
 proc.stdout.on('data', d => buf += d);
