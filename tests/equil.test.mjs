@@ -1,14 +1,15 @@
 // equil_* ツール（EquilibriumSheet_CUI）と、暗号化 NDX からの核種データベース読み込みの試験
 //
-//   POKER_INSTALL_PATH（既定 C:/Poker）に EquilibriumSheet_CUI.exe が無い環境ではスキップする。
+//   POKER_INSTALL_PATH に EquilibriumSheet_CUI.exe（Linux は EquilibriumSheet_CUI）が無い環境ではスキップする。
 //   EQUIL_PLAIN_NDX に平文の ICRP-07.NDX を指定すると、平文を直接解析した結果と
 //   暗号化 NDX を EquilibriumSheet_CUI 経由で読んだ結果を全核種で比べる。
 import fs from 'fs';
 import path from 'path';
 import { POKER_INSTALL_DIR as DEFAULT_POKER_DIR } from '../src/utils/paths.js';   // v1.14.0: OS ごとの既定値
+import { EQUIL_CUI_NAME } from '../src/utils/equilCui.js';                        // v1.14.0: .exe（Windows）／拡張子なし（Linux）
 
 const pokerDir = process.env.POKER_INSTALL_PATH || DEFAULT_POKER_DIR;
-const cui = process.env.EQUIL_CUI_PATH || path.join(pokerDir, 'EquilibriumSheet_CUI.exe');
+const cui = process.env.EQUIL_CUI_PATH || path.join(pokerDir, EQUIL_CUI_NAME);
 
 let ng = 0;
 const ok = (cond, label, detail) => {
@@ -17,7 +18,7 @@ const ok = (cond, label, detail) => {
 };
 
 if (!fs.existsSync(cui)) {
-  console.log('EquilibriumSheet_CUI.exe が無いためスキップ: ' + cui);
+  console.log(EQUIL_CUI_NAME + ' が無いためスキップ: ' + cui);
   process.exit(0);
 }
 

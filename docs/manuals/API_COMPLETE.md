@@ -396,7 +396,7 @@ poker_applyChanges()
 
 POKER の付属ツール EquilibriumSheet のコマンドライン版 `EquilibriumSheet_CUI.exe` を呼びます。
 計算は EquilibriumSheet と同じコードで、結果も同じです。実行ファイルは `EQUIL_CUI_PATH`、
-`POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe`、PATH の順に探し、無い環境では呼んだときに
+`POKER_INSTALL_PATH` の `EquilibriumSheet_CUI.exe`（Linux・macOS は `EquilibriumSheet_CUI`）、PATH の順に探し、無い環境では呼んだときに
 `EQUIL_CUI_NOT_AVAILABLE` を返します。核種名は `Cs-137` の形（`cs137` も可）、時間は数値＋単位
 （`s` / `m` / `h` / `d` / `y`、y = 365 日。例: `10y`、`30d`）です。
 

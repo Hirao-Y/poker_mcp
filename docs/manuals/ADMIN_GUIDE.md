@@ -223,7 +223,7 @@ CAD 連携・非同期ジョブは `POKER_CUI.exe`（と FreeCAD）を使うた�
 | 非同期ジョブ有効 | 46 |
 | 非同期ジョブ有効・GUI が外れる場合 | 45 |
 
-`equil_*` の 5 ツール（v1.12.0）は常に載ります。EquilibriumSheet_CUI.exe が無い環境では、呼んだときに `EQUIL_CUI_NOT_AVAILABLE` を返します。
+`equil_*` の 5 ツール（v1.12.0）は常に載ります。EquilibriumSheet_CUI.exe（Linux は EquilibriumSheet_CUI）が無い環境では、呼んだときに `EQUIL_CUI_NOT_AVAILABLE` を返します。
 `poker_setParticle` / `poker_getParticle` の 2 ツール（v1.13.0）も常に載ります。中性子の計算には POKER 2.3.0 以降が必要です。
 
 ### 設定確認

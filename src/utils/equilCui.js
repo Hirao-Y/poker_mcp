@@ -7,15 +7,19 @@
 //
 // 実行ファイルの場所（上から順に）:
 //   1. 環境変数 EQUIL_CUI_PATH
-//   2. POKER_INSTALL_PATH（既定 C:/Poker）の EquilibriumSheet_CUI.exe
+//   2. POKER_INSTALL_PATH の EquilibriumSheet_CUI.exe（Windows）／EquilibriumSheet_CUI（Linux）
 //   3. PATH 上の EquilibriumSheet_CUI
 // lib は POKER_INSTALL_PATH/LIB を --lib で渡す（poker_cui と同じデータを使うため）。
+// Linux 版（POKER 2.3.0 の Linux 版に付属）は自己完結型の単体実行ファイルで、
+// 復号は同じフォルダの libpklibio.so が行う（.NET のインストールは不要）。
 import { spawn } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { POKER_LIB_DIR, pokerInstallDir } from './paths.js';
-// EquilibriumSheet_CUI は .NET Framework のプログラムで、POKER の Windows 版にだけ付属する。
-// Linux・macOS では EQUIL_CUI_PATH で別に用意したものを指定しない限り使えない（v1.14.0 で案内を明記）。
+
+const IS_WINDOWS = process.platform === 'win32';
+
+export const EQUIL_CUI_NAME = IS_WINDOWS ? 'EquilibriumSheet_CUI.exe' : 'EquilibriumSheet_CUI';
 
 const TIMEOUT_MS = 60000;
 // ChaCha20 で暗号化した lib ファイルの先頭（POKER の Obfuscator と同じ）
@@ -23,7 +27,7 @@ const CHACHA_MAGIC = Buffer.from([0x89, 0x50, 0x4B, 0x58, 0x0D, 0x0A, 0x1A, 0x0A
 
 export function resolveEquilCui() {
   if (process.env.EQUIL_CUI_PATH) return process.env.EQUIL_CUI_PATH;
-  const exe = path.join(pokerInstallDir(), 'EquilibriumSheet_CUI.exe');
+  const exe = path.join(pokerInstallDir(), EQUIL_CUI_NAME);
   if (fs.existsSync(exe)) return exe;
   return 'EquilibriumSheet_CUI';
 }
@@ -73,10 +77,8 @@ export function runEquilCui(args, { libDir = POKER_LIB_DIR, timeoutMs = TIMEOUT_
       clearTimeout(timer);
       reject(new EquilCuiError(`EquilibriumSheet_CUI を起動できません（${exe}）: ${e.message}`, {
         code: 'EQUIL_CUI_NOT_AVAILABLE',
-        hint: process.platform === 'win32'
-          ? 'POKER_INSTALL_PATH に EquilibriumSheet_CUI.exe があるか、環境変数 EQUIL_CUI_PATH を確認してください'
-          : 'EquilibriumSheet_CUI は POKER の Windows 版の付属ツールで、この OS には付属しません。'
-            + '使う場合は環境変数 EQUIL_CUI_PATH に実行ファイルを指定してください'
+        hint: `POKER_INSTALL_PATH（${pokerInstallDir()}）に ${EQUIL_CUI_NAME} があるか、環境変数 EQUIL_CUI_PATH を確認してください`
+          + (IS_WINDOWS ? '' : '（Linux 版は POKER 2.3.0 の Linux 版に付属。同じフォルダに libpklibio.so が必要です）')
       }));
     });
     child.on('close', (code) => {

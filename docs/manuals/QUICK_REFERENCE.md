@@ -194,7 +194,7 @@ equil_getChain(nuclide="Cs-137")
 equil_calculateDecay(nuclide="Mo-99", time="2d", initial={activity_Bq:1e10})
 ```
 
-EquilibriumSheet_CUI.exe（POKER のインストール先）が無い環境では `EQUIL_CUI_NOT_AVAILABLE` を返します。
+EquilibriumSheet_CUI.exe（Linux は EquilibriumSheet_CUI。POKER のインストール先）が無い環境では `EQUIL_CUI_NOT_AVAILABLE` を返します。
 
 ---
 

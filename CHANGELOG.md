@@ -12,7 +12,7 @@ Windows 依存をなくし、Linux（と macOS）でも動くようにした。P
 | CAD 連携（`poker_generatePaths`） | `poker_cui.EXE` の決め打ちをやめ、OS に合った名前で探す。FreeCAD の案内を OS に合わせる |
 | 計算・スキーマ取得 | 呼ぶコマンドを `POKER_CUI_PATH` で変えられるようにした（既定は従来どおり PATH 上の `poker_cui`） |
 | 材料カタログ | `C:\Poker\LIB` の決め打ちをやめ、`utils/paths.js` で解決する |
-| `equil_*` | EquilibriumSheet_CUI が無いときの案内を OS に合わせる（Windows 以外には付属しない） |
+| `equil_*` | 探す実行ファイル名を OS で切り替える（`EquilibriumSheet_CUI.exe` / `EquilibriumSheet_CUI`）。Linux 版（POKER 2.3.0 の Linux 版に付属。自己完結型で .NET 不要、復号は同じフォルダの `libpklibio.so`）をそのまま使える。無いときの案内を OS に合わせる |
 | CAD のツール（`tools/poker_lib.py`） | `LIB` / `lib` の実在するほうを読む |
 | テスト | `C:/Poker` と `poker_cui.exe` の決め打ちを `utils/paths.js` の既定値に置き換えた |
 
