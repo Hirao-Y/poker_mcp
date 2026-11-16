@@ -70,11 +70,12 @@ Claude Desktop を再起動します。
 
 ### Linux で使う（v1.14.0）
 
-POKER 2.3.0 の計算部の Linux 版（`poker230_linux_x86_64.tar.gz`）を展開し、そのフォルダを PATH に加えます。
+POKER 2.3.0 の計算部の Linux 版（`poker230_linux_x86_64.zip`）を Linux の上で展開し、そのフォルダを PATH に加えます
+（Windows で展開してから写した場合は、`chmod +x poker_cui EquilibriumSheet_CUI` で実行権限を付けてください）。
 `POKER_INSTALL_PATH` を書かなければ、PATH 上の `poker_cui` があるフォルダ（`lib` を含む）を使います。
 
 ```bash
-tar -xzf poker230_linux_x86_64.tar.gz -C ~/
+unzip poker230_linux_x86_64.zip -d ~/
 export PATH=$PATH:~/poker230_linux_x86_64
 ```
 

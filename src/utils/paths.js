@@ -47,7 +47,7 @@ export function findOnPath(name) {
 
 // POKER 本体のインストール先の既定値。
 //   Windows: C:/Poker（従来どおり）
-//   Linux / macOS: PATH 上の poker_cui があるフォルダ（配布の tar.gz は poker_cui と lib を同じフォルダに置く）、
+//   Linux / macOS: PATH 上の poker_cui があるフォルダ（配布の zip は poker_cui と lib を同じフォルダに置く）、
 //                  無ければ /opt/poker
 function defaultInstallDir() {
   if (IS_WINDOWS) return 'C:/Poker';

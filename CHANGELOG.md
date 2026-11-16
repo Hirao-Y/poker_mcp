@@ -1,6 +1,6 @@
 # CHANGELOG - Poker MCP Server
 
-## [1.14.0] - 2026-11-14
+## [1.14.0] - 2026-11-16
 
 Windows 依存をなくし、Linux（と macOS）でも動くようにした。POKER 2.3.0 の計算部（`poker_cui`）の Linux 版と組み合わせて使う。
 
