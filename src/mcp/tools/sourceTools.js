@@ -31,7 +31,7 @@ export const sourceTools = [
             properties: {
               nuclide: {
                 type: 'string',
-                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Sources4C / PuBe'
+                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Large / AmBe-Sources4C / PuBe / Cm244 / Cm244-Watt'
               },
               radioactivity: {
                 type: 'number',
@@ -741,7 +741,7 @@ export const sourceTools = [
             properties: {
               nuclide: {
                 type: 'string',
-                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Sources4C / PuBe'
+                description: '核種名。光子は連結形式（例: Cs137, Co60）。中性子は Cf252 / AmBe / AmBe-Large / AmBe-Sources4C / PuBe / Cm244 / Cm244-Watt'
               },
               radioactivity: {
                 type: 'number',

@@ -4,7 +4,7 @@
 //
 // particle: neutron のデッキは POKER の中性子拡張（部品 poker_neutron）で計算される。
 // 線源の inventory は emission [n/s] で書き（radioactivity はエラー）、核種は中性子の目録にあるもの
-// （Cf252 / AmBe / AmBe-Sources4C / PuBe）か、エネルギ線 { energy, spectrum, emission } で指定する。
+// （Cf252 / AmBe / AmBe-Large / AmBe-Sources4C / PuBe / Cm244 / Cm244-Watt）か、エネルギ線 { energy, spectrum, emission } で指定する。
 // 材料は中性子の目録にあるもの（VOID / Air / Water / Polyethylene / Concrete / Soil / Iron / Lead）だけで、
 // 密度は目録の値と 1% 以内であること。buildup_factor は無視される。
 // 多層遮蔽（空気・VOID を除く 2 種類以上の遮蔽材を通る経路）は計算はされるが適用範囲外として警告される。

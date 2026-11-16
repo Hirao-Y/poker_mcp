@@ -16,7 +16,7 @@ Poker MCP Serverは、放射線遮蔽計算の入力ファイル作成を効率�
 放射線遮蔽計算では、複雑な3D形状モデルの作成、材料物性の設定、線源配置など、多くのパラメータを正確に設定する必要があります。本ツールは、これらの設定プロセスを自動化し、計算品質の向上と作業効率化を実現します。
 
 ### 🆕 v1.13.0 新機能（中性子線源）
-- **`poker_setParticle` / `poker_getParticle`**: `particle: neutron` にすると、POKER 2.3.0 の中性子計算（部品 poker_neutron、点減衰核法で中性子と 2 次γ線）を使える。線源の inventory は `{ nuclide, emission [n/s] }`（Cf252・AmBe・AmBe-Sources4C・PuBe）または `{ energy [MeV], spectrum, emission }`。POKER 2.2.x では設定の時点で止める
+- **`poker_setParticle` / `poker_getParticle`**: `particle: neutron` にすると、POKER 2.3.0 の中性子計算（部品 poker_neutron、点減衰核法で中性子と 2 次γ線）を使える。線源の inventory は `{ nuclide, emission [n/s] }`（Cf252・AmBe・AmBe-Large・AmBe-Sources4C・PuBe・Cm244・Cm244-Watt）または `{ energy [MeV], spectrum, emission }`。POKER 2.2.x では設定の時点で止める
 - **修正: `poker_getDoseMap` の線量の種類**: 出力される線量の種類と並びは POKER の `lib/lib_setting.dat` で決まる。以前は E(AP)・DskinM(AP)・H*(10) の並びを決め打ちし、設定によっては別の線量の列を返していた。今は .summary の `result_total.columns` で対応づけ、無い種類には使える種類を返す
 - npm で公開（`npm install -g poker-mcp`）
 

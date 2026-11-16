@@ -14,6 +14,7 @@ Windows 依存をなくし、Linux（と macOS）でも動くようにした。P
 | 材料カタログ | `C:\Poker\LIB` の決め打ちをやめ、`utils/paths.js` で解決する |
 | `equil_*` | 探す実行ファイル名を OS で切り替える（`EquilibriumSheet_CUI.exe` / `EquilibriumSheet_CUI`）。Linux 版（POKER 2.3.0 の Linux 版に付属。自己完結型で .NET 不要、復号は同じフォルダの `libpklibio.so`）をそのまま使える。無いときの案内を OS に合わせる |
 | CAD のツール（`tools/poker_lib.py`） | `LIB` / `lib` の実在するほうを読む |
+| 中性子の核種の説明 | POKER 2.3.0 の目録に加わった AmBe-Large（ISO 8529 の大型線源）、Cm244、Cm244-Watt（Cm-244 の自発核分裂、Maxwell / Watt）を説明文に追加（受け付けるかどうかは従来どおり POKER が目録で判定） |
 | テスト | `C:/Poker` と `poker_cui.exe` の決め打ちを `utils/paths.js` の既定値に置き換えた |
 
 Windows での動作は変わらない（既定値・探す場所・呼ぶコマンドは従来と同じ）。`poker_openGui` は従来どおり Windows だけで載る。

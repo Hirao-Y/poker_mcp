@@ -175,7 +175,7 @@ poker_proposeSource(name="Line", type="POINT", position="0 0 0",
                     inventory=[{energy:2.5, spectrum:1, emission:1e9}])  # エネルギ線 [MeV]
 ```
 
-- 中性子の核種は Cf252・AmBe・AmBe-Sources4C・PuBe。材料は VOID・Air・Water・Polyethylene・Concrete・Soil・Iron・Lead（密度は目録の値と 1% 以内）
+- 中性子の核種は Cf252・AmBe・AmBe-Large・AmBe-Sources4C・PuBe・Cm244・Cm244-Watt。材料は VOID・Air・Water・Polyethylene・Concrete・Soil・Iron・Lead（密度は目録の値と 1% 以内）
 - `radioactivity` は使えない。子孫核種の自動補完はしない。`buildup_factor` は無視される
 - 多層（空気・VOID を除く 2 種類以上の遮蔽材を通る経路）は計算されるが、summary に警告 `NEUTRON_MULTILAYER`
 

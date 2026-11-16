@@ -373,7 +373,7 @@ POKER は受け付けます。
 
 | 書き方 | 内容 |
 |---|---|
-| `{ nuclide, emission }` | 核種名と放出率 [n/s]。核種は `Cf252`・`AmBe`（ISO 8529）・`AmBe-Sources4C`・`PuBe` |
+| `{ nuclide, emission }` | 核種名と放出率 [n/s]。核種は `Cf252`・`AmBe`（ISO 8529）・`AmBe-Large`（ISO 8529 の大型線源）・`AmBe-Sources4C`・`PuBe`・`Cm244`・`Cm244-Watt` |
 | `{ energy, spectrum, emission }` | エネルギ線 [MeV]。その行の強さは `spectrum`（省略時 1）× `emission` [n/s] |
 
 - `radioactivity` は使えません（光子だけ）。逆に光子の入力で `emission` を使うと止めます。
