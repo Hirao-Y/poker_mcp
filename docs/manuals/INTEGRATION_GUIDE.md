@@ -11,7 +11,7 @@
 
 ### 🌐 **最新MCP統合設計**
 - **Claude Desktop中心**: MCP v1.0準拠の自然言語ベース統合
-- **全ツール（既定 43）の活用**: 全機能を活用した統合設計
+- **全ツール（既定 45）の活用**: 全機能を活用した統合設計
 - **外部計算コード**: poker_cui実行・結果解析統合
 - **Python自動化**: MCP ツールの API 活用による高度な自動化
 - **データ可視化**: 結果の効果的な可視化・解析
@@ -36,15 +36,16 @@
 - **System操作**: 6メソッド（applyChanges / executeCalculation / resetYaml / confirmDaughterNuclides / openGui / getDoseMap。子孫核種の生成自体は propose/updateSource 時に自動）
 - **Schema**: 1メソッド
 - **粒子**: 2メソッド（setParticle / getParticle。中性子は POKER 2.3.0 以降、v1.13.0）
+- **中性子の有限媒質補正**: 2メソッド（setNeutronCorrection / getNeutronCorrection。POKER 2.3.2 以降、v1.15.0）
 - **崩壊系列・放射平衡**: 5メソッド（equil_listNuclides / equil_getChain / equil_calculateDecay / equil_getSeries / equil_getEmissions、v1.12.0）
 
 ### **条件によって変わるメソッド（v1.10.0）**
 
 | 条件 | ツール数 | 変化 |
 |---|---|---|
-| 既定（Windows で POKER.exe あり） | 43 | — |
-| `POKER_MCP_ASYNC=1` | 46 | Job系 3（submitCalculation / getJobStatus / getJobResult）が加わり、getDoseMap に `job_id` 引数が付く |
-| GUI が使えない環境 | 42 / 45 | `poker_openGui` が外れる（下記 1.3 参照） |
+| 既定（Windows で POKER.exe あり） | 45 | — |
+| `POKER_MCP_ASYNC=1` | 48 | Job系 3（submitCalculation / getJobStatus / getJobResult）が加わり、getDoseMap に `job_id` 引数が付く |
+| GUI が使えない環境 | 44 / 47 | `poker_openGui` が外れる（下記 1.3 参照） |
 
 ### **10種類立体タイプ完全対応**
 - SPH（球体）

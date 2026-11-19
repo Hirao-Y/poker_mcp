@@ -1,5 +1,33 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.15.0] - 2026-11-19
+
+POKER 2.3.2 の中性子の有限媒質補正（入力の最上位の `neutron_correction`）を MCP から設定できるようにした。
+
+### `poker_setNeutronCorrection` / `poker_getNeutronCorrection` を追加（2 つ）
+
+| ツール | 内容 |
+|---|---|
+| `poker_setNeutronCorrection` | `use_geometry_correction`（G）・`use_finite_medium_correction`（F）を設定する（`poker_applyChanges` で確定）。値を指定したときは、指定しなかった方も今の値で明示して書く。値を両方省略するか `reset: true` で節を消し、既定（両方 true）に戻す |
+| `poker_getNeutronCorrection` | YAML に書いてある値（`neutron_correction`、無ければ null）と、計算で使われる値（`effective`）。保留中の変更は `pending` に示す |
+
+- 補正は中性子の線量だけに掛かる（2 次γ線は補正しない）。G は線源が遮蔽体の外にあるときの体系補正、F は遮蔽体の外の検出点の補正で、体系の外に何もない野外の前提。書かなければ両方 true。
+- 床・壁・天井を書いた部屋の中の体系では F を false にする（ツールと `poker_setParticle` の説明にも書いた）。
+- 中性子のデッキ（`particle: neutron`）でだけ設定できる。光子のデッキでは止める（POKER の入力エラーになるため）。
+- F は G と一緒のときだけ働く。G false・F true は止める。G だけ false にしたときは F も false にして、その旨を `note` で返す。
+- 値を書くときは、計算に使う poker_cui が `neutron_correction` に対応しているかを `poker_cui --schema` の `properties.neutron_correction` で確かめる。POKER 2.3.0 なら版を添えて「POKER 2.3.2 以降が必要」と止める。確かめられないときは止めずに `note` を付ける。既定に戻すだけなら確かめない。
+- 書く位置は `unit` の直後（無ければ `particle` の直後）。既にあればその位置で書き換える。
+
+### 変更
+
+| 箇所 | 変更 |
+|---|---|
+| `poker_setParticle` | `photon` にするとき、中性子だけの項目 `neutron_correction` も消す（光子のデッキに残すと POKER の入力エラーになる） |
+| テスト | `tests/neutron-correction.test.mjs`（通し。POKER 2.3.2 の POKER_CUI で計算し、summary の `neutron_correction` の行まで確かめる）を `npm run test:neutron` に加えた。`tests/particle-check.test.mjs` に POKER の対応の確認（2.3.0 では止める）を加えた。`tests/gui-switch.test.mjs`・`tests/async-jobs.test.mjs` のツール数を 45 / 44 / 47 に直した |
+| 文書 | ツール数（既定 45、非同期ジョブ有効時 48、GUI が外れる環境では 44 / 47）。API_COMPLETE・QUICK_REFERENCE に 2 ツールの節（引数、動作、体系ごとの使い分け、summary の警告 `NEUTRON_CORRECTION`・`NEUTRON_FINITE_MEDIUM_STRUCTURES`・`NEUTRON_OBLIQUE`）、TROUBLESHOOTING にエラー 3 つ、PHYSICS_REFERENCE に補正の物理的な意味。README・docs/README・manuals/README・ADMIN_GUIDE・INTEGRATION_GUIDE の版とツールの一覧 |
+
+ツールは既定で 45（非同期ジョブ有効時 48）。
+
 ## [1.14.0] - 2026-11-16
 
 Windows 依存をなくし、Linux（と macOS）でも動くようにした。POKER 2.3.0 の計算部（`poker_cui`）の Linux 版と組み合わせて使う。

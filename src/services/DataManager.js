@@ -660,8 +660,39 @@ export class SafeDataManager {
       // particle（POKER 2.3.0）: neutron は先頭に particle を置く、photon は消す
       case 'setParticle': {
         const { particle: _old, ...rest } = this.data;
+        // photon にするときは中性子だけの項目 neutron_correction も消す（光子のデッキでは POKER の入力エラー）
+        if (data.particle !== 'neutron') delete rest.neutron_correction;
         this.data = data.particle === 'neutron' ? { particle: 'neutron', ...rest } : rest;
         logger.info('particle を設定しました', { particle: data.particle });
+        break;
+      }
+
+      // neutron_correction（POKER 2.3.2、v1.15.0）: 中性子の有限媒質補正。
+      //   既にあればその位置で書き換え、無ければ unit の直後（unit が無ければ particle の直後）に置く。reset は節を消す
+      case 'setNeutronCorrection': {
+        if (data.reset) {
+          const { neutron_correction: _old, ...rest } = this.data;
+          this.data = rest;
+          logger.info('neutron_correction を消しました（既定: G・F とも true）');
+          break;
+        }
+        const nc = {
+          use_geometry_correction: data.use_geometry_correction,
+          use_finite_medium_correction: data.use_finite_medium_correction
+        };
+        if (Object.prototype.hasOwnProperty.call(this.data, 'neutron_correction')) {
+          this.data.neutron_correction = nc;
+        } else {
+          const keys = Object.keys(this.data);
+          const anchor = keys.includes('unit') ? 'unit' : (keys.includes('particle') ? 'particle' : null);
+          const out = anchor ? {} : { neutron_correction: nc };
+          for (const k of keys) {
+            out[k] = this.data[k];
+            if (k === anchor) out.neutron_correction = nc;
+          }
+          this.data = out;
+        }
+        logger.info('neutron_correction を設定しました', nc);
         break;
       }
 

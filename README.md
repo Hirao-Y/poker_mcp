@@ -12,9 +12,9 @@ shielding code for gamma rays (and, from POKER 2.3.0, neutrons), and read back t
 
 | | |
 |---|---|
-| 最新版 | 1.14.0 |
+| 最新版 | 1.15.0 |
 | 動作環境 | Windows、Linux（macOS も同じ作りで動く見込み。未確認） |
-| ツール数 | 43（非同期ジョブを有効にすると 46） |
+| ツール数 | 45（非同期ジョブを有効にすると 48） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
 | 変更履歴 | [CHANGELOG.md](CHANGELOG.md) |
 
@@ -145,6 +145,7 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 | 確定・計算・結果 | `poker_applyChanges` `poker_resetYaml` `poker_executeCalculation` `poker_getDoseMap` `poker_getSchema` `poker_openGui` |
 | CAD 連携 | `poker_generateInput` `poker_generatePaths` |
 | 粒子（光子・中性子。中性子は POKER 2.3.0 から） | `poker_setParticle` `poker_getParticle` |
+| 中性子の有限媒質補正（POKER 2.3.2 から） | `poker_setNeutronCorrection` `poker_getNeutronCorrection` |
 | 崩壊系列・放射平衡（EquilibriumSheet） | `equil_listNuclides` `equil_getChain` `equil_calculateDecay` `equil_getSeries` `equil_getEmissions` |
 | 非同期実行（`POKER_MCP_ASYNC=1` のとき） | `poker_submitCalculation` `poker_getJobStatus` `poker_getJobResult` |
 

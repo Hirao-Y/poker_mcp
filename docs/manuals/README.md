@@ -1,7 +1,7 @@
-# 📚 Poker MCP Server - マニュアル体系 (v1.13.0)
+# 📚 Poker MCP Server - マニュアル体系 (v1.15.0)
 
 **🎯 対象**: 放射線遮蔽研究者・安全解析・申請実務家・設計エンジニア  
-**🔧 システム**: Poker MCP Server v1.13.0 (43 ツール、非同期ジョブ有効時は 46)  
+**🔧 システム**: Poker MCP Server v1.15.0 (45 ツール、非同期ジョブ有効時は 48)  
 **📅 最終更新**: 2026年11月  
 **🌟 マニュアル体系**: 段階的学習設計（3層構造）
 
@@ -10,7 +10,7 @@
 ## 🏆 マニュアル体系
 
 ### ✨ **完全実装機能**
-- **43 ツール**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・ThinnedIndices系3・CAD系2（generateInput/generatePaths）・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）・Schema系1（getSchema）・粒子系2（setParticle/getParticle）・崩壊系列5（equil_*）。`POKER_MCP_ASYNC=1` で Job系3（submitCalculation/getJobStatus/getJobResult）が加わる。openGui は Windows で POKER.exe があり `POKER_MCP_GUI=0` でないときだけ登録
+- **45 ツール**: Body系3・Zone系3・Transform系3・BuildupFactor系4・Source系3・Detector系3・Unit系5・ThinnedIndices系3・CAD系2（generateInput/generatePaths）・System系6（applyChanges/executeCalculation/resetYaml/confirmDaughterNuclides/openGui/getDoseMap）・Schema系1（getSchema）・粒子系2（setParticle/getParticle）・中性子の補正2（setNeutronCorrection/getNeutronCorrection）・崩壊系列5（equil_*）。`POKER_MCP_ASYNC=1` で Job系3（submitCalculation/getJobStatus/getJobResult）が加わる。openGui は Windows で POKER.exe があり `POKER_MCP_GUI=0` でないときだけ登録
 - **10種類立体完全対応**: SPH,RCC,RPP,BOX,CMB,TOR,ELL,REC,TRC,WED全立体タイプ詳細解説
 - **14種類材料完全対応**: コンクリート、鉛、鉄、VOID等標準遮蔽材料
 - **5メソッドUnit操作**: proposeUnit, getUnit, updateUnit, validateUnitIntegrity, analyzeUnitConversion
@@ -18,6 +18,7 @@
 - **サマリー5セクション**: 入力パラメータ・intermediate・result・result_total完全解析
 
 ### 🔬 **新機能ハイライト**
+- **中性子の有限媒質補正（v1.15.0）**: `poker_setNeutronCorrection` で POKER 2.3.2 の `neutron_correction`（G: 線源が遮蔽体の外にあるときの体系補正、F: 遮蔽体の外の検出点の補正）を設定する。書かなければ両方 true（野外の前提）。床・壁・天井を書いた部屋の中の体系では F を false にする（API_COMPLETE・QUICK_REFERENCE）
 - **中性子線源（v1.13.0）**: `poker_setParticle` で `particle: neutron` にすると、POKER 2.3.0 の中性子計算（中性子と 2 次γ線）を使える。線源は放出率 `emission` [n/s] で、核種（Cf252・AmBe・PuBe など）かエネルギ線で指定する。古い POKER では設定の時点で止める（API_COMPLETE・QUICK_REFERENCE）
 - **線量マップの線量の種類（v1.13.0 修正）**: `poker_getDoseMap` の `dose_type` を POKER の lib_setting.dat の設定どおりに対応づける（以前は並びを決め打ちし、設定によっては別の線量を返していた）
 - **崩壊系列・放射平衡（v1.12.0）**: `equil_*` の 5 ツールで、EquilibriumSheet と同じ崩壊系列・放射平衡・Bateman の計算と放出データの取得ができる
@@ -212,7 +213,7 @@
 
 ## 🚀 v1.4.0実装機能の完全活用
 
-### 📊 **ツール一覧（既定 43）**
+### 📊 **ツール一覧（既定 45）**
 ```yaml
 Body系 (3メソッド): 
 - poker_proposeBody, poker_updateBody, poker_deleteBody
@@ -265,6 +266,10 @@ Schema系 (1メソッド): ★v1.9.8新機能★
 粒子系 (2メソッド): ★v1.13.0新機能★
 - poker_setParticle: 粒子（photon / neutron）の設定。neutron は POKER 2.3.0 以降
 - poker_getParticle: 粒子の確認
+
+中性子の有限媒質補正 (2メソッド): ★v1.15.0新機能★
+- poker_setNeutronCorrection: neutron_correction（G・F）の設定。POKER 2.3.2 以降
+- poker_getNeutronCorrection: 書いてある値と計算で使われる値の確認
 
 崩壊系列・放射平衡 (5メソッド): ★v1.12.0新機能★
 - equil_listNuclides / equil_getChain / equil_calculateDecay / equil_getSeries / equil_getEmissions
@@ -553,7 +558,7 @@ poker_validateUnitIntegrity      # 整合性確認
 ## 🎊 まとめ: v1.4.0で実現する価値
 
 ### ✨ **技術的完全性**
-- **全ツール（既定 43）**: すべての操作を網羅
+- **全ツール（既定 45）**: すべての操作を網羅
 - **Unit操作5メソッド・ThinnedIndices操作3メソッド**: 単位系の完全管理
 - **サマリー5セクション**: 結果の完全解析
 - **エラーコード13種**: 全エラーの即座対処

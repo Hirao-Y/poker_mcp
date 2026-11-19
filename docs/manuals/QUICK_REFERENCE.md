@@ -32,8 +32,8 @@ poker_executeCalculation({ yaml_file: "poker.yaml", path_input: "poker.paths" })
 
 ## 📖 第1章: ツール早見表
 
-> 既定（Windows で POKER.exe あり）は 43。`POKER_MCP_ASYNC=1` で Job 系 3 が加わり 46。
-> GUI が使えない環境では `poker_openGui` が外れて 1 減る（42 / 45）。
+> 既定（Windows で POKER.exe あり）は 45。`POKER_MCP_ASYNC=1` で Job 系 3 が加わり 48。
+> GUI が使えない環境では `poker_openGui` が外れて 1 減る（44 / 47）。
 
 ### 🔷 Body操作系(3メソッド) - 10種類立体完全対応
 
@@ -178,6 +178,22 @@ poker_proposeSource(name="Line", type="POINT", position="0 0 0",
 - 中性子の核種は Cf252・AmBe・AmBe-Large・AmBe-Sources4C・PuBe・Cm244・Cm244-Watt。材料は VOID・Air・Water・Polyethylene・Concrete・Soil・Iron・Lead（密度は目録の値と 1% 以内）
 - `radioactivity` は使えない。子孫核種の自動補完はしない。`buildup_factor` は無視される
 - 多層（空気・VOID を除く 2 種類以上の遮蔽材を通る経路）は計算されるが、summary に警告 `NEUTRON_MULTILAYER`
+
+### ⚛️ 中性子の有限媒質補正（2メソッド）- neutron_correction（v1.15.0）
+
+| メソッド | 機能 | 主要機能 |
+|---------|------|----------|
+| **poker_setNeutronCorrection** | 補正の設定 | `use_geometry_correction`（G）・`use_finite_medium_correction`（F）。applyChanges で確定。中性子のデッキだけ。POKER 2.3.2 以降 |
+| **poker_getNeutronCorrection** | 補正の確認 | 書いてある値と計算で使われる値（`effective`）。保留中の変更も示す |
+
+```
+poker_setNeutronCorrection(use_finite_medium_correction=false)   # 床・壁・天井を書いた部屋の中
+poker_setNeutronCorrection(reset=true)                           # 既定（G・F とも true）に戻す
+```
+
+- 書かなければ G・F とも true（入力に書いたもの以外は何も無い野外の前提）。部屋の中の体系では F を false
+- F は G と一緒のときだけ働く（G false・F true は止める）。2 次γ線は補正しない
+- 2 回以上遮蔽体に入る経路・表の無い材料の経路は補正しない（summary の `NEUTRON_CORRECTION` に割合）
 
 ### 🧬 崩壊系列・放射平衡（5メソッド）- EquilibriumSheet（v1.12.0）
 
@@ -717,7 +733,7 @@ divisions:
 - 分割数の最適化
 - 物理的妥当性の系統的確認
 
-**このクイックリファレンスで、43 ツール・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
+**このクイックリファレンスで、45 ツール・10立体・4キー単位系を完全活用した高効率な放射線遮蔽計算を実現してください。**
 
 ---
 

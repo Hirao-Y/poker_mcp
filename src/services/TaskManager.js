@@ -16,7 +16,7 @@ import {
   isDerived
 } from '../utils/DaughterReconciler.js';
 import { logger } from '../utils/logger.js';
-import { pendingInfo } from '../utils/pendingView.js';
+import { pendingInfo, pickPending } from '../utils/pendingView.js';
 import { ValidationError, PhysicsError } from '../utils/errors.js';
 
 export class TaskManager {
@@ -1612,10 +1612,12 @@ export class TaskManager {
         `（${particle === 'neutron' ? '中性子は emission [n/s]' : '光子は radioactivity [Bq]'} で書きます）。` +
         '先に線源を直すか削除してください', 'particle', particle);
     }
+    // photon にすると、中性子だけの項目 neutron_correction も消す（光子のデッキに残すと POKER の入力エラーになる）
+    const dropsCorrection = particle !== 'neutron' && this.effectiveNeutronCorrection() !== null;
     await this.dataManager.addPendingChange({ action: 'setParticle', data: { particle } });
     const msg = particle === 'neutron'
       ? '提案: particle: neutron（中性子の計算。inventory は emission [n/s]、材料・核種は poker_getSchema の properties.particle を参照）'
-      : '提案: particle を外す（光子の計算）';
+      : '提案: particle を外す（光子の計算）' + (dropsCorrection ? '。中性子だけの項目 neutron_correction も消します' : '');
     return { message: msg, particle };
   }
 
@@ -1624,6 +1626,116 @@ export class TaskManager {
     return {
       particle: current,
       ...(pendingInfo(this.pendingChanges, ['setParticle'], { merge: true }) || {})
+    };
+  }
+
+  //|
+  //| neutron_correction（中性子の有限媒質補正。POKER 2.3.2 から、v1.15.0）
+  //|   中性子のデッキだけに書ける。書かなければ use_geometry_correction（G）・use_finite_medium_correction（F）とも true。
+  //|   F は G と一緒のときだけ働く（G false・F true は POKER の入力エラー）。
+  //|   値を書くときは両方を明示する（入力を見ただけで補正の有無が分かるように）。reset で節を消して既定に戻す。
+  //|
+  // 確定済みの値に保留中の変更を重ねた neutron_correction（書いていなければ null）
+  effectiveNeutronCorrection() {
+    const cur = this.data && this.data.neutron_correction;
+    let nc = cur && typeof cur === 'object' ? { ...cur } : null;
+    for (const c of this.pendingChanges || []) {
+      if (!c || !c.data) continue;
+      if (c.action === 'setNeutronCorrection') {
+        nc = c.data.reset ? null : {
+          use_geometry_correction: c.data.use_geometry_correction,
+          use_finite_medium_correction: c.data.use_finite_medium_correction
+        };
+      }
+      if (c.action === 'setParticle' && c.data.particle !== 'neutron') nc = null;
+    }
+    return nc;
+  }
+
+  async setNeutronCorrection(args = {}) {
+    const { use_geometry_correction: g, use_finite_medium_correction: f, reset } = args || {};
+    for (const [key, v] of [['use_geometry_correction', g], ['use_finite_medium_correction', f], ['reset', reset]]) {
+      if (v !== undefined && typeof v !== 'boolean') {
+        throw PokerMcpError.validationError(`${key} は true か false です`, key, v);
+      }
+    }
+    if (this.effectiveParticle() !== 'neutron') {
+      throw PokerMcpError.validationError(
+        'neutron_correction は中性子のデッキ（particle: neutron）だけに書けます（光子のデッキに書くと POKER の入力エラーになります）。' +
+        '中性子の計算なら先に poker_setParticle で particle: neutron にしてください', 'neutron_correction', args);
+    }
+    const hasValue = g !== undefined || f !== undefined;
+    if (reset === true && hasValue) {
+      throw PokerMcpError.validationError('reset と値（use_geometry_correction・use_finite_medium_correction）は同時に指定できません',
+        'reset', args);
+    }
+    if (reset === true || !hasValue) {
+      await this.dataManager.addPendingChange({ action: 'setNeutronCorrection', data: { reset: true } });
+      return {
+        message: '提案: neutron_correction を消す（既定: 体系補正 G・有限媒質補正 F とも true）',
+        neutron_correction: null,
+        effective: { use_geometry_correction: true, use_finite_medium_correction: true }
+      };
+    }
+
+    // 指定しなかった方は今の値（確定済み＋保留中。書いていなければ true）を引き継ぐ
+    const cur = this.effectiveNeutronCorrection() || {};
+    const curG = cur.use_geometry_correction !== false;
+    const curF = cur.use_finite_medium_correction !== false;
+    const newG = g !== undefined ? g : curG;
+    let newF;
+    let note = null;
+    if (f !== undefined) {
+      newF = f;
+    } else if (newG === false) {
+      newF = false;   // F は G と一緒のときだけ働くので、G を切ったら F も切る
+      if (curF) note = 'G を false にしたので F も false にしました（F は G と一緒のときだけ働きます）';
+    } else {
+      newF = curF;
+    }
+    if (newG === false && newF === true) {
+      throw PokerMcpError.validationError(
+        'use_finite_medium_correction（F）は use_geometry_correction（G）と一緒のときだけ使えます。' +
+        'F を true にするなら G も true にしてください', 'neutron_correction',
+        { use_geometry_correction: newG, use_finite_medium_correction: newF });
+    }
+    const data = { use_geometry_correction: newG, use_finite_medium_correction: newF };
+    await this.dataManager.addPendingChange({ action: 'setNeutronCorrection', data });
+    const words = newG ? (newF ? 'G・F とも有効（野外の体系）' : 'G だけ有効（F は切る。部屋の中の体系など）') : 'G・F とも切る（補正なし）';
+    return {
+      message: `提案: neutron_correction: { use_geometry_correction: ${newG}, use_finite_medium_correction: ${newF} }（${words}）`,
+      neutron_correction: data,
+      ...(note ? { note } : {})
+    };
+  }
+
+  async getNeutronCorrection() {
+    const particle = ((this.data && this.data.particle) || 'photon').toLowerCase() === 'neutron' ? 'neutron' : 'photon';
+    const raw = this.data && this.data.neutron_correction;
+    const written = raw && typeof raw === 'object' ? { ...raw } : null;
+    let effective = null;
+    let note;
+    if (particle === 'neutron') {
+      const g = !(written && written.use_geometry_correction === false);
+      const f = g && !(written && written.use_finite_medium_correction === false);
+      effective = { use_geometry_correction: g, use_finite_medium_correction: f };
+      note = written ? '書いてある値で計算します（G が false なら F も働きません）'
+        : 'neutron_correction を書いていないので既定（G・F とも true、野外の前提）で計算します。' +
+          '床・壁・天井を書いた部屋の中の体系では F を false にしてください';
+    } else {
+      note = '光子のデッキです。neutron_correction は中性子のデッキだけで使えます';
+    }
+    const hits = pickPending(this.pendingChanges, ['setNeutronCorrection']);
+    return {
+      particle,
+      neutron_correction: written,
+      effective,
+      note,
+      ...(hits.length ? {
+        pending: hits[hits.length - 1],
+        pending_count: hits.length,
+        pending_note: '保留中の変更があります。poker_applyChanges で確定するまで YAML には反映されません'
+      } : {})
     };
   }
 

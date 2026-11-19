@@ -1,10 +1,10 @@
 // tests/gui-switch.test.mjs - poker_openGui の登録条件（POKER_MCP_GUI と自動判定）の検証
 //
 //   1. 判定関数 getGuiStatus: POKER_MCP_GUI=0 / Windows 以外 / POKER.exe が無い のそれぞれで無効になる
-//   2. 既定: Windows で POKER.exe があれば、ツール一覧に poker_openGui が載る（v1.13.0 から 43 個）
-//   3. POKER_MCP_GUI=0: 一覧から外れ（42 個）、ツール名で直接呼んでも未知のツールとして拒否される
+//   2. 既定: Windows で POKER.exe があれば、ツール一覧に poker_openGui が載る（v1.15.0 から 45 個）
+//   3. POKER_MCP_GUI=0: 一覧から外れ（44 個）、ツール名で直接呼んでも未知のツールとして拒否される
 //   4. POKER_MCP_GUI=0 でも計算（executeCalculation）は従来どおり動く
-//   5. 非同期ジョブと組み合わせても数が合う（45 個）
+//   5. 非同期ジョブと組み合わせても数が合う（47 個）
 //
 // 実行: npm run test:gui （POKER 本体が必要。POKER_INSTALL_PATH 既定 C:/Poker）
 // いずれかが失敗すると終了コード 1 で終わる。
@@ -79,7 +79,7 @@ console.log('2. 既定');
   const { tools } = await c.listTools();
   const has = tools.some((t) => t.name === 'poker_openGui');
   check(`poker_openGui の有無が判定どおり（${guiExpected ? 'あり' : 'なし'}）`, has === guiExpected);
-  check(`ツール数 ${guiExpected ? 43 : 42}`, tools.length === (guiExpected ? 43 : 42), `(${tools.length})`);
+  check(`ツール数 ${guiExpected ? 45 : 44}`, tools.length === (guiExpected ? 45 : 44), `(${tools.length})`);
   await c.close();
 }
 
@@ -89,7 +89,7 @@ console.log('3/4. POKER_MCP_GUI=0');
   const c = await start({ POKER_MCP_GUI: '0' });
   const { tools } = await c.listTools();
   check('poker_openGui が一覧に無い', !tools.some((t) => t.name === 'poker_openGui'));
-  check('ツール数 42', tools.length === 42, `(${tools.length})`);
+  check('ツール数 44', tools.length === 44, `(${tools.length})`);
 
   let rejected = false, launched = false;
   try {
@@ -115,7 +115,7 @@ console.log('5. POKER_MCP_GUI=0 と POKER_MCP_ASYNC=1');
 {
   const c = await start({ POKER_MCP_GUI: '0', POKER_MCP_ASYNC: '1' });
   const { tools } = await c.listTools();
-  check('ツール数 45', tools.length === 45, `(${tools.length})`);
+  check('ツール数 47', tools.length === 47, `(${tools.length})`);
   check('ジョブ系ツールはある', tools.some((t) => t.name === 'poker_submitCalculation'));
   check('poker_openGui は無い', !tools.some((t) => t.name === 'poker_openGui'));
   await c.close();

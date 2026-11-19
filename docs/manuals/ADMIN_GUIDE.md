@@ -1,6 +1,6 @@
 # 🔧 ADMIN_GUIDE.md - システム管理者ガイド
 
-**バージョン**: 1.13.0（ツール数は既定 43。条件により 42〜46。「ツール数」の節を参照）
+**バージョン**: 1.15.0（ツール数は既定 45。条件により 44〜48。「ツール数」の節を参照）
 **想定環境**: Windows + Claude Desktop（stdio 通信）。別の機械から使う HTTP 版は「[リモート公開するサーバの設定](#-リモート公開するサーバの設定v1110)」
 **最終更新**: 2026年10月
 
@@ -14,7 +14,7 @@ Poker MCP Server の**導入・設定・保守**に必要な実務情報をま�
 
 ### 動作形態の理解
 
-入口は 2 つあり、道具の処理（43 ツール）は共通です。
+入口は 2 つあり、道具の処理（45 ツール）は共通です。
 
 | 入口 | 通信 | 用途 |
 |---|---|---|
@@ -218,13 +218,14 @@ CAD 連携・非同期ジョブは `POKER_CUI.exe`（と FreeCAD）を使うた�
 
 | 条件 | ツール数 |
 |---|---|
-| 既定（Windows で POKER.exe あり） | 43 |
-| 既定で GUI が外れる場合 | 42 |
-| 非同期ジョブ有効 | 46 |
-| 非同期ジョブ有効・GUI が外れる場合 | 45 |
+| 既定（Windows で POKER.exe あり） | 45 |
+| 既定で GUI が外れる場合 | 44 |
+| 非同期ジョブ有効 | 48 |
+| 非同期ジョブ有効・GUI が外れる場合 | 47 |
 
 `equil_*` の 5 ツール（v1.12.0）は常に載ります。EquilibriumSheet_CUI.exe（Linux は EquilibriumSheet_CUI）が無い環境では、呼んだときに `EQUIL_CUI_NOT_AVAILABLE` を返します。
 `poker_setParticle` / `poker_getParticle` の 2 ツール（v1.13.0）も常に載ります。中性子の計算には POKER 2.3.0 以降が必要です。
+`poker_setNeutronCorrection` / `poker_getNeutronCorrection` の 2 ツール（v1.15.0）も常に載ります。中性子の有限媒質補正の設定には POKER 2.3.2 以降が必要です（2.3.0 では設定の時点で止めます）。
 
 ### 設定確認
 
@@ -297,8 +298,8 @@ node src/mcp_server_stdio_v4.js
 ```powershell
 npm run check:manifest
 # → 既定 / 非同期ジョブ有効 / 非同期ジョブ有効・GUI 無効 の 3 通りを照合
-# OK: マニフェストと実行時ツール定義は同期しています (43 tools, 既定)
-# OK: マニフェストと実行時ツール定義は同期しています (46 tools, 非同期ジョブ有効)
+# OK: マニフェストと実行時ツール定義は同期しています (45 tools, 既定)
+# OK: マニフェストと実行時ツール定義は同期しています (48 tools, 非同期ジョブ有効)
 # [INFO] 条件付きのため未登録: poker_openGui
 # OK: マニフェストと実行時ツール定義は同期しています (45 tools, 非同期ジョブ有効・GUI 無効)
 ```
@@ -331,8 +332,8 @@ poker_proposeSource(name="Test", type="POINT", position="0 0 0",
 
 ### 5. Claude Desktop 側での確認
 
-ツール一覧に 43個のツールが表示されることを確認します（既定の場合。
-非同期ジョブ有効なら 46 個、`poker_openGui` が外れる環境ではそれぞれ 1 個少なくなります）。
+ツール一覧に 45個のツールが表示されることを確認します（既定の場合。
+非同期ジョブ有効なら 48 個、`poker_openGui` が外れる環境ではそれぞれ 1 個少なくなります）。
 表示されない場合は Claude Desktop のログ（`%APPDATA%\Claude\logs\`）に
 MCP サーバの起動失敗が記録されています。
 
@@ -501,7 +502,7 @@ v1.11.0 で、MCP を HTTP（Streamable HTTP）で受ける入口 `src/mcp_serve
 別の機械の Claude Code や、`mcp-remote` を介した Claude Desktop から使います。
 クライアント側の設定は [INTEGRATION_GUIDE.md](INTEGRATION_GUIDE.md) を参照してください。
 
-道具の処理（43 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
+道具の処理（45 ツール、非同期ジョブ・GUI の判定も含む）は stdio 版と共有しています。
 HTTP 版のツール一覧と計算結果は stdio 版と同一です（`npm run test:http` で確認）。
 stdio 版は従来どおりで、Claude Desktop のローカル利用は何も変わりません。
 
@@ -659,7 +660,7 @@ POKER 本体が必要です。
 - [ ] `package.json` と `config/mcp-manifest.json` の版数が一致
 - [ ] CHANGELOG に変更内容を記載
 - [ ] Claude Desktop を再起動し、ツール一覧の数が条件どおりか確認
-      （既定 43、非同期有効 46、`poker_openGui` が外れる環境ではそれぞれ 42 / 45）
+      （既定 45、非同期有効 48、`poker_openGui` が外れる環境ではそれぞれ 44 / 47）
 - [ ] 起動ログの `poker_openGui: 有効／無効（理由）` が意図どおりか確認
 
 ### 定期（月次程度）

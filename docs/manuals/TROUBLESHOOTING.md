@@ -3,7 +3,7 @@
 **対象**: 全ユーザー（問題解決時）  
 **バージョン**: 1.13.0 MCP Edition  
 **最終更新**: 2026年10月  
-**使用方法**: Claude Desktop + MCP通信 (既定 43 ツール。非同期ジョブ有効時 46、poker_openGui が外れる環境ではそれぞれ 1 減)
+**使用方法**: Claude Desktop + MCP通信 (既定 45 ツール。非同期ジョブ有効時 48、poker_openGui が外れる環境ではそれぞれ 1 減)
 
 ---
 
@@ -50,6 +50,9 @@
 | この POKER（版 2.2.x）は中性子線源（particle: neutron）に対応していません。POKER 2.3.0 以降が必要です | PATH 上の poker_cui が古い | POKER 2.3.0 以降を入れ、PATH と POKER_INSTALL_PATH をその版に向けてサーバを再起動。光子の計算なら `poker_setParticle(particle="photon")` |
 | emission [n/s] は中性子の線源です。先に poker_setParticle で particle: neutron にしてください | 光子の入力で `emission` を使った | 中性子なら先に setParticle。光子なら `radioactivity` [Bq] で書く |
 | particle: neutron のデッキでは inventory を emission [n/s] で書きます（radioactivity は使えません） | 中性子の入力で `radioactivity` を使った | `emission` [n/s] で書く |
+| この POKER（版 2.3.0）は中性子の有限媒質補正の設定（neutron_correction）に対応していません。POKER 2.3.2 以降が必要です | PATH 上の poker_cui が 2.3.2 より古い（v1.15.0） | POKER 2.3.2 以降を入れ、PATH と POKER_INSTALL_PATH をその版に向けてサーバを再起動。2.3.0 には補正が無いので、設定しないまま計算すると補正なしの値になる |
+| neutron_correction は中性子のデッキ（particle: neutron）だけに書けます | 光子の入力で補正を設定しようとした | 中性子の計算なら先に `poker_setParticle(particle="neutron")` |
+| use_finite_medium_correction（F）は use_geometry_correction（G）と一緒のときだけ使えます | G false・F true を指定した | F を使うなら G も true。補正をすべて切るなら G・F とも false |
 | emission（中性子）と radioactivity（光子）の行が混ざっています | 1 つの線源に両方の書き方がある | どちらかにそろえる（光子と中性子は 1 つの入力に混ぜられない） |
 | 中性子の材料・核種・密度のエラー（計算時に POKER が出す） | 中性子の目録に無い材料・核種、または密度が目録と 1% 以上違う | `poker_getSchema` の `properties.particle` の `x-poker-neutron-materials` / `x-poker-neutron-nuclides` を確認 |
 | getDoseMap: dose_type '…' はこの計算の .dose にありません | 出力される線量は POKER の `lib/lib_setting.dat` の設定で決まり、その種類が出力されていない | 応答の `available_dose_types` から選ぶ。別の線量が必要なら lib_setting.dat を編集して計算し直す |

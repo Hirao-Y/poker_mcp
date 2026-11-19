@@ -10,11 +10,11 @@
 
 ## 📖 本書の位置づけ
 
-この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠したツール（既定 43）の詳細仕様を提供します。
+この文書は**テクニカル層**の完全API仕様書です。MCP(Model Context Protocol)に完全準拠したツール（既定 45）の詳細仕様を提供します。
 
-> **ツール数は環境によって変わります。** 既定（Windows で POKER.exe あり）は 43（v1.12.0 で崩壊系列の 5、
-> v1.13.0 で粒子の 2 を追加）。環境変数 `POKER_MCP_ASYNC=1` で非同期ジョブを有効にすると Job 系 3 メソッドが加わり 46 になります。
-> GUI が使えない環境では `poker_openGui` が外れ、それぞれ 1 減ります（42 / 45）。
+> **ツール数は環境によって変わります。** 既定（Windows で POKER.exe あり）は 45（v1.12.0 で崩壊系列の 5、
+> v1.13.0 で粒子の 2、v1.15.0 で中性子の補正の 2 を追加）。環境変数 `POKER_MCP_ASYNC=1` で非同期ジョブを有効にすると Job 系 3 メソッドが加わり 48 になります。
+> GUI が使えない環境では `poker_openGui` が外れ、それぞれ 1 減ります（44 / 47）。
 > 条件は下記の「Job操作系」と「poker_openGui」の項を参照してください。
 
 ### 🎯 対象読者
@@ -30,7 +30,7 @@
 
 ---
 
-## 📚 ツール一覧（既定 43）
+## 📚 ツール一覧（既定 45）
 
 ### 🔷 **Body操作系(3メソッド) - 10種類立体タイプ完全対応**
 
@@ -392,6 +392,64 @@ poker_proposeSource(name="Cf", type="POINT", position="0 0 0",
 poker_applyChanges()
 ```
 
+### ⚛️ **中性子の有限媒質補正 (2メソッド) - neutron_correction（v1.15.0）**
+
+| **メソッド名** | **機能** | **特徴** |
+|---------------|----------|----------|
+| **poker_setNeutronCorrection** | 中性子の線量の有限媒質補正（`neutron_correction`）を設定 | `poker_applyChanges` で確定。中性子のデッキだけ。POKER 2.3.2 以降 |
+| **poker_getNeutronCorrection** | 書いてある値と、計算で使われる値を取得 | 保留中の変更があれば `pending` に示す |
+
+**引数**（`poker_setNeutronCorrection`。すべて省略可）
+
+| 引数 | 型 | 説明 |
+|---|---|---|
+| `use_geometry_correction` | boolean | 体系補正 G。線源が遮蔽体の外にあるとき、1 種類の遮蔽体（コンクリート・鉄）に 1 回だけ入る経路の線量を G で割る |
+| `use_finite_medium_correction` | boolean | 有限媒質補正 F。遮蔽体の外の検出点では、さらに F で割る。体系の外に何もない野外の前提。G と一緒のときだけ働く |
+| `reset` | boolean | `true` で `neutron_correction` を消し、既定（両方 true）に戻す。値と同時には指定できない |
+
+**動作**
+
+- 入力 YAML の最上位に `neutron_correction: { use_geometry_correction, use_finite_medium_correction }` を書きます。
+  位置は `unit` の直後（無ければ `particle` の直後）で、既にあればその位置で書き換えます。
+- 値を 1 つだけ指定したときも、指定しなかった方を今の値（書いていなければ true）で明示して書きます。
+  入力を見ただけで補正の有無が分かるようにするためです。
+- 値を両方省略するか `reset: true` にすると、節を消して既定（両方 true）に戻します。
+- F は G と一緒のときだけ働きます。G false・F true は止めます。G だけ false にしたときは F も false にし、その旨を `note` で返します。
+- 中性子のデッキ（`particle: neutron`）でだけ設定できます。光子のデッキでは止めます（POKER の入力エラーになるため）。
+  `poker_setParticle(particle="photon")` にすると `neutron_correction` も消します。
+- 値を書くときは、計算に使う poker_cui の `--schema` に `properties.neutron_correction` があるかを確かめます。
+  POKER 2.3.0 なら「POKER 2.3.2 以降が必要」と止めます（`-32007`）。確かめられないときは止めずに `note` を付けます。既定に戻すだけなら確かめません。
+
+**使い分け**
+
+| 体系 | 設定 |
+|---|---|
+| 入力に書いたもの以外に何も無い（野外。POKER の前提） | 書かない（G・F とも true） |
+| 床・壁・天井を書いた部屋の中 | `use_finite_medium_correction: false`（G だけ） |
+| 補正しない（表のまま。過大評価側） | 両方 false |
+
+- 補正は中性子の線量だけに掛かります。2 次γ線は補正しません。
+- 補正するのは 1 種類の遮蔽体に 1 回だけ入る経路で、線源がその遮蔽体の外にあるものです。2 回以上入る経路（間に空気を挟む 2 枚の壁など）と、
+  表の無い材料の経路は補正せず、summary にその割合を知らせます（`NEUTRON_CORRECTION`）。
+- F を掛けた経路の外に入力の構造物（床・壁など、戻りの元になりうるもの）があると `NEUTRON_FINITE_MEDIUM_STRUCTURES`、遮蔽体の法線から 45° を超える斜め入射があると
+  `NEUTRON_OBLIQUE` の警告が付きます（いずれも summary に 1 回だけ）。
+
+**戻り値**（`poker_getNeutronCorrection`）
+
+| 項目 | 内容 |
+|---|---|
+| `particle` | `photon` / `neutron` |
+| `neutron_correction` | YAML に書いてある値（書いていなければ `null`） |
+| `effective` | 計算で使われる値（書いていなければ両方 true。G が false なら F も false）。光子のデッキでは `null` |
+| `pending` / `pending_count` | 保留中の変更（あるときだけ） |
+
+```
+poker_setParticle(particle="neutron")
+poker_setNeutronCorrection(use_finite_medium_correction=false)   # 床・壁を書いた部屋の中
+poker_applyChanges()
+poker_getNeutronCorrection()
+```
+
 ### 🧬 **崩壊系列・放射平衡 (5メソッド) - EquilibriumSheet（v1.12.0）**
 
 POKER の付属ツール EquilibriumSheet のコマンドライン版 `EquilibriumSheet_CUI.exe` を呼びます。
@@ -687,7 +745,7 @@ HTTP 版（`src/mcp_server_http.js`、bin `poker-mcp-http`）は MCP の Streama
 
 ## 📊 主なメソッドの詳細仕様
 
-> 非同期ジョブ有効時（`POKER_MCP_ASYNC=1`）は Job 系 3 メソッドを加えた 46 メソッドになります。
+> 非同期ジョブ有効時（`POKER_MCP_ASYNC=1`）は Job 系 3 メソッドを加えた 48 メソッドになります。
 
 ### 📐 **Body系メソッド（立体管理）**
 
