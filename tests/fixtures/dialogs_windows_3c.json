@@ -4,6 +4,7 @@
   "u1": "unit:\r\n  length: cm\r\n  angle: degree\r\n",
   "u2": "unit:\r\n  length: cm\r\n  angle: radian  # rad\r\n",
   "nsrc": "source:\r\n  - {type: POINT, name: n1, position: 0 0 0, inventory: [{nuclide: Cf252, emission: 2.3e9}]}\r\n  - {type: POINT, name: n2, position: 1 0 0, inventory: [{energy: 2, spectrum: 1, emission: 1e8}], cutoff_rate: 1e-6}\r\n",
+  "src2": "source:\r\n  - {type: POINT, name: p2, position: 1  2 3, inventory: [{nuclide: Co60, radioactivity: 1}], path_trace: {position: [4  5 6]}}\r\n  - {type: RPP, name: r2, geometry: {min: 0  0 0, max: 1 1  1}, division: {edge_1: {type: UNIFORM, number: 1}, edge_2: {type: UNIFORM, number: 2}, edge_3: {type: UNIFORM, number: 2}}, inventory: [{nuclide: Co60, radioactivity: 1}]}\r\n",
   "bad": "source:\r\n  - {type: POINT, name: x, position: 0 0 0, colour: red, inventory: [{nuclide: Co60, radioactivity: 1}]}\r\n"
  },
  "files": {
@@ -327,11 +328,9 @@
     }
    ],
    "expected": {
-    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 5}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 180}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 5}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 101}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 180}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
     "exports": [],
     "messages": [
-     "Enter an integer between 2 and 100.",
-     "Enter an integer between 2 and 100.",
      "Enter a positive real number: ‘0 - 180’",
      "Enter a positive real number less than ‘90’.",
      "Enter a positive real number: ‘0 - 1’"
@@ -370,6 +369,172 @@
     "messages": [
      "Enter a positive real number: ‘0 - Pi’"
     ]
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
+   "id": "div-uniform",
+   "doc": "src1",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 1
+    },
+    {
+     "op": "div",
+     "r": 0,
+     "c": 1,
+     "v": "1"
+    },
+    {
+     "op": "register"
+    },
+    {
+     "op": "div",
+     "r": 0,
+     "c": 1,
+     "v": "250"
+    },
+    {
+     "op": "divtype",
+     "r": 0,
+     "t": "GAUSS_LAST"
+    },
+    {
+     "op": "div",
+     "r": 1,
+     "c": 1,
+     "v": "101"
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: GAUSS_LAST, number: 100}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 90}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": [
+     "Enter an integer between 2 and 100."
+    ]
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
+   "id": "div-phi",
+   "doc": "src1",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 3
+    },
+    {
+     "op": "div",
+     "r": 1,
+     "c": 1,
+     "v": "1"
+    },
+    {
+     "op": "div",
+     "r": 2,
+     "c": 1,
+     "v": "1"
+    },
+    {
+     "op": "div",
+     "r": 0,
+     "c": 1,
+     "v": "0"
+    },
+    {
+     "op": "divtype",
+     "r": 2,
+     "t": "GAUSS_FIRST"
+    },
+    {
+     "op": "register"
+    },
+    {
+     "op": "select",
+     "i": 2
+    },
+    {
+     "op": "div",
+     "r": 1,
+     "c": 1,
+     "v": "1"
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 5}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 1, min: 0, max: 90}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_FIRST, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": [
+     "For phi, enter an integer of 2 or more (with 1, all source points are placed on one side, at phi = 180 degrees).",
+     "Enter an integer between 2 and 100.",
+     "Enter an integer of 1 or more for UNIFORM."
+    ]
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
+   "id": "gauss-clamp-low",
+   "doc": "src1",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 1
+    },
+    {
+     "op": "div",
+     "r": 0,
+     "c": 1,
+     "v": "1"
+    },
+    {
+     "op": "divtype",
+     "r": 0,
+     "t": "GAUSS_CENTER"
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: GAUSS_CENTER, number: 2}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 90}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": []
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
+   "id": "spaces",
+   "doc": "src2",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 0
+    },
+    {
+     "op": "register"
+    },
+    {
+     "op": "select",
+     "i": 1
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p2\r\n    position: 1 2 3\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n    path_trace: \r\n      position: \r\n        - 4 5 6\r\n  - type: RPP\r\n    name: r2\r\n    geometry:\r\n      min: 0 0 0\r\n      max: 1 1 1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 1}\r\n      edge_2: {type: UNIFORM, number: 2}\r\n      edge_3: {type: UNIFORM, number: 2}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": []
    },
    "defaultNeutron": "Cf252"
   },

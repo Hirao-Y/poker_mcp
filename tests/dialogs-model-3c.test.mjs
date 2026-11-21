@@ -18,7 +18,8 @@ const all = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'dialogs_wind
 const parse = (t) => (t ? yaml.load(t, { schema: yaml.FAILSAFE_SCHEMA }) : null);
 // Windows の英語のメッセージ（Properties.Resources）
 const MSG = {
-  REALINPUT: 'Enter a real number: ‘{0}’', TWOTOHUNDRED: 'Enter an integer between 2 and 100.', POSREALINPUT: 'Enter a positive real number: ‘{0}’',
+  REALINPUT: 'Enter a real number: ‘{0}’', TWOTOHUNDRED: 'Enter an integer between 2 and 100.', UNIFORMNUMBER: 'Enter an integer of 1 or more for UNIFORM.',
+  UNIFORMPHI: 'For phi, enter an integer of 2 or more (with 1, all source points are placed on one side, at phi = 180 degrees).', POSREALINPUT: 'Enter a positive real number: ‘{0}’',
   LESSPOSREALINPUT: 'Enter a positive real number less than ‘{0}’.', MOREPOSREALINPUT: 'Enter a positive real number greater than ‘{0}’.',
   RINAMEINPUT: 'Enter RI name.', FIRSTALPHABET: 'The first letter must begin with a letter of the alphabet.', NOMOREROWDELETE: 'No more lines can be deleted.',
   NOEMPTYVALUE: 'No blanks allowed.', NODUPLICATE: 'The same name is already defined.', ZEROTOONEREAL: 'Enter a real number between 0 and 1.',

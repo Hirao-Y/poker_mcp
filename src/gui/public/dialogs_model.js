@@ -790,7 +790,9 @@
       const s = this.find(i);
       if (!s) return;
       const ed = this.editor;
-      const fill = (row, str) => { if (str === null) return; String(str).split(' ').forEach((v, c) => { if (c < 3) ed.geo[row][c] = v; }); };
+      // 空白の続きは 1 つの区切り、使うのは最初の 3 つ（Windows は空白が続くと例外になっていた。2026-11-22 に Windows も直した）
+      const words = (str) => String(str).split(/[ \t]+/).filter(Boolean);
+      const fill = (row, str) => { if (str === null) return; words(str).forEach((v, c) => { if (c < 3) ed.geo[row][c] = v; }); };
       if (s.type === 'POINT') {
         ed.name = s.name ?? '';
         this._radioType('POINT');
@@ -814,7 +816,7 @@
       ed.cutoff = fmtNet(s.cutoff);
       this._radioInv(s.invType === 'NUCLIDE' ? 'nuclide' : 'energy');
       ed.inv = s.inventory.map(v => (s.invType === 'NUCLIDE' ? [v.nuclide, v.radioactivity] : [v.energy, v.spectrum, v.radioactivity]));
-      ed.positions = ptPositions(s).map(p => { const v = p.split(' '); return [v[0], v[1], v[2]]; });
+      ed.positions = ptPositions(s).map(p => { const v = words(p); return [v[0] ?? null, v[1] ?? null, v[2] ?? null]; });
       ed.bounding = ptBoxes(s);
       this.dirty = false;
     }
@@ -839,6 +841,11 @@
       if (row.type === t) return null;
       if (row.type === 'MANUAL') row.n = '2';
       else if (t === 'MANUAL') row.n = '0.0 1.0';
+      else if (t.startsWith('GAUSS') && /^\s*[+-]?\d+\s*$/.test(cellStr(row.n))) {
+        // GAUSS_* に変えたとき数が 2～100 の外なら直す（UNIFORM の 1 や 101 以上のままだと計算でエラーになる。2026-11-22 に Windows も同じにした）
+        const n = Number(cellStr(row.n));
+        if (n < 2) row.n = '2'; else if (n > 100) row.n = '100';
+      }
       this._divTypeCell(r, t); this.dirty = true; return null;
     }
     /** 分割の数・min・max の欄（c：1・2・3） */
@@ -847,8 +854,12 @@
       const key = c === 1 ? 'n' : c === 2 ? 'min' : 'max';
       if (c === 1) {
         if (row.type !== 'MANUAL') {
-          const ok = /^\s*[+-]?\d+\s*$/.test(v) && Number(v) > 1 && Number(v) <= 100;
-          if (!ok) return { error: 'TWOTOHUNDRED' };
+          // UNIFORM は CUI と同じく 1 以上（上限なし）。ただし phi は 2 以上（1 では線源点が φ=180° の片側にだけ置かれる）。
+          // GAUSS_* は 2～100（CUI の GAUSS_MAX）。2026-11-22 に Windows も同じにした（以前はどれも 2～100）
+          const uniform = row.type === 'UNIFORM', phi = this.divLabels()[r] === 'phi';
+          const lower = uniform ? (phi ? 2 : 1) : 2, upper = uniform ? 2147483647 : 100;
+          const n = /^\s*[+-]?\d+\s*$/.test(v) ? Number(v) : NaN;
+          if (!(n >= lower && n <= upper)) return { error: uniform ? (phi ? 'UNIFORMPHI' : 'UNIFORMNUMBER') : 'TWOTOHUNDRED' };
         }
       } else {
         if (row.ro) return { error: 'READONLY' };
