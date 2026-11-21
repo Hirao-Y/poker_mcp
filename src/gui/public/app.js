@@ -30,7 +30,7 @@ const TEXT = {
     q_discard: '変更が保存されていません。破棄してよいですか？', q_saveBeforeRun: '計算の前に入力を保存します。よろしいですか？',
     sev_error: 'エラー', sev_warning: '警告', sev_info: '情報',
     doseViz: '線量表示', doseTitle: '線量表示：', tabGraph: 'グラフ',
-    dlgTransform: 'transform:回転移動', dlgBody: 'body:立体', dlgZone: 'zone:遮蔽体', dlgDetector: 'detector:検出器', dlgBuildup: 'buildup_factor:',
+    dlgTransform: 'transform:回転移動', dlgBody: 'body:立体', dlgZone: 'zone:遮蔽体', dlgSource: 'source:線源', dlgDetector: 'detector:検出器', dlgBuildup: 'buildup_factor:',
     lblDet: '検出器：', lblDoseType: '線量種類：', lblRay: '線種：', lblSrc: '線源：', lblEnergy: 'エネルギ：', lblSlice: 'スライス面：',
     lblYaxis: 'Y-axis scale :', linear: 'linear', log: 'log', notePoint: '点検出器の線量は可視化できません', saveDose: '線量保存...',
     s_doseLoading: '線量を読み込んでいます…', s_cantDose: '線量を表示できません: {0}', s_noDosePath: '入力を保存して線量計算をしてください',
@@ -59,7 +59,7 @@ const TEXT = {
     q_discard: 'The changes are not saved. Discard them?', q_saveBeforeRun: 'The input will be saved before the calculation. OK?',
     sev_error: 'Error', sev_warning: 'Warning', sev_info: 'Info',
     doseViz: 'Dose viz.', doseTitle: 'Visualize output dose :  ', tabGraph: 'Graph',
-    dlgTransform: 'transform:', dlgBody: 'body:', dlgZone: 'zone:', dlgDetector: 'detector:', dlgBuildup: 'buildup_factor:',
+    dlgTransform: 'transform:', dlgBody: 'body:', dlgZone: 'zone:', dlgSource: 'source:', dlgDetector: 'detector:', dlgBuildup: 'buildup_factor:',
     lblDet: 'Detector :', lblDoseType: 'Dose type :', lblRay: 'Radiation :', lblSrc: 'Source :', lblEnergy: 'Energy :', lblSlice: 'Slice surface :',
     lblYaxis: 'Y-axis scale :', linear: 'linear', log: 'log', notePoint: 'Dose at the point detector cannot be visualized.', saveDose: 'Save dose...',
     s_doseLoading: 'Reading doses...', s_cantDose: 'Cannot show the doses: {0}', s_noDosePath: 'Save the input and run the dose calculation first',
@@ -521,6 +521,7 @@ async function init() {
   $('btnDlgTransform').onclick = () => PokerDialogUI.openTransform();
   $('btnDlgBody').onclick = () => PokerDialogUI.openBody();
   $('btnDlgZone').onclick = () => PokerDialogUI.openZone().catch(e => alert(e.message));
+  $('btnDlgSource').onclick = () => PokerDialogUI.openSource().catch(e => alert(e.message));
   $('btnDlgDetector').onclick = () => PokerDialogUI.openDetector().catch(e => alert(e.message));
   $('btnDlgBuildup').onclick = () => Promise.resolve(PokerDialogUI.openBuildup()).catch(e => alert(e.message));
   updateBuildupButton();

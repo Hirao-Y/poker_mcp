@@ -79,3 +79,11 @@ dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: au
 .pdGray { color: #777; }
 .pdNc { max-width: 560px; }
 dialog.pdAsk { min-width: 300px; }
+/* 段階 3c：線源 */
+.pdSource { min-width: 760px; }
+.pdTabs { display: flex; gap: 2px; border-bottom: 1px solid #bbb; }
+.pdTabs button { border: 1px solid #bbb; border-bottom: none; background: #eee; padding: 3px 10px; border-radius: 4px 4px 0 0; }
+.pdTabs button.on { background: #fff; font-weight: bold; }
+.pdPage { border: 1px solid #bbb; border-top: none; padding: 6px; min-height: 12em; }
+.pdInv tr.sel th { background: #cfe0fb; }
+.pdManual { min-width: 380px; }

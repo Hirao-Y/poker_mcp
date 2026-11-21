@@ -683,6 +683,64 @@
    "defaultNeutron": "Cf252"
   },
   {
+   "id": "paste-nuclide",
+   "doc": "src1",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 0
+    },
+    {
+     "op": "paste",
+     "r": 1,
+     "c": 0,
+     "text": "Ir192\t3.7E+10\r\nCs-137\t1e9\r\n60\tx\r\nNa22\t5\textra\r\n"
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Ir192, radioactivity: 3.7E+10}\r\n      - {nuclide: Cs-137, radioactivity: 1e9}\r\n      - {nuclide: Co60, radioactivity: 0}\r\n      - {nuclide: Na22, radioactivity: 5}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 5}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 1, radioactivity: 3e8}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 90}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": []
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
+   "id": "paste-energy",
+   "doc": "src1",
+   "unit": "u1",
+   "steps": [
+    {
+     "op": "select",
+     "i": 1
+    },
+    {
+     "op": "paste",
+     "r": 0,
+     "c": 1,
+     "text": "0.5\t2e3\n0.25\t4e3\n"
+    },
+    {
+     "op": "paste",
+     "r": 2,
+     "c": 0,
+     "text": "2.0\t1\t1\n"
+    },
+    {
+     "op": "register"
+    }
+   ],
+   "expected": {
+    "yaml": "  - type: POINT\r\n    name: p1\r\n    position: 100 0 50\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1.0e+10}\r\n      - {nuclide: Cs137, radioactivity: 2e9}\r\n    cutoff_rate: 1E-05\r\n    path_trace: \r\n      position: \r\n        - 1 2 3\r\n        - 4 5 6\r\n      bounding_box: \r\n        - b1\r\n  - type: BOX\r\n    name: box1\r\n    geometry:\r\n      vertex: 0 0 0\r\n      edge_1: 10 0 0\r\n      edge_2: 0 20 0\r\n      edge_3: 0 0 30\r\n      transform: tr1\r\n    division:\r\n      edge_1: {type: UNIFORM, number: 5}\r\n      edge_2: {type: GAUSS_FIRST, number: 4, min: 0.1, max: 0.9}\r\n      edge_3: {type: MANUAL, end_point: 0 0.3 1, weight: 2 1}\r\n    inventory: \r\n      - {energy: 1.25, spectrum: 0.5, radioactivity: 2e3}\r\n      - {energy: 0, spectrum: 0.25, radioactivity: 4e3}\r\n      - {energy: 2.0, spectrum: 1, radioactivity: 1}\r\n    cutoff_rate: 0.001\r\n  - type: SPH\r\n    name: ball\r\n    geometry:\r\n      center: 0 0 0\r\n      radius: 5\r\n    division:\r\n      r     : {type: UNIFORM, number: 3}\r\n      theta : {type: UNIFORM, number: 4, min: 0, max: 90}\r\n      phi   : {type: MANUAL, end_point: 0 0.5 1}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 1}\r\n    cutoff_rate: 0.0001\r\n  - type: RCC\r\n    name: cyl\r\n    geometry:\r\n      bottom_center: 0 0 0\r\n      height_vector: 0 0 10\r\n      radius       : 2\r\n      transform    : tr2\r\n    division:\r\n      r     : {type: UNIFORM, number: 2}\r\n      phi   : {type: UNIFORM, number: 2}\r\n      z     : {type: GAUSS_BOTH, number: 6}\r\n    inventory: \r\n      - {nuclide: Co60, radioactivity: 5}\r\n    cutoff_rate: 0.0001\r\n",
+    "exports": [],
+    "messages": []
+   },
+   "defaultNeutron": "Cf252"
+  },
+  {
    "id": "add-edit",
    "doc": "src1",
    "unit": "u1",

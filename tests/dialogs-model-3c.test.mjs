@@ -65,6 +65,7 @@ function runSource(D, all, s, defaultNeutron) {
       case 'delinv': say(m.removeInvRow(st.i)); break;
       case 'back': m.clearInv(st.r, st.c); break;
       case 'pick': m.pickNuclide(st.r, st.v); break;
+      case 'paste': m.pasteInv(st.r, st.c, st.text); break;
       case 'cutoff': say(m.setCutoff(st.v)); break;
       case 'pos': if (st.r === ed.positions.length) m.addPosition(); say(m.setPosition(st.r, st.c, st.v)); break;
       case 'delpos': m.removePosition(st.r); break;

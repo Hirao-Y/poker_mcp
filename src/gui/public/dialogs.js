@@ -512,5 +512,249 @@
     f.dlg.showModal();
   }
 
-  window.PokerDialogUI = { openTransform, openBody, openZone, openDetector, openBuildup, openNeutronCorrection, R };
+  // ===================================================================================
+  // 段階 3c：source（Form_追加_線源・Form_追加_MANUAL）
+  //   Windows と同じく一覧の全部をダイアログで編集し、「入力を更新」で入力の source 節を入れ替える。
+  //   4 つのタブ（線源形状・線源情報・体積線源の領域分割・エラーチェック用の透過線基準）。表の欄を変えたときの検査と
+  //   メッセージは Windows と同じ（dialogs_model の SourceModel が返す）。
+  // ===================================================================================
+  Object.assign(RES.en, {
+    srTitle: 'Define source node', srName: 'Name :', srTab0: 'geometry', srTab1: 'inventory', srTab2: 'volume source partitioning', srTab3: 'path trace for error checking',
+    srPoint: 'point', srCuboid: 'cuboid', srSphere: 'sphere', srCylinder: 'cylinder', srPOINT: 'POINT', srBOX: 'BOX (any direction)', srRPP: 'RPP (parallel to each axis)', srSPH: 'SPH', srRCC: 'RCC',
+    srTransform: 'Transform node (optional) :', srNuclide: 'RI-based', srEnergy: 'Energy-based', srListRI: 'List of radioisotpes', srImport: 'Import', srExport: 'Export',
+    srCutoff: 'cutoff rate :', srRiName: 'RI name', srEnergyCol: 'energy [MeV]', srSpectrum: 'spectrum', srRadioactivity: 'radioactivity [Bq]', srEmission: 'Emission [n/s]',
+    srAddRow: 'Add row', srInsRow: 'Insert row', srDelRow: 'Delete row', srPasteHint: 'Tab-separated text (e.g. copied from a spreadsheet) can be pasted into a cell with Ctrl+V.',
+    srDivType: 'type', srDivN: 'number | end_point,weight', srMin: 'min', srMax: 'max', srEdit: 'Edit…', srBounding: 'bounding_box', srList: 'List of predefined sources',
+    srColType: 'type', srColName: 'name', srColPos: 'position/geometry', srColDiv: 'division', srColInv: 'inventory', srColCutoff: 'cutoff_rate', srColPt: 'path_trace',
+    SOURCETAB0: 'Specify the geometry of the source.\nPoint: POINT (coordinates representing the point location) \nRectangle in any orientation: BOX (one vertex, three edge vectors linked to it) \nRectangle parallel to X, Y, Z axes: RPP (vertex with the smallest coordinates, vertex with the largest coordinates diagonal to it) \nBall: SPH (center coordinates, radius length) \nCylinder: RCC (base center coordinates, radius length, axis length vector) \nTransform operation can also be specified for a given geometry.',
+    SOURCETAB1: "Specify the inventory by nuclide or by energy.\nFor nuclide: nuclide name, radioactivity [Bq] .\nFor energy: energy value [MeV], spectrum, radioactivity [Bq].  \nThe value obtained by multiplying spectrum and radioactivity represents the photon emission rate by the energy.\n’cutoff rate’ means that a photon emission rate smaller than this value will be ignored in the calculation, i.e., considered zero.",
+    SOURCETAB1N: "Specify the neutron source strength by nuclide or by energy (a 'particle: neutron' deck).\nFor nuclide: nuclide name (choose from the nuclide list), emission rate [n/s].\nFor energy: energy [MeV], fraction, emission rate [n/s] (fraction x emission rate = neutrons per second).\nEnter the neutron emission rate [n/s], not the activity [Bq] (e.g. Cf-252 emits about 0.116 n/s per Bq).\nLines with a fraction below 'cutoff_rate' are ignored (treated as zero).",
+    SOURCETAB2: "Six types of volume source partitioning methods:\nUNIFORM : Equal partitioning.\nGAUSS_FIRST : Gaussian partitioning with start point subdivision.\nGAUSS_LAST : Same as above with end point subdivision.\nGAUSS_BOTH : Same with both ends subdivision.\nGAUSS_CENTER : Same with center subdivision.\nMANUAL : arbitrary partitioning, where the source point is placed at the center of the area. divided by 'end_point'. 'weight' is the ratio of radioactivity to be distributed to each source point.\n’min’, ’max’ specify the angle in the case of theta, phi, and in other cases, values between 0 and 1.",
+    SOURCETAB3: 'This function is for debugging: when a volume source is selected in geometry, a virtual point source is set up to check if the path of the penetrating line to the detector is as intended.',
+    mnTitle: 'Set the energy split point in MANUAL mode', mnWeight: 'arbitrary Weighting', mnNormalize: 'Normalize weights', mnNote: '(# of weight elements = # of end points - 1)',
+    mnEnd: 'end_point', mnW: 'weight', mnInsert: 'Row insert', mnRemove: 'Row delete', mnAdd: 'Add end_point', mnOk: 'OK',
+    REALINPUT: 'Enter a real number: ‘{0}’', TWOTOHUNDRED: 'Enter an integer between 2 and 100.', POSREALINPUT: 'Enter a positive real number: ‘{0}’',
+    LESSPOSREALINPUT: 'Enter a positive real number less than ‘{0}’.', MOREPOSREALINPUT: 'Enter a positive real number greater than ‘{0}’.',
+    RINAMEINPUT: 'Enter RI name.', FIRSTALPHABET: 'The first letter must begin with a letter of the alphabet.', NOMOREROWDELETE: 'No more lines can be deleted.',
+    NOEMPTYVALUE: 'No blanks allowed.', NODUPLICATE: 'The same name is already defined.', ZEROTOONEREAL: 'Enter a real number between 0 and 1.',
+    LESSPREVIOUS: 'Change the previous value to a value less than {0}.', NUMENDPOINT: 'Specify two or more segments for end_point.', NOTEMPTYCELL: 'Fill in the blank cell : {0}',
+    NUMWEIGHT: 'The number of elements in weight must be equal to the number of segments in end_point minus 1.',
+    INVALIDHEADERRA: 'Radioactivity column not readable from file header.\nCheck data format of the file.',
+    IMPORTHEADERNEUTRON: 'Emission column not readable from file header.\nFor a neutron source file, the header line (the first line that is not a # comment) must be nuclide,emission or energy,spectrum,emission.',
+    NOTREADNODE: 'Unable to read source node from YAML input.', NOTEXISTNODE: 'Target node does not exist.',
+  });
+  Object.assign(RES.ja, {
+    srTitle: '線源の追加', srName: '名前：', srTab0: '線源形状', srTab1: '線源情報', srTab2: '体積線源の領域分割', srTab3: 'エラーチェック用の透過線基準',
+    srPoint: '点', srCuboid: '直方体', srSphere: '球', srCylinder: '円柱', srBOX: 'BOX (任意方向)', srRPP: 'RPP (xyz軸に平行)',
+    srTransform: '回転と平行移動 (オプション)：', srNuclide: '核種指定', srEnergy: 'エネルギ指定', srListRI: '核種名リスト', srImport: 'インポート', srExport: 'エクスポート',
+    srCutoff: '放出率カットオフ：', srRiName: '核種名', srEnergyCol: 'エネルギ [MeV]', srSpectrum: '分布 [-]', srRadioactivity: '放射能 [Bq]',
+    srAddRow: '行を追加', srInsRow: '行を挿入', srDelRow: '行を削除', srPasteHint: 'タブ区切りの文字（表計算ソフトからのコピーなど）は、欄で Ctrl+V で貼り付けられます。',
+    srEdit: '編集…', srList: '定義済み線源リスト', srColType: '形状', srColName: '名前', srColPos: '位置/形状の属性', srColDiv: '体積線源分割', srColInv: 'インベントリ', srColCutoff: '放出率カットオフ',
+    SOURCETAB0: '線源の幾何形状を指定します。\n・点：POINT（点位置を表す座標）\n・任意の姿勢の直方体：BOX（一つの頂点、それにリンクする３つの辺ベクトル）\n・X,Y,Z軸に平行な直方体：RPP（最小の座標を持つ頂点、それと対角位置にある最大の座標をもつ頂点）\n・球: SPH（中心座標、半径長）\n・円柱: RCC（底辺中心座標、半径長、軸長ベクトル）\n指定した形状にtransform操作を指定可',
+    SOURCETAB1: "線源強度を核種またはエネルギで指定します。\n・核種の場合：核種名、放射能 [Bq]\n・エネルギの場合： エネルギ値 [MeV], 分布, 放射能 [Bq]（分布と放射能を乗じた値が光子発生数を表す）\n'cutoff_rate'とは、この値よりも小さい光子発生数は計算で無視、つまりゼロとみなされます。",
+    SOURCETAB1N: "中性子線源の強度を核種またはエネルギで指定します（particle: neutron のデッキ）。\n・核種の場合：核種名（核種名リストから選択）、放出率 [n/s]\n・エネルギの場合：エネルギ値 [MeV]、割合、放出率 [n/s]（割合と放出率を乗じた値が中性子の放出数 [n/s]）\n放射能 [Bq] ではなく中性子の放出率 [n/s] を入力します（例：Cf-252 では 1 Bq ≒ 0.116 n/s）。\n'cutoff_rate'とは、この値よりも小さい割合の行は計算で無視、つまりゼロとみなされます。",
+    SOURCETAB2: '体積線源の領域分割手法：typeは6種類\n・UNIFORM : 等分割\n・GAUSS_FIRST : 始点細分ガウス分割\n・GAUSS_LAST : 終点細分ガウス分割\n・GAUSS_BOTH : 両端細分ガウス分割\n・GAUSS_CENTER : 中央細分ガウス分割\n・MANUAL :  任意分割、end_pointで分割した領域の中心に線源点を置きます。weightは各線源点に分配する放射能の比率を表します。\nmin, maxは、theta, phiの場合は角度を、それ以外の場合は、0～1で指定します。',
+    SOURCETAB3: 'デバッグ用の機能です。\ngeometryで体積線源を選んだとき、仮想点線源を設定して、検出器までの透過線が意図どおりに作成されるかチェックします。',
+    mnTitle: 'MANUALの分割点：end_point', mnWeight: '任意重み付け', mnNormalize: '重み規格化', mnNote: '※weight(重み)の要素数 = end_pointの区分点数 ー 1',
+    mnW: '重み', mnInsert: '行の挿入', mnRemove: '行の削除', mnAdd: 'end_point を追加',
+    REALINPUT: "実数を指定してください：'{0}'", TWOTOHUNDRED: '2から100までの整数を指定してください', POSREALINPUT: "正の実数を指定してください：'{0}'",
+    LESSPOSREALINPUT: "'{0}' より小さい正の実数を指定してください", MOREPOSREALINPUT: "'{0}' より大きい正の実数を指定してください",
+    RINAMEINPUT: '核種名を指定してください', FIRSTALPHABET: '最初の文字はアルファベットで始めてください', NOMOREROWDELETE: 'これ以上行を削除できません',
+    NOEMPTYVALUE: '空白は許されません', NODUPLICATE: '同じ名前が既に定義されています', ZEROTOONEREAL: '0～1の間の実数を指定してください',
+    LESSPREVIOUS: '1つ前の値を{0}より小さい値にしてください', NUMENDPOINT: 'end_pointの区分点数は2点以上指定してください', NOTEMPTYCELL: '空欄を埋めてください：{0}',
+    NUMWEIGHT: 'weightの要素数は[end_pointの区分点数-1]にしてください',
+    INVALIDHEADERRA: 'ファイルヘッダから放射能カラムを読み取れません。\nファイルのデータフォーマットを確認してください',
+    IMPORTHEADERNEUTRON: 'ファイルヘッダから放出率（emission）のカラムを読み取れません。\n中性子の線源情報ファイルは、ヘッダ行（# のコメント行を除いた最初の行）を nuclide,emission 又は energy,spectrum,emission としてください。',
+    NOTREADNODE: 'sourceノードをYAML入力から読み込めません', NOTEXISTNODE: '対象となるノードがありません',
+  });
+  /** モデルが返す { error, args, all } を Windows と同じ文で（だめなものの数だけ）知らせる */
+  function tellError(e) {
+    if (!e || !e.error) return false;
+    for (const x of e.all || [e]) alert(R(x.error).replace(/\{(\d)\}/g, (_, i) => (x.args || [])[Number(i)] ?? ''));
+    return true;
+  }
+  /** 表の欄：変えたら apply(値) を呼び、エラーなら知らせて元に戻す（Windows の CellValidating → CancelEdit） */
+  function cell(value, apply, { size = 8, disabled = false, onPaste } = {}) {
+    const inp = el('input', { value: value ?? '', size, disabled: disabled || undefined, class: disabled ? 'off' : undefined });
+    let prev = value ?? '';
+    inp.addEventListener('change', () => {
+      const e = apply(inp.value);
+      if (tellError(e)) { inp.value = prev; inp.focus(); return; }
+      prev = inp.value;
+    });
+    if (onPaste) inp.addEventListener('paste', (ev) => { const t = ev.clipboardData && ev.clipboardData.getData('text'); if (t && /[\t\n]/.test(t)) { ev.preventDefault(); onPaste(t); } });
+    return inp;
+  }
+
+  // ---- MANUAL の分割点（Form_追加_MANUAL）。OK なら onOk(数の欄の文字) ----
+  function openManual(values, onOk) {
+    const mm = new D.ManualModel(values);
+    const tbl = el('table', { class: 'pdGrid' });
+    const wcb = el('input', { type: 'checkbox', checked: mm.weight || undefined, onchange: () => { mm.setWeight(wcb.checked); render(); } });
+    let addInp;
+    function render() {
+      tbl.innerHTML = '';
+      tbl.append(el('tr', {}, el('th'), el('th', { text: R('mnEnd') }), mm.weight ? el('th', { text: R('mnW') }) : null, el('th'), el('th')));
+      mm.rows.forEach((r, i) => tbl.append(el('tr', {}, el('th', { text: String(i + 1) }),
+        el('td', {}, cell(r.e, (v) => { const e = mm.setEnd(i, v); if (!e) render(); return e; })),
+        mm.weight ? el('td', {}, i < mm.rows.length - 1 ? cell(r.w, (v) => mm.setW(i, v)) : el('input', { disabled: true, size: 8, class: 'off' })) : null,
+        el('td', {}, el('button', { type: 'button', text: R('mnInsert'), onclick: () => { mm.insertRow(i); render(); } })),
+        el('td', {}, el('button', { type: 'button', text: R('mnRemove'), onclick: () => { if (!tellError(mm.removeRow(i))) render(); } })))));
+      addInp = el('input', { size: 8, placeholder: R('mnAdd') });
+      addInp.addEventListener('change', () => { if (!addInp.value) return; const e = mm.setEnd(mm.rows.length, addInp.value); if (tellError(e)) { addInp.value = ''; return; } render(); });
+      tbl.append(el('tr', {}, el('th', { text: '*' }), el('td', {}, addInp)));
+    }
+    const dlg = el('dialog', { class: 'pdlg pdManual' },
+      el('h3', { text: R('mnTitle') }),
+      el('div', { class: 'pdBody' }, tbl,
+        el('div', {}, el('label', {}, wcb, ' ' + R('mnWeight')), ' ', el('button', { type: 'button', text: R('mnNormalize'), onclick: () => { mm.normalize(); render(); } })),
+        note(R('mnNote'))),
+      el('menu', {},
+        el('button', { type: 'button', class: 'left', text: R('help'), onclick: () => openHelp('volsrcdivide/#2-toc-title') }),
+        el('button', { type: 'button', text: R('mnOk'), onclick: () => { if (tellError(mm.check())) return; onOk(mm.result()); dlg.close(); } }),
+        el('button', { type: 'button', text: R('cancel'), onclick: () => dlg.close() })));
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.appendChild(dlg);
+    render();
+    dlg.showModal();
+  }
+
+  // ---- source（Form_追加_線源） ----
+  async function openSource() {
+    const text = getText();
+    const neutron = D.isNeutronDeck(text);
+    let defaultNuclide;
+    if (neutron) { try { const n = await getNames(); defaultNuclide = (n.neutronNuclides || [])[0]; } catch { /* 目録が読めない */ } }
+    const r = D.sourcesFromDoc(await readNode('source'), D.abstractNode('unit', text));
+    if (r.error) alert(R('NOTREADNODE'));
+    const m = new D.SourceModel(r.list, { name: D.nameCandidate('s', text), neutron, angle: r.angle, defaultNuclide: defaultNuclide || (neutron ? 'Cf252' : 'Co60') });
+    const ed = m.editor;
+    let tab = 0, invRow = 0;
+    const help = el('textarea', { class: 'pdHelp', readonly: true, rows: 5 });
+    const nameInp = el('input', { size: 20 });
+    nameInp.addEventListener('change', () => { if (tellError(m.setName(nameInp.value))) { nameInp.value = ed.name; nameInp.focus(); } refresh(); });
+    const tabs = el('div', { class: 'pdTabs' });
+    const page = el('div', { class: 'pdPage' });
+    const list = listTable([R('srColType'), R('srColName'), R('srColPos'), R('srColDiv'), R('srColInv'), R('srColCutoff'), R('srColPt')], (i) => { m.select(i); invRow = 0; render(); });
+    const btnUpdate = el('button', { type: 'button', text: R('btnUpdate'), onclick: () => { if (m.register() === 'NOTEXISTNODE') alert(R('NOTEXISTNODE')); render(); } });
+    const btnRemove = el('button', { type: 'button', text: R('btnDelete'), onclick: () => { m.remove(); invRow = 0; render(); } });
+    const btnNew = el('button', { type: 'button', text: R('btnAdd'), onclick: async () => {
+      if (m.dirty) { const a = await ask3(R('updateValue')); if (a === 'cancel') return; if (a === 'yes') m.register(); }
+      m.add(); invRow = 0; render();
+    } });
+    const fileInp = el('input', { type: 'file', accept: '.txt,.csv,text/plain', style: 'display:none' });
+    fileInp.addEventListener('change', async () => {
+      const f = fileInp.files[0]; fileInp.value = '';
+      if (!f) return;
+      const res = m.importInventory(await f.text());
+      if (res.error) alert(R(res.error));
+      render();
+    });
+    const changed = (e) => { if (!e) render(); return e; };   // 値が入ったら表示を作り直す
+
+    function geometryPage() {
+      const has = m.list.length > 0;
+      const groups = [['srPoint', ['POINT']], ['srCuboid', ['BOX', 'RPP']], ['srSphere', ['SPH']], ['srCylinder', ['RCC']]];
+      const radios = el('div', { class: 'pdRadios' }, ...groups.map(([g, types]) => el('div', {}, el('span', { class: 'pdGroup', text: R(g) }),
+        ...types.map(t => el('label', {}, el('input', { type: 'radio', name: 'srType', checked: t === ed.type || undefined, disabled: !has || undefined,
+          onchange: () => { m.setType(t); render(); } }), ' ' + R('sr' + t))))));
+      const grid = el('table', { class: 'pdGrid' }, el('tr', {}, el('th'), ...['x', 'y', 'z'].map(c => el('th', { text: c }))));
+      m.geoLabels().forEach((label, rI) => grid.append(el('tr', {}, el('th', { text: label }),
+        ...ed.geo[rI].map((v, c) => el('td', {}, v === null && rI > 0 && c > 0 ? el('input', { disabled: true, size: 8, class: 'off' })
+          : cell(v, (x) => m.setGeo(rI, c, x), { disabled: !has }))))));
+      const tr = el('input', { size: 20, value: ed.transform, disabled: (!has || !ed.transformEnabled) || undefined, oninput: (e) => { m.setTransform(e.target.value); refresh(); } });
+      return el('div', { class: 'pdRow' }, radios, el('div', {}, grid, el('label', {}, R('srTransform') + ' ', tr)));
+    }
+    function inventoryPage() {
+      const has = m.list.length > 0, nuc = ed.invKind === 'nuclide';
+      const strength = neutron ? R('srEmission') : R('srRadioactivity');
+      const cols = nuc ? [R('srRiName'), strength] : [R('srEnergyCol'), R('srSpectrum'), strength];
+      const tbl = el('table', { class: 'pdGrid pdInv' }, el('tr', {}, el('th'), ...cols.map(c => el('th', { text: c }))));
+      ed.inv.forEach((row, rI) => tbl.append(el('tr', { class: rI === invRow ? 'sel' : '', onclick: () => { invRow = rI; tbl.querySelectorAll('tr').forEach((t, k) => t.classList.toggle('sel', k === rI + 1)); } },
+        el('th', { text: String(rI + 1) }),
+        ...row.map((v, c) => el('td', {}, cell(v, (x) => changed(m.setInv(rI, c, x)), { size: c === 0 && nuc ? 12 : 10, disabled: !has,
+          onPaste: (t) => { m.pasteInv(rI, c, t); render(); } }))))));
+      const radio = (k, label) => el('label', {}, el('input', { type: 'radio', name: 'srInv', checked: ed.invKind === k || undefined, disabled: !has || undefined,
+        onchange: () => { m.setInvKind(k); invRow = 0; render(); } }), ' ' + R(label));
+      const cut = cell(ed.cutoff, (v) => m.setCutoff(v), { size: 10, disabled: !has });
+      return el('div', {},
+        el('div', {}, radio('nuclide', 'srNuclide'), ' ', radio('energy', 'srEnergy'), '　',
+          el('button', { type: 'button', text: R('srListRI'), disabled: (!has || !nuc) || undefined, onclick: () => showList('ri', (row) => { m.pickNuclide(Math.min(invRow, ed.inv.length - 1), row[0]); render(); }) }), ' ',
+          el('button', { type: 'button', text: R('srImport'), disabled: !has || undefined, onclick: () => fileInp.click() }), ' ',
+          el('button', { type: 'button', text: R('srExport'), disabled: (!has || !ed.inv.length) || undefined, onclick: () => {
+            const t = m.exportInventory(); if (t === null) return;
+            const a = el('a', { href: URL.createObjectURL(new Blob([t], { type: 'text/plain' })), download: 'source_inventory.txt' });
+            document.body.appendChild(a); a.click(); a.remove();
+          } })),
+        tbl,
+        el('div', {},
+          el('button', { type: 'button', text: R('srAddRow'), disabled: !has || undefined, onclick: () => { invRow = m.addInvRow(); render(); } }), ' ',
+          el('button', { type: 'button', text: R('srInsRow'), disabled: (!has || !ed.inv.length) || undefined, onclick: () => { m.insertInvRow(Math.min(invRow, ed.inv.length - 1)); render(); } }), ' ',
+          el('button', { type: 'button', text: R('srDelRow'), disabled: (!has || !ed.inv.length) || undefined, onclick: () => { if (!tellError(m.removeInvRow(Math.min(invRow, ed.inv.length - 1)))) { invRow = Math.max(0, Math.min(invRow, ed.inv.length - 1)); render(); } } }),
+          '　', el('label', {}, R('srCutoff') + ' ', cut)),
+        note(R('srPasteHint')));
+    }
+    function divisionPage() {
+      const has = m.list.length > 0 && ed.type !== 'POINT';
+      const tbl = el('table', { class: 'pdGrid' }, el('tr', {}, el('th'), ...[R('srDivType'), R('srDivN'), R('srMin'), R('srMax')].map(c => el('th', { text: c }))));
+      m.divLabels().forEach((label, rI) => {
+        const row = ed.div[rI];
+        const sel = el('select', { disabled: !has || undefined, onchange: () => { m.setDivType(rI, sel.value); render(); } }, ...D.DIV_TYPES.map(t => el('option', { value: t, text: t })));
+        sel.value = row.type;
+        const n = row.type === 'MANUAL'
+          ? el('span', {}, el('input', { value: row.n ?? '', size: 18, readonly: true }), ' ',
+            el('button', { type: 'button', text: R('srEdit'), disabled: !has || undefined, onclick: () => openManual(row.n ?? '', (v) => { m.setDivManual(rI, v); render(); }) }))
+          : cell(row.n, (x) => m.setDivCell(rI, 1, x), { size: 6, disabled: !has });
+        tbl.append(el('tr', {}, el('th', { text: label }), el('td', {}, sel), el('td', {}, n),
+          el('td', {}, cell(row.min, (x) => m.setDivCell(rI, 2, x), { size: 6, disabled: !has || row.ro })),
+          el('td', {}, cell(row.max, (x) => m.setDivCell(rI, 3, x), { size: 6, disabled: !has || row.ro }))));
+      });
+      return el('div', {}, tbl);
+    }
+    function pathPage() {
+      const has = m.list.length > 0;
+      const pos = el('table', { class: 'pdGrid' }, el('tr', {}, el('th'), ...['x', 'y', 'z'].map(c => el('th', { text: c })), el('th')));
+      ed.positions.forEach((row, rI) => pos.append(el('tr', {}, el('th', { text: String(rI + 1) }),
+        ...row.map((v, c) => el('td', {}, cell(v, (x) => m.setPosition(rI, c, x), { disabled: !has }))),
+        el('td', {}, el('button', { type: 'button', text: R('srDelRow'), disabled: !has || undefined, onclick: () => { m.removePosition(rI); render(); } })))));
+      const box = el('table', { class: 'pdGrid' }, el('tr', {}, el('th'), el('th', { text: R('srBounding') }), el('th')));
+      ed.bounding.forEach((v, rI) => box.append(el('tr', {}, el('th', { text: String(rI + 1) }),
+        el('td', {}, cell(v, (x) => { m.setBounding(rI, x); return null; }, { size: 14, disabled: !has })),
+        el('td', {}, el('button', { type: 'button', text: R('srDelRow'), disabled: !has || undefined, onclick: () => { m.removeBounding(rI); render(); } })))));
+      return el('div', { class: 'pdRow' },
+        el('div', {}, el('div', { text: 'position' }), pos, el('button', { type: 'button', text: R('srAddRow'), disabled: !has || undefined, onclick: () => { m.addPosition(); render(); } })),
+        el('div', {}, box, el('button', { type: 'button', text: R('srAddRow'), disabled: !has || undefined, onclick: () => { m.addBounding(''); render(); } })));
+    }
+    const TABS = [['srTab0', geometryPage, 'SOURCETAB0'], ['srTab1', inventoryPage, neutron ? 'SOURCETAB1N' : 'SOURCETAB1'], ['srTab2', divisionPage, 'SOURCETAB2'], ['srTab3', pathPage, 'SOURCETAB3']];
+    function render() {
+      const has = m.list.length > 0;
+      nameInp.value = ed.name;
+      tabs.innerHTML = '';
+      TABS.forEach(([label], i) => tabs.append(el('button', { type: 'button', class: i === tab ? 'on' : '', text: R(label), onclick: () => { tab = i; render(); } })));
+      page.innerHTML = ''; page.append(TABS[tab][1]());
+      help.value = R(TABS[tab][2]);
+      list.render(m.list.map(s => m.row(s)), m.cur);
+      btnRemove.disabled = !has;
+      refresh();
+    }
+    const body = el('div', { class: 'pdBody pdSource' },
+      el('label', {}, R('srName') + ' ', nameInp),
+      tabs, page, help,
+      el('div', {}, btnNew, ' ', btnUpdate, ' ', btnRemove),
+      el('fieldset', {}, el('legend', { text: R('srList') }), list.tbl),
+      el('label', {}, el('input', { type: 'checkbox', checked: m.block, onchange: (e) => { m.block = e.target.checked; refresh(); } }), ' ' + R('block')),
+      fileInp);
+    const f = frame(R('srTitle') + (neutron ? R('neutron') : ''), body, {
+      okLabel: R('updateInput'), helpAnchor: 'guiinput/#3-toc-title',
+      ok: async () => {
+        if (m.dirty) { const a = await ask3(R('updateValue')); if (a === 'cancel') return false; if (a === 'yes') m.register(); }
+        replaceNode('source', m.yaml); return true;
+      },
+    });
+    const refresh = () => { f.setYaml(m.yaml); btnUpdate.disabled = !(m.dirty && m.cur >= 0); };
+    render();
+    f.dlg.showModal();
+  }
+
+  window.PokerDialogUI = { openTransform, openBody, openZone, openSource, openDetector, openBuildup, openNeutronCorrection, R };
 })();

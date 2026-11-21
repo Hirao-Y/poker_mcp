@@ -889,6 +889,29 @@
     removeInvRow(i) { if (this.editor.inv.length <= 1) return { error: 'NOMOREROWDELETE' }; this.editor.inv.splice(i, 1); this.dirty = true; return null; }
     /** BackSpace キー：核種名の欄は既定の核種、それ以外は 0 */
     clearInv(r, c) { this.editor.inv[r][c] = this.editor.invKind === 'nuclide' && c === 0 ? this.defaultNuclide : '0'; this.dirty = true; }
+    /** Ctrl+V（dgvKeyDown）：タブ・改行区切りの文字を (y 行, x 列) から貼る。核種名の欄に数が来たら既定の核種、
+     *  数の欄は数として読めるものだけ。表の下に行が足りなければ足す（足した行は既定の値で埋めてから貼る。
+     *  Windows は足した行のその欄の値を捨てていた。2026-11-22 に Windows も直した） */
+    pasteInv(y, x, text) {
+      const ed = this.editor, nuc = ed.invKind === 'nuclide', ncol = nuc ? 2 : 3;
+      const lines = String(text).replace(/\r\n/g, '\n').replace(/\r/g, '\n').replace(/\n+$/, '').split('\n');
+      let nflag = true;
+      for (let r = 0; r < lines.length; r++) {
+        if (r >= lines.length - 1 && lines[r] === '' && !nflag) break;
+        if (lines[r] !== '') nflag = false;
+        const vals = lines[r].split('\t');
+        let c2 = 0;
+        for (let c = 0; c < vals.length; c++) {
+          const rowCount = ed.inv.length + 1;   // DataGridView の新しい行を含む
+          if (!(x + c2 >= 0 && x + c2 < ncol && y + r >= 0 && y + r < rowCount)) continue;
+          if (y + r === rowCount - 1) ed.inv.push(nuc ? [this.defaultNuclide, '0'] : ['0', '0', '0']);
+          if (nuc && x + c2 === 0) ed.inv[y + r][0] = netTryParse(vals[c]).ok ? this.defaultNuclide : vals[c];
+          else if (netTryParse(vals[c]).ok) ed.inv[y + r][x + c2] = vals[c];
+          c2++;
+        }
+      }
+      this.dirty = true;
+    }
     /** 核種リストから選んだ名前を今の行に入れる */
     pickNuclide(r, name) { this.editor.inv[r][0] = name; this.dirty = true; }
     /** cutoff_rate（txtCutoff_Validating：正の実数） */
