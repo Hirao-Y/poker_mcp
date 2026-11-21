@@ -16,7 +16,7 @@
 //   GET  /api/dose/view?path=&det=&dose=&ray=&src=&energy=&plane=&slice=&yaxis=  図・グラフの JS │ Form_線量表示。doseFile.js）
 //   GET  /api/dose/csv?…       「線量保存」の CSV                                                ┘
 //   GET  /api/names            材料リスト・核種リスト（libLists.js）
-//   POST /api/parse            {text} → 入力の節を YAML として読んだもの（入力ダイアログが今の中身を読むため）
+//   POST /api/parse            {text, scalars?} → 入力の節を YAML として読んだもの（入力ダイアログが今の中身を読むため）
 //
 // /api はトークン必須。すべての要求で Host・Origin・Sec-Fetch-Site を検査する（security.js）。
 import fs from 'fs';
@@ -175,8 +175,9 @@ export function createGuiServer(cfg) {
       }
 
       if (req.method === 'POST' && p === '/api/parse') {
-        const { text } = await readJson(req);
-        try { return sendJson(res, 200, { doc: yaml.load(String(text ?? '')) ?? null }); }
+        const { text, scalars } = await readJson(req);
+        const opts = scalars === 'text' ? { schema: yaml.FAILSAFE_SCHEMA } : {};   // text：値を文字のまま（数・真偽に直さない）
+        try { return sendJson(res, 200, { doc: yaml.load(String(text ?? ''), opts) ?? null }); }
         catch (e) { return sendJson(res, 200, { error: String(e.message || e).split('\n')[0] }); }
       }
 

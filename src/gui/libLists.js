@@ -51,6 +51,34 @@ export function readMaterials(libDir) {
   return { materials: out };
 }
 
+/**
+ * ビルドアップ係数のダイアログ（Form_Add_Buildupfactor）の選択肢を、Windows と同じ読み方で作る。
+ *   materials：lib_material.dat の材料名（単層の欄）。one：lib_setting.dat の buildup_material（等価材料名の欄。先頭に空）。
+ *   two・three：twolayer_buildup_material・threelayer_buildup_material（2・3 重層の欄）
+ */
+export function readBuildupLists(libDir) {
+  const out = { materials: [], one: [], two: [], three: [] };
+  const setting = fs.readFileSync(path.join(libDir, 'lib_setting.dat'), 'utf8');
+  const items = (line) => {
+    const arr = line.split(':');
+    if (arr.length < 2) return null;
+    const crr = arr[1].trim().replace(/^[[\]]+|[[\]]+$/g, '');
+    return crr ? crr.split(',').map(x => x.trim()) : null;
+  };
+  for (const line of setting.split(/\r?\n/)) {
+    if (line.includes('file_material')) {
+      try { out.materials.push(...readMaterials(libDir).materials.map(m => m.name.trim())); } catch { /* 読めない */ }
+    } else if (line.trim().indexOf('buildup_material') === 0) {
+      const v = items(line); if (v) out.one = ['', ...v];
+    } else if (line.includes('twolayer_buildup_material')) {
+      const v = items(line); if (v) out.two = v;
+    } else if (line.includes('threelayer_buildup_material')) {
+      const v = items(line); if (v) out.three = v;
+    }
+  }
+  return out;
+}
+
 let cached = null;
 /** 一覧（--schema は一度だけ呼ぶ） */
 export async function libLists(cui, libDir) {
@@ -62,7 +90,10 @@ export async function libLists(cui, libDir) {
   const particle = (schema.properties || {}).particle || {};
   let lib;
   try { lib = readMaterials(libDir); } catch (e) { lib = { error: e.message, materials: [] }; }
+  let buildup;
+  try { buildup = readBuildupLists(libDir); } catch { buildup = { materials: [], one: [''], two: [], three: [] }; }
   cached = {
+    buildup,
     materialNames: (defs.material || {})['x-poker-names'] || [],
     materials: lib.materials, materialsError: lib.error || null,
     nuclides: (defs.nuclide || {})['x-poker-names'] || [],
