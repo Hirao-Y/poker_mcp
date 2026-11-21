@@ -164,6 +164,7 @@ async function updateView() {
     const r = await api('POST', '/api/geometry', { text: getText(), polygon: $('selPolygon').value, lang: LANG });
     if (r.exitCode !== 0) { setStatus(t('s_cantDraw', r.error), 'err'); return; }
     await frameReady($('frameView'), w => w.scene && typeof w.removeAll === 'function');
+    if (viewWin().viewerReady) await viewWin().viewerReady;   // 組み合わせ立体の Manifold（wasm）の読み込みを待つ
     viewWin().eval(r.js);   // WinForms の webView2_3D.ExecuteScriptAsync(js) と同じ
     selectTab('view');
     setStatus(t('s_drawn'), 'ok');
