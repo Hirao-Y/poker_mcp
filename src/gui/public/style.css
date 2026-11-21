@@ -49,7 +49,7 @@ menu { display: flex; gap: 6px; justify-content: flex-end; padding: 0; }
 #listTable tbody tr:hover { background: #e8f0fe; }
 .hint { color: #555; font-size: 12px; }
 /* 入力ダイアログ（dialogs.js） */
-dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: auto; }
+dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: auto; font-family: system-ui, 'Segoe UI', 'Yu Gothic UI', sans-serif; }
 .pdlg h3 { margin: 0 0 8px; }
 .pdBody { display: flex; flex-direction: column; gap: 6px; }
 .pdRow { display: flex; gap: 14px; align-items: flex-start; }
