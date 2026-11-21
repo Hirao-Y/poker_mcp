@@ -2,7 +2,7 @@
 //
 //   GET  /                     シェル画面（src/gui/public/index.html）
 //   GET  /app/<file>           シェル画面の JS・CSS（src/gui/public）
-//   GET  /html/<path>          POKER のインストール先の html（エディタ・3D・グラフ。配布版をそのまま）
+//   GET  /html/<path>          Web GUI 用の画面ファイル（POKER の webgui_html：エディタ・3D・グラフ）
 //   GET  /api/info             版・作業フォルダ・html の有無
 //   GET  /api/files?dir=       作業フォルダの中の一覧
 //   GET  /api/file?path=       ファイルを読む（作業フォルダの中だけ）
@@ -98,7 +98,7 @@ export function createGuiServer(cfg) {
           catch { version = ''; }
         }
         return sendJson(res, 200, {
-          version, workspace: cfg.workspace, html: fs.existsSync(path.join(cfg.htmlDir, '3D_view', 'view.html')),
+          version, workspace: cfg.workspace, html: fs.existsSync(path.join(cfg.htmlDir, 'viewer3d', 'viewer3d.html')),
           busy: jobs.busy(),
         });
       }

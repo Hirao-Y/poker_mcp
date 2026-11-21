@@ -34,7 +34,7 @@ let symlinkMade = false;
 try { fs.symlinkSync(OUTSIDE, path.join(WS, 'link'), 'dir'); symlinkMade = true; } catch { /* Windows で権限が無い */ }
 
 const cui = pokerCuiInInstallDir() || findOnPath(POKER_CUI_NAME);
-const htmlDir = process.env.POKER_GUI_HTML || path.join(pokerInstallDir(), 'html');
+const htmlDir = process.env.POKER_GUI_HTML || path.join(pokerInstallDir(), 'webgui_html');
 const hasNewCui = Boolean(cui) && /--babylon/.test(spawnSync(cui, ['-h'], { encoding: 'utf8' }).stdout || '');
 
 const token = newToken();

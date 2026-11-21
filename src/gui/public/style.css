@@ -17,9 +17,9 @@ iframe { border: 0; width: 100%; }
 .status.ok { color: #176f2c; } .status.warn { color: #8a6100; } .status.err { color: #b00020; } .status.busy { color: #555; }
 #issues { margin: 0; padding: 0 8px; max-height: 25%; overflow: auto; list-style: none; }
 #issues li { padding: 2px 0; cursor: pointer; border-bottom: 1px dotted #ddd; }
-#issues li.error::before { content: "エラー "; color: #b00020; font-weight: bold; }
-#issues li.warning::before { content: "警告 "; color: #8a6100; font-weight: bold; }
-#issues li.info::before { content: "情報 "; color: #555; }
+#issues li.error::before { content: var(--sev-error); color: #b00020; font-weight: bold; }
+#issues li.warning::before { content: var(--sev-warning); color: #8a6100; font-weight: bold; }
+#issues li.info::before { content: var(--sev-info); color: #555; }
 .tabs { display: flex; gap: 2px; padding: 3px 4px 0; background: #fafafa; border-bottom: 1px solid #ddd; }
 .tabs button { border: 1px solid #ccc; border-bottom: 0; background: #eee; padding: 3px 10px; }
 .tabs button.active { background: #fff; font-weight: bold; }

@@ -5,7 +5,8 @@
 //   127.0.0.1 の空いているポートで待ち受け、起動ごとの合い言葉（トークン）付きの URL を表示してブラウザを開く。
 //   ブラウザを開かないときは POKER_GUI_NO_BROWSER=1。ポートを決めたいときは POKER_GUI_PORT。
 //   poker_cui と lib の場所は poker-mcp と同じ規則（POKER_CUI_PATH、POKER_INSTALL_PATH、PATH 上の poker_cui）。
-//   画面ファイル（html）は既定でインストール先の html。POKER_GUI_HTML で別の場所を指定できる。
+//   画面ファイルは既定でインストール先の webgui_html（Web GUI 用。Windows 版の GUI の html とは別）。
+//   POKER_GUI_HTML で別の場所を指定できる。
 //   止めるときは Ctrl+C。
 import fs from 'fs';
 import os from 'os';
@@ -24,9 +25,9 @@ const workspace = fs.realpathSync(wsArg);
 const cui = pokerCuiInInstallDir() || findOnPath(POKER_CUI_NAME);
 if (!cui) fatal(`${POKER_CUI_NAME} が見つかりません（POKER_CUI_PATH か POKER_INSTALL_PATH を設定するか、PATH に加えてください）`);
 
-const htmlDir = path.resolve(process.env.POKER_GUI_HTML || path.join(pokerInstallDir(), 'html'));
-if (!fs.existsSync(path.join(htmlDir, '3D_view', 'view.html'))) {
-  fatal(`画面ファイルが見つかりません: ${htmlDir}（POKER の html フォルダ。POKER_GUI_HTML で指定できます）`);
+const htmlDir = path.resolve(process.env.POKER_GUI_HTML || path.join(pokerInstallDir(), 'webgui_html'));
+if (!fs.existsSync(path.join(htmlDir, 'viewer3d', 'viewer3d.html'))) {
+  fatal(`画面ファイルが見つかりません: ${htmlDir}（POKER の webgui_html フォルダ。POKER_GUI_HTML で指定できます）`);
 }
 
 let port = 0;
