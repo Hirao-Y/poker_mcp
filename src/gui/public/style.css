@@ -69,3 +69,13 @@ dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: au
 .pdForm { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; }
 .pdlg menu { margin-top: 8px; }
 .pdlg menu .left { margin-right: auto; }
+/* 段階 3b：検出器・ビルドアップ係数・中性子の補正 */
+.pdlg fieldset { border: 1px solid #ccc; padding: 2px 6px 6px; margin: 0; }
+.pdlg fieldset legend { color: #333; font-size: 12px; }
+.pdlg fieldset .pdList { max-height: 12em; }
+.pdIndent { margin-left: 22px; display: flex; gap: 4px; align-items: flex-start; }
+.pdPre { white-space: pre-wrap; }
+.pdWarn { color: darkred; }
+.pdGray { color: #777; }
+.pdNc { max-width: 560px; }
+dialog.pdAsk { min-width: 300px; }

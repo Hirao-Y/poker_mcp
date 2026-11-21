@@ -104,12 +104,12 @@
   function openHelp(anchor) { if (confirm(R('accessWeb'))) window.open(DOC_URL + anchor, '_blank', 'noopener'); }
 
   /** ダイアログの枠：見出し・中身・YAML の見本（読むだけ）・ボタン。ok() が true を返したら閉じる */
-  function frame(title, body, { okLabel = R('ok'), ok, helpAnchor }) {
+  function frame(title, body, { okLabel = R('ok'), ok, helpAnchor, preview = true }) {
     const yamlBox = el('textarea', { class: 'pdYaml', readonly: true, rows: 6, spellcheck: 'false' });
     const dlg = el('dialog', { class: 'pdlg' },
-      el('h3', { text: title }), body, yamlBox,
+      el('h3', { text: title }), body, preview ? yamlBox : null,
       el('menu', {},
-        el('button', { type: 'button', class: 'left', text: R('help'), onclick: () => openHelp(helpAnchor) }),
+        helpAnchor ? el('button', { type: 'button', class: 'left', text: R('help'), onclick: () => openHelp(helpAnchor) }) : el('span', { class: 'left' }),
         el('button', { type: 'button', text: okLabel, onclick: async () => { if (await ok()) dlg.close(); } }),
         el('button', { type: 'button', text: R('cancel'), onclick: () => dlg.close() })));
     dlg.addEventListener('close', () => dlg.remove());
@@ -222,7 +222,7 @@
   // ===================================================================================
   async function openZone() {
     const text = getText();
-    const neutron = /^\s*particle\s*:\s*neutron\b/m.test(text);
+    const neutron = D.isNeutronDeck(text);
     // body の名前（Windows は body 節を YamlDotNet で読む）。body 節が無い・読めないときも ATMOSPHERE は選べるようにする
     let names = [];
     const bodyNode = D.abstractNode('body', text);
@@ -269,5 +269,248 @@
     f.dlg.showModal(); sel.focus();
   }
 
-  window.PokerDialogUI = { openTransform, openBody, openZone, R };
+  // ===================================================================================
+  // 段階 3b：detector・buildup_factor・neutron_correction
+  //   Windows と同じく、一覧の全部をダイアログで編集し、「入力を更新」で入力の節を消してから
+  //   ダイアログの YAML を節として足し直す（Form_MainWindow：DeleteNode → SetText → AddNode）。
+  // ===================================================================================
+  Object.assign(RES.en, {
+    yes: 'Yes', no: 'No', updateInput: 'Update Input', btnAdd: 'Add', btnUpdate: 'Update', btnDelete: 'Delete',
+    updateValue: 'Value has been changed.\nUpdate it?', updateRow: 'The value of the current row has been changed.  Update it?',
+    notExistInList: "Target data does not exist in the list  : '{0}'", existSameNode: 'A node with the same material name has already been defined.',
+    noDuplicate: 'The same name is already defined.', moreInt: 'Enter an integer greater than or equal to {0}.',
+    dupTitle: 'Material name duplication error',
+    dtTitle: 'Define detector node', dtPoint: 'point', dt1: '1-dim line', dt2: '2-dim plane', dt3: '3-dim space', dtShow: 'show_path_trace',
+    dtTransform: 'transform node (optional) :', dtList: 'List of predefined detectors', dtColName: 'name', dtColOrigin: 'origin', dtColGrid: 'grid',
+    dtColTransform: 'transform', dtColShow: 'show_path_trace', dtDiv: '# divisions',
+    dtNote: "The detector, i.e., the location where the dose is calculated, can be specified as a point, a one-dimensional line, a two-dimensional plane, or a three-dimensional spatial grid.\nIf 'show_path_trace' is unchecked, the verification results showing that there are no undefined areas or overlapping areas on the penetrating line connecting the virtual source point defined in the source node and the grid point defined in the detector node will not be output.",
+    buTitle: 'Define buildup factor node', buLayers: '# of layers', buOne: 'one', buTwo: 'two', buThree: 'three', buMaterial: 'Material name of layer(s)',
+    buEquiv: 'Equivalent (option) :', buCorr: 'Correction : ', buFinite: 'finite_medium', buSlant: 'slant_penetration', buList: 'List of predefined buildup factors',
+    buColLayers: '# of layers', buColMaterial: 'material(s)', buColEquiv: 'equivalent', buColFinite: 'finite_medium', buColSlant: 'slant_penetration', buMoveUp: '⇡ moveup',
+    buNote: 'Buildup factors can be specified for a single layer as well as for certain two- or three-layer materials (note that only single layer is available at this time). \nMultiple candidates for buildup materials can be registered in the list of predefined buildup factors, however, only the material placed at the top of the list among those present on each penetration line will be selected.  Therefore, a multilayer factor should be listed before the single-layer. \nFor certain materials, the finite_medium and slant_penetration options allow dose correction for finite media and slant penetration, respectively.',
+    ncButton: 'Neutron corr.', ncTitle: 'Neutron correction (neutron_correction)',
+    ncHelp: 'Finite-medium correction of the neutron dose. The buildup tables are made for an infinite medium, so without the correction the dose is overestimated. Paths that enter one shield (concrete, iron, lead or soil) once are corrected. The secondary gamma is not corrected.',
+    ncG: 'Geometry correction G (use_geometry_correction): the source is outside the shield',
+    ncF: 'Finite-medium correction F (use_finite_medium_correction): detectors outside the shield.\nAssumes nothing outside the system (open air). Only together with G',
+    ncRoom: 'For a system inside a room (floor, walls or ceiling in the input), uncheck F (the neutrons returned from them would be underestimated).',
+    ncWritten: 'Showing neutron_correction in the input.', ncNone: 'The input has no neutron_correction (default: G and F on). Updating writes both keys explicitly.',
+  });
+  Object.assign(RES.ja, {
+    yes: 'はい', no: 'いいえ', updateInput: '入力を更新', btnAdd: '追加', btnUpdate: '更新', btnDelete: '削除',
+    updateValue: '値が変更されています。\n更新しますか？', updateRow: '現在の行の値が変更されています。\n更新しますか？',
+    notExistInList: '対象となるデータがリストに存在しません : {0}', existSameNode: '同じ材料名のノードが既に定義されています',
+    noDuplicate: '同じ名前が既に定義されています', moreInt: "'{0}' より大きい整数を指定してください",
+    dtTitle: '検出器の追加', dtPoint: '点', dt1: '1次元 (線)', dt2: '2次元 (面)', dt3: '3次元', dtTransform: '回転と平行移動 (オプション)：',
+    dtList: '定義済み検出器リスト', dtColName: '名前', dtColOrigin: '原点', dtColGrid: 'グリッド', dtColTransform: '回転と移動', dtDiv: '分割数',
+    dtNote: '検出器（線量を計算する位置）は、点の他、1次元、2次元、3次元のグリッドを指定することができます。\nshow_path_traceのチェックを外すと、sourceノードで定義した仮想線源点と評価点を結ぶ透過線上に未定義領域・重複領域が無いことの検証結果は出力されません。',
+    buTitle: 'ビルドアップ材料の追加', buLayers: '層数', buOne: '単層', buTwo: '2重層', buThree: '3重層', buMaterial: '各層の材料名', buEquiv: '等価材料名 (オプション) :',
+    buCorr: '補正 : ', buList: '定義済みビルドアップ係数リスト', buColLayers: '層数', buColMaterial: '各層の材料名', buColEquiv: '等価材料名', buMoveUp: '↑ 上に移動',
+    buNote: 'ビルドアップ係数は単層の他、特定の2重層または3重層の多重層材料を指定できます（現状は単層しか使えませんので注意）。\n定義済みビルドアップ係数リストには複数のビルドアップ材料を指定できますが、使用されるのは各透過線に対してその透過線上に在る材料のうち、リストの一番上に記載された材料だけです。よって多重層材料を指定する場合は単層材料よりも前に記載する必要があります。\nまた特定の材料に対して、finite_mediumで有限媒質の、slant_penetrationでスラブ斜め透過の線量補正を行えます。',
+    ncButton: '中性子の補正', ncTitle: '中性子の補正（neutron_correction）',
+    ncHelp: '中性子の線量の有限媒質補正です。ビルドアップ係数の表は無限媒質で作られているため、表のままでは線量を大きめに見積もります。1 種類の遮蔽体（コンクリート・鉄・鉛・土壌）に 1 回だけ入る経路の線量を割り戻します。2 次γ線は補正しません。',
+    ncG: '体系補正 G（use_geometry_correction）：線源が遮蔽体の外にあるとき',
+    ncF: '有限媒質補正 F（use_finite_medium_correction）：遮蔽体の外の検出点。\n体系の外に何もない（野外）前提。G と一緒のときだけ使えます',
+    ncRoom: '床・壁・天井を書いた部屋の中では F を外してください（戻りの分を過小評価するため）。',
+    ncWritten: '入力の neutron_correction を表示しています。', ncNone: '入力に neutron_correction はありません（既定: G・F とも有効）。更新すると両方を明示して書きます。',
+  });
+
+  /** はい・いいえ・キャンセルの問い（MessageBoxButtons.YesNoCancel）。'yes' | 'no' | 'cancel' */
+  function ask3(message) {
+    return new Promise((resolve) => {
+      let answer = 'cancel';
+      const b = (label, v) => el('button', { type: 'button', text: label, onclick: () => { answer = v; dlg.close(); } });
+      const dlg = el('dialog', { class: 'pdlg pdAsk' }, el('div', { class: 'pdNote', text: message }),
+        el('menu', {}, b(R('yes'), 'yes'), b(R('no'), 'no'), b(R('cancel'), 'cancel')));
+      dlg.addEventListener('close', () => { dlg.remove(); resolve(answer); });
+      document.body.appendChild(dlg);
+      dlg.showModal();
+    });
+  }
+  /** 入力の節を読む（Windows：AbstractNode で節を切り出して YamlDotNet で読む。値は文字のまま）。読めなければ null */
+  async function readNode(node) {
+    const part = D.abstractNode(node, getText());
+    if (!part) return null;
+    const r = await api('POST', '/api/parse', { text: part, scalars: 'text' });
+    if (r.error) { alert(`${node}: deseriarization error\n${r.error}`); return null; }
+    return r.doc;
+  }
+  /** 入力の節を、ダイアログで作った YAML に入れ替える（DeleteNode → SetText → AddNode） */
+  function replaceNode(node, yamlText) {
+    const w = inputWin();
+    w.setText(D.deleteNode(node, w.editor.getValue()));
+    addToInput(node, yamlText);
+  }
+  /** 一覧の表（行を押すと選ぶ） */
+  function listTable(cols, onPick) {
+    const tbl = el('table', { class: 'pdList' });
+    return {
+      tbl,
+      render(rows, cur) {
+        tbl.innerHTML = '';
+        tbl.append(el('tr', {}, ...cols.map(c => el('th', { text: c }))));
+        rows.forEach((r, i) => tbl.append(el('tr', { class: i === cur ? 'sel' : '', onclick: () => onPick(i) }, ...r.map(c => el('td', { text: c })))));
+      },
+    };
+  }
+
+  // ---- detector（Form_追加_検出器） ----
+  async function openDetector() {
+    const r = D.detectorsFromDoc(await readNode('detector'));
+    if (r.error) alert(`detector: deseriarization error\n${r.error}`);
+    const m = new D.DetectorModel(r.list);
+    const KINDS = ['dtPoint', 'dt1', 'dt2', 'dt3'];
+    const grid = el('table', { class: 'pdGrid' });
+    const nameInp = el('input', { size: 20 });
+    const trInp = el('input', { size: 20, oninput: () => { m.setTransform(trInp.value); refresh(); } });
+    const showCb = el('input', { type: 'checkbox', onchange: () => { m.setShow(showCb.checked); refresh(); } });
+    const radios = KINDS.map((k, i) => el('input', { type: 'radio', name: 'dtKind', onchange: () => { m.setKind(i); render(); } }));
+    nameInp.addEventListener('change', () => {
+      const err = m.setName(nameInp.value);
+      if (err) { alert(R(err === 'NOEMPTYVALUE' ? 'noEmpty' : 'noDuplicate')); nameInp.value = m.editor.name; nameInp.focus(); }
+      refresh();
+    });
+    const list = listTable([R('dtColName'), R('dtColOrigin'), R('dtColGrid'), R('dtColTransform'), R('dtColShow')], (i) => { m.select(i); render(); });
+    const btnUpdate = el('button', { type: 'button', text: R('btnUpdate'), onclick: () => {
+      const e = m.register();
+      if (e === 'NOTEXISTINLIST') alert(R('notExistInList').replace('{0}', m.editor.name));
+      render();
+    } });
+    const btnRemove = el('button', { type: 'button', text: R('btnDelete'), onclick: () => { m.remove(); render(); } });
+    const btnNew = el('button', { type: 'button', text: R('btnAdd'), onclick: async () => {
+      if (m.dirty) { const a = await ask3(R('updateValue')); if (a === 'cancel') return; if (a === 'yes') m.register(); }
+      m.add(); render();
+    } });
+    function renderGrid() {
+      grid.innerHTML = '';
+      grid.append(el('tr', {}, el('th'), ...['x', 'y', 'z', R('dtDiv')].map(c => el('th', { text: c }))));
+      m.editor.grid.forEach((row, rI) => grid.append(el('tr', {}, el('th', { text: rI === 0 ? 'origin' : 'grid' + rI }),
+        ...row.map((v, c) => el('td', {}, v === null ? el('input', { disabled: true, size: 8, class: 'off' })
+          : numberInput(v, (x) => { m.setCell(rI, c, x); refresh(); }, { numeric: false, check: (x) => {
+            const err = D.detectorCellOk(rI, c, x);
+            if (err) alert(err === 'REALINPUT' ? R('realInput').replace('{0}', x) : R('moreInt').replace('{0}', '1'));
+            return !err;
+          } }))))));
+    }
+    function render() {
+      const has = m.list.length > 0;
+      list.render(m.list.map(d => m.row(d)), m.cur);
+      radios.forEach((rb, i) => { rb.checked = i === m.editor.kind; rb.disabled = !has; });
+      nameInp.value = m.editor.name; trInp.value = m.editor.transform; showCb.checked = m.editor.show;
+      trInp.disabled = !has || m.editor.kind === 0; showCb.disabled = !has; btnRemove.disabled = !has;
+      renderGrid(); grid.querySelectorAll('input').forEach(i => { if (!has) i.disabled = true; });
+      refresh();
+    }
+    const body = el('div', { class: 'pdBody' },
+      el('label', {}, R('name') + ' ', nameInp),
+      el('div', { class: 'pdRow' },
+        el('div', { class: 'pdRadios' }, ...KINDS.map((k, i) => el('label', {}, radios[i], ' ' + R(k)))),
+        el('div', {}, grid, el('label', {}, R('dtTransform') + ' ', trInp), el('div', {}, el('label', {}, showCb, ' ' + R('dtShow'))))),
+      el('div', {}, btnNew, ' ', btnUpdate, ' ', btnRemove),
+      el('fieldset', {}, el('legend', { text: R('dtList') }), list.tbl),
+      note(R('dtNote')),
+      el('label', {}, el('input', { type: 'checkbox', checked: m.block, onchange: (e) => { m.block = e.target.checked; refresh(); } }), ' ' + R('block')));
+    const f = frame(R('dtTitle'), body, {
+      okLabel: R('updateInput'), helpAnchor: 'guiinput/#6-toc-title',
+      ok: async () => {
+        if (m.dirty) { const a = await ask3(R('updateValue')); if (a === 'cancel') return false; if (a === 'yes') m.register(); }
+        replaceNode('detector', m.yaml); return true;
+      },
+    });
+    const refresh = () => { f.setYaml(m.yaml); btnUpdate.disabled = !(m.dirty && m.cur >= 0); };
+    render();
+    f.dlg.showModal();
+  }
+
+  // ---- buildup_factor（Form_Add_Buildupfactor）。中性子のデッキでは neutron_correction ----
+  async function openBuildup() {
+    if (D.isNeutronDeck(getText())) return openNeutronCorrection();
+    const names = await getNames();
+    const lists = names.buildup || { materials: [], one: [''], two: [], three: [] };
+    const r = D.buildupsFromDoc(await readNode('buildup_factor'));
+    if (r.error) alert(`buildup_factor: deseriarization error\n${r.error}`);
+    const m = new D.BuildupModel(r.list, lists);
+    const combo = (which) => {
+      const s = el('select', { onchange: () => { m.choose(which, s.value); refresh(); } }, ...m.items(which).map(x => el('option', { value: x, text: x })));
+      return s;
+    };
+    const combos = { first: combo('first'), second: combo('second'), third: combo('third'), equiv: combo('equiv') };
+    const LAY = ['buOne', 'buTwo', 'buThree'];
+    const radios = LAY.map((k, i) => el('input', { type: 'radio', name: 'buLayers', onchange: () => { m.setLayers(i + 1); render(); } }));
+    const finite = el('input', { type: 'checkbox', onchange: () => { m.setFinite(finite.checked); refresh(); } });
+    const slant = el('input', { type: 'checkbox', onchange: () => { m.setSlant(slant.checked); refresh(); } });
+    const list = listTable([R('buColLayers'), R('buColMaterial'), R('buColEquiv'), R('buColFinite'), R('buColSlant')], (i) => { m.select(i); render(); });
+    const btnUpdate = el('button', { type: 'button', text: R('btnUpdate'), onclick: () => { registerWithMessage(); render(); } });
+    const btnRemove = el('button', { type: 'button', text: R('btnDelete'), onclick: () => { m.remove(); render(); } });
+    const btnUp = el('button', { type: 'button', text: R('buMoveUp'), onclick: () => { m.moveUp(); render(); } });
+    const btnNew = el('button', { type: 'button', text: R('btnAdd'), onclick: async () => {
+      if (m.dirty) { const a = await ask3(R('updateRow')); if (a === 'cancel') return; if (a === 'yes') registerWithMessage(); }
+      m.add(); render();
+    } });
+    function registerWithMessage() {
+      const e = m.register();
+      if (e === 'EXISTSAMENODE') alert(R('existSameNode'));
+      else if (e === 'NOTEXISTINLIST') alert(R('notExistInList').replace('{0}', ''));
+    }
+    function render() {
+      const has = m.list.length > 0, L = m.editor.layers;
+      list.render(m.list.map(b => m.row(b)), m.cur);
+      radios.forEach((rb, i) => { rb.checked = i + 1 === L; rb.disabled = !has; });
+      for (const [w, s] of Object.entries(combos)) {
+        s.value = m.editor[w];
+        if (s.value !== m.editor[w]) s.selectedIndex = -1;   // 一覧に無い名前（入力に書いてあったもの）は空欄で見せる
+        s.disabled = !has || (w === 'first' || w === 'equiv' ? L !== 1 : w === 'second' ? L !== 2 : L !== 3);
+      }
+      finite.checked = m.editor.finite; slant.checked = m.editor.slant;
+      finite.disabled = slant.disabled = btnRemove.disabled = !has;
+      refresh();
+    }
+    const body = el('div', { class: 'pdBody' },
+      el('div', { class: 'pdForm' },
+        el('span', { text: R('buLayers') }), el('span', {}, ...LAY.map((k, i) => el('label', {}, radios[i], ' ' + R(k) + '　'))),
+        el('span', { text: R('buMaterial') }), el('span', {}, combos.first, ' ', combos.second, ' ', combos.third),
+        el('span', { text: R('buEquiv') }), el('span', {}, combos.equiv),
+        el('span', { text: R('buCorr') }), el('span', {}, el('label', {}, finite, ' ' + R('buFinite')), '　', el('label', {}, slant, ' ' + R('buSlant')))),
+      el('div', {}, btnNew, ' ', btnUpdate, ' ', btnRemove, ' ', btnUp),
+      el('fieldset', {}, el('legend', { text: R('buList') }), list.tbl),
+      note(R('buNote')),
+      el('label', {}, el('input', { type: 'checkbox', checked: m.block, onchange: (e) => { m.block = e.target.checked; refresh(); } }), ' ' + R('block')));
+    const f = frame(R('buTitle'), body, {
+      okLabel: R('updateInput'), helpAnchor: 'guiinput/#7-toc-title',
+      ok: async () => {
+        const ce = m.closeError();   // Windows の FormClosing：一覧に無い材料・重複を先に調べる
+        if (ce) { alert(ce.error === 'DUPLICATE' ? `${R('dupTitle')}\n${ce.detail}` : R('notExistInList').replace('{0}', ce.detail)); return false; }
+        if (m.dirty) { const a = await ask3(R('updateRow')); if (a === 'cancel') return false; if (a === 'yes') registerWithMessage(); }
+        replaceNode('buildup_factor', m.yaml); return true;
+      },
+    });
+    const refresh = () => { f.setYaml(m.yaml); btnUpdate.disabled = !(m.dirty && m.cur >= 0); };
+    render();
+    f.dlg.showModal();
+  }
+
+  // ---- neutron_correction（Form_NeutronCorrection。NeutronCatalog.ReadCorrection・WriteCorrection） ----
+  function openNeutronCorrection() {
+    const text = getText();
+    const rc = D.readCorrection(text);
+    const m = new D.NeutronCorrectionModel(rc);
+    const g = el('input', { type: 'checkbox' });
+    const fcb = el('input', { type: 'checkbox' });
+    const sync = () => { g.checked = m.g; fcb.checked = m.f; fcb.disabled = !m.fEnabled; };
+    g.addEventListener('change', () => { m.setG(g.checked); sync(); });
+    fcb.addEventListener('change', () => { m.setF(fcb.checked); sync(); });
+    const body = el('div', { class: 'pdBody pdNc' },
+      el('div', { text: R('ncHelp') }),
+      el('label', {}, g, ' ' + R('ncG')),
+      el('label', { class: 'pdIndent' }, fcb, ' ', el('span', { class: 'pdPre', text: R('ncF') })),
+      el('div', { class: 'pdWarn', text: R('ncRoom') }),
+      el('div', { class: 'pdGray', text: R(rc.written ? 'ncWritten' : 'ncNone') }));
+    const f = frame(R('ncTitle'), body, {
+      okLabel: R('updateInput'), preview: false,
+      ok: () => { inputWin().setText(D.writeCorrection(getText(), m.geometryCorrection, m.finiteMediumCorrection)); inputWin().editor.focus(); return true; },
+    });
+    sync();
+    f.dlg.showModal();
+  }
+
+  window.PokerDialogUI = { openTransform, openBody, openZone, openDetector, openBuildup, openNeutronCorrection, R };
 })();
