@@ -135,20 +135,20 @@ export function createGuiServer(cfg) {
       }
 
       if (req.method === 'POST' && p === '/api/validate') {
-        const { text } = await readJson(req);
-        return sendJson(res, 200, await validateText(cfg.cui, String(text ?? '')));
+        const { text, lang } = await readJson(req);
+        return sendJson(res, 200, await validateText(cfg.cui, String(text ?? ''), lang));
       }
 
       if (req.method === 'POST' && p === '/api/geometry') {
-        const { text, polygon } = await readJson(req);
-        return sendJson(res, 200, await geometryJs(cfg.cui, String(text ?? ''), String(polygon || 'low')));
+        const { text, polygon, lang } = await readJson(req);
+        return sendJson(res, 200, await geometryJs(cfg.cui, String(text ?? ''), String(polygon || 'low'), lang));
       }
 
       if (req.method === 'POST' && p === '/api/run') {
         const body = await readJson(req);
         const abs = resolveInside(cfg.workspace, String(body.path || ''));
         if (!WRITE_EXT.has(path.extname(abs).toLowerCase()) || !fs.existsSync(abs)) return fail(res, 400, 'save the input (.yaml) first');
-        const job = jobs.start(abs, body.mode === 'trace' ? 'trace' : 'all');
+        const job = jobs.start(abs, body.mode === 'trace' ? 'trace' : 'all', body.lang);
         return sendJson(res, 200, { id: job.id });
       }
 

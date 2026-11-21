@@ -130,7 +130,7 @@ function onInputChanged() {
 async function validateNow() {
   const seq = ++state.validateSeq;
   try {
-    const r = await api('POST', '/api/validate', { text: getText() });
+    const r = await api('POST', '/api/validate', { text: getText(), lang: LANG });
     if (seq !== state.validateSeq) return;   // 古い結果は捨てる
     showIssues(r);
   } catch (e) {
@@ -161,7 +161,7 @@ function showIssues(r) {
 async function updateView() {
   setStatus(t('s_drawing'), 'busy');
   try {
-    const r = await api('POST', '/api/geometry', { text: getText(), polygon: $('selPolygon').value });
+    const r = await api('POST', '/api/geometry', { text: getText(), polygon: $('selPolygon').value, lang: LANG });
     if (r.exitCode !== 0) { setStatus(t('s_cantDraw', r.error), 'err'); return; }
     await frameReady($('frameView'), w => w.scene && typeof w.removeAll === 'function');
     viewWin().eval(r.js);   // WinForms の webView2_3D.ExecuteScriptAsync(js) と同じ
@@ -238,7 +238,7 @@ async function run(mode) {
     if (!(await save())) return;
   }
   try {
-    const { id } = await api('POST', '/api/run', { path: state.path, mode });
+    const { id } = await api('POST', '/api/run', { path: state.path, mode, lang: LANG });
     state.job = id;
     setRunning(true);
     setStatus(mode === 'trace' ? t('s_tracing') : t('s_running'), 'busy');

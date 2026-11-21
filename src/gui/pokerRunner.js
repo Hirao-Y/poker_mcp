@@ -15,6 +15,11 @@ import yaml from 'js-yaml';
 
 const MAX_OUT = 64 * 1024 * 1024;   // 標準出力の上限（3D の JS は 10 万点で数 MB）
 
+/** 画面から来た言語（'ja' / 'en'）で poker_cui のメッセージの言語を決める環境変数。それ以外はサーバの設定のまま */
+export function envForLang(lang) {
+  return (lang === 'ja' || lang === 'en') ? { ...process.env, POKER_LANG: lang } : process.env;
+}
+
 /**
  * poker_cui を 1 回起動して終わるのを待つ。
  * @returns {Promise<{code:number|null, stdout:string, stderr:string, timedOut:boolean}>}
@@ -62,9 +67,9 @@ export function parseValidateYaml(text) {
   return { ok: doc.ok === true, stage: doc.stage ? String(doc.stage) : '', summary: doc.summary || {}, note: doc.note ? String(doc.note) : '', issues };
 }
 
-export async function validateText(cui, text) {
+export async function validateText(cui, text, lang) {
   return withTempYaml(text, async (file, dir) => {
-    const r = await runCui(cui, [file, '--validate', '--format=yaml'], { cwd: dir, timeoutMs: 60000 });
+    const r = await runCui(cui, [file, '--validate', '--format=yaml'], { cwd: dir, timeoutMs: 60000, env: envForLang(lang) });
     const parsed = parseValidateYaml(r.stdout);
     return { exitCode: r.code, result: parsed, raw: parsed ? undefined : (r.stdout + r.stderr) };
   });
@@ -72,10 +77,10 @@ export async function validateText(cui, text) {
 
 const POLYGONS = ['low', 'middle', 'high'];
 
-export async function geometryJs(cui, text, polygon = 'low') {
+export async function geometryJs(cui, text, polygon = 'low', lang) {
   const q = POLYGONS.includes(polygon) ? polygon : 'low';
   return withTempYaml(text, async (file, dir) => {
-    const r = await runCui(cui, [file, '--babylon', `--polygon=${q}`], { cwd: dir, timeoutMs: 180000 });
+    const r = await runCui(cui, [file, '--babylon', `--polygon=${q}`], { cwd: dir, timeoutMs: 180000, env: envForLang(lang) });
     if (r.code !== 0) return { exitCode: r.code, error: (r.stderr || r.stdout).trim() || `poker_cui exited with ${r.code}` };
     return { exitCode: 0, js: r.stdout };
   });
@@ -95,7 +100,7 @@ export class JobRunner {
 
   busy() { return Boolean(this.current); }
 
-  start(inputAbs, mode) {
+  start(inputAbs, mode, lang) {
     if (this.current) throw Object.assign(new Error('another calculation is running'), { status: 409 });
     const id = crypto.randomBytes(8).toString('hex');
     const summary = `${inputAbs}.summary`;
@@ -110,7 +115,7 @@ export class JobRunner {
       status: 'running', stage: null, percent: null, exitCode: null,
       startedAt: new Date().toISOString(), finishedAt: null, log: [], child: null,
     };
-    const child = spawn(this.cui, args, { cwd: path.dirname(inputAbs), windowsHide: true, shell: false });
+    const child = spawn(this.cui, args, { cwd: path.dirname(inputAbs), env: envForLang(lang), windowsHide: true, shell: false });
     job.child = child;
     let buf = '';
     child.stderr.on('data', (c) => {

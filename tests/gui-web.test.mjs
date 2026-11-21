@@ -102,6 +102,13 @@ if (!hasNewCui) {
   const vb = await req('POST', '/api/validate', { body: { text: bad } });
   check('検査: 壊した入力はエラーあり（行番号つき）', vb.json.result && vb.json.result.issues.some(i => i.severity === 'error'));
 
+  if (process.platform !== 'win32') {
+    const ve = await req('POST', '/api/validate', { body: { text: bad, lang: 'en' } });
+    const vj = await req('POST', '/api/validate', { body: { text: bad, lang: 'ja' } });
+    const msg = (r) => r.json.result.issues.map(i => i.message).join(' ');
+    check('検査: 言語の指定で poker_cui のメッセージが変わる（en は ASCII、ja は日本語）',
+      /^[\x20-\x7e]*$/.test(msg(ve)) && /[\u3040-\u30ff\u4e00-\u9fff]/.test(msg(vj)), `${msg(ve).slice(0, 60)} / ${msg(vj).slice(0, 30)}`);
+  }
   const g = await req('POST', '/api/geometry', { body: { text: sample, polygon: 'middle' } });
   const direct = spawnSync(cui, [path.join(sampleDir, 'cs137_constants.yaml'), '--babylon', '--polygon=middle'], { encoding: 'utf8' }).stdout;
   check('3D 表示の JS が poker_cui --babylon と同じ', g.json.exitCode === 0 && g.json.js === direct && /removeAll\(\)/.test(g.json.js));
