@@ -1,5 +1,5 @@
 {
- "note": "Windows の GUI（POKER 2.3.2、src230）の入力ダイアログが作った YAML。POKER の webgui_dev/phase3/ref_dialogs.ps1 で作った。",
+ "note": "Windows の GUI（POKER 2.3.2、src230。2026-11-22 の zone の直しを含む）の入力ダイアログが作った YAML。POKER の webgui_dev/phase3/ref_dialogs.ps1 で作った。",
  "scenarios": [
   {
    "id": "tr-x-default",
@@ -416,6 +416,23 @@
    "void": true,
    "void_off": true,
    "block": true
+  },
+  {
+   "id": "zone-select-after",
+   "form": "zone",
+   "doc": "body:\r\n  - { name: b1, type: SPH, center: 0 0 0, radius: 1 }\r\n  - { name: wall, type: RPP, min: 0 0 0, max: 1 1 1 }\r\n",
+   "material": "LEAD",
+   "density": "11.35",
+   "block": false,
+   "select_after": 2
+  },
+  {
+   "id": "zone-no-body",
+   "form": "zone",
+   "doc": "",
+   "material": "AIR",
+   "density": "0.0012",
+   "block": false
   }
  ],
  "windows": {
@@ -447,6 +464,8 @@
   "zone-void-block": "  - body_name: b1\r\n    material: VOID\r\n",
   "zone-atmosphere": "  - { body_name: ATMOSPHERE, material: AIR, density: 1.2e-3 }\r\n",
   "zone-atmosphere-off": "  - { body_name: , material: AIR, density: 0.0012 }\r\n",
-  "zone-void-off": "  - body_name: b1\r\n    material: \r\n    density: 0\r\n"
+  "zone-void-off": "  - body_name: b1\r\n    material: \r\n    density: 0\r\n",
+  "zone-select-after": "  - { body_name: wall, material: LEAD, density: 11.35 }\r\n",
+  "zone-no-body": "  - { body_name: ATMOSPHERE, material: AIR, density: 0.0012 }\r\n"
  }
 }

@@ -13,7 +13,7 @@ vm.runInContext(fs.readFileSync(path.join(here, '..', 'src', 'gui', 'public', 'd
 const D = ctx.PokerDialogs;
 const { scenarios, windows } = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'dialogs_windows.json'), 'utf8'));
 const byId = new Map(scenarios.map(s => [s.id, s]));
-const bodyNames = (doc) => doc ? [...doc.matchAll(/name\s*:\s*([^,\s}]+)/g)].map(m => m[1]) : null;
+const bodyNames = (doc) => doc ? [...doc.matchAll(/name\s*:\s*([^,\s}]+)/g)].map(m => m[1]) : [];   // body 節が無いときは ATMOSPHERE だけ（Windows も 2026-11-22 に同じにした）
 
 export function runScenario(D, s, byId) {
   if (s.form === 'transform') {
@@ -46,6 +46,7 @@ export function runScenario(D, s, byId) {
     if (s.material !== undefined) m.material = s.material;
     if (s.density !== undefined) m.density = s.density;
     m.block = Boolean(s.block);
+    if (s.select_after !== undefined) m.bodyName = m.items[s.select_after];
     return m.yaml;
   }
   throw new Error('unknown form ' + s.form);
