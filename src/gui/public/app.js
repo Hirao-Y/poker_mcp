@@ -353,6 +353,10 @@ async function openDose() {
   doseUi.path = rel; doseUi.info = null; doseUi.ready = false;
   $('doseTitle').textContent = t('doseTitle') + (rel.length > 40 ? '...' + rel.slice(-40) : rel);
   $('doseLoading').hidden = false; $('btnSaveDose').disabled = true;
+  if (!doseUi.moved) {   // 最初は右の区画（3D・グラフ）の左上。3D 表示の操作パネル（右上）とグラフの線にかぶらないように
+    const r = $('right').getBoundingClientRect();
+    $('dlgDose').style.left = `${Math.round(r.left + 60)}px`; $('dlgDose').style.top = `${Math.round(r.top + 34)}px`;
+  }
   $('dlgDose').show();
   try {
     doseUi.info = await api('GET', `/api/dose/info?${qs({ path: rel })}`);
@@ -422,6 +426,20 @@ async function saveDoseCsv() {
   $('rngSlice').oninput = () => { $('sliceNo').textContent = `${$('rngSlice').value} / ${$('rngSlice').max}`; updateDose(); };
   document.querySelectorAll('input[name="yaxis"]').forEach(r => { r.onchange = () => { if (doseDet().edges.length === 1) updateDose(); }; });
   $('doseClose').onclick = () => closeDose();
+  // 見出しをつかんで動かす（一度動かしたら、次に開くときもその場所）
+  document.querySelector('#dlgDose .dlgHead').addEventListener('mousedown', (e) => {
+    if (e.target.closest('button')) return;
+    const dlg = $('dlgDose'), r0 = dlg.getBoundingClientRect(), x0 = e.clientX, y0 = e.clientY;
+    document.querySelectorAll('iframe').forEach(f => { f.style.pointerEvents = 'none'; });
+    const move = (ev) => {
+      dlg.style.left = `${Math.max(0, Math.min(window.innerWidth - 80, r0.left + ev.clientX - x0))}px`;
+      dlg.style.top = `${Math.max(0, Math.min(window.innerHeight - 30, r0.top + ev.clientY - y0))}px`;
+      doseUi.moved = true;
+    };
+    const up = () => { window.removeEventListener('mousemove', move); window.removeEventListener('mouseup', up); document.querySelectorAll('iframe').forEach(f => { f.style.pointerEvents = ''; }); };
+    window.addEventListener('mousemove', move); window.addEventListener('mouseup', up);
+    e.preventDefault();
+  });
   $('btnSaveDose').onclick = () => saveDoseCsv();
   $('dlgDose').addEventListener('cancel', (e) => { e.preventDefault(); closeDose(); });
 })();
