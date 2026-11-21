@@ -12,6 +12,10 @@
 //   POST /api/run              {path, mode: all|trace} → ジョブ
 //   GET  /api/jobs/:id         ジョブの状態（画面が 0.5 秒ごとに読む）
 //   POST /api/jobs/:id/cancel  取り消し
+//   GET  /api/dose/info?path=  .dose の見出し（検出器・線量の種類・線種・線源・エネルギ）    ┐ 線量表示（Windows の GUI の
+//   GET  /api/dose/view?path=&det=&dose=&ray=&src=&energy=&plane=&slice=&yaxis=  図・グラフの JS │ Form_線量表示。doseFile.js）
+//   GET  /api/dose/csv?…       「線量保存」の CSV                                                ┘
+//   GET  /api/names            材料リスト・核種リスト（libLists.js）
 //
 // /api はトークン必須。すべての要求で Host・Origin・Sec-Fetch-Site を検査する（security.js）。
 import fs from 'fs';
@@ -20,6 +24,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { checkRequestSource, checkToken, resolveInside, PAGE_HEADERS } from './security.js';
 import { validateText, geometryJs, runCui, JobRunner } from './pokerRunner.js';
+import { loadDose, headerView, doseView, doseCsv } from './doseFile.js';
+import { libLists } from './libLists.js';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 20 * 1024 * 1024;        // 入力の YAML の上限
@@ -71,7 +77,8 @@ function serveStatic(res, base, rel) {
 }
 
 /**
- * @param {{port:number, token:string, workspace:string, htmlDir:string, cui:string}} cfg  workspace は realpath 済み
+ * @param {{port:number, token:string, workspace:string, htmlDir:string, cui:string, libDir?:string}} cfg  workspace は realpath 済み
+ *   libDir は POKER の lib（既定は poker_cui と同じ場所の lib）
  */
 export function createGuiServer(cfg) {
   const jobs = new JobRunner(cfg.cui);
@@ -151,6 +158,22 @@ export function createGuiServer(cfg) {
         if (!WRITE_EXT.has(path.extname(abs).toLowerCase()) || !fs.existsSync(abs)) return fail(res, 400, 'save the input (.yaml) first');
         const job = jobs.start(abs, body.mode === 'trace' ? 'trace' : 'all', body.lang);
         return sendJson(res, 200, { id: job.id });
+      }
+
+      if (req.method === 'GET' && /^\/api\/dose\/(info|view|csv)$/.test(p)) {
+        const abs = resolveInside(cfg.workspace, url.searchParams.get('path') || '');
+        if (path.extname(abs).toLowerCase() !== '.dose') return fail(res, 400, 'not a .dose file');
+        const d = await loadDose(abs);
+        if (p === '/api/dose/info') return sendJson(res, 200, headerView(d));
+        const int = (k) => { const v = parseInt(url.searchParams.get(k) ?? '0', 10); return Number.isInteger(v) ? v : 0; };
+        const sel = { det: int('det'), dose: int('dose'), ray: int('ray'), src: int('src'), energy: int('energy'),
+          plane: int('plane'), slice: int('slice'), yaxis: url.searchParams.get('yaxis') === 'log' ? 'log' : 'linear' };
+        if (p === '/api/dose/view') return sendJson(res, 200, doseView(d, sel));
+        return send(res, 200, doseCsv(d, sel), { 'Content-Type': 'text/csv; charset=utf-8' });
+      }
+
+      if (req.method === 'GET' && p === '/api/names') {
+        return sendJson(res, 200, await libLists(cfg.cui, cfg.libDir || path.join(path.dirname(cfg.cui), 'lib')));
       }
 
       const m = /^\/api\/jobs\/([0-9a-f]{16})(\/cancel)?$/.exec(p);

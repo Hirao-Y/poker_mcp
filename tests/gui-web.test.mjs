@@ -134,6 +134,37 @@ if (!hasNewCui) {
       check('進み具合（--progress）を読めた', j.percent === 100 && j.stage !== null, `${j.stage} ${j.percent}`);
     }
   }
+  // 線量表示（Form_線量表示）：点・1 次元・2 次元・3 次元の検出器があるサンプル
+  const vis = path.join(sampleDir, 'storage_dose_vis1.yaml');
+  if (fs.existsSync(vis)) {
+    fs.copyFileSync(vis, path.join(WS, 'vis.yaml'));
+    const r = await req('POST', '/api/run', { body: { path: 'vis.yaml', mode: 'all' } });
+    let j;
+    for (let i = 0; i < 3000; i++) { j = (await req('GET', `/api/jobs/${r.json.id}`)).json; if (j.status !== 'running') break; await new Promise(s => setTimeout(s, 200)); }
+    check('線量表示: サンプルの計算が終わる', j.status === 'done', j.status);
+    const info = (await req('GET', '/api/dose/info?path=vis.yaml.dose')).json;
+    check('線量表示: 見出しを読める（検出器 4 つ、edge 0〜3 本）', JSON.stringify(info.detectors?.map(d => d.edges.length)) === '[0,1,2,3]' &&
+      info.dose_types.length > 0 && info.ray_types.length > 0 && info.sources.length > 0, JSON.stringify(info.detectors?.map(d => d.edges.length)));
+    const last = info.sources.length - 1, ray = info.ray_types.length - 1, energy = info.sources[last].energy_bins.length - 1;
+    const view = async (det, extra = '') => (await req('GET', `/api/dose/view?path=vis.yaml.dose&det=${det}&dose=0&ray=${ray}&src=${last}&energy=${energy}${extra}`)).json;
+    const v0 = await view(0), v1 = await view(1, '&yaxis=log'), v2 = await view(2), v3 = await view(3, '&plane=1&slice=5');
+    check('線量表示: 点検出器は図を消すだけ', v0.kind === 'point' && v0.viewJs === 'slice__hide();');
+    check('線量表示: 1 次元はグラフ', v1.kind === 'graph' && /graph__update\(y, y_label, length, yaxistype\)/.test(v1.graphJs) && /yaxistype = 'log'/.test(v1.graphJs));
+    check('線量表示: 2・3 次元はスライス', v2.kind === 'slice' && v3.kind === 'slice' && /slice__show\(/.test(v3.viewJs) && v3.sliceMax === info.detectors[3].edges[0].number - 1,
+      `${v2.kind} ${v3.kind} ${v3.sliceMax}`);
+    const csv = await req('GET', `/api/dose/csv?path=vis.yaml.dose&det=3&dose=0&ray=${ray}&src=${last}&energy=${energy}`);
+    const n3 = info.detectors[3].edges.reduce((a, e) => a * e.number, 1);
+    check('線量表示: 線量保存（CSV）', csv.status === 200 && csv.text.startsWith('#  Poker: output dose values\n') &&
+      csv.text.trim().split('\n').filter(l => !l.startsWith('#')).length === n3 + 1, `${csv.status}`);
+    check('線量表示: .dose 以外は読まない', (await req('GET', '/api/dose/info?path=vis.yaml')).status === 400);
+    check('線量表示: 作業フォルダの外は拒否', [403, 404].includes((await req('GET', '/api/dose/info?path=../x.dose')).status));
+    check('線量表示: 無い .dose は 404', (await req('GET', '/api/dose/info?path=none.yaml.dose')).status === 404);
+  }
+  // 材料リスト・核種リスト
+  const names = (await req('GET', '/api/names')).json;
+  check('一覧: 材料（名前と密度）・核種の名前', names.materials?.length > 0 && names.materials.every(m => m.name && m.density) &&
+    names.nuclides?.includes('CS137') && names.neutronNuclides?.length > 0, `${names.materials?.length} ${names.nuclides?.length} ${names.materialsError}`);
+
   // 取り消し：大きいデッキで始めてすぐ止める
   const big = path.join(sampleDir, 'ans-ii-1.yaml');
   if (fs.existsSync(big)) {
