@@ -1,0 +1,34 @@
+html, body { height: 100%; margin: 0; font-family: system-ui, "Noto Sans CJK JP", "Yu Gothic UI", sans-serif; font-size: 13px; }
+body { display: flex; flex-direction: column; }
+#toolbar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f3f3f3; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+#toolbar .brand { font-weight: bold; margin-right: 6px; }
+#toolbar .sep { width: 1px; height: 20px; background: #ccc; margin: 0 4px; }
+#toolbar button { padding: 3px 8px; }
+#progress { width: 140px; }
+main { flex: 1; display: flex; min-height: 0; }
+#left { width: 45%; display: flex; flex-direction: column; min-width: 200px; }
+#right { flex: 1; display: flex; flex-direction: column; min-width: 200px; }
+#splitter { width: 5px; cursor: col-resize; background: #ddd; }
+.paneTitle { padding: 3px 8px; background: #fafafa; border-bottom: 1px solid #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dirty { color: #c00; margin-left: 4px; }
+iframe { border: 0; width: 100%; }
+#frameInput { flex: 1; }
+.status { padding: 3px 8px; border-top: 1px solid #ddd; background: #fafafa; }
+.status.ok { color: #176f2c; } .status.warn { color: #8a6100; } .status.err { color: #b00020; } .status.busy { color: #555; }
+#issues { margin: 0; padding: 0 8px; max-height: 25%; overflow: auto; list-style: none; }
+#issues li { padding: 2px 0; cursor: pointer; border-bottom: 1px dotted #ddd; }
+#issues li.error::before { content: "エラー "; color: #b00020; font-weight: bold; }
+#issues li.warning::before { content: "警告 "; color: #8a6100; font-weight: bold; }
+#issues li.info::before { content: "情報 "; color: #555; }
+.tabs { display: flex; gap: 2px; padding: 3px 4px 0; background: #fafafa; border-bottom: 1px solid #ddd; }
+.tabs button { border: 1px solid #ccc; border-bottom: 0; background: #eee; padding: 3px 10px; }
+.tabs button.active { background: #fff; font-weight: bold; }
+.tabPane { display: none; flex: 1; }
+.tabPane.active { display: block; }
+dialog { min-width: 420px; }
+#openList { list-style: none; padding: 0; max-height: 50vh; overflow: auto; }
+#openList li { padding: 3px 6px; cursor: pointer; }
+#openList li:hover { background: #e8f0fe; }
+#openList li.dir::before { content: "📁 "; }
+.path { color: #555; margin-bottom: 4px; }
+menu { display: flex; gap: 6px; justify-content: flex-end; padding: 0; }

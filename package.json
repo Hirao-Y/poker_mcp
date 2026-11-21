@@ -6,16 +6,19 @@
   "type": "module",
   "bin": {
     "poker-mcp": "src/mcp_server_stdio_v4.js",
-    "poker-mcp-http": "src/mcp_server_http.js"
+    "poker-mcp-http": "src/mcp_server_http.js",
+    "poker-gui": "src/poker_gui.js"
   },
   "scripts": {
     "start": "node src/mcp_server_stdio_v4.js",
     "start:http": "node src/mcp_server_http.js",
+    "gui": "node src/poker_gui.js",
     "dev": "nodemon src/mcp_server_stdio_v4.js",
     "prepare": "echo 'NPX ready: npx poker-mcp'",
     "check:manifest": "node scripts/check-manifest-sync.mjs && node scripts/check-manifest-sync.mjs --async && node scripts/check-manifest-sync.mjs --async --no-gui",
     "test:jobs": "node tests/async-jobs.test.mjs",
     "test:gui": "node tests/gui-switch.test.mjs",
+    "test:gui-web": "node tests/gui-web.test.mjs",
     "test:http": "node tests/http-transport.test.mjs",
     "test:pending": "node tests/pending-view.test.mjs",
     "test:cad": "node tests/cad-e2e.test.mjs",

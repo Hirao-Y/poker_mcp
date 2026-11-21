@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>POKER Web GUI</title>
+  <link rel="stylesheet" href="/app/style.css">
+</head>
+<body>
+  <header id="toolbar">
+    <span class="brand">POKER</span>
+    <button id="btnNew" title="新規作成">新規</button>
+    <button id="btnOpen" title="作業フォルダから開く">開く</button>
+    <button id="btnSave" title="上書き保存 (Ctrl+S)">保存</button>
+    <button id="btnSaveAs" title="名前を付けて保存">名前を付けて保存</button>
+    <span class="sep"></span>
+    <button id="btnView" title="図の更新">図の更新</button>
+    <label title="入力を開いたとき・保存したときに図を更新する"><input type="checkbox" id="chkAutoView" checked>自動</label>
+    <select id="selPolygon" title="ポリゴンの細かさ">
+      <option value="low" selected>低ポリゴン</option>
+      <option value="middle">中ポリゴン</option>
+      <option value="high">高ポリゴン</option>
+    </select>
+    <span class="sep"></span>
+    <button id="btnRunAll" title="線量を計算する">実行（全て）</button>
+    <button id="btnRunTrace" title="透視線の追跡だけ行う（線量は計算しない）">実行（透視線のみ）</button>
+    <button id="btnCancel" title="計算を止める" disabled>取り消し</button>
+    <progress id="progress" max="100" value="0" hidden></progress>
+    <span id="progressText"></span>
+    <span class="sep"></span>
+    <select id="selFont" title="文字の大きさ">
+      <option>9</option><option>10</option><option>11</option><option selected>12</option>
+      <option>14</option><option>16</option><option>20</option><option>24</option>
+    </select>
+  </header>
+
+  <main>
+    <section id="left">
+      <div class="paneTitle"><span id="fileName">（新規）</span><span id="dirty"></span></div>
+      <iframe id="frameInput" src="/html/editor/editor.html" title="入力"></iframe>
+      <div id="status" class="status">準備中…</div>
+      <ul id="issues"></ul>
+    </section>
+    <div id="splitter" title="ドラッグで幅を変える"></div>
+    <section id="right">
+      <nav class="tabs">
+        <button data-tab="view" class="active">3D 表示</button>
+        <button data-tab="output">出力（サマリー）</button>
+      </nav>
+      <iframe id="frameView" src="/html/3D_view/view.html" title="3D 表示" class="tabPane active" data-pane="view"></iframe>
+      <iframe id="frameOutput" src="/html/editor/editor.html" title="出力" class="tabPane" data-pane="output"></iframe>
+    </section>
+  </main>
+
+  <dialog id="dlgOpen">
+    <form method="dialog">
+      <h3>作業フォルダから開く</h3>
+      <div class="path" id="openPath"></div>
+      <ul id="openList"></ul>
+      <menu><button value="cancel">閉じる</button></menu>
+    </form>
+  </dialog>
+
+  <dialog id="dlgSaveAs">
+    <form method="dialog" id="formSaveAs">
+      <h3>名前を付けて保存</h3>
+      <p>作業フォルダからの相対パス（.yaml）</p>
+      <input id="saveAsName" size="40" required pattern=".+\.(yaml|yml)$">
+      <menu><button value="cancel" formnovalidate>やめる</button><button value="ok">保存</button></menu>
+    </form>
+  </dialog>
+
+  <script src="/app/app.js"></script>
+</body>
+</html>
