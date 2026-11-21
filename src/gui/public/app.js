@@ -30,6 +30,7 @@ const TEXT = {
     q_discard: '変更が保存されていません。破棄してよいですか？', q_saveBeforeRun: '計算の前に入力を保存します。よろしいですか？',
     sev_error: 'エラー', sev_warning: '警告', sev_info: '情報',
     doseViz: '線量表示', doseTitle: '線量表示：', tabGraph: 'グラフ',
+    dlgTransform: 'transform:回転移動', dlgBody: 'body:立体', dlgZone: 'zone:遮蔽体',
     lblDet: '検出器：', lblDoseType: '線量種類：', lblRay: '線種：', lblSrc: '線源：', lblEnergy: 'エネルギ：', lblSlice: 'スライス面：',
     lblYaxis: 'Y-axis scale :', linear: 'linear', log: 'log', notePoint: '点検出器の線量は可視化できません', saveDose: '線量保存...',
     s_doseLoading: '線量を読み込んでいます…', s_cantDose: '線量を表示できません: {0}', s_noDosePath: '入力を保存して線量計算をしてください',
@@ -58,6 +59,7 @@ const TEXT = {
     q_discard: 'The changes are not saved. Discard them?', q_saveBeforeRun: 'The input will be saved before the calculation. OK?',
     sev_error: 'Error', sev_warning: 'Warning', sev_info: 'Info',
     doseViz: 'Dose viz.', doseTitle: 'Visualize output dose :  ', tabGraph: 'Graph',
+    dlgTransform: 'transform:', dlgBody: 'body:', dlgZone: 'zone:',
     lblDet: 'Detector :', lblDoseType: 'Dose type :', lblRay: 'Radiation :', lblSrc: 'Source :', lblEnergy: 'Energy :', lblSlice: 'Slice surface :',
     lblYaxis: 'Y-axis scale :', linear: 'linear', log: 'log', notePoint: 'Dose at the point detector cannot be visualized.', saveDose: 'Save dose...',
     s_doseLoading: 'Reading doses...', s_cantDose: 'Cannot show the doses: {0}', s_noDosePath: 'Save the input and run the dose calculation first',
@@ -447,7 +449,9 @@ async function saveDoseCsv() {
 // ---- 材料リスト・核種リスト（Form_ListMaterial・Form_ListRI）。名前を入力のカーソル位置に入れる ----
 let namesCache = null;
 const isNeutronDeck = () => /^\s*particle\s*:\s*neutron\b/m.test(getText());
-async function showList(kind) {
+let listPick = null;   // 選ぶ使い方のときの受け取り先（ダイアログから開いたとき）
+async function showList(kind, onPick = null) {
+  listPick = onPick;
   try { namesCache = namesCache || await api('GET', '/api/names'); } catch (e) { alert(e.message); return; }
   const n = namesCache, neutron = isNeutronDeck();
   let cols, rows, note = t('listHint');
@@ -471,13 +475,17 @@ async function showList(kind) {
       if (f && !r.some(c => String(c).toUpperCase().includes(f))) continue;
       const tr = body.insertRow();
       r.forEach(c => { tr.insertCell().textContent = c; });
-      tr.ondblclick = () => insertName(r[0]);
+      tr.ondblclick = () => pickRow(r);
     }
   };
   $('listFilter').value = ''; $('listFilter').oninput = render;
-  $('listFilter').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const first = $('listTable').tBodies[0].rows[0]; if (first) insertName(first.cells[0].textContent); } };
+  $('listFilter').onkeydown = (e) => { if (e.key === 'Enter') { e.preventDefault(); const first = $('listTable').tBodies[0].rows[0]; if (first) pickRow([...first.cells].map(c => c.textContent)); } };
   render();
   $('dlgList').showModal(); $('listFilter').focus();
+}
+function pickRow(row) {
+  if (listPick) { const f = listPick; listPick = null; $('dlgList').close(); f(row); return; }
+  insertName(row[0]);
 }
 function insertName(name) {
   $('dlgList').close();
@@ -505,6 +513,9 @@ async function init() {
   $('btnSaveAs').onclick = () => saveAs();
   $('btnView').onclick = () => updateView();
   $('btnDose').onclick = () => openDose();
+  $('btnDlgTransform').onclick = () => PokerDialogUI.openTransform();
+  $('btnDlgBody').onclick = () => PokerDialogUI.openBody();
+  $('btnDlgZone').onclick = () => PokerDialogUI.openZone().catch(e => alert(e.message));
   $('btnListMat').onclick = () => showList('mat');
   $('btnListRI').onclick = () => showList('ri');
   $('btnRunAll').onclick = () => run('all');

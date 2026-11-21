@@ -48,3 +48,24 @@ menu { display: flex; gap: 6px; justify-content: flex-end; padding: 0; }
 #listTable tbody tr { cursor: pointer; }
 #listTable tbody tr:hover { background: #e8f0fe; }
 .hint { color: #555; font-size: 12px; }
+/* 入力ダイアログ（dialogs.js） */
+dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: auto; }
+.pdlg h3 { margin: 0 0 8px; }
+.pdBody { display: flex; flex-direction: column; gap: 6px; }
+.pdRow { display: flex; gap: 14px; align-items: flex-start; }
+.pdRadios { display: flex; flex-direction: column; gap: 2px; min-width: 210px; }
+.pdRadios .pdGroup { display: block; color: #555; font-size: 12px; margin-top: 4px; }
+.pdGrid { border-collapse: collapse; margin-bottom: 6px; }
+.pdGrid th { font-weight: normal; color: #333; padding: 1px 6px; text-align: left; white-space: nowrap; }
+.pdGrid td { padding: 1px 2px; }
+.pdGrid input.off { background: #bbb; border-color: #aaa; }
+.pdList { border-collapse: collapse; width: 100%; border: 1px solid #ccc; min-height: 3em; outline: none; }
+.pdList th { background: #f3f3f3; text-align: left; padding: 2px 6px; font-weight: normal; }
+.pdList td { padding: 2px 6px; border-top: 1px solid #eee; font-family: monospace; }
+.pdList tr.sel td { background: #cfe0fb; }
+.pdNote { white-space: pre-wrap; color: #444; font-size: 12px; background: #fafafa; border: 1px solid #e3e3e3; padding: 4px 6px; }
+.pdHelp { width: 100%; font-size: 12px; resize: vertical; }
+.pdYaml { width: 100%; margin-top: 8px; font-family: monospace; font-size: 12px; background: #f7f7f7; }
+.pdForm { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; }
+.pdlg menu { margin-top: 8px; }
+.pdlg menu .left { margin-right: auto; }

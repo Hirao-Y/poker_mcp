@@ -19,6 +19,7 @@
     "test:jobs": "node tests/async-jobs.test.mjs",
     "test:gui": "node tests/gui-switch.test.mjs",
     "test:gui-web": "node tests/gui-web.test.mjs",
+    "test:dialogs": "node tests/dialogs-model.test.mjs",
     "test:http": "node tests/http-transport.test.mjs",
     "test:pending": "node tests/pending-view.test.mjs",
     "test:cad": "node tests/cad-e2e.test.mjs",

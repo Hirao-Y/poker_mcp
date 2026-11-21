@@ -15,6 +15,11 @@
     <button id="btnSave" data-t="save"></button>
     <button id="btnSaveAs" data-t="saveAs"></button>
     <span class="sep"></span>
+    <!-- 入力ダイアログ（Windows の GUI の入力ノードのボタン） -->
+    <button id="btnDlgTransform" data-t="dlgTransform"></button>
+    <button id="btnDlgBody" data-t="dlgBody"></button>
+    <button id="btnDlgZone" data-t="dlgZone"></button>
+    <span class="sep"></span>
     <button id="btnView" data-t="redraw"></button>
     <button id="btnDose" data-t="doseViz"></button>
     <label data-t-title="autoTitle"><input type="checkbox" id="chkAutoView" checked><span data-t="auto"></span></label>
@@ -109,6 +114,8 @@
     </form>
   </dialog>
 
+  <script src="/app/dialogs_model.js"></script>
+  <script src="/app/dialogs.js"></script>
   <script src="/app/app.js"></script>
 </body>
 </html>

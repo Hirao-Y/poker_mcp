@@ -16,6 +16,7 @@
 //   GET  /api/dose/view?path=&det=&dose=&ray=&src=&energy=&plane=&slice=&yaxis=  図・グラフの JS │ Form_線量表示。doseFile.js）
 //   GET  /api/dose/csv?…       「線量保存」の CSV                                                ┘
 //   GET  /api/names            材料リスト・核種リスト（libLists.js）
+//   POST /api/parse            {text} → 入力の節を YAML として読んだもの（入力ダイアログが今の中身を読むため）
 //
 // /api はトークン必須。すべての要求で Host・Origin・Sec-Fetch-Site を検査する（security.js）。
 import fs from 'fs';
@@ -26,6 +27,7 @@ import { checkRequestSource, checkToken, resolveInside, PAGE_HEADERS } from './s
 import { validateText, geometryJs, runCui, JobRunner } from './pokerRunner.js';
 import { loadDose, headerView, doseView, doseCsv } from './doseFile.js';
 import { libLists } from './libLists.js';
+import yaml from 'js-yaml';
 
 const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 20 * 1024 * 1024;        // 入力の YAML の上限
@@ -170,6 +172,12 @@ export function createGuiServer(cfg) {
           plane: int('plane'), slice: int('slice'), yaxis: url.searchParams.get('yaxis') === 'log' ? 'log' : 'linear' };
         if (p === '/api/dose/view') return sendJson(res, 200, doseView(d, sel));
         return send(res, 200, doseCsv(d, sel), { 'Content-Type': 'text/csv; charset=utf-8' });
+      }
+
+      if (req.method === 'POST' && p === '/api/parse') {
+        const { text } = await readJson(req);
+        try { return sendJson(res, 200, { doc: yaml.load(String(text ?? '')) ?? null }); }
+        catch (e) { return sendJson(res, 200, { error: String(e.message || e).split('\n')[0] }); }
       }
 
       if (req.method === 'GET' && p === '/api/names') {
