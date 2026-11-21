@@ -372,10 +372,11 @@
     /** 一覧の表示（addDetectorToList） */
     row(d) { return [d.name, d.origin, d.grid === null ? '' : '[' + d.grid.map(g => `{edge: ${g.edge}, number: ${g.number}}`).join(', ') + ']', d.transform ?? '', csBool(d.show)]; }
   }
-  /** 欄の検査（dataGridView_単一操作_CellValidating）：x・y・z は実数、分割数は 1 以上の整数 */
+  /** 欄の検査（dataGridView_単一操作_CellValidating）：x・y・z は実数、number（点の数）は 2 以上 1000 以下の整数 */
   function detectorCellOk(r, c, v) {
     if (c < 3) return netTryParse(v).ok ? null : 'REALINPUT';
-    if (r > 0 && c === 3) return /^\s*[+-]?\d+\s*$/.test(v) && parseInt(v, 10) > 0 && parseInt(v, 10) <= 2147483647 ? null : 'MOREINTINPUT';
+    // number は両端を含む点の数。CUI（DetectorGrid::throw_if_invalid）と同じく 2 以上 1000 以下（Windows も 2026-11-22 に同じにした）
+    if (r > 0 && c === 3) return /^\s*[+-]?\d+\s*$/.test(v) && parseInt(v, 10) >= 2 && parseInt(v, 10) <= 1000 ? null : 'GRIDNUMBER';
     return null;
   }
 

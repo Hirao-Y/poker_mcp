@@ -278,11 +278,11 @@
     yes: 'Yes', no: 'No', updateInput: 'Update Input', btnAdd: 'Add', btnUpdate: 'Update', btnDelete: 'Delete',
     updateValue: 'Value has been changed.\nUpdate it?', updateRow: 'The value of the current row has been changed.  Update it?',
     notExistInList: "Target data does not exist in the list  : '{0}'", existSameNode: 'A node with the same material name has already been defined.',
-    noDuplicate: 'The same name is already defined.', moreInt: 'Enter an integer greater than or equal to {0}.',
+    noDuplicate: 'The same name is already defined.', gridNumber: 'Enter an integer from 2 to 1000 (the number of points including both ends).',
     dupTitle: 'Material name duplication error',
     dtTitle: 'Define detector node', dtPoint: 'point', dt1: '1-dim line', dt2: '2-dim plane', dt3: '3-dim space', dtShow: 'show_path_trace',
     dtTransform: 'transform node (optional) :', dtList: 'List of predefined detectors', dtColName: 'name', dtColOrigin: 'origin', dtColGrid: 'grid',
-    dtColTransform: 'transform', dtColShow: 'show_path_trace', dtDiv: '# divisions',
+    dtColTransform: 'transform', dtColShow: 'show_path_trace', dtDiv: '# points',
     dtNote: "The detector, i.e., the location where the dose is calculated, can be specified as a point, a one-dimensional line, a two-dimensional plane, or a three-dimensional spatial grid.\nIf 'show_path_trace' is unchecked, the verification results showing that there are no undefined areas or overlapping areas on the penetrating line connecting the virtual source point defined in the source node and the grid point defined in the detector node will not be output.",
     buTitle: 'Define buildup factor node', buLayers: '# of layers', buOne: 'one', buTwo: 'two', buThree: 'three', buMaterial: 'Material name of layer(s)',
     buEquiv: 'Equivalent (option) :', buCorr: 'Correction : ', buFinite: 'finite_medium', buSlant: 'slant_penetration', buList: 'List of predefined buildup factors',
@@ -299,9 +299,9 @@
     yes: 'はい', no: 'いいえ', updateInput: '入力を更新', btnAdd: '追加', btnUpdate: '更新', btnDelete: '削除',
     updateValue: '値が変更されています。\n更新しますか？', updateRow: '現在の行の値が変更されています。\n更新しますか？',
     notExistInList: '対象となるデータがリストに存在しません : {0}', existSameNode: '同じ材料名のノードが既に定義されています',
-    noDuplicate: '同じ名前が既に定義されています', moreInt: "'{0}' より大きい整数を指定してください",
+    noDuplicate: '同じ名前が既に定義されています', gridNumber: '2 以上 1000 以下の整数を指定してください（両端を含む点の数）',
     dtTitle: '検出器の追加', dtPoint: '点', dt1: '1次元 (線)', dt2: '2次元 (面)', dt3: '3次元', dtTransform: '回転と平行移動 (オプション)：',
-    dtList: '定義済み検出器リスト', dtColName: '名前', dtColOrigin: '原点', dtColGrid: 'グリッド', dtColTransform: '回転と移動', dtDiv: '分割数',
+    dtList: '定義済み検出器リスト', dtColName: '名前', dtColOrigin: '原点', dtColGrid: 'グリッド', dtColTransform: '回転と移動', dtDiv: '点の数',
     dtNote: '検出器（線量を計算する位置）は、点の他、1次元、2次元、3次元のグリッドを指定することができます。\nshow_path_traceのチェックを外すと、sourceノードで定義した仮想線源点と評価点を結ぶ透過線上に未定義領域・重複領域が無いことの検証結果は出力されません。',
     buTitle: 'ビルドアップ材料の追加', buLayers: '層数', buOne: '単層', buTwo: '2重層', buThree: '3重層', buMaterial: '各層の材料名', buEquiv: '等価材料名 (オプション) :',
     buCorr: '補正 : ', buList: '定義済みビルドアップ係数リスト', buColLayers: '層数', buColMaterial: '各層の材料名', buColEquiv: '等価材料名', buMoveUp: '↑ 上に移動',
@@ -387,7 +387,7 @@
         ...row.map((v, c) => el('td', {}, v === null ? el('input', { disabled: true, size: 8, class: 'off' })
           : numberInput(v, (x) => { m.setCell(rI, c, x); refresh(); }, { numeric: false, check: (x) => {
             const err = D.detectorCellOk(rI, c, x);
-            if (err) alert(err === 'REALINPUT' ? R('realInput').replace('{0}', x) : R('moreInt').replace('{0}', '1'));
+            if (err) alert(err === 'REALINPUT' ? R('realInput').replace('{0}', x) : R('gridNumber'));
             return !err;
           } }))))));
     }

@@ -79,6 +79,8 @@ const checks = [
   ['buildup：閉じるときの検査は FindString と同じく前方一致・大文字小文字を区別しない（iron は Iron で通る）', JSON.stringify(new D.BuildupModel(D.buildupsFromDoc(parse(docs.bu1)).list, lists).closeError()), 'null'],
   ['buildup：閉じるとき一覧に無い材料', JSON.stringify(new D.BuildupModel(D.buildupsFromDoc(parse('buildup_factor:\n  - {material: Gold}\n')).list, lists).closeError()), JSON.stringify({ error: 'NOTEXISTINLIST', detail: 'Gold' })],
   ['buildup：閉じるとき材料の重複（大文字小文字を区別しない）', JSON.stringify(new D.BuildupModel(D.buildupsFromDoc(parse('buildup_factor:\n  - {material: Iron}\n  - {material: IRON}\n')).list, lists).closeError()), JSON.stringify({ error: 'DUPLICATE', detail: 'IRON' })],
+  ['detector の number（両端を含む点の数）：CUI と同じく 2 以上 1000 以下（Windows で確かめた：1・1001・x は不可）',
+    ['1', '2', '1000', '1001', 'x', ' 3 '].map(v => D.detectorCellOk(1, 3, v) ?? 'ok').join(), 'GRIDNUMBER,ok,ok,GRIDNUMBER,GRIDNUMBER,ok'],
   ['isNeutronDeck', [D.isNeutronDeck('particle: neutron\n'), D.isNeutronDeck("particle: 'neutron'  # n\n"), D.isNeutronDeck('particle: photon\n')].join(), 'true,true,false'],
 ];
 for (const [label, got, want] of checks) if (got !== want) { failures++; console.log(`NG ${label}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); }
