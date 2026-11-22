@@ -8,7 +8,7 @@
 //   画面ファイルは既定でインストール先の webgui_html（Web GUI 用。Windows 版の GUI の html とは別）。
 //   POKER_GUI_HTML で別の場所を指定できる。
 //   止めるときは Ctrl+C。
-//   端末への表示は、POKER_GUI_LANG（ja・en）、無ければ LC_ALL・LC_MESSAGES・LANG（Windows ではシステムの言語）が ja なら日本語、それ以外は英語。
+//   端末への表示は、poker_cui のメッセージと同じく POKER_LANG・LC_ALL・LC_MESSAGES・LANG のうち最初に設定されているもの（無ければ、Windows ではシステムの言語）が ja で始まれば日本語、それ以外は英語。
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -17,7 +17,7 @@ import { createGuiServer } from './gui/server.js';
 import { newToken } from './gui/security.js';
 import { pokerInstallDir, pokerCuiInInstallDir, findOnPath, POKER_CUI_NAME } from './utils/paths.js';
 
-const langEnv = process.env.POKER_GUI_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG
+const langEnv = process.env.POKER_LANG || process.env.LC_ALL || process.env.LC_MESSAGES || process.env.LANG
   || (process.platform === 'win32' ? Intl.DateTimeFormat().resolvedOptions().locale : '') || '';
 const JA = /^ja/i.test(langEnv);
 const MSG = JA ? {
