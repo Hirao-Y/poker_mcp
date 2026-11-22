@@ -27,7 +27,7 @@ const TEXT = {
     s_checking: '検査中…', s_cantCheck: '検査できません: {0}', s_cantParse: '検査の結果を読めませんでした: {0}',
     s_errors: '入力にエラー {0} 件{1}（行をクリックすると移動）', s_andWarn: '・警告 {0} 件', s_warns: '入力に警告 {0} 件（計算はできます）',
     s_ok: '入力に問題はありません', s_drawing: '図を作っています…', s_cantDraw: '図を作れません: {0}', s_drawn: '図を更新しました',
-    s_saved: '保存しました: {0}', s_cantSave: '保存できません: {0}', s_new: '新規',
+    s_saved: '保存しました: {0}', s_cantSave: '保存できません: {0}', s_cantOpen: '開けません: {0}', s_new: '新規',
     s_running: '線量を計算しています…', s_tracing: '透視線を追跡しています…', s_cantRun: '計算を始められません: {0}',
     s_done: '計算が終わりました（{0}）', s_aborted: '計算を中止しました', s_failed: '計算に失敗しました（終了コード {0}）: {1}',
     s_cantPoll: '状態を読めません: {0}', lineAt: '{0} 行: ',
@@ -60,7 +60,7 @@ const TEXT = {
     s_checking: 'Checking...', s_cantCheck: 'Cannot check the input: {0}', s_cantParse: 'Cannot read the check result: {0}',
     s_errors: '{0} error(s){1} in the input (click a line to jump)', s_andWarn: ', {0} warning(s)', s_warns: '{0} warning(s) in the input (it can be calculated)',
     s_ok: 'No problem in the input', s_drawing: 'Drawing...', s_cantDraw: 'Cannot draw: {0}', s_drawn: 'Redrawn',
-    s_saved: 'Saved: {0}', s_cantSave: 'Cannot save: {0}', s_new: 'New',
+    s_saved: 'Saved: {0}', s_cantSave: 'Cannot save: {0}', s_cantOpen: 'Cannot open: {0}', s_new: 'New',
     s_running: 'Calculating doses...', s_tracing: 'Tracing ray paths...', s_cantRun: 'Cannot start the calculation: {0}',
     s_done: 'Calculation finished ({0})', s_aborted: 'Calculation aborted', s_failed: 'Calculation failed (exit code {0}): {1}',
     s_cantPoll: 'Cannot read the status: {0}', lineAt: 'line {0}: ',
@@ -97,9 +97,12 @@ const state = {
 })();
 
 // ---- トークン（URL の # の後ろ → sessionStorage。URL からは消す） ----
+// open= は poker-gui に渡した入力ファイル（起動時に開く。URL から消すので、読み直したときは開き直さない。2.3.3 の後）
 (function takeToken() {
   const m = /token=([0-9a-f]{64})/.exec(location.hash);
   if (m) {
+    const o = /[#&]open=([^&]*)/.exec(location.hash);
+    if (o) { try { state.openAtStart = decodeURIComponent(o[1]); } catch { /* 壊れた URL */ } }
     sessionStorage.setItem('pokerGuiToken', m[1]);
     history.replaceState(null, '', location.pathname);
   }
@@ -582,9 +585,15 @@ async function init() {
   window.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save().catch(err => alert(err.message)); } });
   window.addEventListener('beforeunload', (e) => { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
+  // poker-gui に入力ファイルを渡したときは、それを開く（状態の表示は「開く」と同じく検査の結果）。2.3.3 の後
+  if (state.openAtStart) {
+    try { await openFile(state.openAtStart); setFileName(); return; }
+    catch (e) { state.openFailed = t('s_cantOpen', `${state.openAtStart} (${e.message})`); }
+  }
   // 起動直後もひな形を出す（Windows の起動時の NewYaml と同じ。2.3.3 の後）。状態の表示は起動の文のまま
   if (!getText().trim()) { setText(await fetchTemplate()); setDirty(false); }
   setFileName();
+  if (state.openFailed) { setStatus(state.openFailed, 'err'); return; }
   setStatus(t('s_ready', info.version || '', info.workspace) + (info.html ? '' : t('s_noHtml')), info.html ? '' : 'err');
 }
 init();

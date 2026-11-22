@@ -2,6 +2,7 @@
 // poker_gui.js - POKER の Web GUI（ブラウザで使う画面）を起動する
 //
 // 使い方: poker-gui [作業フォルダ]      （既定 ~/poker_work。無ければ作る）
+//        poker-gui <入力.yaml>         （そのフォルダを作業フォルダにして、その入力を開いた状態で始める。2.3.3 の後）
 //   127.0.0.1 の空いているポートで待ち受け、起動ごとの合い言葉（トークン）付きの URL を表示してブラウザを開く。
 //   ブラウザを開かないときは POKER_GUI_NO_BROWSER=1。ポートを決めたいときは POKER_GUI_PORT。
 //   poker_cui と lib の場所は poker-mcp と同じ規則（POKER_CUI_PATH、POKER_INSTALL_PATH、PATH 上の poker_cui）。
@@ -14,6 +15,7 @@ import os from 'os';
 import path from 'path';
 import { spawn } from 'child_process';
 import { createGuiServer } from './gui/server.js';
+import { resolveStartArg } from './gui/startArgs.js';
 import { newToken } from './gui/security.js';
 import { pokerInstallDir, pokerCuiInInstallDir, findOnPath, POKER_CUI_NAME } from './utils/paths.js';
 
@@ -24,21 +26,29 @@ const MSG = JA ? {
   noCui: (n) => `${n} が見つかりません（POKER_CUI_PATH か POKER_INSTALL_PATH を設定するか、PATH に加えてください）`,
   noHtml: (d) => `画面ファイルが見つかりません: ${d}（POKER の webgui_html フォルダ。POKER_GUI_HTML で指定できます）`,
   badPort: (v) => `POKER_GUI_PORT が不正です: ${v}`,
+  NOT_YAML: (a) => `入力ファイル（.yaml）ではありません: ${a}`,
+  NO_FILE: (a) => `入力ファイルがありません: ${a}`,
+  NOT_DIR: (a) => `フォルダではありません: ${a}`,
+  open: '  入力ファイル: ',
   ws: '  作業フォルダ: ', cui: '  poker_cui   : ', html: '  画面ファイル: ', url: '  URL         : ',
   note: '  （この URL は起動ごとに変わります。他の人に渡さないでください。止めるときは Ctrl+C）',
 } : {
   noCui: (n) => `${n} not found (set POKER_CUI_PATH or POKER_INSTALL_PATH, or add it to PATH)`,
   noHtml: (d) => `screen files not found: ${d} (the webgui_html folder of POKER; can be set with POKER_GUI_HTML)`,
   badPort: (v) => `invalid POKER_GUI_PORT: ${v}`,
+  NOT_YAML: (a) => `not an input file (.yaml): ${a}`,
+  NO_FILE: (a) => `input file not found: ${a}`,
+  NOT_DIR: (a) => `not a folder: ${a}`,
+  open: '  Input file  : ',
   ws: '  Workspace   : ', cui: '  poker_cui   : ', html: '  Screen files: ', url: '  URL         : ',
   note: '  (This URL changes every time. Do not give it to others. Press Ctrl+C to stop.)',
 };
 
 function fatal(msg) { console.error(`poker-gui: ${msg}`); process.exit(2); }
 
-const wsArg = process.argv[2] || path.join(os.homedir(), 'poker_work');
-fs.mkdirSync(wsArg, { recursive: true });
-const workspace = fs.realpathSync(wsArg);
+let workspace, openRel;
+try { ({ workspace, open: openRel } = resolveStartArg(process.argv[2], path.join(os.homedir(), 'poker_work'))); }
+catch (e) { fatal(MSG[e.code] ? MSG[e.code](e.arg) : e.message); }
 
 const cui = pokerCuiInInstallDir() || findOnPath(POKER_CUI_NAME);
 if (!cui) fatal(MSG.noCui(POKER_CUI_NAME));
@@ -58,9 +68,11 @@ const token = newToken();
 const server = createGuiServer({ token, workspace, htmlDir: fs.realpathSync(htmlDir), cui });
 server.on('error', (e) => fatal(e.message));
 server.listen(port, '127.0.0.1', () => {
-  const url = `http://127.0.0.1:${server.address().port}/#token=${token}`;
+  // 入力ファイルは # の後ろで画面に渡す（画面はトークンと一緒に URL から消すので、読み直しても開き直さない）
+  const url = `http://127.0.0.1:${server.address().port}/#token=${token}` + (openRel ? `&open=${encodeURIComponent(openRel)}` : '');
   console.log('POKER Web GUI');
   console.log(MSG.ws + workspace);
+  if (openRel) console.log(MSG.open + openRel);
   console.log(MSG.cui + cui);
   console.log(MSG.html + htmlDir);
   console.log(MSG.url + url);
