@@ -7,7 +7,7 @@
 POKER の GUI をブラウザで使う Web GUI。POKER 2.3.3 の Linux 版（`poker233_linux_x86_64_webgui.zip`）に同梱している（同梱の静的リンクの Node で動く）。
 Windows の GUI（POKER.exe）と同じ入力ダイアログ・3D 表示・計算・線量表示・材料／核種リストを持つ。MCP のツールは変えていない。
 
-- 起動：`poker-gui [作業フォルダ]`（`npm run gui`）。127.0.0.1 だけで待ち受け、起動ごとのトークン付きの URL を表示してブラウザを開く。
+- 起動：`poker-gui [作業フォルダ]`（`npm run gui`）。`poker-gui <入力.yaml>` はそのフォルダを作業フォルダにして、その入力を開いた状態で始める。127.0.0.1 だけで待ち受け、起動ごとのトークン付きの URL を表示してブラウザを開く。
   `POKER_GUI_NO_BROWSER=1`・`POKER_GUI_PORT`。端末への表示の言語は poker_cui と同じく `POKER_LANG`・`LC_ALL`・`LC_MESSAGES`・`LANG`。
 - 画面ファイル（3D 表示・エディタ・グラフ）は POKER の `webgui_html` を使う（`POKER_GUI_HTML` で指定。npm のパッケージには入っていない）。
   poker_cui は `--babylon`・`--progress` のある POKER 2.3.3 以降が要る。

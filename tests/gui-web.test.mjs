@@ -14,6 +14,7 @@ import os from 'os';
 import path from 'path';
 import { spawnSync } from 'child_process';
 import { createGuiServer } from '../src/gui/server.js';
+import { resolveStartArg } from '../src/gui/startArgs.js';
 import { newToken } from '../src/gui/security.js';
 import { pokerInstallDir, pokerCuiInInstallDir, findOnPath, POKER_CUI_NAME } from '../src/utils/paths.js';
 
@@ -204,6 +205,24 @@ if (!hasNewCui) {
     for (let i = 0; i < 100; i++) { j = (await req('GET', `/api/jobs/${r.json.id}`)).json; if (j.status !== 'running') break; await new Promise(s => setTimeout(s, 100)); }
     check('取り消せる', (c.json.canceled && j.status === 'canceled') || j.status === 'done', `${c.json.canceled} ${j.status}`);
   }
+}
+
+// poker-gui の引数（2.3.3 の後）：フォルダ／入力ファイル（そのフォルダで開く）／無い .yaml・.yaml 以外は止める
+{
+  const A = path.join(WS, 'args');
+  fs.mkdirSync(A, { recursive: true });
+  fs.writeFileSync(path.join(A, 'in put.yaml'), 'title: t\n');
+  fs.writeFileSync(path.join(A, 'note.txt'), 'x');
+  const real = fs.realpathSync(A);
+  const r1 = resolveStartArg(undefined, path.join(A, 'default_ws'));
+  check('引数なし：既定の作業フォルダを作る', r1.open === null && r1.workspace === path.join(real, 'default_ws') && fs.statSync(r1.workspace).isDirectory());
+  const r2 = resolveStartArg(path.join(A, 'newdir'), '/nonexistent');
+  check('フォルダ：無ければ作る', r2.open === null && r2.workspace === path.join(real, 'newdir') && fs.statSync(r2.workspace).isDirectory());
+  const r3 = resolveStartArg(path.join(A, 'in put.yaml'), '/nonexistent');
+  check('入力ファイル：そのフォルダを作業フォルダにして開く', r3.workspace === real && r3.open === 'in put.yaml', JSON.stringify(r3));
+  const code = (a) => { try { resolveStartArg(a, '/nonexistent'); return 'ok'; } catch (e) { return e.code; } };
+  check('無い .yaml は止める（フォルダを作らない）', code(path.join(A, 'missing.yaml')) === 'NO_FILE' && !fs.existsSync(path.join(A, 'missing.yaml')));
+  check('.yaml 以外のファイルは止める', code(path.join(A, 'note.txt')) === 'NOT_YAML');
 }
 
 server.close();
