@@ -29,7 +29,10 @@ import { loadDose, headerView, doseView, doseCsv } from './doseFile.js';
 import { libLists } from './libLists.js';
 import yaml from 'js-yaml';
 
-const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
+// シェル画面のファイル。1 ファイルの実行ファイル（Node SEA、poker_gui_sea.js）では、実行ファイルに埋めたものを
+// globalThis.__POKER_GUI_PUBLIC（名前 → Buffer の Map）で受け取る。それ以外はこのファイルの隣の public/
+const PUBLIC_FILES = globalThis.__POKER_GUI_PUBLIC instanceof Map ? globalThis.__POKER_GUI_PUBLIC : null;
+const PUBLIC_DIR = PUBLIC_FILES ? null : path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 20 * 1024 * 1024;        // 入力の YAML の上限
 const MAX_READ = 50 * 1024 * 1024;        // 読み出すファイル（サマリーなど）の上限
 const LIST_EXT = new Set(['.yaml', '.yml', '.summary', '.dose', '.txt', '.paths']);
@@ -78,6 +81,14 @@ function serveStatic(res, base, rel) {
   send(res, 200, fs.readFileSync(abs), { 'Content-Type': type });
 }
 
+/** シェル画面のファイルを配る（実行ファイルに埋めたもの、または public/） */
+function servePublic(res, rel) {
+  if (!PUBLIC_FILES) return serveStatic(res, PUBLIC_DIR, rel);
+  const buf = PUBLIC_FILES.get(rel);
+  if (!buf) return fail(res, 404, 'not found');
+  send(res, 200, buf, { 'Content-Type': MIME[path.extname(rel).toLowerCase()] || 'application/octet-stream' });
+}
+
 /**
  * @param {{port:number, token:string, workspace:string, htmlDir:string, cui:string, libDir?:string}} cfg  workspace は realpath 済み
  *   libDir は POKER の lib（既定は poker_cui と同じ場所の lib）
@@ -95,8 +106,8 @@ export function createGuiServer(cfg) {
       const url = new URL(req.url, 'http://local');
       const p = decodeURIComponent(url.pathname);
 
-      if (req.method === 'GET' && (p === '/' || p === '/index.html')) return serveStatic(res, PUBLIC_DIR, 'index.html');
-      if (req.method === 'GET' && p.startsWith('/app/')) return serveStatic(res, PUBLIC_DIR, p.slice(5));
+      if (req.method === 'GET' && (p === '/' || p === '/index.html')) return servePublic(res, 'index.html');
+      if (req.method === 'GET' && p.startsWith('/app/')) return servePublic(res, p.slice(5));
       if (req.method === 'GET' && p.startsWith('/html/')) return serveStatic(res, cfg.htmlDir, p.slice(6));
       if (!p.startsWith('/api/')) return fail(res, 404, 'not found');
 
