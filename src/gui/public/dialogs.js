@@ -13,7 +13,7 @@
     en: {
       ok: 'Add node to Update input', okBody: 'Add to input', cancel: 'Cancel', help: 'Help', block: 'Block style', name: 'Name :',
       accessWeb: 'Access to the external website?', realInput: 'Enter a real number: ‘{0}’', notItemList: 'No item in the list.',
-      rotateLengthZero: 'The length of the axis of rotation is zero.', nonNegativeReal: 'Enter a non-negative real number.', noEmpty: 'No blanks allowed.',
+      rotateLengthZero: 'The length of the axis of rotation is zero.', nonNegativeReal: 'Enter a non-negative real number.', noEmpty: 'No blanks allowed.', invalidName: "The name '{0}' cannot be used. Use only letters, digits, '_' and '-'.",
       parseError: 'zone: deseriarization error',
       // transform
       trTitle: 'Add transform node', trX: 'rotate around X-axis', trY: 'rotate around Y-axis', trZ: 'rotate around Z-axis', trAxis: 'rotation axis/angle',
@@ -48,7 +48,7 @@
     ja: {
       ok: '入力に追加', okBody: '入力に追加', cancel: 'キャンセル', help: 'ヘルプ', block: 'ブロック形式', name: '名前：',
       accessWeb: '外部サイトにオンライン接続して良いですか？', realInput: "実数を指定してください：'{0}'", notItemList: 'リストに項目が有りません',
-      rotateLengthZero: '回転軸の長さがゼロです', nonNegativeReal: '非負の実数を入力してください', noEmpty: '空白は許されません',
+      rotateLengthZero: '回転軸の長さがゼロです', nonNegativeReal: '非負の実数を入力してください', noEmpty: '空白は許されません', invalidName: "名前 '{0}' は使えません。半角の英数字、_、- で書いてください",
       trTitle: '回転と平行移動の追加', trX: 'x軸周りの回転', trY: 'y軸周りの回転', trZ: 'z軸周りの回転', trAxis: '回転軸と角度', trMatrix: '回転行列',
       trTranslate: '平行移動のみ', trRpy: 'Z-Y-Xオイラー角(=ロール・ピッチ・ヨー角)', trZxz: 'Z-X-Zオイラー角', trXyz: 'X-Y-Zオイラー角',
       trAddOp: '操作を追加', trColOp: '操作', trColValue: '値',
@@ -177,7 +177,7 @@
       el('label', {}, blk, ' ' + R('block')));
     const f = frame(R('trTitle'), body, {
       helpAnchor: 'guiinput/#0-toc-title',
-      ok: () => { if (m.closeError()) { alert(R('notItemList')); return false; } addToInput('transform', m.yaml); return true; },
+      ok: () => { const ce = m.closeError(); if (ce) { alert(ce === 'INVALIDNAME' ? R('invalidName').replace('{0}', m.name) : R('notItemList')); return false; } addToInput('transform', m.yaml); return true; },
     });
     const refresh = () => f.setYaml(m.yaml);
     renderGrid(); renderOps(); refresh();
@@ -211,7 +211,7 @@
       el('div', { class: 'pdRow' }, radios, el('div', {}, grid, note(R('bdUnitNote')), help)),
       el('label', {}, R('bdTransform') + ' ', trInp), note(R('bdTransformHint')),
       el('label', {}, el('input', { type: 'checkbox', onchange: (e) => { m.block = e.target.checked; refresh(); } }), ' ' + R('block')));
-    const f = frame(R('bdTitle'), body, { okLabel: R('okBody'), helpAnchor: 'guiinput/#1-toc-title', ok: () => { addToInput('body', m.yaml); return true; } });
+    const f = frame(R('bdTitle'), body, { okLabel: R('okBody'), helpAnchor: 'guiinput/#1-toc-title', ok: () => { if (m.closeError()) { alert(R('invalidName').replace('{0}', m.name)); return false; } addToInput('body', m.yaml); return true; } });
     const refresh = () => f.setYaml(m.yaml);
     renderGrid(); refresh();
     f.dlg.showModal(); nameInp.focus();
@@ -366,7 +366,7 @@
     const radios = KINDS.map((k, i) => el('input', { type: 'radio', name: 'dtKind', onchange: () => { m.setKind(i); render(); } }));
     nameInp.addEventListener('change', () => {
       const err = m.setName(nameInp.value);
-      if (err) { alert(R(err === 'NOEMPTYVALUE' ? 'noEmpty' : 'noDuplicate')); nameInp.value = m.editor.name; nameInp.focus(); }
+      if (err) { alert(err === 'INVALIDNAME' ? R('invalidName').replace('{0}', nameInp.value) : R(err === 'NOEMPTYVALUE' ? 'noEmpty' : 'noDuplicate')); nameInp.value = m.editor.name; nameInp.focus(); }
       refresh();
     });
     const list = listTable([R('dtColName'), R('dtColOrigin'), R('dtColGrid'), R('dtColTransform'), R('dtColShow')], (i) => { m.select(i); render(); });
@@ -537,7 +537,7 @@
     UNIFORMPHI: 'For phi, enter an integer of 2 or more (with 1, all source points are placed on one side, at phi = 180 degrees).', POSREALINPUT: 'Enter a positive real number: ‘{0}’',
     LESSPOSREALINPUT: 'Enter a positive real number less than ‘{0}’.', MOREPOSREALINPUT: 'Enter a positive real number greater than ‘{0}’.',
     RINAMEINPUT: 'Enter RI name.', FIRSTALPHABET: 'The first letter must begin with a letter of the alphabet.', NOMOREROWDELETE: 'No more lines can be deleted.',
-    NOEMPTYVALUE: 'No blanks allowed.', NODUPLICATE: 'The same name is already defined.', ZEROTOONEREAL: 'Enter a real number between 0 and 1.',
+    NOEMPTYVALUE: 'No blanks allowed.', INVALIDNAME: "The name '{0}' cannot be used. Use only letters, digits, '_' and '-'.", NODUPLICATE: 'The same name is already defined.', ZEROTOONEREAL: 'Enter a real number between 0 and 1.',
     LESSPREVIOUS: 'Change the previous value to a value less than {0}.', NUMENDPOINT: 'Specify two or more segments for end_point.', NOTEMPTYCELL: 'Fill in the blank cell : {0}',
     NUMWEIGHT: 'The number of elements in weight must be equal to the number of segments in end_point minus 1.',
     INVALIDHEADERRA: 'Radioactivity column not readable from file header.\nCheck data format of the file.',
@@ -562,7 +562,7 @@
     UNIFORMPHI: 'phi は 2 以上の整数を指定してください（1 では線源点が φ=180° の片側にだけ置かれます）', POSREALINPUT: "正の実数を指定してください：'{0}'",
     LESSPOSREALINPUT: "'{0}' より小さい正の実数を指定してください", MOREPOSREALINPUT: "'{0}' より大きい正の実数を指定してください",
     RINAMEINPUT: '核種名を指定してください', FIRSTALPHABET: '最初の文字はアルファベットで始めてください', NOMOREROWDELETE: 'これ以上行を削除できません',
-    NOEMPTYVALUE: '空白は許されません', NODUPLICATE: '同じ名前が既に定義されています', ZEROTOONEREAL: '0～1の間の実数を指定してください',
+    NOEMPTYVALUE: '空白は許されません', INVALIDNAME: "名前 '{0}' は使えません。半角の英数字、_、- で書いてください", NODUPLICATE: '同じ名前が既に定義されています', ZEROTOONEREAL: '0～1の間の実数を指定してください',
     LESSPREVIOUS: '1つ前の値を{0}より小さい値にしてください', NUMENDPOINT: 'end_pointの区分点数は2点以上指定してください', NOTEMPTYCELL: '空欄を埋めてください：{0}',
     NUMWEIGHT: 'weightの要素数は[end_pointの区分点数-1]にしてください',
     INVALIDHEADERRA: 'ファイルヘッダから放射能カラムを読み取れません。\nファイルのデータフォーマットを確認してください',

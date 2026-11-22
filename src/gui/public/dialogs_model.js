@@ -98,6 +98,9 @@
       default: return [['0', '0', '0']];
     }
   }
+  /** 名前の欄の検査（Windows の NameRule、CUI の YAMLInput::throw_if_invalid_name と同じ）：前後の空白を除いて英数字・_・- だけ（2.3.3） */
+  function nameOk(name) { const t = String(name ?? '').trim(); return t.length > 0 && /^[A-Za-z0-9_-]+$/.test(t); }
+
   class TransformModel {
     constructor(name) { this.name = name; this.kind = 'x'; this.grid = transformGrid('x'); this.ops = []; this.block = 'Unchecked'; }
     setKind(kind) { this.kind = kind; this.grid = transformGrid(kind); }
@@ -144,7 +147,7 @@
       return `  - name: ${this.name}${NL}    operation:${NL}` + yaml;
     }
     /** 閉じるときの検査（Form_追加_回転と平行移動_FormClosing） */
-    closeError() { return this.ops.length < 1 ? 'NOTITEMLIST' : null; }
+    closeError() { if (this.ops.length < 1) return 'NOTITEMLIST'; if (!nameOk(this.name)) return 'INVALIDNAME'; return null; }
   }
 
   // ===================================================================================
@@ -165,6 +168,8 @@
   };
   class BodyModel {
     constructor(name) { this.name = name; this.transform = ''; this.block = false; this.setType('BOX'); }
+    /** 閉じるときの検査（2.3.3：名前） */
+    closeError() { return nameOk(this.name) ? null : 'INVALIDNAME'; }
     setType(type) { this.type = type; this.grid = BODY_TYPES[type].rows.map(([h, v]) => ({ header: h, values: [...v] })); }
     get yaml() {
       const elements = [`name: ${this.name}`, `type: ${this.type}`];
@@ -288,6 +293,7 @@
     /** 名前の欄の検査（textBox_Name_Validating）。だめなら 'NOEMPTYVALUE' / 'NODUPLICATE' */
     setName(v) {
       if (v.length <= 0) return 'NOEMPTYVALUE';
+      if (!nameOk(v)) return 'INVALIDNAME';
       if (this.list.some(d => d.name === v)) return 'NODUPLICATE';
       this.editor.name = v; this.dirty = true; return null;
     }
@@ -827,6 +833,7 @@
     /** 名前（textBox_Name_Validating）：空・一覧の名前と同じはだめ */
     setName(v) {
       if (v.length <= 0) return { error: 'NOEMPTYVALUE' };
+      if (!nameOk(v)) return { error: 'INVALIDNAME', args: [v] };
       if (this.list.some(s => s.name === v)) return { error: 'NODUPLICATE' };
       this.editor.name = v; this.dirty = true; return null;
     }
@@ -1155,7 +1162,7 @@
     }
   }
 
-  const api = { fmtG, fmtNet, fmtE, S_TYPES, DIV_TYPES, GEO_ROWS, DIV_ROWS, angleFromUnit, sourcesFromDoc, SourceModel, ManualModel, NL, netTryParse, findNode, abstractNode, addNode, deleteNode, nameCandidate,
+  const api = { nameOk, fmtG, fmtNet, fmtE, S_TYPES, DIV_TYPES, GEO_ROWS, DIV_ROWS, angleFromUnit, sourcesFromDoc, SourceModel, ManualModel, NL, netTryParse, findNode, abstractNode, addNode, deleteNode, nameCandidate,
     TransformModel, transformGrid, T_OPS, BodyModel, BODY_TYPES, ZoneModel, ATMOSPHERE, VOID,
     detectorsFromDoc, DetectorModel, detectorCellOk, buildupsFromDoc, BuildupModel,
     isNeutronDeck, readCorrection, writeCorrection, NeutronCorrectionModel };
