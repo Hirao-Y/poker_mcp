@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>POKER Web GUI</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/app/style.css">
+</head>
+<body>
+  <!-- 表示名は app.js の TEXT（最新の POKER GUI の表示名に合わせる。ブラウザの言語が日本語なら日本語、それ以外は英語） -->
+  <header id="toolbar">
+    <span class="brand">POKER</span>
+    <button id="btnNew" data-t="new"></button>
+    <button id="btnOpen" data-t="open"></button>
+    <button id="btnSave" data-t="save"></button>
+    <button id="btnSaveAs" data-t="saveAs"></button>
+    <span class="sep"></span>
+    <!-- 入力ダイアログ（Windows の GUI の入力ノードのボタン） -->
+    <button id="btnDlgTransform" data-t="dlgTransform"></button>
+    <button id="btnDlgBody" data-t="dlgBody"></button>
+    <button id="btnDlgZone" data-t="dlgZone"></button>
+    <button id="btnDlgSource" data-t="dlgSource"></button>
+    <button id="btnDlgDetector" data-t="dlgDetector"></button>
+    <button id="btnDlgBuildup" data-t="dlgBuildup"></button>
+    <span class="sep"></span>
+    <button id="btnView" data-t="redraw"></button>
+    <button id="btnDose" data-t="doseViz"></button>
+    <label data-t-title="autoTitle"><input type="checkbox" id="chkAutoView" checked><span data-t="auto"></span></label>
+    <select id="selPolygon" data-t-title="polygonTitle">
+      <option value="high" data-t="polyHigh"></option>
+      <option value="middle" data-t="polyMiddle"></option>
+      <option value="low" data-t="polyLow" selected></option>
+    </select>
+    <span class="sep"></span>
+    <button id="btnRunAll" data-t="doseCalc"></button>
+    <button id="btnRunTrace" data-t="rayPath"></button>
+    <button id="btnCancel" data-t="abort" disabled></button>
+    <progress id="progress" max="100" value="0" hidden></progress>
+    <span id="progressText"></span>
+    <span class="sep"></span>
+    <button id="btnListMat" data-t="listMat"></button>
+    <button id="btnListRI" data-t="listRI"></button>
+    <span class="sep"></span>
+    <select id="selFont" data-t-title="fontTitle">
+      <option>9</option><option>10</option><option>11</option><option selected>12</option>
+      <option>14</option><option>16</option><option>20</option><option>24</option>
+    </select>
+  </header>
+
+  <main>
+    <section id="left">
+      <div class="paneTitle"><span id="fileName"></span><span id="dirty"></span></div>
+      <iframe id="frameInput" src="/html/editor/editor.html" data-t-title="input"></iframe>
+      <div id="status" class="status"></div>
+      <ul id="issues"></ul>
+    </section>
+    <div id="splitter"></div>
+    <section id="right">
+      <nav class="tabs">
+        <button data-tab="view" class="active" data-t="tab3d"></button>
+        <button data-tab="output" data-t="tabOutput"></button>
+        <button data-tab="graph" data-t="tabGraph" hidden></button>
+      </nav>
+      <iframe id="frameView" src="/html/viewer3d/viewer3d.html" class="tabPane active" data-pane="view" data-t-title="tab3d"></iframe>
+      <iframe id="frameOutput" src="/html/editor/editor.html" class="tabPane" data-pane="output" data-t-title="tabOutput"></iframe>
+      <iframe id="frameGraph" src="/html/graph/graph.html" class="tabPane" data-pane="graph" data-t-title="tabGraph"></iframe>
+    </section>
+  </main>
+
+  <dialog id="dlgOpen">
+    <form method="dialog">
+      <h3 data-t="openTitle"></h3>
+      <div class="path" id="openPath"></div>
+      <ul id="openList"></ul>
+      <menu><button value="cancel" data-t="close"></button></menu>
+    </form>
+  </dialog>
+
+  <dialog id="dlgSaveAs">
+    <form method="dialog">
+      <h3 data-t="saveAs"></h3>
+      <p data-t="saveAsHint"></p>
+      <input id="saveAsName" size="40" required pattern=".+\.(yaml|yml)$">
+      <menu><button value="cancel" formnovalidate data-t="cancel"></button><button value="ok" data-t="saveAsOk"></button></menu>
+    </form>
+  </dialog>
+
+  <!-- 線量表示（Windows の GUI の Form_線量表示）。図・グラフを見ながら操作できるよう、モーダルにしない -->
+  <dialog id="dlgDose">
+    <div class="dlgHead"><span id="doseTitle"></span><button id="doseClose" class="x" title="×">×</button></div>
+    <div id="doseLoading" data-t="s_doseLoading"></div>
+    <div class="doseGrid">
+      <label for="selDet" data-t="lblDet"></label><select id="selDet"></select>
+      <label for="selDoseType" data-t="lblDoseType"></label><select id="selDoseType"></select>
+      <label for="selRay" data-t="lblRay"></label><select id="selRay"></select>
+      <label for="selSrc" data-t="lblSrc"></label><select id="selSrc"></select>
+      <label for="selEnergy" data-t="lblEnergy"></label><select id="selEnergy"></select>
+      <label class="slice" for="selPlane" data-t="lblSlice"></label>
+      <span class="slice"><select id="selPlane"><option value="0">edge 1-2</option><option value="1">edge 2-3</option><option value="2">edge 3-1</option></select>
+        <input type="range" id="rngSlice" min="0" max="0" value="0"> <span id="sliceNo"></span></span>
+      <span class="yaxis" data-t="lblYaxis"></span>
+      <span class="yaxis"><label><input type="radio" name="yaxis" value="linear" checked><span data-t="linear"></span></label>
+        <label><input type="radio" name="yaxis" value="log"><span data-t="log"></span></label></span>
+    </div>
+    <p id="doseNote" data-t="notePoint"></p>
+    <menu><button id="btnSaveDose" data-t="saveDose"></button></menu>
+  </dialog>
+
+  <!-- 材料リスト・核種リスト（Form_ListMaterial・Form_ListRI）。ダブルクリックで名前を入力のカーソル位置に入れる -->
+  <dialog id="dlgList">
+    <form method="dialog">
+      <h3 id="listTitle"></h3>
+      <input id="listFilter" data-t-placeholder="filter" size="30">
+      <div class="listWrap"><table id="listTable"><thead></thead><tbody></tbody></table></div>
+      <p class="hint" id="listNote"></p>
+      <menu><button value="cancel" data-t="close"></button></menu>
+    </form>
+  </dialog>
+
+  <script src="/app/dialogs_model.js"></script>
+  <script src="/app/dialogs.js"></script>
+  <script src="/app/app.js"></script>
+</body>
+</html>

@@ -97,6 +97,12 @@ env = { POKER_MCP_HOME = "/home/<username>/poker_mcp_workspace" }
 `equil_*`（崩壊系列・放射平衡）は、同じフォルダの `EquilibriumSheet_CUI`（Linux 版。.NET のインストール不要）を使います。
 Linux で使えないものは `poker_openGui`（POKER.exe は Windows 専用。自動的に外れます）だけです。
 
+### Web GUI（poker-gui）
+
+POKER の GUI をブラウザで使う Web GUI です（Linux 向け。Windows でも動きます）。POKER 2.3.3 の Linux 版の zip に同梱しているので、
+通常はそちらの `./poker-gui` を使ってください（Node.js のインストールは不要）。このリポジトリ（npm では次の版から）では `node src/poker_gui.js [作業フォルダ]`（`npm run gui`）で起動でき、
+POKER のインストール先（`POKER_INSTALL_PATH`）の `poker_cui`（2.3.3 以降）と `webgui_html` を使います。
+
 HTTP 版（別の機械から使う）の設定と、非同期実行・リモート公開の詳細は
 [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバ側）と
 [INTEGRATION_GUIDE](docs/manuals/INTEGRATION_GUIDE.md)（クライアント側）を参照してください。

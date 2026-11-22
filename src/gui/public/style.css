@@ -1,0 +1,89 @@
+html, body { height: 100%; margin: 0; font-family: system-ui, "Noto Sans CJK JP", "Yu Gothic UI", sans-serif; font-size: 13px; }
+body { display: flex; flex-direction: column; }
+#toolbar { display: flex; align-items: center; gap: 6px; padding: 4px 8px; background: #f3f3f3; border-bottom: 1px solid #ccc; flex-wrap: wrap; }
+#toolbar .brand { font-weight: bold; margin-right: 6px; }
+#toolbar .sep { width: 1px; height: 20px; background: #ccc; margin: 0 4px; }
+#toolbar button { padding: 3px 8px; }
+#progress { width: 140px; }
+main { flex: 1; display: flex; min-height: 0; }
+#left { width: 45%; display: flex; flex-direction: column; min-width: 200px; }
+#right { flex: 1; display: flex; flex-direction: column; min-width: 200px; }
+#splitter { width: 5px; cursor: col-resize; background: #ddd; }
+.paneTitle { padding: 3px 8px; background: #fafafa; border-bottom: 1px solid #ddd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+#dirty { color: #c00; margin-left: 4px; }
+iframe { border: 0; width: 100%; }
+#frameInput { flex: 1; }
+.status { padding: 3px 8px; border-top: 1px solid #ddd; background: #fafafa; }
+.status.ok { color: #176f2c; } .status.warn { color: #8a6100; } .status.err { color: #b00020; } .status.busy { color: #555; }
+#issues { margin: 0; padding: 0 8px; max-height: 25%; overflow: auto; list-style: none; }
+#issues li { padding: 2px 0; cursor: pointer; border-bottom: 1px dotted #ddd; }
+#issues li.error::before { content: var(--sev-error); color: #b00020; font-weight: bold; }
+#issues li.warning::before { content: var(--sev-warning); color: #8a6100; font-weight: bold; }
+#issues li.info::before { content: var(--sev-info); color: #555; }
+.tabs { display: flex; gap: 2px; padding: 3px 4px 0; background: #fafafa; border-bottom: 1px solid #ddd; }
+.tabs button { border: 1px solid #ccc; border-bottom: 0; background: #eee; padding: 3px 10px; }
+.tabs button.active { background: #fff; font-weight: bold; }
+.tabPane { display: none; flex: 1; }
+.tabPane.active { display: block; }
+dialog { min-width: 420px; }
+#openList { list-style: none; padding: 0; max-height: 50vh; overflow: auto; }
+#openList li { padding: 3px 6px; cursor: pointer; }
+#openList li:hover { background: #e8f0fe; }
+#openList li.dir::before { content: "📁 "; }
+.path { color: #555; margin-bottom: 4px; }
+menu { display: flex; gap: 6px; justify-content: flex-end; padding: 0; }
+#dlgDose { position: fixed; inset: auto; margin: 0; min-width: 360px; padding: 8px 12px; box-shadow: 0 2px 10px rgba(0,0,0,.25); border: 1px solid #aaa; }
+#dlgDose .dlgHead { cursor: move; user-select: none; display: flex; justify-content: space-between; gap: 8px; font-weight: bold; margin-bottom: 6px; }
+#dlgDose .x { border: 0; background: none; font-size: 16px; cursor: pointer; }
+.doseGrid { display: grid; grid-template-columns: auto 1fr; gap: 4px 8px; align-items: center; }
+.doseGrid select { max-width: 320px; }
+#rngSlice { width: 160px; vertical-align: middle; }
+#doseNote { color: #8a6100; margin: 6px 0 0; }
+#doseLoading { color: #555; margin-bottom: 4px; }
+#dlgList { width: 640px; }
+.listWrap { max-height: 55vh; overflow: auto; border: 1px solid #ddd; margin-top: 6px; }
+#listTable { border-collapse: collapse; width: 100%; }
+#listTable th { position: sticky; top: 0; background: #f3f3f3; text-align: left; padding: 3px 6px; cursor: pointer; }
+#listTable td { padding: 2px 6px; border-top: 1px solid #eee; white-space: nowrap; }
+#listTable tbody tr { cursor: pointer; }
+#listTable tbody tr:hover { background: #e8f0fe; }
+.hint { color: #555; font-size: 12px; }
+/* 入力ダイアログ（dialogs.js） */
+dialog.pdlg { min-width: 560px; max-width: 900px; max-height: 92vh; overflow: auto; font-family: system-ui, 'Segoe UI', 'Yu Gothic UI', sans-serif; }
+.pdlg h3 { margin: 0 0 8px; }
+.pdBody { display: flex; flex-direction: column; gap: 6px; }
+.pdRow { display: flex; gap: 14px; align-items: flex-start; }
+.pdRadios { display: flex; flex-direction: column; gap: 2px; min-width: 210px; }
+.pdRadios .pdGroup { display: block; color: #555; font-size: 12px; margin-top: 4px; }
+.pdGrid { border-collapse: collapse; margin-bottom: 6px; }
+.pdGrid th { font-weight: normal; color: #333; padding: 1px 6px; text-align: left; white-space: nowrap; }
+.pdGrid td { padding: 1px 2px; }
+.pdGrid input.off { background: #bbb; border-color: #aaa; }
+.pdList { border-collapse: collapse; width: 100%; border: 1px solid #ccc; min-height: 3em; outline: none; }
+.pdList th { background: #f3f3f3; text-align: left; padding: 2px 6px; font-weight: normal; }
+.pdList td { padding: 2px 6px; border-top: 1px solid #eee; font-family: monospace; }
+.pdList tr.sel td { background: #cfe0fb; }
+.pdNote { white-space: pre-wrap; color: #444; font-size: 12px; background: #fafafa; border: 1px solid #e3e3e3; padding: 4px 6px; }
+.pdHelp { width: 100%; font-size: 12px; resize: vertical; }
+.pdYaml { width: 100%; margin-top: 8px; font-family: monospace; font-size: 12px; background: #f7f7f7; }
+.pdForm { display: grid; grid-template-columns: auto 1fr; gap: 6px 8px; align-items: center; }
+.pdlg menu { margin-top: 8px; }
+.pdlg menu .left { margin-right: auto; }
+/* 段階 3b：検出器・ビルドアップ係数・中性子の補正 */
+.pdlg fieldset { border: 1px solid #ccc; padding: 2px 6px 6px; margin: 0; }
+.pdlg fieldset legend { color: #333; font-size: 12px; }
+.pdlg fieldset .pdList { max-height: 12em; }
+.pdIndent { margin-left: 22px; display: flex; gap: 4px; align-items: flex-start; }
+.pdPre { white-space: pre-wrap; }
+.pdWarn { color: darkred; }
+.pdGray { color: #777; }
+.pdNc { max-width: 560px; }
+dialog.pdAsk { min-width: 300px; }
+/* 段階 3c：線源 */
+.pdSource { min-width: 760px; }
+.pdTabs { display: flex; gap: 2px; border-bottom: 1px solid #bbb; }
+.pdTabs button { border: 1px solid #bbb; border-bottom: none; background: #eee; padding: 3px 10px; border-radius: 4px 4px 0 0; }
+.pdTabs button.on { background: #fff; font-weight: bold; }
+.pdPage { border: 1px solid #bbb; border-top: none; padding: 6px; min-height: 12em; }
+.pdInv tr.sel th { background: #cfe0fb; }
+.pdManual { min-width: 380px; }
