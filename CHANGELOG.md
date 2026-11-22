@@ -1,5 +1,22 @@
 # CHANGELOG - Poker MCP Server
 
+## [Unreleased]
+
+### Web GUI（`poker-gui`）を追加
+
+POKER の GUI をブラウザで使う Web GUI。POKER 2.3.3 の Linux 版（`poker233_linux_x86_64_webgui.zip`）に同梱している（同梱の静的リンクの Node で動く）。
+Windows の GUI（POKER.exe）と同じ入力ダイアログ・3D 表示・計算・線量表示・材料／核種リストを持つ。MCP のツールは変えていない。
+
+- 起動：`poker-gui [作業フォルダ]`（`npm run gui`）。127.0.0.1 だけで待ち受け、起動ごとのトークン付きの URL を表示してブラウザを開く。
+  `POKER_GUI_NO_BROWSER=1`・`POKER_GUI_PORT`。端末への表示の言語は poker_cui と同じく `POKER_LANG`・`LC_ALL`・`LC_MESSAGES`・`LANG`。
+- 画面ファイル（3D 表示・エディタ・グラフ）は POKER の `webgui_html` を使う（`POKER_GUI_HTML` で指定。npm のパッケージには入っていない）。
+  poker_cui は `--babylon`・`--progress` のある POKER 2.3.3 以降が要る。
+- 守り：Host・Origin・Sec-Fetch-Site の検査（画面のページ遷移だけは他のサイトのリンクからでも通す）、`/api` はトークン必須、作業フォルダの外は読み書きしない。
+- 入力の名前の検査：使えない文字、入力で既に使われている名前（大文字・小文字を区別しない、点線源だけ）と予約名 ATMOSPHERE を止める（Windows の GUI と同じ）。
+- 新規作成・起動時のひな形は画面の言語で `lib/template.yaml`／`lib/template_e.yaml`。
+- 試験：`npm run test:gui-web`（サーバ）、`npm run test:dialogs`（入力ダイアログが Windows の GUI と同じ YAML を作るか）。
+- `src/poker_gui.js`（入口）、`src/gui/`（サーバと画面）。
+
 ## [1.15.0] - 2026-11-19
 
 POKER 2.3.2 の中性子の有限媒質補正（入力の最上位の `neutron_correction`）を MCP から設定できるようにした。
