@@ -248,12 +248,16 @@ function saveAs() {
   });
 }
 
+/** ひな形（画面の言語で template.yaml／template_e.yaml。読めなければ空） */
+async function fetchTemplate() {
+  try { return (await api('GET', `/api/template?lang=${LANG}`)).text || ''; } catch { return ''; }
+}
+
 /** 新規作成（Windows の NewYaml）：線量表示を閉じ、ひな形（lib/template.yaml）を読み込み、3D 表示を読み直す（2.3.3 の後。以前は空にするだけで、3D に前の形が残った） */
 async function newFile() {
   if (!confirmDiscard()) return;
   closeDose();
-  let template = '';
-  try { template = (await api('GET', '/api/template')).text || ''; } catch { /* ひな形が読めなければ空 */ }
+  const template = await fetchTemplate();
   setText(template);
   state.path = null; setFileName(); setDirty(false);
   $('issues').innerHTML = '';
@@ -348,6 +352,17 @@ function setFont(size) {
 (function restoreFont() {
   let v = null; try { v = localStorage.getItem('pokerGuiFontSize'); } catch { /* 使えない環境 */ }
   if (v && [...$('selFont').options].some(o => o.value === v)) $('selFont').value = v;
+})();
+// ツールバーのポリゴン数と「自動」も、次に開いたときに同じにする（2.3.3 の後。設定の画面は作らない）
+(function rememberToolbar() {
+  try {
+    const pv = localStorage.getItem('pokerGuiPolygon');
+    if (pv && [...$('selPolygon').options].some(o => o.value === pv)) $('selPolygon').value = pv;
+    const av = localStorage.getItem('pokerGuiAutoView');
+    if (av === '0' || av === '1') $('chkAutoView').checked = av === '1';
+  } catch { /* 使えない環境 */ }
+  $('selPolygon').addEventListener('change', () => { try { localStorage.setItem('pokerGuiPolygon', $('selPolygon').value); } catch { /* 使えない環境 */ } });
+  $('chkAutoView').addEventListener('change', () => { try { localStorage.setItem('pokerGuiAutoView', $('chkAutoView').checked ? '1' : '0'); } catch { /* 使えない環境 */ } });
 })();
 
 // ---- 線量表示（Windows の GUI の Form_線量表示。図・グラフの JS と CSV はサーバ（doseFile.js）が Windows と同じ文字列で作る） ----
@@ -567,6 +582,8 @@ async function init() {
   window.addEventListener('keydown', (e) => { if ((e.ctrlKey || e.metaKey) && e.key === 's') { e.preventDefault(); save().catch(err => alert(err.message)); } });
   window.addEventListener('beforeunload', (e) => { if (state.dirty) { e.preventDefault(); e.returnValue = ''; } });
 
+  // 起動直後もひな形を出す（Windows の起動時の NewYaml と同じ。2.3.3 の後）。状態の表示は起動の文のまま
+  if (!getText().trim()) { setText(await fetchTemplate()); setDirty(false); }
   setFileName();
   setStatus(t('s_ready', info.version || '', info.workspace) + (info.html ? '' : t('s_noHtml')), info.html ? '' : 'err');
 }

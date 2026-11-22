@@ -7,7 +7,7 @@
 //   GET  /api/files?dir=       作業フォルダの中の一覧
 //   GET  /api/file?path=       ファイルを読む（作業フォルダの中だけ）
 //   PUT  /api/file?path=[&create=1]  入力（.yaml / .yml）を保存する（create=1：既にあれば 409 exists。名前を付けて保存の上書きの確認）
-//   GET  /api/template         新規作成のひな形（POKER の lib/template.yaml。無ければ空）
+//   GET  /api/template?lang=   新規作成・起動時のひな形（lang=ja は lib/template.yaml、それ以外は lib/template_e.yaml。無ければもう一方、両方無ければ空）
 //   POST /api/validate         {text} → 検査の結果
 //   POST /api/geometry         {text, polygon} → 3D 表示の JS
 //   POST /api/run              {path, mode: all|trace} → ジョブ
@@ -30,10 +30,8 @@ import { loadDose, headerView, doseView, doseCsv } from './doseFile.js';
 import { libLists } from './libLists.js';
 import yaml from 'js-yaml';
 
-// シェル画面のファイル。1 ファイルの実行ファイル（Node SEA、poker_gui_sea.js）では、実行ファイルに埋めたものを
-// globalThis.__POKER_GUI_PUBLIC（名前 → Buffer の Map）で受け取る。それ以外はこのファイルの隣の public/
-const PUBLIC_FILES = globalThis.__POKER_GUI_PUBLIC instanceof Map ? globalThis.__POKER_GUI_PUBLIC : null;
-const PUBLIC_DIR = PUBLIC_FILES ? null : path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
+// シェル画面のファイル（このファイルの隣の public/）
+const PUBLIC_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), 'public');
 const MAX_BODY = 20 * 1024 * 1024;        // 入力の YAML の上限
 const MAX_READ = 50 * 1024 * 1024;        // 読み出すファイル（サマリーなど）の上限
 const LIST_EXT = new Set(['.yaml', '.yml', '.summary', '.dose', '.txt', '.paths']);
@@ -90,13 +88,8 @@ function serveStatic(res, base, rel) {
   send(res, 200, fs.readFileSync(abs), { 'Content-Type': type });
 }
 
-/** シェル画面のファイルを配る（実行ファイルに埋めたもの、または public/） */
-function servePublic(res, rel) {
-  if (!PUBLIC_FILES) return serveStatic(res, PUBLIC_DIR, rel);
-  const buf = PUBLIC_FILES.get(rel);
-  if (!buf) return fail(res, 404, 'not found');
-  send(res, 200, buf, { 'Content-Type': MIME[path.extname(rel).toLowerCase()] || 'application/octet-stream' });
-}
+/** シェル画面のファイルを配る（public/） */
+const servePublic = (res, rel) => serveStatic(res, PUBLIC_DIR, rel);
 
 /**
  * @param {{port:number, token:string, workspace:string, htmlDir:string, cui:string, libDir?:string}} cfg  workspace は realpath 済み
@@ -166,10 +159,14 @@ export function createGuiServer(cfg) {
       }
 
       if (req.method === 'GET' && p === '/api/template') {
-        const f = path.join(cfg.libDir || path.join(path.dirname(cfg.cui), 'lib'), 'template.yaml');
-        let text = '';
-        try { if (fs.statSync(f).size <= MAX_READ) text = fs.readFileSync(f, 'utf8'); } catch { /* 無ければ空（Windows も同じ） */ }
-        return sendJson(res, 200, { text });
+        // 画面の言語で選ぶ（Windows の Form_MainWindow.TemplatePath と同じ。2.3.3 の後）
+        const lib = cfg.libDir || path.join(path.dirname(cfg.cui), 'lib');
+        const names = url.searchParams.get('lang') === 'en' ? ['template_e.yaml', 'template.yaml'] : ['template.yaml', 'template_e.yaml'];
+        let text = '', file = null;
+        for (const n of names) {
+          try { const f = path.join(lib, n); if (fs.statSync(f).size <= MAX_READ) { text = fs.readFileSync(f, 'utf8'); file = n; break; } } catch { /* 無い */ }
+        }
+        return sendJson(res, 200, { text, file });
       }
 
       if (req.method === 'POST' && p === '/api/validate') {

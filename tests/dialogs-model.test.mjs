@@ -74,15 +74,29 @@ const checks = [
   const full = { transform: [{ name: 'tr1' }], body: [{ name: 'b1' }, { name: ' rpp1 ' }],
     source: [{ name: 's1', type: 'POINT' }, { name: 'line1', type: 'LINE' }], buildup_factor: [{ material: 'Concrete' }], detector: [{ name: 'd1' }] };
   const all = [...D.takenNames(full)].sort().join(',');
-  checks.push(['takenNames（transform・body・点線源・buildup_factor の材料・detector と ATMOSPHERE）', all, 'ATMOSPHERE,Concrete,b1,d1,rpp1,s1,tr1']);
-  checks.push(['takenNames（線源のダイアログは線源の名前を含めない）', [...D.takenNames(full, 'source')].includes('s1'), false]);
-  checks.push(['takenNames（検出器のダイアログは検出器の名前を含めない）', [...D.takenNames(full, 'detector')].includes('d1'), false]);
+  checks.push(['takenNames（transform・body・点線源・buildup_factor の材料・detector と ATMOSPHERE。大文字にそろえる）', all, 'ATMOSPHERE,B1,CONCRETE,D1,RPP1,S1,TR1']);
+  checks.push(['takenNames（線源のダイアログは線源の名前を含めない）', [...D.takenNames(full, 'source')].includes('S1'), false]);
+  checks.push(['takenNames（検出器のダイアログは検出器の名前を含めない）', [...D.takenNames(full, 'detector')].includes('D1'), false]);
   checks.push(['takenNames（入力が読めなければ予約名だけ）', [...D.takenNames(null)].join(','), 'ATMOSPHERE']);
   const bm = new D.BodyModel('rpp1'); bm.taken = D.takenNames(full);
   checks.push(['立体：使われている名前は TAKEN', bm.closeError(), 'TAKEN']);
   bm.name = 'ATMOSPHERE'; checks.push(['立体：ATMOSPHERE は TAKEN', bm.closeError(), 'TAKEN']);
   bm.name = 'line1'; checks.push(['立体：点線源でない線源の名前は使える（CUI と同じ）', bm.closeError(), null]);
   bm.name = 'a b'; checks.push(['立体：使えない文字は INVALIDNAME のまま', bm.closeError(), 'INVALIDNAME']);
+  bm.name = 'RPP1'; checks.push(['立体：大文字・小文字だけ違う名前も TAKEN', bm.closeError(), 'TAKEN']);
+  bm.name = 'Atmosphere'; checks.push(['立体：ATMOSPHERE は大文字・小文字を問わず TAKEN', bm.closeError(), 'TAKEN']);
+  bm.name = 'Line1'; checks.push(['立体：点線源でない線源の名前は大文字・小文字違いでも使える', bm.closeError(), null]);
+  const bn = new D.BodyModel('atmosphere'); checks.push(['立体：taken が無くても ATMOSPHERE は TAKEN', bn.closeError(), 'TAKEN']);
+  // 線源：点線源のときだけ調べる（名前の欄と「更新」）。サンプル bodies.yaml の命名（立体 BOX と体積線源 box）は通す
+  const sm = new D.SourceModel([], { name: 's9', neutron: false, angle: 'radian', defaultNuclide: 'Co60' });
+  sm.taken = D.takenNames(full, 'source');
+  checks.push(['線源（点）：使われている名前（大文字・小文字違い）は TAKEN', (sm.setName('RPP1') || {}).error, 'TAKEN']);
+  sm.setType('BOX');
+  checks.push(['線源（体積）：立体と同じ名前でも通る', sm.setName('rpp1'), null]);
+  sm.add(); sm.setType('POINT'); sm.editor.name = 'TR1'; sm.dirty = true;
+  checks.push(['線源の「更新」：点線源で使われている名前は TAKEN（未更新のまま）', `${sm.register()} ${sm.dirty}`, 'TAKEN true']);
+  sm.editor.name = 'p9';
+  checks.push(['線源の「更新」：使える名前は更新する', `${sm.register()} ${sm.list[sm.cur] && sm.list[sm.cur].name}`, 'null p9']);
   const tm = new D.TransformModel('b1'); tm.taken = D.takenNames(full); tm.setKind('x'); tm.addOperation();
   checks.push(['変換：body の名前は TAKEN', tm.closeError(), 'TAKEN']);
   const dm = new D.DetectorModel([]); dm.taken = D.takenNames(full, 'detector');

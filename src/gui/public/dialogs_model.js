@@ -101,7 +101,7 @@
   /** 名前の欄の検査（Windows の NameRule、CUI の YAMLInput::throw_if_invalid_name と同じ）：前後の空白を除いて英数字・_・- だけ（2.3.3） */
   function nameOk(name) { const t = String(name ?? '').trim(); return t.length > 0 && /^[A-Za-z0-9_-]+$/.test(t); }
   /**
-   * 入力で既に使われている名前（2.3.3 の後。Windows の NameRule.Taken と同じ）。CUI の YAMLInput::throw_if_invalid が
+   * 入力で既に使われている名前（2.3.3 の後。Windows の NameRule.Taken と同じ。大文字にそろえて持ち、大文字・小文字を区別せずに比べる）。CUI の YAMLInput::throw_if_invalid が
    * 重なりを調べる範囲：transform・body・点線源（type: POINT）の name、buildup_factor の material、detector の name。予約名 ATMOSPHERE も。
    * doc は入力全体を値を文字のまま読んだもの（/api/parse の scalars: 'text'）。読めなければ予約名だけ。
    * except：節ごと書き直すダイアログ（'source'・'detector'）は自分の節を含めない（節の中の重なりはダイアログが調べる）
@@ -109,7 +109,7 @@
   function takenNames(doc, except) {
     const s = new Set([ATMOSPHERE]);
     if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return s;
-    const add = (v) => { const t = v === undefined || v === null ? '' : String(v).trim(); if (t) s.add(t); };
+    const add = (v) => { const t = v === undefined || v === null ? '' : String(v).trim().toUpperCase(); if (t) s.add(t); };
     const items = (k) => (Array.isArray(doc[k]) ? doc[k].filter(x => x && typeof x === 'object') : []);
     items('transform').forEach(x => add(x.name));
     items('body').forEach(x => add(x.name));
@@ -118,7 +118,8 @@
     if (except !== 'detector') items('detector').forEach(x => add(x.name));
     return s;
   }
-  const nameTaken = (taken, name) => Boolean(taken) && taken.has(String(name ?? '').trim());
+  // 大文字・小文字は区別しない（CUI の仕様。照合が区別しない所があるので、違いが大文字・小文字だけの名前は危ない）。予約名 ATMOSPHERE は常に
+  const nameTaken = (taken, name) => { const u = String(name ?? '').trim().toUpperCase(); return u === ATMOSPHERE || (Boolean(taken) && taken.has(u)); };
 
   class TransformModel {
     constructor(name) { this.name = name; this.kind = 'x'; this.grid = transformGrid('x'); this.ops = []; this.block = 'Unchecked'; }
@@ -854,7 +855,7 @@
     setName(v) {
       if (v.length <= 0) return { error: 'NOEMPTYVALUE' };
       if (!nameOk(v)) return { error: 'INVALIDNAME', args: [v] };
-      if (nameTaken(this.taken, v)) return { error: 'TAKEN', args: [v] };
+      if (this.editor.type === 'POINT' && nameTaken(this.taken, v)) return { error: 'TAKEN', args: [v] };   // CUI の重複の検査は点線源だけを見る
       if (this.list.some(s => s.name === v)) return { error: 'NODUPLICATE' };
       this.editor.name = v; this.dirty = true; return null;
     }
@@ -965,6 +966,8 @@
     /** 「更新」（btnRegister_Click） */
     register() {
       if (this.cur < 0) return null;
+      // 点線源の名前は、入力で既に使われている名前を使えない（名前の後に種類を点に変えた場合も、ここで止める）。止めたら未更新のまま（Windows と同じ）
+      if (this.editor.type === 'POINT' && nameTaken(this.taken, this.editor.name)) return 'TAKEN';
       this.dirty = false;
       const index = this.cur, s = this.find(index);
       if (!s) return 'NOTEXISTNODE';

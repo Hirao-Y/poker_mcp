@@ -118,6 +118,10 @@ if (!hasNewCui) {
   const list = await req('GET', '/api/files?dir=sub');
   check('一覧に出る', list.json.entries.some(e => e.name === 's.yaml'));
 
+  // 2.3.3 の後：ひな形は画面の言語で選ぶ（ja は template.yaml、en は template_e.yaml）
+  const tja = await req('GET', '/api/template?lang=ja'); const ten = await req('GET', '/api/template?lang=en');
+  check('ひな形：日本語は template.yaml、英語は template_e.yaml', tja.json.file === 'template.yaml' && ten.json.file === 'template_e.yaml' && /^# POKER input yaml template/.test(ten.json.text) && tja.json.text !== ten.json.text,
+    `${tja.json.file} / ${ten.json.file}`);
   const v = await req('POST', '/api/validate', { body: { text: sample } });
   check('検査: サンプルはエラーなし', v.json.result && v.json.result.issues.filter(i => i.severity === 'error').length === 0, JSON.stringify(v.json.result && v.json.result.summary));
   const bad = sample.replace(/^unit:/m, 'unit_typo:');
