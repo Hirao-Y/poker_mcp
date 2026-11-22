@@ -69,6 +69,26 @@ const checks = [
   ['abstractNode（コメント・空行は飛ばす）', D.abstractNode('body', doc), 'body:\r\n  - { name: b1, type: SPH, center: 0 0 0, radius: 1 }\r\n'],
   ['deleteNode（コメントは見出しの前に残す）', D.deleteNode('body', doc).split('\n').slice(3, 6).join('|'), '  # - { name: b9, type: SPH }|body:|'],
 ];
+// 2.3.3 の後：入力で既に使われている名前（CUI の重複の検査と同じ範囲）。Windows の NameRule.Taken と同じ
+{
+  const full = { transform: [{ name: 'tr1' }], body: [{ name: 'b1' }, { name: ' rpp1 ' }],
+    source: [{ name: 's1', type: 'POINT' }, { name: 'line1', type: 'LINE' }], buildup_factor: [{ material: 'Concrete' }], detector: [{ name: 'd1' }] };
+  const all = [...D.takenNames(full)].sort().join(',');
+  checks.push(['takenNames（transform・body・点線源・buildup_factor の材料・detector と ATMOSPHERE）', all, 'ATMOSPHERE,Concrete,b1,d1,rpp1,s1,tr1']);
+  checks.push(['takenNames（線源のダイアログは線源の名前を含めない）', [...D.takenNames(full, 'source')].includes('s1'), false]);
+  checks.push(['takenNames（検出器のダイアログは検出器の名前を含めない）', [...D.takenNames(full, 'detector')].includes('d1'), false]);
+  checks.push(['takenNames（入力が読めなければ予約名だけ）', [...D.takenNames(null)].join(','), 'ATMOSPHERE']);
+  const bm = new D.BodyModel('rpp1'); bm.taken = D.takenNames(full);
+  checks.push(['立体：使われている名前は TAKEN', bm.closeError(), 'TAKEN']);
+  bm.name = 'ATMOSPHERE'; checks.push(['立体：ATMOSPHERE は TAKEN', bm.closeError(), 'TAKEN']);
+  bm.name = 'line1'; checks.push(['立体：点線源でない線源の名前は使える（CUI と同じ）', bm.closeError(), null]);
+  bm.name = 'a b'; checks.push(['立体：使えない文字は INVALIDNAME のまま', bm.closeError(), 'INVALIDNAME']);
+  const tm = new D.TransformModel('b1'); tm.taken = D.takenNames(full); tm.setKind('x'); tm.addOperation();
+  checks.push(['変換：body の名前は TAKEN', tm.closeError(), 'TAKEN']);
+  const dm = new D.DetectorModel([]); dm.taken = D.takenNames(full, 'detector');
+  checks.push(['検出器：変換の名前は TAKEN', dm.setName('tr1'), 'TAKEN']);
+  checks.push(['検出器：新しい名前は通る', dm.setName('d9'), null]);
+}
 for (const [label, got, want] of checks) if (got !== want) { failures++; console.log(`NG ${label}: ${JSON.stringify(got)} ≠ ${JSON.stringify(want)}`); }
 console.log(failures ? `\n${failures} 件失敗` : `\nすべて成功（Windows と比べたシナリオ ${scenarios.length} 件、節の扱い ${checks.length} 件）`);
 process.exit(failures ? 1 : 0);

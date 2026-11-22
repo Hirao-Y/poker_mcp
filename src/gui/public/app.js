@@ -16,7 +16,11 @@ const TEXT = {
     polyHigh: '高', polyMiddle: '中', polyLow: '低',
     doseCalc: '線量計算', rayPath: '透視線のみ', abort: '中止', fontTitle: 'フォントサイズ',
     input: '入力', tab3d: '3D', tabOutput: '出力', newFile: '（新規）',
-    openTitle: '作業フォルダから開く', close: '閉じる', cancel: 'キャンセル', saveAsHint: '作業フォルダからの相対パス（.yaml）',
+    openTitle: '作業フォルダから開く', close: '閉じる', cancel: 'キャンセル', saveAsHint: '作業フォルダからの相対パス（.yaml）', saveAsOk: '保存',
+    q_overwrite: '{0} は既にあります。上書きしますか？',
+    e_EACCES: '書き込む（読む）権限がありません', e_EPERM: '書き込む（読む）権限がありません', e_EROFS: '読み取り専用のファイルシステムです',
+    e_ENOSPC: 'ディスクがいっぱいです', e_EDQUOT: 'ディスクの使用量の上限を超えています', e_EISDIR: 'フォルダです', e_ENOTDIR: 'フォルダがありません',
+    e_ENOENT: 'ファイル（フォルダ）がありません', e_EBUSY: 'ファイルが使用中です', e_ENAMETOOLONG: '名前が長すぎます',
     stage_path: '透視線計算', stage_dose: '線量計算', stage_output: '出力', calculating: '計算中',
     s_preparing: '準備中…', s_noToken: 'トークンがありません。poker-gui が表示した URL を開き直してください。',
     s_noServer: 'サーバに接続できません: {0}', s_ready: 'POKER {0}  作業フォルダ: {1}', s_noHtml: '（画面ファイルがありません）',
@@ -45,7 +49,11 @@ const TEXT = {
     polyHigh: 'High', polyMiddle: 'Medium', polyLow: 'Low',
     doseCalc: 'Dose calc.', rayPath: 'Ray path', abort: 'Abort', fontTitle: 'Font size',
     input: 'Input', tab3d: '3D', tabOutput: 'Output', newFile: '(new)',
-    openTitle: 'Open from the workspace', close: 'Close', cancel: 'Cancel', saveAsHint: 'Path relative to the workspace (.yaml)',
+    openTitle: 'Open from the workspace', close: 'Close', cancel: 'Cancel', saveAsHint: 'Path relative to the workspace (.yaml)', saveAsOk: 'Save',
+    q_overwrite: '{0} already exists. Overwrite it?',
+    e_EACCES: 'Permission denied', e_EPERM: 'Permission denied', e_EROFS: 'Read-only file system',
+    e_ENOSPC: 'No space left on the device', e_EDQUOT: 'Disk quota exceeded', e_EISDIR: 'It is a folder', e_ENOTDIR: 'The folder does not exist',
+    e_ENOENT: 'The file (folder) does not exist', e_EBUSY: 'The file is busy', e_ENAMETOOLONG: 'The name is too long',
     stage_path: 'Penetrating', stage_dose: 'Calculating', stage_output: 'Printing', calculating: 'Calculating',
     s_preparing: 'Preparing...', s_noToken: 'No token. Open the URL shown by poker-gui again.',
     s_noServer: 'Cannot connect to the server: {0}', s_ready: 'POKER {0}  Workspace: {1}', s_noHtml: ' (screen files not found)',
@@ -107,9 +115,11 @@ async function api(method, url, body, { raw = false } = {}) {
   }
   const res = await fetch(url, { method, headers, body: payload, cache: 'no-store' });
   if (!res.ok) {
-    let msg = `${res.status}`;
-    try { msg = (await res.json()).error || msg; } catch { /* 本文なし */ }
-    throw new Error(msg);
+    let msg = `${res.status}`, code;
+    try { const j = await res.json(); msg = j.error || msg; code = j.code; } catch { /* 本文なし */ }
+    // ファイルの読み書きのエラーは code から分かる文言に（2.3.3 の後）
+    if (code && (TEXT[LANG][`e_${code}`] || TEXT.en[`e_${code}`])) msg = t(`e_${code}`);
+    throw Object.assign(new Error(msg), { status: res.status, code });
   }
   return raw ? res.text() : res.json();
 }
@@ -208,9 +218,16 @@ async function openFile(rel) {
   if ($('chkAutoView').checked) updateView();
 }
 
-async function save(rel = state.path) {
+async function save(rel = state.path, { create = false } = {}) {
   if (!rel) return saveAs();
-  await api('PUT', `/api/file?path=${encodeURIComponent(rel)}`, getText());
+  try {
+    await api('PUT', `/api/file?path=${encodeURIComponent(rel)}${create ? '&create=1' : ''}`, getText());
+  } catch (e) {
+    // 名前を付けて保存で既にあるファイル：上書きを確かめる（Windows の保存のダイアログと同じ）。2.3.3 の後
+    if (e.code !== 'EXISTS') throw e;
+    if (!confirm(t('q_overwrite', rel))) return false;
+    await api('PUT', `/api/file?path=${encodeURIComponent(rel)}`, getText());
+  }
   state.path = rel; setFileName(); setDirty(false);
   setStatus(t('s_saved', rel), 'ok');
   if ($('chkAutoView').checked) updateView();
@@ -223,11 +240,27 @@ function saveAs() {
     $('saveAsName').value = state.path || 'new.yaml';
     dlg.onclose = async () => {
       if (dlg.returnValue !== 'ok') return resolve(false);
-      try { resolve(await save($('saveAsName').value.trim())); }
+      const rel = $('saveAsName').value.trim();
+      try { resolve(await save(rel, { create: rel !== state.path })); }
       catch (e) { alert(t('s_cantSave', e.message)); resolve(false); }
     };
     dlg.showModal();
   });
+}
+
+/** 新規作成（Windows の NewYaml）：線量表示を閉じ、ひな形（lib/template.yaml）を読み込み、3D 表示を読み直す（2.3.3 の後。以前は空にするだけで、3D に前の形が残った） */
+async function newFile() {
+  if (!confirmDiscard()) return;
+  closeDose();
+  let template = '';
+  try { template = (await api('GET', '/api/template')).text || ''; } catch { /* ひな形が読めなければ空 */ }
+  setText(template);
+  state.path = null; setFileName(); setDirty(false);
+  $('issues').innerHTML = '';
+  $('frameView').contentWindow.location.reload();   // WinForms の webView2_3D.Reload()
+  selectTab('view');
+  setStatus(t('s_new'));
+  if (template.trim()) validateNow();
 }
 
 async function showOpenDialog(dir = '') {
@@ -512,14 +545,14 @@ async function init() {
   await frameReady($('frameOutput'), w => w.editor && typeof w.setText === 'function');
   setFont($('selFont').value);
 
-  $('btnNew').onclick = () => { if (!confirmDiscard()) return; setText(''); state.path = null; setFileName(); setDirty(false); setStatus(t('s_new')); $('issues').innerHTML = ''; };
+  $('btnNew').onclick = () => newFile().catch(e => alert(e.message));
   $('btnOpen').onclick = () => showOpenDialog().catch(e => alert(e.message));
   $('btnSave').onclick = () => save().catch(e => alert(t('s_cantSave', e.message)));
   $('btnSaveAs').onclick = () => saveAs();
   $('btnView').onclick = () => updateView();
   $('btnDose').onclick = () => openDose();
-  $('btnDlgTransform').onclick = () => PokerDialogUI.openTransform();
-  $('btnDlgBody').onclick = () => PokerDialogUI.openBody();
+  $('btnDlgTransform').onclick = () => PokerDialogUI.openTransform().catch(e => alert(e.message));
+  $('btnDlgBody').onclick = () => PokerDialogUI.openBody().catch(e => alert(e.message));
   $('btnDlgZone').onclick = () => PokerDialogUI.openZone().catch(e => alert(e.message));
   $('btnDlgSource').onclick = () => PokerDialogUI.openSource().catch(e => alert(e.message));
   $('btnDlgDetector').onclick = () => PokerDialogUI.openDetector().catch(e => alert(e.message));

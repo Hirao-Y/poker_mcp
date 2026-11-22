@@ -100,6 +100,25 @@
   }
   /** 名前の欄の検査（Windows の NameRule、CUI の YAMLInput::throw_if_invalid_name と同じ）：前後の空白を除いて英数字・_・- だけ（2.3.3） */
   function nameOk(name) { const t = String(name ?? '').trim(); return t.length > 0 && /^[A-Za-z0-9_-]+$/.test(t); }
+  /**
+   * 入力で既に使われている名前（2.3.3 の後。Windows の NameRule.Taken と同じ）。CUI の YAMLInput::throw_if_invalid が
+   * 重なりを調べる範囲：transform・body・点線源（type: POINT）の name、buildup_factor の material、detector の name。予約名 ATMOSPHERE も。
+   * doc は入力全体を値を文字のまま読んだもの（/api/parse の scalars: 'text'）。読めなければ予約名だけ。
+   * except：節ごと書き直すダイアログ（'source'・'detector'）は自分の節を含めない（節の中の重なりはダイアログが調べる）
+   */
+  function takenNames(doc, except) {
+    const s = new Set([ATMOSPHERE]);
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) return s;
+    const add = (v) => { const t = v === undefined || v === null ? '' : String(v).trim(); if (t) s.add(t); };
+    const items = (k) => (Array.isArray(doc[k]) ? doc[k].filter(x => x && typeof x === 'object') : []);
+    items('transform').forEach(x => add(x.name));
+    items('body').forEach(x => add(x.name));
+    if (except !== 'source') items('source').filter(x => String(x.type ?? '').trim().toUpperCase() === 'POINT').forEach(x => add(x.name));
+    items('buildup_factor').forEach(x => add(x.material));
+    if (except !== 'detector') items('detector').forEach(x => add(x.name));
+    return s;
+  }
+  const nameTaken = (taken, name) => Boolean(taken) && taken.has(String(name ?? '').trim());
 
   class TransformModel {
     constructor(name) { this.name = name; this.kind = 'x'; this.grid = transformGrid('x'); this.ops = []; this.block = 'Unchecked'; }
@@ -147,7 +166,7 @@
       return `  - name: ${this.name}${NL}    operation:${NL}` + yaml;
     }
     /** 閉じるときの検査（Form_追加_回転と平行移動_FormClosing） */
-    closeError() { if (this.ops.length < 1) return 'NOTITEMLIST'; if (!nameOk(this.name)) return 'INVALIDNAME'; return null; }
+    closeError() { if (this.ops.length < 1) return 'NOTITEMLIST'; if (!nameOk(this.name)) return 'INVALIDNAME'; if (nameTaken(this.taken, this.name)) return 'TAKEN'; return null; }
   }
 
   // ===================================================================================
@@ -169,7 +188,7 @@
   class BodyModel {
     constructor(name) { this.name = name; this.transform = ''; this.block = false; this.setType('BOX'); }
     /** 閉じるときの検査（2.3.3：名前） */
-    closeError() { return nameOk(this.name) ? null : 'INVALIDNAME'; }
+    closeError() { return !nameOk(this.name) ? 'INVALIDNAME' : nameTaken(this.taken, this.name) ? 'TAKEN' : null; }
     setType(type) { this.type = type; this.grid = BODY_TYPES[type].rows.map(([h, v]) => ({ header: h, values: [...v] })); }
     get yaml() {
       const elements = [`name: ${this.name}`, `type: ${this.type}`];
@@ -294,6 +313,7 @@
     setName(v) {
       if (v.length <= 0) return 'NOEMPTYVALUE';
       if (!nameOk(v)) return 'INVALIDNAME';
+      if (nameTaken(this.taken, v)) return 'TAKEN';
       if (this.list.some(d => d.name === v)) return 'NODUPLICATE';
       this.editor.name = v; this.dirty = true; return null;
     }
@@ -834,6 +854,7 @@
     setName(v) {
       if (v.length <= 0) return { error: 'NOEMPTYVALUE' };
       if (!nameOk(v)) return { error: 'INVALIDNAME', args: [v] };
+      if (nameTaken(this.taken, v)) return { error: 'TAKEN', args: [v] };
       if (this.list.some(s => s.name === v)) return { error: 'NODUPLICATE' };
       this.editor.name = v; this.dirty = true; return null;
     }
@@ -1162,7 +1183,7 @@
     }
   }
 
-  const api = { nameOk, fmtG, fmtNet, fmtE, S_TYPES, DIV_TYPES, GEO_ROWS, DIV_ROWS, angleFromUnit, sourcesFromDoc, SourceModel, ManualModel, NL, netTryParse, findNode, abstractNode, addNode, deleteNode, nameCandidate,
+  const api = { nameOk, takenNames, nameTaken, fmtG, fmtNet, fmtE, S_TYPES, DIV_TYPES, GEO_ROWS, DIV_ROWS, angleFromUnit, sourcesFromDoc, SourceModel, ManualModel, NL, netTryParse, findNode, abstractNode, addNode, deleteNode, nameCandidate,
     TransformModel, transformGrid, T_OPS, BodyModel, BODY_TYPES, ZoneModel, ATMOSPHERE, VOID,
     detectorsFromDoc, DetectorModel, detectorCellOk, buildupsFromDoc, BuildupModel,
     isNeutronDeck, readCorrection, writeCorrection, NeutronCorrectionModel };

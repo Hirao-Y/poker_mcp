@@ -6,7 +6,8 @@
 //   GET  /api/info             版・作業フォルダ・html の有無
 //   GET  /api/files?dir=       作業フォルダの中の一覧
 //   GET  /api/file?path=       ファイルを読む（作業フォルダの中だけ）
-//   PUT  /api/file?path=       入力（.yaml / .yml）を保存する
+//   PUT  /api/file?path=[&create=1]  入力（.yaml / .yml）を保存する（create=1：既にあれば 409 exists。名前を付けて保存の上書きの確認）
+//   GET  /api/template         新規作成のひな形（POKER の lib/template.yaml。無ければ空）
 //   POST /api/validate         {text} → 検査の結果
 //   POST /api/geometry         {text, polygon} → 3D 表示の JS
 //   POST /api/run              {path, mode: all|trace} → ジョブ
@@ -51,7 +52,15 @@ function send(res, status, body, headers = {}) {
   res.end(body);
 }
 const sendJson = (res, status, obj) => send(res, status, JSON.stringify(obj), { 'Content-Type': 'application/json; charset=utf-8' });
-const fail = (res, status, message) => sendJson(res, status, { error: message });
+const fail = (res, status, message, code) => sendJson(res, status, code ? { error: message, code } : { error: message });
+
+// ファイルの読み書きのエラー（2.3.3 の後）：画面で分かる文言にするため、状態と code を返す（以前は 500 internal error）。
+//   画面（app.js）は code から日本語・英語の文言を作る。絶対パスは返さない。
+const FS_ERRORS = {
+  EACCES: [403, 'permission denied'], EPERM: [403, 'permission denied'], EROFS: [403, 'read-only file system'],
+  ENOSPC: [507, 'no space left on the device'], EDQUOT: [507, 'disk quota exceeded'], EISDIR: [400, 'is a folder'],
+  ENOTDIR: [404, 'folder not found'], ENOENT: [404, 'not found'], EBUSY: [409, 'file is busy'], ENAMETOOLONG: [400, 'name too long'],
+};
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -149,10 +158,18 @@ export function createGuiServer(cfg) {
         if (req.method === 'PUT') {
           if (!WRITE_EXT.has(path.extname(abs).toLowerCase())) return fail(res, 400, 'only .yaml / .yml can be saved');
           const text = await readBody(req);
+          if (url.searchParams.get('create') === '1' && fs.existsSync(abs)) return fail(res, 409, 'exists', 'EXISTS');
           fs.writeFileSync(abs, text, 'utf8');
           return sendJson(res, 200, { saved: path.relative(cfg.workspace, abs).split(path.sep).join('/') });
         }
         return fail(res, 405, 'method not allowed');
+      }
+
+      if (req.method === 'GET' && p === '/api/template') {
+        const f = path.join(cfg.libDir || path.join(path.dirname(cfg.cui), 'lib'), 'template.yaml');
+        let text = '';
+        try { if (fs.statSync(f).size <= MAX_READ) text = fs.readFileSync(f, 'utf8'); } catch { /* 無ければ空（Windows も同じ） */ }
+        return sendJson(res, 200, { text });
       }
 
       if (req.method === 'POST' && p === '/api/validate') {
@@ -209,7 +226,12 @@ export function createGuiServer(cfg) {
       }
       return fail(res, 404, 'not found');
     } catch (e) {
-      const status = e.status || (e.code === 'ENOENT' ? 404 : e instanceof URIError ? 400 : 500);
+      const fe = !e.status && FS_ERRORS[e.code];
+      if (fe) {
+        if (fe[0] !== 404) console.error(`poker-gui: ${e.code}: ${e.message}`);
+        return fail(res, fe[0], fe[1], e.code);
+      }
+      const status = e.status || (e instanceof URIError ? 400 : 500);
       if (status === 500) console.error('poker-gui:', e);
       return fail(res, status, status === 500 ? 'internal error' : e.message);
     }

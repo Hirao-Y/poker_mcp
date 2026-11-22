@@ -41,6 +41,10 @@ export function allowedOrigins(port) {
  */
 export function checkRequestSource(req, port) {
   const host = String(req.headers.host || '').toLowerCase();
+  // 画面の読み込み（アドレス欄・リンクからのページ遷移で GET /）は、他のサイトのリンクから開いても通す（2.3.3 の後）。
+  //   画面そのものに秘密は無く（トークンは URL の # の後ろでサーバには届かない）、/api はトークンと出どころの検査を通らないと使えない。
+  //   iframe に埋めることは frame-ancestors 'self' で防いでいる。Host の検査（DNS rebinding 対策）はこの場合もする。
+  if (isPageNavigation(req)) return allowedHosts(port).includes(host) ? null : `Host not allowed: ${host || '(none)'}`;
   if (!allowedHosts(port).includes(host)) return `Host not allowed: ${host || '(none)'}`;
   const origin = req.headers.origin;
   if (origin !== undefined && !allowedOrigins(port).includes(String(origin).toLowerCase())) {
@@ -51,6 +55,14 @@ export function checkRequestSource(req, port) {
     return `Cross-site request rejected: ${site}`;
   }
   return null;
+}
+
+/** 画面（GET / または /index.html）のページ遷移か。ブラウザが付ける Sec-Fetch-Mode: navigate と Sec-Fetch-Dest: document で見分ける */
+export function isPageNavigation(req) {
+  if (req.method !== 'GET') return false;
+  const p = String(req.url || '').split(/[?#]/)[0];
+  if (p !== '/' && p !== '/index.html') return false;
+  return req.headers['sec-fetch-mode'] === 'navigate' && req.headers['sec-fetch-dest'] === 'document';
 }
 
 /** Authorization: Bearer <token> の検査 */

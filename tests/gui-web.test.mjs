@@ -81,6 +81,28 @@ else console.log('  -- シンボリックリンクの試験は飛ばした（作
 check('.yaml 以外は保存できない（400）', (await req('PUT', '/api/file?path=x.sh', { body: 'echo' })).status === 400);
 check('作業フォルダの外へ保存できない（403）', (await req('PUT', '/api/file?path=' + encodeURIComponent('../x.yaml'), { body: 'a: 1' })).status === 403);
 check('知らない API は 404', (await req('GET', '/api/nothing')).status === 404);
+// 2.3.3 の後：画面の読み込み（ページ遷移）は他のサイトのリンクからでも通す。API・遷移でないもの・知らない Host は今までどおり拒む
+const NAV = { 'Sec-Fetch-Site': 'cross-site', 'Sec-Fetch-Mode': 'navigate', 'Sec-Fetch-Dest': 'document' };
+check('他のサイトのリンクからの画面の読み込みは通る', (await req('GET', '/', { auth: false, headers: NAV })).status === 200);
+check('他のサイトからの画面の読み込みでも知らない Host は 403', (await req('GET', '/', { auth: false, headers: { ...NAV, Host: `evil.example:${port}` } })).status === 403);
+check('他のサイトからの /api はページ遷移の見出しでも 403', (await req('GET', '/api/info', { headers: NAV })).status === 403);
+check('他のサイトからの画面の読み込みでも iframe（Dest: iframe）は 403', (await req('GET', '/', { auth: false, headers: { ...NAV, 'Sec-Fetch-Dest': 'iframe' } })).status === 403);
+check('他のサイトからの /app のファイルは 403', (await req('GET', '/app/app.js', { auth: false, headers: NAV })).status === 403);
+// 2.3.3 の後：名前を付けて保存の上書きの確認（create=1）、書けないときの code
+fs.writeFileSync(path.join(WS, 'exists.yaml'), 'a: 1\n');
+const cr = await req('PUT', '/api/file?path=exists.yaml&create=1', { body: 'a: 2' });
+check('create=1 で既にあるファイルは 409 EXISTS（書かない）', cr.status === 409 && cr.json.code === 'EXISTS' && fs.readFileSync(path.join(WS, 'exists.yaml'), 'utf8') === 'a: 1\n');
+check('create=1 で無いファイルは保存できる', (await req('PUT', '/api/file?path=new1.yaml&create=1', { body: 'a: 3' })).status === 200);
+fs.chmodSync(path.join(WS, 'exists.yaml'), 0o444);
+const ro = await req('PUT', '/api/file?path=exists.yaml', { body: 'a: 4' });
+const isRoot = typeof process.getuid === 'function' && process.getuid() === 0;
+if (isRoot) console.log('  -- 読み取り専用の試験は飛ばした（root）');
+else check('読み取り専用のファイルへの保存は 403 と code（EACCES・EPERM）', ro.status === 403 && ['EACCES', 'EPERM'].includes(ro.json.code) && !/internal/.test(ro.json.error), JSON.stringify(ro.json));
+fs.chmodSync(path.join(WS, 'exists.yaml'), 0o644);
+const nf = await req('GET', '/api/file?path=nothing.yaml');
+check('無いファイルは 404 で、絶対パスを返さない', nf.status === 404 && nf.json.code === 'ENOENT' && !nf.text.includes(os.tmpdir().slice(3)), nf.text);
+const tp = await req('GET', '/api/template');
+check('ひな形の API は 200（文字列を返す）', tp.status === 200 && typeof tp.json.text === 'string');
 
 console.log('2. 働き');
 if (!hasNewCui) {
