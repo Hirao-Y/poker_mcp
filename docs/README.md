@@ -391,6 +391,10 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 
 詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
 
+### v1.16.0
+- MCP のツールは 1.15.0 と同じ。npm には 1.15.0 を出していないので、1.14.0 から上げると 1.15.0 の変更もこの版で入る
+- Web GUI（poker-gui）は POKER の Linux 版（2.3.3 以降）に同梱する形にし、このパッケージからは外した
+
 ### v1.15.0
 - 中性子の有限媒質補正（poker_setNeutronCorrection / poker_getNeutronCorrection）。POKER 2.3.2 以降
 
