@@ -12,7 +12,7 @@ shielding code for gamma rays (and, from POKER 2.3.0, neutrons), and read back t
 
 | | |
 |---|---|
-| 最新版 | 1.15.0 |
+| 最新版 | 1.16.0 |
 | 動作環境 | Windows、Linux（macOS も同じ作りで動く見込み。未確認） |
 | ツール数 | 45（非同期ジョブを有効にすると 48） |
 | 通信 | 標準入出力（`poker-mcp`）、HTTP（`poker-mcp-http`） |
