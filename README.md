@@ -99,9 +99,8 @@ Linux で使えないものは `poker_openGui`（POKER.exe は Windows 専用。
 
 ### Web GUI（poker-gui）
 
-POKER の GUI をブラウザで使う Web GUI です（Linux 向け。Windows でも動きます）。POKER 2.3.3 の Linux 版の zip に同梱しているので、
-通常はそちらの `./poker-gui` を使ってください（Node.js のインストールは不要）。このリポジトリ（npm では次の版から）では `node src/poker_gui.js [作業フォルダ]`（`npm run gui`）で起動でき（入力ファイルを渡すと、そのフォルダで開いた状態で始めます）、
-POKER のインストール先（`POKER_INSTALL_PATH`）の `poker_cui`（2.3.3 以降）と `webgui_html` を使います。
+POKER の GUI をブラウザで使う Web GUI（`poker-gui`）は、POKER の Linux 版（2.3.3 以降の zip）に同梱しています（`./poker-gui`。Node.js のインストールは不要）。
+MCP のツールではないので、poker-mcp（このリポジトリと npm のパッケージ）には含めていません。
 
 HTTP 版（別の機械から使う）の設定と、非同期実行・リモート公開の詳細は
 [ADMIN_GUIDE](docs/manuals/ADMIN_GUIDE.md)（サーバ側）と

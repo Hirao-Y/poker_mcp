@@ -2,7 +2,18 @@
 
 ## [Unreleased]
 
-### Web GUI（`poker-gui`）を追加
+### Web GUI（`poker-gui`）は POKER 本体の側に置く
+
+ブラウザで POKER を使う Web GUI（`poker-gui`）は、POKER 2.3.3 の Linux 版（`poker233_linux_x86_64_webgui.zip`）に同梱して配る。
+開発の間はこのリポジトリ（`src/poker_gui.js`・`src/gui/`）に置いていたが、MCP のツールではなく、POKER の画面ファイル（`webgui_html`）と
+poker_cui がそろわないと動かないので、正本を POKER 側に移し、このリポジトリと npm のパッケージからは外した（npm に出したことはない）。
+MCP のツールは変えていない。
+
+- 外したもの：`src/poker_gui.js`、`src/gui/`、package.json の `bin` の `poker-gui` と `scripts` の `gui`・`test:gui-web`・`test:dialogs`、
+  その試験（`tests/gui-web.test.mjs`・`tests/dialogs-model*.test.mjs`・`tests/fixtures/dialogs_windows*.json`）。
+- それまでの内容は履歴（`ce35d10`〜`0fcd4aa`）に残っている。下はそのときの記録。
+
+### （記録）Web GUI（`poker-gui`）を追加（このリポジトリでの開発の間）
 
 POKER の GUI をブラウザで使う Web GUI。POKER 2.3.3 の Linux 版（`poker233_linux_x86_64_webgui.zip`）に同梱している（同梱の静的リンクの Node で動く）。
 Windows の GUI（POKER.exe）と同じ入力ダイアログ・3D 表示・計算・線量表示・材料／核種リストを持つ。MCP のツールは変えていない。
