@@ -52,7 +52,7 @@
 
 | **メソッド名** | **機能** | **操作タイプ** |
 |---------------|----------|---------------|
-| **poker_proposeTransform** | 回転・移動変換作成 | translate, rotate_around_x/y/z |
+| **poker_proposeTransform** | 回転・移動変換作成 | translate, rotate_around_x/y/z（角度、または {angle, center}）, rotate_by_axis_angle, rotate_by_euler, rotate_by_rpy, rotate_by_matrix（POKER 2.3.4 以降） |
 | **poker_updateTransform** | 変換操作更新 | 複数操作の連続実行対応 |
 | **poker_deleteTransform** | 変換削除 | 依存関係チェック付き |
 

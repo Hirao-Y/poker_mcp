@@ -7,6 +7,10 @@ import { ManifestValidator } from './ManifestValidator.js';
  * YAMLデータのtransformセクション内での名前存在確認と依存関係管理
  */
 export class TransformValidator {
+
+  /** [追加 2026-11-27] POKER 2.3.4 の transform の操作とオイラー角の軸の並び（CUI と同じ） */
+  static OPERATION_TYPES = ['rotate_around_x', 'rotate_around_y', 'rotate_around_z', 'rotate_by_axis_angle', 'rotate_by_euler', 'rotate_by_rpy', 'rotate_by_matrix', 'translate'];
+  static EULER_SEQUENCES = ['xyz', 'xzy', 'yxz', 'yzx', 'zxy', 'zyx', 'xyx', 'xzx', 'yxy', 'yzy', 'zxz', 'zyz'];
   
   /**
    * Transform参照の存在確認
@@ -35,6 +39,14 @@ export class TransformValidator {
 
   /**
    * Transform操作の基本バリデーション
+   * [変更 2026-11-27] POKER 2.3.4 の transform の作り直しに合わせた（CUI の YAMLInput.IO.cpp と同じ操作）:
+   *   rotate_around_x/y/z: 角度、または { angle, center }
+   *   rotate_by_axis_angle: { axis, angle, center? }
+   *   rotate_by_euler: { sequence（12 通り）, angles: "a b c", frame: intrinsic|extrinsic, center? }
+   *   rotate_by_rpy: { roll, pitch, yaw, center? }（R = Rz(yaw)·Ry(pitch)·Rx(roll)）
+   *   rotate_by_matrix: { row_1, row_2, row_3, center? }（正規直交で行列式 +1。鏡映は不可）
+   *   translate: "x y z"
+   *   旧 rotate_by_rpy（3 値）・rotate_by_eulerzxz・rotate_by_eulerxyz は POKER 2.3.4 で廃止
    * @param {Array} operations - 変換操作の配列
    */
   static validateTransformOperations(operations) {
@@ -46,49 +58,91 @@ export class TransformValidator {
       );
     }
 
+    const fail = (msg, field, value) => { throw PokerMcpError.validationError(msg, field, value); };
+    const isObj = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
+    const onlyKeys = (v, keys, required, field) => {
+      if (!isObj(v)) fail(`${field} must be an object`, field, v);
+      for (const k of Object.keys(v)) if (!keys.includes(k)) fail(`${field} has an unknown key '${k}' (allowed: ${keys.join(', ')})`, field, v);
+      for (const k of required) if (v[k] === undefined) fail(`${field}.${k} is required`, `${field}.${k}`, v);
+    };
+    const num = (v, field) => { if (typeof v !== 'number' || !Number.isFinite(v)) fail(`${field} must be a number`, field, v); };
+    const vec = (v, field) => ManifestValidator.validateCoordinateString(v, field);
+    const vec3 = (s) => String(s).trim().split(/\s+/).map(Number);
+    const center = (v, field) => { if (v.center !== undefined) vec(v.center, `${field}.center`); };
+
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i];
-      
+      const f = `operations[${i}]`;
+
       if (!operation || typeof operation !== 'object') {
-        throw PokerMcpError.validationError(
-          `operation[${i}] must be an object`,
-          `operations[${i}]`,
-          operation
-        );
+        fail(`operation[${i}] must be an object`, f, operation);
       }
 
       const keys = Object.keys(operation);
       if (keys.length !== 1) {
-        throw PokerMcpError.validationError(
-          `operation[${i}] must have exactly one key`,
-          `operations[${i}]`,
-          operation
-        );
+        fail(`operation[${i}] must have exactly one key`, f, operation);
       }
 
       const operationType = keys[0];
-      const operationValue = operation[operationType];
+      const v = operation[operationType];
+      const field = `${f}.${operationType}`;
 
       switch (operationType) {
         case 'translate':
-          ManifestValidator.validateCoordinateString(operationValue, `operations[${i}].translate`);
+          vec(v, field);
           break;
-          
+
         case 'rotate_around_x':
         case 'rotate_around_y':
         case 'rotate_around_z':
-          ManifestValidator.validateRotationAngle(operationValue, `operations[${i}].${operationType}`);
+          if (typeof v === 'number') ManifestValidator.validateRotationAngle(v, field);
+          else { onlyKeys(v, ['angle', 'center'], ['angle'], field); ManifestValidator.validateRotationAngle(v.angle, `${field}.angle`); center(v, field); }
           break;
-          
+
+        case 'rotate_by_axis_angle': {
+          onlyKeys(v, ['axis', 'angle', 'center'], ['axis', 'angle'], field);
+          vec(v.axis, `${field}.axis`);
+          if (vec3(v.axis).every(x => x === 0)) fail(`${field}.axis must not be the zero vector`, `${field}.axis`, v.axis);
+          ManifestValidator.validateRotationAngle(v.angle, `${field}.angle`);
+          center(v, field);
+          break;
+        }
+
+        case 'rotate_by_euler': {
+          onlyKeys(v, ['sequence', 'angles', 'frame', 'center'], ['sequence', 'angles', 'frame'], field);
+          const seq = String(v.sequence).trim().toLowerCase();
+          if (!TransformValidator.EULER_SEQUENCES.includes(seq)) fail(`${field}.sequence must be one of ${TransformValidator.EULER_SEQUENCES.join(', ')}`, `${field}.sequence`, v.sequence);
+          if (!['intrinsic', 'extrinsic'].includes(String(v.frame).trim().toLowerCase())) fail(`${field}.frame must be intrinsic or extrinsic`, `${field}.frame`, v.frame);
+          vec(v.angles, `${field}.angles`);
+          center(v, field);
+          break;
+        }
+
+        case 'rotate_by_rpy':
+          onlyKeys(v, ['roll', 'pitch', 'yaw', 'center'], ['roll', 'pitch', 'yaw'], field);
+          for (const k of ['roll', 'pitch', 'yaw']) num(v[k], `${field}.${k}`);
+          center(v, field);
+          break;
+
+        case 'rotate_by_matrix': {
+          onlyKeys(v, ['row_1', 'row_2', 'row_3', 'center'], ['row_1', 'row_2', 'row_3'], field);
+          for (const k of ['row_1', 'row_2', 'row_3']) vec(v[k], `${field}.${k}`);
+          const m = [vec3(v.row_1), vec3(v.row_2), vec3(v.row_3)];
+          const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+          // POKER の CUI と同じ許容（1e-3）で、行の長さが 1・互いに直交・行列式 +1 を確かめる
+          m.forEach((r, k) => { if (Math.abs(1 - Math.sqrt(dot(r, r))) > 1e-3) fail(`${field}.row_${k + 1}: the length must be 1`, `${field}.row_${k + 1}`, v[`row_${k + 1}`]); });
+          if (Math.abs(dot(m[0], m[1])) > 1e-3 || Math.abs(dot(m[0], m[2])) > 1e-3 || Math.abs(dot(m[1], m[2])) > 1e-3) fail(`${field}: the rows must be orthogonal`, field, v);
+          const det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+          if (det < 0) fail(`${field}: the determinant is -1 (a reflection, not a rotation); a rotation matrix must have determinant +1`, field, v);
+          center(v, field);
+          break;
+        }
+
         default:
-          throw PokerMcpError.validationError(
-            `Invalid operation type: ${operationType}. Valid types: translate, rotate_around_x, rotate_around_y, rotate_around_z`,
-            `operations[${i}]`,
-            operationType
-          );
+          fail(`Invalid operation type: ${operationType}. Valid types: ${TransformValidator.OPERATION_TYPES.join(', ')}`, f, operationType);
       }
     }
-    
+
     return true;
   }
 
@@ -101,47 +155,58 @@ export class TransformValidator {
     let hasRotation = false;
     let hasTranslation = false;
     let totalRotationMagnitude = 0;
-    
+
     for (let i = 0; i < operations.length; i++) {
       const operation = operations[i];
       const operationType = Object.keys(operation)[0];
       const operationValue = operation[operationType];
-      
+
       switch (operationType) {
-        case 'translate':
+        case 'translate': {
           hasTranslation = true;
           // 移動量の大きさチェック
-          const [dx, dy, dz] = operationValue.split(/\s+/).map(Number);
+          const [dx, dy, dz] = operationValue.trim().split(/\s+/).map(Number);
           const translationMagnitude = Math.sqrt(dx*dx + dy*dy + dz*dz);
           if (translationMagnitude > 10000) {
             console.warn(`Transform '${transformName}': 非常に大きな移動量です (${translationMagnitude.toFixed(2)})`);
           }
           break;
-          
+        }
+
         case 'rotate_around_x':
         case 'rotate_around_y':
         case 'rotate_around_z':
+        case 'rotate_by_axis_angle': {
           hasRotation = true;
-          totalRotationMagnitude += Math.abs(operationValue);
-          
+          const angle = typeof operationValue === 'number' ? operationValue : operationValue.angle;
+          totalRotationMagnitude += Math.abs(angle);
+          if (operationValue && operationValue.center !== undefined) hasTranslation = true;   // 中心が原点でない回転は位置も動かす
           // 異常な回転角度のチェック
-          if (Math.abs(operationValue) > 360) {
-            console.warn(`Transform '${transformName}': 360度を超える回転角度です (${operationValue}度)`);
+          if (Math.abs(angle) > 360) {
+            console.warn(`Transform '${transformName}': 360度を超える回転角度です (${angle}度)`);
           }
+          break;
+        }
+
+        case 'rotate_by_euler':
+        case 'rotate_by_rpy':
+        case 'rotate_by_matrix':
+          hasRotation = true;
+          if (operationValue && operationValue.center !== undefined) hasTranslation = true;
           break;
       }
     }
-    
+
     // 総回転量のチェック
     if (totalRotationMagnitude > 720) {
       console.warn(`Transform '${transformName}': 総回転量が非常に大きいです (${totalRotationMagnitude.toFixed(1)}度)`);
     }
-    
+
     // Transformの意味チェック
     if (!hasRotation && !hasTranslation) {
       console.warn(`Transform '${transformName}': 回転も移動も含まれていません`);
     }
-    
+
     return {
       hasRotation,
       hasTranslation,
