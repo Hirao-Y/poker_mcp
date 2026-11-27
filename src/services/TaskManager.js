@@ -1632,7 +1632,7 @@ export class TaskManager {
   //|
   //| neutron_correction（中性子の有限媒質補正。POKER 2.3.2 から、v1.15.0）
   //|   中性子のデッキだけに書ける。書かなければ use_geometry_correction（G）・use_finite_medium_correction（F）とも true。
-  //|   F は G と一緒のときだけ働く（G false・F true は POKER の入力エラー）。
+  //|   G（形状補正）と F（有限媒質補正）は独立に指定できる（POKER 2.3.4 から。前は F は G と一緒のときだけ）。
   //|   値を書くときは両方を明示する（入力を見ただけで補正の有無が分かるように）。reset で節を消して既定に戻す。
   //|
   // 確定済みの値に保留中の変更を重ねた neutron_correction（書いていなければ null）
@@ -1672,7 +1672,7 @@ export class TaskManager {
     if (reset === true || !hasValue) {
       await this.dataManager.addPendingChange({ action: 'setNeutronCorrection', data: { reset: true } });
       return {
-        message: '提案: neutron_correction を消す（既定: 体系補正 G・有限媒質補正 F とも true）',
+        message: '提案: neutron_correction を消す（既定: 形状補正 G・有限媒質補正 F とも true）',
         neutron_correction: null,
         effective: { use_geometry_correction: true, use_finite_medium_correction: true }
       };
@@ -1683,29 +1683,14 @@ export class TaskManager {
     const curG = cur.use_geometry_correction !== false;
     const curF = cur.use_finite_medium_correction !== false;
     const newG = g !== undefined ? g : curG;
-    let newF;
-    let note = null;
-    if (f !== undefined) {
-      newF = f;
-    } else if (newG === false) {
-      newF = false;   // F は G と一緒のときだけ働くので、G を切ったら F も切る
-      if (curF) note = 'G を false にしたので F も false にしました（F は G と一緒のときだけ働きます）';
-    } else {
-      newF = curF;
-    }
-    if (newG === false && newF === true) {
-      throw PokerMcpError.validationError(
-        'use_finite_medium_correction（F）は use_geometry_correction（G）と一緒のときだけ使えます。' +
-        'F を true にするなら G も true にしてください', 'neutron_correction',
-        { use_geometry_correction: newG, use_finite_medium_correction: newF });
-    }
+    const newF = f !== undefined ? f : curF;   // POKER 2.3.4: G と F は独立
     const data = { use_geometry_correction: newG, use_finite_medium_correction: newF };
     await this.dataManager.addPendingChange({ action: 'setNeutronCorrection', data });
-    const words = newG ? (newF ? 'G・F とも有効（野外の体系）' : 'G だけ有効（F は切る。部屋の中の体系など）') : 'G・F とも切る（補正なし）';
+    const words = newG ? (newF ? 'G・F とも有効（野外の体系）' : 'G だけ有効（F は切る。部屋の中の体系など）')
+      : (newF ? 'F だけ有効（G は切る。線源を四方から囲む球に近い形の遮蔽体など）' : 'G・F とも切る（補正なし）');
     return {
       message: `提案: neutron_correction: { use_geometry_correction: ${newG}, use_finite_medium_correction: ${newF} }（${words}）`,
-      neutron_correction: data,
-      ...(note ? { note } : {})
+      neutron_correction: data
     };
   }
 
@@ -1717,9 +1702,9 @@ export class TaskManager {
     let note;
     if (particle === 'neutron') {
       const g = !(written && written.use_geometry_correction === false);
-      const f = g && !(written && written.use_finite_medium_correction === false);
+      const f = !(written && written.use_finite_medium_correction === false);   // POKER 2.3.4: G と F は独立
       effective = { use_geometry_correction: g, use_finite_medium_correction: f };
-      note = written ? '書いてある値で計算します（G が false なら F も働きません）'
+      note = written ? '書いてある値で計算します（G と F は独立）'
         : 'neutron_correction を書いていないので既定（G・F とも true、野外の前提）で計算します。' +
           '床・壁・天井を書いた部屋の中の体系では F を false にしてください';
     } else {

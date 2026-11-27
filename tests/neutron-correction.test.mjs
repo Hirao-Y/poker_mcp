@@ -5,10 +5,10 @@
 // 検証すること:
 //   1. 光子のデッキでは設定できない
 //   2. setParticle photon で neutron_correction も消える（光子のデッキに残さない）
-//   3. G false・F true、reset と値の同時指定は止まる
+//   3. reset と値の同時指定、真偽値でない値は止まる（G false・F true は POKER 2.3.4 から書ける）
 //   4. 値は両方を明示して unit の直後に書く。保留中は getNeutronCorrection の pending に出る
 //   5. 計算（POKER 2.3.2 の POKER_CUI）の summary に設定どおりの neutron_correction の行が出る
-//   6. G だけ false にすると F も false になる（note が付く）
+//   6. G だけ false にすると F は今の値のまま（POKER 2.3.4 から G と F は独立）
 //   7. 引数なし（reset）で節を消し、既定（G・F とも true）に戻る
 import fs from 'fs';
 import path from 'path';
@@ -66,7 +66,6 @@ const calls = [
   ['  getNeutronCorrection（光子）', 'poker_getNeutronCorrection', {}, 'ok',
     t => (/"particle": "photon"/.test(t) && /"effective": null/.test(t)) || t.slice(0, 80)],
   ['  setParticle neutron', 'poker_setParticle', { particle: 'neutron' }, 'ok'],
-  ['3 G false・F true', 'poker_setNeutronCorrection', { use_geometry_correction: false, use_finite_medium_correction: true }, 'error'],
   ['3 reset と値の同時指定', 'poker_setNeutronCorrection', { reset: true, use_geometry_correction: true }, 'error'],
   ['3 真偽値でない', 'poker_setNeutronCorrection', { use_geometry_correction: 'yes' }, 'error'],
   ['4 F false', 'poker_setNeutronCorrection', { use_finite_medium_correction: false }, 'ok',
@@ -88,7 +87,7 @@ const calls = [
   ['  getNeutronCorrection', 'poker_getNeutronCorrection', {}, 'ok',
     t => (/"effective": \{\s*"use_geometry_correction": true,\s*"use_finite_medium_correction": false/.test(t) && !/"pending"/.test(t)) || t.slice(0, 160)],
   ['5 計算', 'poker_executeCalculation', { yaml_file: Y, summary_options: { show_total_dose: true } }, 'ok'],
-  ['6 G だけ false', 'poker_setNeutronCorrection', { use_geometry_correction: false }, 'ok',
+  ['6 G だけ false（F は今の false のまま）', 'poker_setNeutronCorrection', { use_geometry_correction: false }, 'ok',
     t => /use_geometry_correction: false, use_finite_medium_correction: false/.test(t) || t.slice(0, 160)],
   ['  applyChanges', 'poker_applyChanges', {}, 'ok',
     (t, y) => { const n = ncLines(y); return (n && /use_geometry_correction: false/.test(n.lines.join('\n')) && /use_finite_medium_correction: false/.test(n.lines.join('\n'))) || '値が違う'; }],
@@ -96,8 +95,10 @@ const calls = [
   ['  applyChanges', 'poker_applyChanges', {}, 'ok', (t, y) => ncLines(y) === null || '消えていない'],
   ['  getNeutronCorrection', 'poker_getNeutronCorrection', {}, 'ok',
     t => (/"neutron_correction": null/.test(t) && /"use_finite_medium_correction": true/.test(t)) || t.slice(0, 160)],
-  ['6 既定（F true）から G だけ false', 'poker_setNeutronCorrection', { use_geometry_correction: false }, 'ok',
-    t => (/use_geometry_correction: false, use_finite_medium_correction: false/.test(t) && /F も false にしました/.test(t)) || t.slice(0, 160)],
+  ['6 既定（F true）から G だけ false（F は true のまま）', 'poker_setNeutronCorrection', { use_geometry_correction: false }, 'ok',
+    t => (/use_geometry_correction: false, use_finite_medium_correction: true/.test(t) && /F だけ有効/.test(t)) || t.slice(0, 160)],
+  ['3 G false・F true を明示（2.3.4 から書ける）', 'poker_setNeutronCorrection', { use_geometry_correction: false, use_finite_medium_correction: true }, 'ok',
+    t => /use_geometry_correction: false, use_finite_medium_correction: true/.test(t) || t.slice(0, 160)],
 ];
 
 const env = { ...process.env, POKER_MCP_HOME: T, POKER_INSTALL_PATH: POKER_DIR,
