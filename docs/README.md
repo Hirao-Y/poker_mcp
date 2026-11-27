@@ -1,4 +1,4 @@
-﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.16.0
+﻿# Poker MCP Server - 放射線遮蔽計算支援ツール v1.17.0
 
 **Claude対応** 放射線遮蔽計算用YAML入力ファイル管理ツール（45 ツール。非同期ジョブ有効時は 48）
 
@@ -390,6 +390,10 @@ obtained separately and licensed separately. FreeCAD も別途入手が必要で
 ## 🔄 更新履歴
 
 詳細は [CHANGELOG.md](../CHANGELOG.md) を参照してください。
+
+### v1.17.0
+- transform の操作を POKER 2.3.4 に合わせた（回転の中心 center、rotate_by_axis_angle、rotate_by_euler、rotate_by_rpy {roll, pitch, yaw}、rotate_by_matrix は行列式 +1 だけ。旧 rpy（3 値）・eulerzxz・eulerxyz は廃止）
+- 中性子の補正（poker_setNeutronCorrection）：形状補正 G と有限媒質補正 F を独立に指定できる（POKER 2.3.4）
 
 ### v1.16.0
 - MCP のツールは 1.15.0 と同じ。npm には 1.15.0 を出していないので、1.14.0 から上げると 1.15.0 の変更もこの版で入る

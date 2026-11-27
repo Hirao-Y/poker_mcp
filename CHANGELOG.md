@@ -1,5 +1,21 @@
 # CHANGELOG - Poker MCP Server
 
+## [1.17.0] - 2026-11-27
+
+POKER 2.3.4 に合わせた版。
+
+### transform の操作（proposeTransform・updateTransform）
+
+- 回転はすべて回転の中心 `center` を持てる（省くと原点）。`rotate_around_x/y/z` は角度か `{angle, center}`。
+- 追加：`rotate_by_axis_angle {axis, angle, center}`、`rotate_by_euler {sequence, angles, frame, center}`（12 通りの軸の並び、intrinsic・extrinsic）。
+- `rotate_by_rpy` は `{roll, pitch, yaw, center}`（R = Rz(yaw)·Ry(pitch)·Rx(roll)）。`rotate_by_matrix` は行列式 +1 だけ（鏡映は止める）。
+- 廃止：旧 `rotate_by_rpy`（3 値）・`rotate_by_eulerzxz`・`rotate_by_eulerxyz`（POKER 2.3.4 でも未知のキーのエラー）。
+- 試験 `tests/transform-ops.test.mjs`（`npm run test:transform`）。
+
+### 中性子の補正（poker_setNeutronCorrection）
+
+- 形状補正 G（`use_geometry_correction`、球体系の核を平板などの形に使う補正）と有限媒質補正 F（`use_finite_medium_correction`、無限媒質の核を有限の厚さに使う補正）を独立に指定できる。G を false にしても F は今の値のまま、G false・F true も書ける（前は F は G と一緒のときだけ）。POKER 2.3.4 が両方を独立に扱う。
+
 ## [1.16.0] - 2026-11-23
 
 npm には 1.15.0 を出していないので、npm で 1.14.0 から上げる場合は 1.15.0 の変更（中性子の有限媒質補正の 2 ツールなど）もこの版で入る。
