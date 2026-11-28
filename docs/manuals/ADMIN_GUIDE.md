@@ -63,7 +63,7 @@ Claude Desktop  ──stdio──>  node src/mcp_server_stdio_v4.js
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.10.0"],
+      "args": ["-y", "poker-mcp@1.17.0"],
       "env": {
         "POKER_MCP_HOME": "C:/Users/<username>/poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"

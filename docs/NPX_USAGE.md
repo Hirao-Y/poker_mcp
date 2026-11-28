@@ -1,8 +1,8 @@
-# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.10.0)
+# 🚀 NPX を使用したPoker MCPサーバーの起動 (v1.17.0)
 
-> npm に公開している最新版は **1.10.0** です（非同期ジョブ `POKER_MCP_ASYNC` と
-> `POKER_MCP_GUI` を含む）。HTTP 版（`poker-mcp-http`）は v1.11.0 の機能で、npm には
-> まだ公開していません。試す場合は方法2（ローカルソース）で起動してください。
+> npm に公開している最新版は **1.17.0** です（2026-11-28 公開、POKER 2.3.4 に合わせた版）。
+> 非同期ジョブ `POKER_MCP_ASYNC`・`POKER_MCP_GUI` と HTTP 版（`poker-mcp-http`）を含みます。
+> 変更の内容は [CHANGELOG.md](../CHANGELOG.md) を見てください。
 
 ## 📦 起動方法
 
@@ -145,7 +145,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 
 ---
 
-## 🎯 **Claude Desktop での設定（v1.10.0推奨）**
+## 🎯 **Claude Desktop での設定（v1.17.0推奨）**
 
 ### **推奨設定**
 ```json
@@ -153,7 +153,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.10.0"],
+      "args": ["-y", "poker-mcp@1.17.0"],
       "env": {
         "POKER_MCP_HOME": "C:\\Users\\<username>\\poker_mcp_workspace",
         "POKER_INSTALL_PATH": "C:/Poker"
@@ -165,7 +165,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
 `<username>` はご自身のWindowsユーザー名に置き換えてください。
 
 > **⚠️ 版数の固定を推奨**
-> `poker-mcp@latest` ではなく `poker-mcp@1.10.0` のように固定してください。
+> `poker-mcp@latest` ではなく `poker-mcp@1.17.0` のように固定してください。
 > 遮蔽計算では、いつサーバが入れ替わるか分からない状態は再現性の観点から
 > 望ましくありません。更新は設定を書き換える意図的な操作として行います。
 >
@@ -195,7 +195,7 @@ POKER_INSTALL_PATH/         # デフォルト: C:/Poker
   "mcpServers": {
     "poker-mcp": {
       "command": "npx",
-      "args": ["-y", "poker-mcp@1.10.0"],
+      "args": ["-y", "poker-mcp@1.17.0"],
       "env": {
         "POKER_MCP_HOME": "/home/<username>/.poker-mcp",
         "POKER_INSTALL_PATH": "/usr/local/share/poker"
@@ -221,12 +221,12 @@ Windows 以外では POKER.exe（GUI）が使えないため、v1.10.0 以降は
 }
 ```
 
-### **HTTP 版の起動（v1.11.0）**
+### **HTTP 版の起動（v1.11.0 以降）**
 
-別の機械から使うための HTTP 版（bin `poker-mcp-http`）は、v1.11.0 の npm 公開後は次で起動できます。
+別の機械から使うための HTTP 版（bin `poker-mcp-http`）は、npm の版で次のように起動できます。
 
 ```bash
-npx -y -p poker-mcp@1.11.0 poker-mcp-http
+npx -y -p poker-mcp poker-mcp-http
 ```
 
 公開前はローカルソースから `node src/mcp_server_http.js`（または `npm run start:http`）で起動します。
@@ -364,7 +364,7 @@ npm cache clean --force
 npx poker-mcp
 
 # 版数を指定して起動（Claude Desktop の設定では固定を推奨）
-npx -y poker-mcp@1.10.0
+npx -y poker-mcp@1.17.0
 
 # 最新版を明示して起動（動作確認用。常用は非推奨）
 npx -y poker-mcp@latest
@@ -376,7 +376,7 @@ npx -y poker-mcp@latest
 
 | 項目 | 内容 |
 |------|------|
-| 推奨起動コマンド | `npx poker-mcp`（Claude Desktop では `poker-mcp@1.10.0` のように版数を固定） |
+| 推奨起動コマンド | `npx poker-mcp`（Claude Desktop では `poker-mcp@1.17.0` のように版数を固定） |
 | ツール数 | 36（非同期ジョブ有効で 39、`poker_openGui` が外れる環境ではそれぞれ 1 減） |
 | 設定方法 | `claude_desktop_config.json` に `env.POKER_MCP_HOME` を追加 |
 | データ保存先 | `POKER_MCP_HOME`（未設定時: `~/.poker-mcp/`） |
@@ -392,4 +392,4 @@ npx -y poker-mcp@latest
 - [ESSENTIAL_GUIDE.md](manuals/ESSENTIAL_GUIDE.md): 基本操作ガイド
 - [CHANGELOG.md](../CHANGELOG.md): バージョン変更履歴
 
-**Poker MCP Server v1.10.0（npm 公開版）** | 作者: Yoshihiro Hirao | ライセンス: MIT
+**Poker MCP Server v1.17.0（npm 公開版）** | 作者: Yoshihiro Hirao | ライセンス: MIT
